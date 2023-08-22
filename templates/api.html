@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Jinxed URL Shortener API Documentation</title>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="https://images.jinxed.cf/favicon_api.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <!-- <meta name="keywords" content="url shortener, API documentation, developer resources, jinxed url shortner api, jinxed api"> -->
+    <meta name="description" content="Documentation for the API of Jinxed URL shortener service." />
+    <meta name="author" content="Zane">
+    <link rel="canonical" href="https://jinxed.cf/api">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="API Documentation - Jinxed.cf">
+    <meta property="og:description" content="Documentation for the API of Jinxed URL shortener service.">
+    <meta property="og:image:url" content="https://images.jinxed.cf/api-gradient.jpg">
+    <meta property="og:url" content="https://jinxed.cf/api">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary">
+    
+    <!-- Include necessary CSS and JavaScript libraries -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/themes/prism.css">
+
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.45);
+            padding: 16px;
+            text-align: right;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .navbar ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: flex-end;
+            /* Align the navbar to the right */
+        }
+
+        .navbar li {
+            display: inline-block;
+            margin-right: 20px;
+        }
+
+        .navbar a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .navbar a:hover {
+            color: #aaa;
+        }
+
+        .navbar a.active {
+            font-weight: bold;
+        }
+
+        .json .string {
+            color: green;
+        }
+
+        .json .number {
+            color: darkorange;
+        }
+
+        .json .boolean {
+            color: blue;
+        }
+
+        .json .null {
+            color: magenta;
+        }
+
+        .json .key {
+            color: red;
+        }
+
+        .language-json {
+            font-weight: normal;
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <ul>
+            <li><a href="/">Shorten</a></li>
+            <li><a href="#" class="active">API</a></li>
+            <li><a href="/stats">Stats</a></li>
+            <li><a href="#">Contact</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <h2>URL Shortener API Documentation</h2>
+        <p>Welcome to the URL Shortener API documentation. This page provides information on how to use the API to
+            shorten URLs and retrieve analytics.</p>
+
+        <h3>API Base URL</h3>
+        <p>https://jinxed.cf</p>
+
+        <h2 style="text-align: center;">API Endpoints</h2>
+
+
+        <h4>Shorten a URL</h4>
+        <p><strong>Endpoint:</strong> <code> POST / </code></p>
+        <p><strong>Parameters:</strong></p>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Description</th>
+                    <th>Required</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>url</td>
+                    <td>The long URL to be shortened.</td>
+                    <td>Yes</td>
+                </tr>
+                <tr>
+                    <td>alias</td>
+                    <td>Custom alias for the shortened URL.</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td>password</td>
+                    <td>Password to access the shortened URL.</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td>max-clicks</td>
+                    <td>Maximum number of clicks allowed for the shortened URL.</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td>json*</td>
+                    <td>To get the response in JSON.</td>
+                    <td>No</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Headers</h5>
+        <p>The following headers are used in the API requests and responses:</p>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Header</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>Accept*</code></td>
+                    <td>Specifies the format of the request payload. Accepted values: <code>application/json</code>,
+                        <code>application/xml</code>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p> * The Json parameter or The Accept Header is <b>requiered</b> to get a non Html Response from the API</p>
+        <p><strong>Example Request: (Python)</strong></p>
+        <pre>
+      <code class="language-python">
+import requests
+import json
+
+url = "https://jinxed.cf"
+
+payload = {
+  "url": "https://example.com",
+  "alias": "anything", 
+  "max-clicks": 100, 
+  "password": "YourPass@1234"
+}
+
+headers = {
+  "Accept": "application/json"
+}
+
+response = requests.post(url, data=payload, headers=headers)
+print(json.loads(response.text))
+
+>>> {'short_url': 'https://jinxed.cf/anything'}
+      </code>
+    </pre>
+
+        <h5>Errors</h5>
+        <p>This section provides information about the various errors that could occur while making requests through the
+            API.</p>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Error Name</th>
+                    <th>Error Code</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>UrlError</code></td>
+                    <td>400</td>
+                    <td>The request contains an invalid url.</td>
+                </tr>
+                <tr>
+                    <td><code>AliasError</code></td>
+                    <td>400</td>
+                    <td>The User requested Alias is not avalibale or already taken.</td>
+                </tr>
+                <tr>
+                    <td><code>PasswordError</code></td>
+                    <td>400</td>
+                    <td>The user entered password must be atleast 8 characters long, must contain a letter and a number
+                        and a special character either '@' or '.' and cannot be consecutive.</td>
+                </tr>
+                <tr>
+                    <td><code>MaxClicksError</code></td>
+                    <td>400</td>
+                    <td>The user entered max-clicks is not a positive integer.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br>
+        <hr>
+        <br>
+
+        <h4>Retrieve Shortened URL Stats</h4>
+        <p><strong>Endpoint:</strong> <code>POST /</code>stats/{shortCode}</p>
+        <p><strong>Parameters:</strong></p>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Description</th>
+                    <th>Required</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>password*</td>
+                    <td>Password of the shortened url if any.</td>
+                    <td>No</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>* if the Short Url is password protected then the password parameter is a <b>must</b>.</p>
+
+        <p><strong>Example Request: (Python)</strong></p>
+        <pre>
+      <code class="language-python" >
+import requests
+import json
+
+short_code = "ex"
+url = f"https://jinxed.cf/{short_code}"
+
+payload = { 
+  "password": "Example@9012"
+}
+
+response = requests.post(url, data=payload)
+
+print(json.loads(response.text))
+      </code>
+    </pre>
+        <p><strong>Example Response:</strong></p>
+        <pre>
+      <code class="language-json">
+      </code>
+    </pre>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Data Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>browser</code></td>
+                    <td>Dict</td>
+                    <td>Data about the Browsers in which the short link was accessed.</td>
+                </tr>
+                <tr>
+                    <td><code>counter</code></td>
+                    <td>Dict</td>
+                    <td>Data about the clicks per day since the link was created.</td>
+                </tr>
+                <tr>
+                    <td><code>expired*</code></td>
+                    <td>Bool</td>
+                    <td>Tells whether the link has expired or not.</td>
+                </tr>
+                <tr>
+                    <td><code>last-click</code></td>
+                    <td>Str</td>
+                    <td>Last Time when the short link was accessed.</td>
+                </tr>
+                <tr>
+                    <td><code>last-click-browser</code></td>
+                    <td>Str</td>
+                    <td>Last Browser in which the short link was accessed.</td>
+                </tr>
+                <tr>
+                    <td><code>last-click-os</code></td>
+                    <td>Str</td>
+                    <td>Last Os name in which the short link was accessed.</td>
+                </tr>
+                <tr>
+                    <td><code>max-clicks*</code></td>
+                    <td>Str</td>
+                    <td>Information about the Max Clicks set my the User on the Short Link.</td>
+                </tr>
+                <tr>
+                    <td><code>creation-date</code></td>
+                    <td>Str</td>
+                    <td>Date when the short link was created.</td>
+                </tr>
+                <tr>
+                    <td><code>os_name</code></td>
+                    <td>Dict</td>
+                    <td>Data about the Os names in which the short link was accessed.</td>
+                </tr>
+                <tr>
+                    <td><code>password*</code></td>
+                    <td>Str</td>
+                    <td>The password set by the User on the Short Link.</td>
+                </tr>
+                <tr>
+                    <td><code>short_code</code></td>
+                    <td>Str</td>
+                    <td>The Short Code of the Short Link.</td>
+                </tr>
+                <tr>
+                    <td><code>total-clicks</code></td>
+                    <td>Int</td>
+                    <td>Count of the total clicks made since the short link was created.</td>
+                </tr>
+                <tr>
+                    <td><code>url</code></td>
+                    <td>Str</td>
+                    <td>Original Long Url which the short link redirects to.</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>* <b>Null (None)</b> if the Short link didnt have max-clicks set or was not password protected.</p>
+
+        <h5>Stats Errors</h5>
+        <p>This section provides information about the various errors that could occur while making requests through the
+            API.</p>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Error Name</th>
+                    <th>Error Code</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>UrlError</code></td>
+                    <td>404</td>
+                    <td>The user requested Url never existed.</td>
+                </tr>
+                <tr>
+                    <td><code>PasswordError</code></td>
+                    <td>400</td>
+                    <td>The user entered password is invalid.</td>
+                </tr>
+                <!-- Add more error codes and descriptions as needed -->
+            </tbody>
+        </table>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+    <script>
+        Prism.highlightAll();
+    </script>
+    <script>
+        var jsonVar = {
+            "browser": {
+                "Edge": 7
+            },
+            "counter": {
+                "2023-06-05": 7
+            },
+            "expired": null,
+            "last-click": "2023-06-05 18:51:34.871862+00:00",
+            "creation-date": "2023-06-06",
+            "last-click-browser": "Edge",
+            "last-click-os": "Windows",
+            "max-clicks": null,
+            "os_name": {
+                "Windows": 7
+            },
+            "password": "Example@9012",
+            "short_code": "ex",
+            "total-clicks": 7,
+            "url": "https://example.com"
+        };
+        var jsonStr = JSON.stringify(jsonVar, null, 2);
+        var element = document.getElementsByClassName("language-json")[0];
+        element.innerHTML = "<pre class='json'>" + syntaxHighlight(jsonStr) + "</pre>";
+
+        // Function to syntax highlight the JSON string
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(
+                /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
+                function (match) {
+                    var cls = 'number';
+                    if (/^"/.test(match)) {
+                        if (/:$/.test(match)) {
+                            cls = 'key';
+                        } else {
+                            cls = 'string';
+                        }
+                    } else if (/true|false/.test(match)) {
+                        cls = 'boolean';
+                    } else if (/null/.test(match)) {
+                        cls = 'null';
+                    }
+                    return '<span class="' + cls + '">' + match + '</span>';
+                }
+            );
+        }
+    </script>
+</body>
+
+</html>

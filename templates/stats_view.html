@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>URL Stats</title>
+  <link rel="icon" type="image/png" href="https://images.jinxed.cf/favicon_stats_view.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <!-- <meta name="keywords" content="url shortener, link statistics, analytics" /> -->
+  <meta name="description" content="View detailed statistics of your shortened links." />
+  <meta name="author" content="Zane" />
+  <link rel="canonical" href="https://jinxed.cf/stats" />
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="Link Statistics - Jinxed.cf" />
+  <meta property="og:description" content="View detailed statistics of your shortened links." />
+  <meta property="og:image:url" content="https://images.jinxed.cf/stats-view-gradient.jpg" />
+  <meta property="og:url" content="https://jinxed.cf/stats" />
+  <meta property="og:type" content="website" />
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Link Statistics - Jinxed.cf" />
+  <meta name="twitter:description" content="View detailed statistics of your shortened links." />
+  <meta name="twitter:image:url" content="https://images.jinxed.cf/stats-view-gradient-small.jpg" />
+  <meta property="twitter:domain" content="https://jinxed.cf" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.0/dist/html2canvas.min.js"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      padding: 20px;
+      padding-top: 0;
+      background-image: linear-gradient(355deg, #2f281f, #320ea2);
+      -ms-overflow-style: none;
+    }
+
+    p {
+      -ms-overflow-style: none;
+    }
+
+    body::-webkit-scrollbar {
+      display: none;
+    }
+
+    body::-webkit-scrollbar-track {
+      background-color: transparent;
+    }
+
+    p::-webkit-scrollbar {
+      display: none;
+    }
+
+    p::-webkit-scrollbar-track {
+      background-color: transparent;
+    }
+
+    .navbar {
+      background-color: rgba(255, 255, 255, 0.15);
+      padding: 16px;
+      text-align: right;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      margin-left: -20px;
+      margin-right: -20px;
+    }
+
+    .navbar ul {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .navbar li {
+      display: inline-block;
+      margin-right: 20px;
+    }
+
+    .navbar a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 16px;
+      padding: 5px;
+      transition: color 0.3s ease;
+    }
+
+    .navbar a:hover {
+      color: #ccc;
+    }
+
+    .navbar a.active {
+      font-weight: bold;
+    }
+
+    .main-data-container {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .main-data,
+    .clicks-data,
+    .browsers-data,
+    .os-data,
+    .referrer-data,
+    .country-data,
+    .average-data,
+    .qr-code {
+      background-color: rgba(255, 255, 255, 0.15);
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      flex-basis: 49.5%;
+      margin-bottom: 20px;
+    }
+
+    .charts-container {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .chart-container {
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 20px;
+      background-color: rgba(255, 255, 255, 0.125);
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin-left: 20px;
+      margin-top: 20px;
+    }
+
+    .json-data {
+      white-space: pre-wrap;
+      font-family: monospace;
+      background-color: #f0f0ee;
+      border-radius: 5px;
+      padding: 10px;
+      border: 1px solid #ccccca;
+      height: 280px;
+      overflow: auto;
+    }
+
+    select,
+    button {
+      margin-top: 10px;
+    }
+
+    #countryChart,
+    #referrerChart,
+    #browserChart,
+    #osChart,
+    #counterChart,
+    #analysisChart {
+      height: 281px;
+    }
+
+    .qr-code {
+      text-align: center;
+    }
+
+    @media screen and (max-width: 1350px) and (min-width: 601px) {
+
+      .charts-container,
+      .main-data-container {
+        flex-wrap: wrap;
+      }
+
+      .chart-container,
+      .data-container {
+        flex-basis: 49.5%;
+        max-width: 50%;
+      }
+    }
+
+    @media screen and (max-width: 1000px) {
+      .charts-container {
+        flex-direction: column;
+      }
+
+      .main-data-container {
+        flex-direction: column;
+      }
+
+      .chart-container {
+        margin-left: 0;
+        margin-top: 0;
+      }
+    }
+
+    @media screen and (max-width: 600px) {
+      body {
+        padding: 10px;
+        padding-top: 0;
+      }
+
+      .navbar {
+        padding-left: -10px;
+        padding-right: -10px;
+      }
+
+      .main-data p,
+      .clicks-data p {
+        font-size: 14px;
+      }
+
+      .main-data,
+      .clicks-data,
+      .browsers-data,
+      .os-data,
+      .referrer-data,
+      .country-data,
+      .average-data,
+      .qr-code {
+        margin: 0 auto 20px;
+        width: 100%;
+      }
+
+      .charts-container,
+      .main-data-container {
+        flex-direction: column;
+      }
+
+      .json-data {
+        height: 150px;
+      }
+
+      #countryChart,
+      #referrerChart,
+      #countryJson,
+      #referrerJson {
+        height: 280px;
+      }
+
+      #counterChart,
+      #counterJson {
+        height: 250px;
+      }
+
+      #browserChart,
+      #osChart,
+      #browserJson,
+      #osJson,
+      #analysisChart,
+      #analysisJson {
+        height: 200px;
+      }
+
+      #url_long_input {
+        max-width: 45%;
+      }
+    }
+
+    h2 {
+      color: white;
+      padding-bottom: 10px;
+    }
+
+    p {
+      margin-bottom: 20px;
+      color: white;
+      font-size: 17px;
+    }
+
+    .main-data-heading {
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 10px 10px;
+      border-radius: 12px;
+      margin-left: 10px;
+      border: 0;
+      color: white;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    #counterOption,
+    #browserDataOption,
+    #osDataOption,
+    #countryDataOption,
+    #referrerDataOption,
+    #counterDataOption {
+      padding: 10px 8px;
+      border-radius: 12px;
+      color: white;
+      background: rgba(255, 255, 255, 0.15);
+      margin-left: 10px;
+      border: 0;
+    }
+
+    #counterOption:hover,
+    #browserDataOption:hover,
+    #osDataOption:hover,
+    #countryDataOption:hover,
+    #referrerDataOption:hover,
+    #counterDataOption:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    option {
+      color: black;
+    }
+
+    code {
+      background-color: rgba(225, 225, 225, 0.125);
+      border-radius: 10px;
+      padding: 5px 10px;
+      font-family: Arial, sans-serif;
+    }
+
+    #url_long_input {
+      background: none;
+      border: none;
+      color: white;
+      width: 50%;
+      font-size: 16px;
+    }
+
+    #last_click_long_input {
+      background: none;
+      border: none;
+      color: white;
+      max-width: 50%;
+      font-size: 15px;
+    }
+
+    input:focus {
+      all: unset;
+    }
+
+    h3 {
+      color: white;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.125);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="navbar">
+    <ul>
+      <li><a href="/">Shorten</a></li>
+      <li><a href="/api">API</a></li>
+      <li><a href="/stats" class="active">Stats</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+  </div>
+  <div class="main-data-container">
+    <div class="main-data">
+      <h2 class="main-data-heading">Main Data</h2>
+      <p>
+        <b>Original URL</b> &nbsp; <code
+          id="url_long_code"><input id="url_long_input" oninput="adjustWidth()" type="text" value="{{ json_data['url']}} " readonly></code>
+      </p>
+      <p><b>Total Clicks</b> &nbsp; <code>{{ json_data["total-clicks"] }}</code></p>
+      <p>
+        <b>Total Unique Clicks</b> &nbsp; <code>{{ json_data["total_unique_clicks"] }}</code>
+      </p>
+      <p><b>Short Code</b> &nbsp; <code>{{ json_data["short_code"] }}</code></p>
+      <p><b>Creation Date</b> &nbsp; <code>{{ json_data["creation-date"] }}</code></p>
+      <p><b>Max Clicks</b> &nbsp; <code>{{ json_data["max-clicks"] }}</code></p>
+      <p><b>Expired</b> &nbsp; <code id="expire">{{ json_data["expired"] }}</code></p>
+      <p><b>Last Click</b> &nbsp;
+        <code><input id="last_click_long_input" type="text" value="{{ json_data['last-click']}} " readonly></code></p>
+      <p>
+        <b>Last Click Browser Name</b> &nbsp; <code>{{ json_data["last-click-browser"] }}</code>
+      </p>
+      <p><b>Last Click OS Name</b> &nbsp; <code>{{ json_data["last-click-os"] }}</code></p>
+    </div>
+    <div class="clicks-data">
+      <h2>Click Counter</h2>
+      <div class="chart-container">
+        <canvas id="counterChart"></canvas>
+        <pre id="counterJson" class="json-data" style="display: none"></pre>
+      </div>
+      <label for="counterOption" style="color: white">Select Range:</label>
+      <select id="counterOption" onchange="updateCounterChart()">
+        <option value="last7days" selected>Last 7 Days</option>
+        <option value="last30days">Last 30 Days</option>
+        <option value="alltime">All Time</option>
+      </select>
+      <button onclick="counterToggleView('counter')">Toggle View</button>
+      <select id="counterDataOption" onchange="updateCounterChart()">
+        <option value="collectiveData" selected>Collective Data</option>
+        <option value="uniqueData">Unique Data</option>
+      </select>
+    </div>
+  </div>
+  <div class="charts-container">
+    <div class="browsers-data">
+      <h2>Browsers</h2>
+      <div class="chart-container">
+        <canvas id="browserChart"></canvas>
+        <pre id="browserJson" class="json-data" style="display: none"></pre>
+      </div>
+      <button onclick="toggleView('browser')">Toggle View</button>
+      <select id="browserDataOption" onchange="updateBrowserChart()">
+        <option value="collectiveData" selected>Collective Data</option>
+        <option value="uniqueData">Unique Data</option>
+      </select>
+    </div>
+    <div class="os-data">
+      <h2>Platforms</h2>
+      <div class="chart-container">
+        <canvas id="osChart"></canvas>
+        <pre id="osJson" class="json-data" style="display: none"></pre>
+      </div>
+      <button onclick="toggleView('os')">Toggle View</button>
+      <select id="osDataOption" onchange="updateOsChart()">
+        <option value="collectiveData" selected>Collective Data</option>
+        <option value="uniqueData">Unique Data</option>
+      </select>
+    </div>
+  </div>
+  <div class="charts-container">
+    <div class="referrer-data">
+      <h2>Referrers</h2>
+      <div class="chart-container">
+        <canvas id="referrerChart"></canvas>
+        <pre id="referrerJson" class="json-data" style="display: none"></pre>
+      </div>
+      <button onclick="toggleView('referrer')">Toggle View</button>
+      <select id="referrerDataOption" onchange="updateReferrerChart()">
+        <option value="collectiveData" selected>Collective Data</option>
+        <option value="uniqueData">Unique Data</option>
+      </select>
+    </div>
+    <div class="country-data">
+      <h2>Countries</h2>
+      <div class="chart-container" id="country-container">
+        <canvas id="countryChart"></canvas>
+        <pre id="countryJson" class="json-data" style="display: none"></pre>
+      </div>
+      <button onclick="toggleView('country')">Toggle View</button>
+      <select id="countryDataOption" onchange="updateCountryChart()">
+        <option value="collectiveData" selected>Collective Data</option>
+        <option value="uniqueData">Unique Data</option>
+      </select>
+    </div>
+  </div>
+  <div class="charts-container">
+    <div class="average-data">
+      <h2>Clicks Analysis</h2>
+      <div class="chart-container">
+        <canvas id="analysisChart"></canvas>
+        <pre id="analysisJson" class="json-data" style="display: none"></pre>
+      </div>
+      <button onclick="toggleView('analysis')">Toggle View</button>
+    </div>
+    <div class="qr-code">
+      <h2 style="text-align: left; margin-bottom: 20px;">Qr Code</h2>
+      <div style="border-radius: 12px; background: rgba(255, 255, 255, 0.125); justify-items: center; padding: 10px;">
+        <img style="max-width: 350px; max-height: 250px; border-radius: 12px; margin: 10px;"
+          src="https://qr.jinxed.cf/radial?url=https://jinxed.cf/{{json_data['short_code']}}">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function adjustWidth() {
+      var input = document.getElementById("last_click_long_input");
+      var value = input.value;
+      var width = value.length * 7;
+      input.style.width = width + "px";
+      var input2 = document.getElementById("url_long_input");
+      if (input2.value.length < 50) {
+        input2.style.width = input2.value.length * 7 + "px";
+        input2.style.textAlign = "center";
+      }
+      var p = document.getElementById("expire");
+      if (p.innerText === "True") {
+        p.style.background = "rgba(255, 0, 0, 0.5)";
+      }
+      if (p.innerText === "False") {
+        p.style.background = "rgba(0, 255, 0, 0.5)";
+      }
+    }
+    window.onload = adjustWidth;
+  </script>
+
+  <script>
+    const jsonResponse = {{ json_data| tojson }};
+
+    function counterToggleView(chartType) {
+      const chartContainer = document.getElementById(`counterContainer`);
+      const chartCanvas = document.getElementById(`counterChart`);
+      const jsonDataElement = document.getElementById(`counterJson`);
+
+      if (chartCanvas.style.display === 'none') {
+        chartCanvas.style.display = 'block';
+        jsonDataElement.style.display = 'none';
+      } else {
+        chartCanvas.style.display = 'none';
+        jsonDataElement.style.display = 'block';
+        jsonDataElement.textContent = JSON.stringify(getCounterData() || jsonResponse.os_name || {}, null, 2);
+      }
+    }
+
+    function toggleView(chartType) {
+      const chartContainer = document.getElementById(`${chartType}Container`);
+      const chartCanvas = document.getElementById(`${chartType}Chart`);
+      const jsonDataElement = document.getElementById(`${chartType}Json`);
+
+      if (chartType === 'analysis') {
+        console.log('hello')
+        if (chartCanvas.style.display === 'none') {
+          chartCanvas.style.display = 'block';
+          jsonDataElement.style.display = 'none';
+        } else {
+          chartCanvas.style.display = 'none';
+          jsonDataElement.style.display = 'block';
+          jsonDataElement.textContent = JSON.stringify(jsonResponse['analysis_data'] || jsonResponse.os_name || {}, null, 2);
+        }
+      }
+      else {
+        if (chartCanvas.style.display === 'none') {
+          chartCanvas.style.display = 'block';
+          jsonDataElement.style.display = 'none';
+        }
+        else {
+          chartCanvas.style.display = 'none';
+          jsonDataElement.style.display = 'block';
+          const dataOption = document.getElementById(`${chartType}DataOption`).value;
+          jsonDataElement.textContent = dataOption === "collectiveData" ? JSON.stringify(jsonResponse[chartType] || jsonResponse.os_name || {}, null, 2) : JSON.stringify(jsonResponse['unique_' + chartType] || jsonResponse.unique_os_name || {}, null, 2);
+        }
+      }
+    }
+
+    function getCounterData() {
+      const option = document.getElementById('counterOption').value;
+      const dataOption = document.getElementById('counterDataOption').value;
+
+      switch (option) {
+        case 'last7days':
+          return getLastNDaysCounterData(7);
+        case 'last30days':
+          return getLastNDaysCounterData(30);
+        case 'alltime':
+          if (dataOption === "collectiveData") {
+            return jsonResponse.counter;
+          }
+          else {
+            return jsonResponse.unique_counter;
+          }
+        default:
+          return jsonResponse.counter;
+      }
+    }
+
+    function getLastNDaysCounterData(days) {
+      const dataOption = document.getElementById('counterDataOption').value;
+      const counter = dataOption === "collectiveData" ? jsonResponse.counter : jsonResponse.unique_counter;
+      const counterKeys = Object.keys(counter);
+      const lastNDaysKeys = counterKeys.slice(-days);
+
+      const lastNDaysCounterData = {};
+      lastNDaysKeys.forEach((key) => {
+        lastNDaysCounterData[key] = counter[key];
+      });
+
+      return lastNDaysCounterData;
+    }
+
+    function updateCounterChart() {
+      const counterData = getCounterData();
+      const counterChartCanvas = document.getElementById('counterChart');
+
+      // Destroy the existing chart to clear the canvas
+      if (counterChartCanvas.chart) {
+        counterChartCanvas.chart.destroy();
+      }
+
+      const counterChart = new Chart(counterChartCanvas, {
+        type: 'line',
+        data: {
+          labels: Object.keys(counterData),
+          datasets: [
+            {
+              label: 'Click Counter',
+              data: Object.values(counterData),
+              fill: 'start',
+              backgroundColor: 'rgba(255, 99, 132, 0.4)',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 1,
+              tension: 0.3,
+            },
+          ],
+        },
+        options: {
+          responsive: true, // Enable responsiveness
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                color: '#fff', // Change the color of the x-axis labels
+              },
+            },
+            y: {
+              ticks: {
+                color: '#fff', // Change the color of the y-axis labels
+              },
+            },
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: '#fff', // Change the color of the legend labels
+              },
+            },
+          },
+        },
+      });
+
+      counterChartCanvas.chart = counterChart;
+    }
+
+    function updateOsChart() {
+      const osChartCanvas = document.getElementById('osChart');
+
+      if (osChartCanvas.chart) {
+        osChartCanvas.chart.destroy();
+      }
+      const dataOption = document.getElementById('osDataOption').value;
+      const dt = dataOption === "collectiveData" ? jsonResponse.sorted_os_name : jsonResponse.sorted_unique_os_name;
+
+      const osChart = new Chart(osChartCanvas, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(dt),
+          datasets: [
+            {
+              label: 'Platforms',
+              data: Object.values(dt),
+              backgroundColor: 'rgba(75, 192, 192, 0.4)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 1,
+              borderRadius: 20,
+            },
+          ],
+        },
+        options: {
+          responsive: true, // Enable responsiveness
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          scales: {
+            x: {
+              ticks: {
+                color: '#fff', // Change the color of the x-axis labels
+              },
+            },
+            y: {
+              ticks: {
+                color: '#fff', // Change the color of the y-axis labels
+              },
+            },
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: '#fff', // Change the color of the legend labels
+              },
+            },
+          },
+        },
+      });
+      osChartCanvas.chart = osChart;
+    }
+
+    function updateAnalysisChart() {
+      const analysisChartCanvas = document.getElementById('analysisChart');
+
+      if (analysisChartCanvas.chart) {
+        osChartCanvas.chart.destroy();
+      }
+
+      const analysisChart = new Chart(analysisChartCanvas, {
+        type: 'bar',
+        data: {
+          labels: ['Daily', 'Weekly', 'Monthly'],
+          datasets: [
+            {
+              label: 'Clicks Analysis',
+              data: [{{ json_data["average_daily_clicks"] }}, {{ json_data["average_weekly_clicks"]}}, {{ json_data["average_monthly_clicks"]}}],
+    backgroundColor: 'rgba(255, 205, 86, 0.4)',
+      borderColor: 'rgba(255, 205, 86, 1)',
+        borderWidth: 1,
+          borderRadius: 20,
+              },
+            ],
+        },
+    options: {
+      responsive: true,
+        maintainAspectRatio: false,
+          indexAxis: 'y',
+            scales: {
+        x: {
+          ticks: {
+            color: '#fff', // Change the color of the x-axis labels
+                  },
+        },
+        y: {
+          ticks: {
+            color: '#fff', // Change the color of the y-axis labels
+                  },
+        },
+      },
+      plugins: {
+        legend: {
+          labels: {
+            color: '#fff', // Change the color of the legend labels
+                  },
+        },
+      },
+    },
+        });
+    analysisChartCanvas.chart = analysisChart;
+      }
+
+    function updateBrowserChart() {
+      const browserChartCanvas = document.getElementById('browserChart');
+      if (browserChartCanvas.chart) {
+        browserChartCanvas.chart.destroy();
+      }
+
+      const dataOption = document.getElementById('browserDataOption').value;
+      const dt = dataOption === "collectiveData" ? jsonResponse.sorted_browser : jsonResponse.sorted_unique_browser;
+
+      const browserChart = new Chart(browserChartCanvas, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(dt),
+          datasets: [
+            {
+              label: 'Browsers',
+              data: Object.values(dt),
+              backgroundColor: 'rgba(153, 102, 255, 0.4)',
+              borderColor: 'rgba(153, 102, 255, 1)',
+              borderWidth: 1,
+              borderRadius: 20,
+            },
+          ],
+        },
+        options: {
+          responsive: true, // Enable responsiveness
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          scales: {
+            x: {
+              ticks: {
+                color: '#fff', // Change the color of the x-axis labels
+              },
+            },
+            y: {
+              ticks: {
+                color: '#fff', // Change the color of the y-axis labels
+              },
+            },
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: '#fff', // Change the color of the legend labels
+              },
+            },
+          },
+        },
+      });
+      browserChartCanvas.chart = browserChart;
+    }
+
+    function updateReferrerChart() {
+      const referrerChartCanvas = document.getElementById('referrerChart');
+
+      if (referrerChartCanvas.chart) {
+        referrerChartCanvas.chart.destroy();
+      }
+      const dataOption = document.getElementById('referrerDataOption').value;
+      const dt = dataOption === "collectiveData" ? JSON.parse(jsonResponse.sorted_referrer) : JSON.parse(jsonResponse.sorted_unique_referrer);
+
+      const referrerChart = new Chart(referrerChartCanvas, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(dt),
+          datasets: [
+            {
+              label: 'Referrers',
+              data: Object.values(dt),
+              backgroundColor:
+                ["rgba(128, 0, 128, 0.6)", "rgba(255, 0, 255, 0.6)", "rgba(153, 51, 255, 0.6)", "rgba(204, 153, 255, 0.6)", "rgba(230, 230, 250, 0.6)"],
+              borderColor:
+                ["rgba(128, 0, 128, 1)", "rgba(255, 0, 255, 1)", "rgba(153, 51, 255, 1)", "rgba(204, 153, 255, 1)", "rgba(230, 230, 250, 1)"],
+              borderWidth: 0.8,
+              hoverOffset: 4,
+              borderRadius: 5,
+              spacing: 5,
+            },
+          ],
+        },
+        options: {
+          responsive: true, // Enable responsiveness
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: '#fff', // Change the color of the legend labels
+                boxWidth: 12
+              }
+            }
+          }
+        },
+      });
+      referrerChartCanvas.chart = referrerChart;
+    }
+
+    function updateCountryChart() {
+      const countryChartCanvas = document.getElementById('countryChart');
+
+      if (countryChartCanvas.chart) {
+        countryChartCanvas.chart.destroy();
+      }
+      const dataOption = document.getElementById('countryDataOption').value;
+      const dt = dataOption === "collectiveData" ? jsonResponse.sorted_country : jsonResponse.sorted_unique_country;
+
+
+      const countryChart = new Chart(countryChartCanvas, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(dt),
+          datasets: [
+            {
+              label: 'Countries',
+              data: Object.values(dt),
+              backgroundColor: [
+                'rgba(217, 210, 138, 0.6)',
+                'rgba(255, 130, 118, 0.6)',
+                'rgba(255, 221, 213, 0.6)',
+                'rgba(148, 108, 214, 0.6)',
+                'rgba(100, 100, 100, 0.6)'
+              ],
+              borderColor: [
+                'rgba(217, 210, 138, 1)',
+                'rgba(255, 130, 118, 1)',
+                'rgba(255, 221, 213, 1)',
+                'rgba(148, 108, 214, 1)',
+                'rgba(100, 100, 100, 1)'
+              ],
+              borderWidth: 0.8,
+              hoverOffset: 4,
+              borderRadius: 5,
+              spacing: 5,
+            },
+          ],
+        },
+        options: {
+          responsive: true, // Enable responsiveness
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: '#fff', // Change the color of the legend labels
+                boxWidth: 12
+              }
+            }
+          }
+        },
+      });
+      countryChartCanvas.chart = countryChart;
+    }
+
+    const counterData = getLastNDaysCounterData(7);
+    updateCounterChart(counterData);
+    updateOsChart();
+    updateBrowserChart();
+    updateReferrerChart();
+    updateCountryChart();
+    updateAnalysisChart();
+  </script>
+
+</body>
+
+</html>

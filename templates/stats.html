@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Jinxed URL Stats</title>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="https://images.jinxed.cf/favicon_stats.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="description" content="View detailed statistics of your shortened links." />
+  <meta name="author" content="Zane">
+  <link rel="canonical" href="https://jinxed.cf/stats">
+
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="Link Statistics - Jinxed.cf">
+  <meta property="og:description" content="View detailed statistics of your shortened links.">
+  <meta property="og:image:url" content="https://images.jinxed.cf/stats-gradient.jpg">
+  <meta property="og:url" content="https://jinxed.cf/stats">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Link Statistics - Jinxed.cf">
+  <meta name="twitter:description" content="View detailed statistics of your shortened links.">
+  <meta name="twitter:image:url" content="https://images.jinxed.cf/stats-gradient-small.jpg">
+  <meta property="twitter:domain" content="https://jinxed.cf">
+
+  <style>
+    *:not(ul) {
+      box-sizing: border-box;
+      /*text-align: center;*/
+      color: white;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      background-attachment: fixed;
+      background-color: #ff99c2;
+      background-repeat: no-repeat;
+      background-image: linear-gradient(63deg, #321932, #425da9);
+      background-image: linear-gradient(to bottom, rgb(41, 105, 100), rgb(80, 131, 233));
+      -ms-overflow-style: none;
+      color: white;
+    }
+
+    body::-webkit-scrollbar {
+      display: none;
+    }
+
+    body::-webkit-scrollbar-track {
+      background-color: transparent;
+    }
+
+    .navbar {
+      background-color: rgba(255, 255, 255, 0.15);
+      padding: 16px;
+      text-align: right;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .navbar ul {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .navbar li {
+      display: inline-block;
+      margin-right: 20px;
+    }
+
+    .navbar a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 16px;
+      padding: 5px;
+      transition: color 0.3s ease;
+    }
+
+    .navbar a:hover {
+      color: #ccc;
+    }
+
+    .navbar a.active {
+      font-weight: bold;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #555;
+      transition: background-color 0.3s ease;
+    }
+
+    form {
+      max-width: 1000px;
+      margin: 0 auto;
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+
+    label {
+      display: block;
+      margin-bottom: 12px;
+      color: white;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 15px;
+      border-radius: 20px;
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 20px;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    input[type="text"]::placeholder,
+    input[type="password"]::placeholder {
+      color: #999;
+      color: rgba(255, 255, 255, 0.6)
+    }
+
+    input:focus {
+      outline: none;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.5);
+    }
+
+    input[type="text"]:focus::placeholder,
+    input[type="password"]:focus::placeholder,
+    input[type="number"]:focus::placeholder {
+      color: #ccc;
+    }
+
+    button[type="submit"] {
+      background-color: #333;
+      border: none;
+      padding: 14px 30px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 15px;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: background-color 0.2s ease-in-out;
+      display: block;
+      margin: 0 auto;
+      margin-top: 20px;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #555;
+      background-color: rgba(255, 255, 255, 0.25);
+
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    #password-error {
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      padding: 10px 20px;
+      border-radius: 15px;
+      color: white;
+      margin-left: 10%;
+      margin-right: 10%;
+      transition: all 0.3s ease-in-out;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    #url-error {
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      padding: 10px 20px;
+      border-radius: 15px;
+      color: white;
+      margin-left: 10%;
+      margin-right: 10%;
+      transition: all 0.3s ease-in-out;
+      margin-top: -30px;
+    }
+  </style>
+  <script>
+    function removeErrorMessage() {
+      var passError = document.getElementById("password-error");
+
+      if (passError) {
+        setTimeout(function () {
+          passError.remove();
+        }, 3000);
+      }
+    }
+
+    function checkURL() {
+      var hostURL = "https://jinxed.cf";
+      var enteredURL = document.getElementById("short_code").value.trim();
+
+      if (!enteredURL.startsWith(hostURL)) {
+        document.getElementById("url-error").innerText = "Invalid URL: The entered URL must begin with the host's URL.";
+        document.getElementById("url-error").style.background = "rgba(255, 255, 255, 0.15)"
+        document.getElementById("url-error").style.marginTop = "-15px"
+        setTimeout(function () {
+          document.getElementById("url-error").innerText = "";
+          document.getElementById("url-error").style.background = "";
+          document.getElementById("url-error").style.marginTop = "-30px";
+        }, 3000);
+        return false;
+      }
+      return true;
+    }
+
+  </script>
+</head>
+
+<body>
+  <div class="navbar">
+    <ul>
+      <li><a href="/">Shorten</a></li>
+      <li><a href="/api">API</a></li>
+      <li><a href="#" class="active">Stats</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+  </div>
+  <h1>URL Stats</h1>
+
+  <form action="/stats" method="POST" onsubmit="return checkURL();">
+    <p id="url-error"></p>
+    <label for="short-code">Enter the full Url</label>
+    <input type="text" id="short_code" name="short_code" required placeholder="https://jinxed.cf/your-short-code"
+      value="{{ url }}">
+
+    {% if error %}
+    <p id="password-error">{{ error }}</p>
+    <script>removeErrorMessage();</script>
+    {% endif %}
+
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" placeholder="Optional">
+
+    <button type="submit">View Stats</button>
+  </form>
+</body>
+
+</html>

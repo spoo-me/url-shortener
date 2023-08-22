@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <script type="text/javascript">
+    (function (c, l, a, r, i, t, y) {
+      c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+      t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+      y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+    })(window, document, "clarity", "script", "hi3dzq9xec");
+  </script>
+  <title>Jinxed URL Shortener</title>
+  <link rel="icon" type="image/png" href="https://images.jinxed.cf/favicon.png" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="description"
+    content="Jinxed is a free and easy-to-use URL shortener that lets you create short links for any website. You can even choose your own alias, set a password, and limit the number of clicks." />
+  <meta name="author" content="Zane">
+  <link rel="canonical" href="https://jinxed.cf">
+
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="Shorten Your URLs, Not Your Possiblities | Jinxed.cf">
+  <meta property="og:site_name" content="Shorten Your URLs, Not Your Possiblities | Jinxed.cf">
+  <meta property="og:description"
+    content="Jinxed is a free and easy-to-use URL shortener that lets you create short links for any website.">
+  <meta property="og:image:url" content="https://images.jinxed.cf/main-gradient.jpg">
+  <meta property="og:url" content="https://jinxed.cf">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Jinxed URL Shortener">
+  <meta name="twitter:description"
+    content="Jinxed is a free and easy-to-use URL shortener that lets you create short links for any website.">
+  <meta name="twitter:image:src" content="https://images.jinxed.cf/main-gradient.jpg">
+
+  <meta property="twitter:domain" content="https://jinxed.cf">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      background-attachment: fixed;
+      background-color: #ff99c2;
+      background-repeat: no-repeat;
+      background-image: linear-gradient(to left, rgb(74, 116, 196), rgb(26, 21, 56));
+      background-image: linear-gradient(to bottom, rgb(23, 5, 22), rgb(33, 77, 171));
+      -ms-overflow-style: none;
+    }
+
+    body::-webkit-scrollbar {
+      display: none;
+    }
+
+    body::-webkit-scrollbar-track {
+      background-color: transparent;
+    }
+
+    .navbar {
+      background-color: rgba(255, 255, 255, 0.15);
+      padding: 16px;
+      text-align: right;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .navbar ul {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .navbar li {
+      display: inline-block;
+      margin-right: 20px;
+    }
+
+    .navbar a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 16px;
+      padding: 5px;
+      transition: color 0.3s ease;
+    }
+
+    .navbar a:hover {
+      color: #ccc;
+    }
+
+    .navbar a.active {
+      font-weight: bold;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #555;
+      transition: background-color 0.3s ease;
+    }
+
+    h1 {
+      text-align: left;
+      margin-top: 40px;
+      color: #333;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    form {
+      max-width: 1000px;
+      margin: 0 auto;
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+
+    label {
+      display: block;
+      margin-bottom: 12px;
+      color: white;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="number"] {
+      width: 100%;
+      padding: 15px;
+      border-radius: 20px;
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 20px;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    input[type="text"]::placeholder,
+    input[type="password"]::placeholder,
+    input[type="number"]::placeholder {
+      color: #999;
+      color: rgba(255, 255, 255, 0.6)
+    }
+
+    input:focus {
+      outline: none;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.5);
+    }
+
+    input[type="text"]:focus::placeholder,
+    input[type="password"]:focus::placeholder,
+    input[type="number"]:focus::placeholder {
+      color: #ccc;
+    }
+
+    #alias {
+      margin-bottom: 0px;
+    }
+
+    #non-imp {
+      font-size: 12px;
+      margin-top: 5px;
+      margin-right: 5px;
+      text-align: right;
+      color: white;
+    }
+
+    details {
+      margin-bottom: 20px;
+    }
+
+    button[type="submit"] {
+      background-color: #333;
+      border: none;
+      padding: 14px 30px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 15px;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #555;
+      background-color: rgba(255, 255, 255, 0.25);
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    #tagline {
+      letter-spacing: 1px;
+      font-size: 17px;
+      color: white;
+      margin-bottom: 10px;
+    }
+
+    #password-div {
+      float: left;
+      width: 48%;
+    }
+
+    #clicks-div {
+      float: right;
+      width: 48%;
+    }
+
+    #sub {
+      text-align: center;
+    }
+
+    #password-error {
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      padding: 10px 20px;
+      border-radius: 15px;
+      color: white;
+      margin-left: 10%;
+      margin-right: 10%;
+      transition: all 0.3s ease-in-out;
+      margin-top: -25px;
+    }
+
+    #url-error {
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      padding: 10px 20px;
+      border-radius: 15px;
+      color: white;
+      margin-left: 10%;
+      margin-right: 10%;
+      transition: all 0.3s ease-in-out;
+      margin-top: -30px;
+    }
+
+    #alias-error {
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      padding: 10px 20px;
+      border-radius: 15px;
+      color: white;
+      margin-left: 10%;
+      margin-right: 10%;
+      transition: all 0.3s ease-in-out;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    #recentURLs {
+      list-style: none;
+      padding: 0;
+    }
+
+    .url-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      padding: 5px;
+      margin-left: 20%;
+      margin-right: 20%;
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 1rem 3rem rgba(0, 0, 0, .175) !important;
+      padding-right: 1.25rem;
+      padding-left: 1.25rem;
+      max-width: 83.33333%;
+    }
+
+    .left-section {
+      flex: 1;
+    }
+
+    .short-url {
+      font-weight: bold;
+    }
+
+    .right-section {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: flex-start;
+      margin-top: 10px;
+      margin-left: auto;
+    }
+
+
+    .copy-button,
+    .stats-button {
+      margin-left: 0;
+      border-radius: 13px;
+      height: 40px;
+      width: 90px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      font-size: 15px;
+      color: white;
+      margin-right: 10px;
+    }
+
+    button:hover {
+      background-color: #555;
+      background-color: rgba(255, 255, 255, 0.25);
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    .qr-code {
+      width: 50px;
+      height: 50px;
+    }
+
+    a {
+      all: unset;
+      color: white;
+      font-weight: normal;
+      font-size: 17px;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+    }
+
+    a:hover {
+      text-decoration: underline;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .navbar a:hover {
+      color: #ccc;
+      text-decoration: none;
+    }
+
+    .section-1 {
+      width: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-grow: 1;
+    }
+
+    .section-2 {
+      width: auto;
+      display: flex;
+      justify-content: right;
+      align-items: center;
+      margin-left: auto;
+    }
+
+    @media screen and (max-width: 480px) {
+      .url-container {
+        margin-left: 10%;
+        margin-right: 10%;
+      }
+    }
+
+    @media screen and (max-width: 900px) {
+      .right-section {
+        margin-left: 15px;
+      }
+
+      .url-container {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .section-1 {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .section-2 {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .qr-code {
+        width: 50px;
+        height: 50px;
+        margin-right: 10px;
+      }
+
+      .copy-button,
+      .stats-button {
+        margin: 5px;
+      }
+    }
+  </style>
+  <script>
+    function validatePassword() {
+      var password = document.getElementById("password").value;
+      if (password.trim() === "") {
+        // Password field is empty, skip validation
+        document.getElementById("password-error").innerText = "";
+        document.getElementById("password-error").style.background = ""
+        document.getElementById("password-error").style.marginTop = "-25px"
+        return true;
+      }
+      var passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@.])[A-Za-z\d@.]{8,}$/;
+      if (!passwordRegex.test(password)) {
+        document.getElementById("password-error").innerText = "Password must be at least 8 characters long and contain an alphabet, a number, a special character '@' or '.'";
+        document.getElementById("password-error").style.background = "rgba(255, 255, 255, 0.15)"
+        document.getElementById("password-error").style.marginTop = "0px"
+        setTimeout(function () {
+          document.getElementById("password-error").innerText = "";
+          document.getElementById("password-error").style.background = "";
+          document.getElementById("password-error").style.marginTop = "-25px";
+        }, 3000);
+        return false;
+      }
+      else {
+        document.getElementById("password-error").innerText = "";
+        document.getElementById("password-error").style.background = ""
+        document.getElementById("password-error").style.marginTop = "-25px"
+        return true;
+      }
+    }
+    function validateURL() {
+      var url = document.getElementById("long-url").value;
+      var urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
+
+      if (!urlRegex.test(url) || url.includes('jinxed.cf')) {
+        document.getElementById("url-error").innerText = "Please Enter a Valid URL";
+        document.getElementById("url-error").style.background = "rgba(255, 255, 255, 0.15)"
+        document.getElementById("url-error").style.marginTop = "-15px"
+        setTimeout(function () {
+          document.getElementById("url-error").innerText = "";
+          document.getElementById("url-error").style.background = "";
+          document.getElementById("url-error").style.marginTop = "-30px";
+        }, 3000);
+        return false;
+      } else {
+        document.getElementById("url-error").innerText = "";
+        document.getElementById("url-error").style.background = ""
+        document.getElementById("url-error").style.marginTop = "-30px"
+        return true;
+      }
+    }
+
+    function removeErrorMessage() {
+      var aliasError = document.getElementById("alias-error");
+
+      if (aliasError) {
+        setTimeout(function () {
+          aliasError.remove();
+        }, 3000);
+      }
+    }
+
+  </script>
+</head>
+<script>
+  function toggleDropdown() {
+    const dropdown = document.querySelector('.dropdown');
+    dropdown.classList.toggle('dropdown-expanded');
+  }
+</script>
+
+<body>
+  <div class="navbar">
+    <ul>
+      <li><a href="#" class="active">Shorten</a></li>
+      <li><a href="/api">API</a></li>
+      <li><a href="/stats">Stats</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+  </div>
+  <form action="/" method="POST" onsubmit="return validateURL() && validatePassword();">
+
+    <p id="url-error"></p>
+    <h1>
+      <label for="long-url" id="tagline"><b>Shorten Your URLs, Not Your Possiblities.</b></label>
+    </h1>
+    <input type="text" id="long-url" name="url" required placeholder="https://your-long-url.com" value="{{ url }}">
+
+    {% if error %}
+    <p id="alias-error">{{ error }}</p>
+    <script>removeErrorMessage();</script>
+    {% endif %}
+
+    <label for="alias">Custom Alias</label>
+    <input type="text" id="alias" name="alias" placeholder="your-custom-alias*">
+    <p id="non-imp">* leave blank for random url slug</p>
+
+    <p id="password-error"></p>
+
+    <div id="password-div">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" placeholder="optional" class="invalid">
+    </div>
+
+    <div id="clicks-div">
+      <label for="max-clicks">Max Clicks</label>
+      <input type="number" id="max-clicks" name="max-clicks" placeholder="optional" min="1">
+    </div>
+    <div id="sub">
+      <button type="submit">Shorten URL</button>
+    </div>
+  </form>
+  {% if recentURLs %}
+  <hr style="margin:10px 30% 20px 30%; border: 1px solid rgba(255, 255, 255, 0.15);">
+  <div id="recentURLs"> {% for url in recentURLs %} <div class="url-container">
+      <div class="section-1">
+        <div class="left-section">
+          <span class="short-url">
+            <a href="/{{ url}}" target="_blank">https://jinxed.cf/{{ url }}</a>
+          </span>
+        </div>
+        <div class="right-section">
+          <div class="qr-code" data-url="https://jinxed.cf/{{ url }}"></div>
+        </div>
+      </div>
+      <div class="section-2">
+        <div class="button-container">
+          <button class="copy-button" data-url="https://jinxed.cf/{{ url }}">Copy</button>
+          <button class="stats-button">Stats</button>
+        </div>
+      </div>
+    </div> {% endfor %} </div>
+  {% endif %}
+
+  <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+
+  <script>
+    // Get all elements with the "stats-button" class
+    const statsButtons = document.querySelectorAll('.stats-button');
+
+    // Add click event listener to each stats button
+    statsButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Get the URL from the data-url attribute of the button
+        const url = "/stats/" + button.parentNode.parentNode.parentNode.querySelector('.short-url a').getAttribute('href');
+
+        // Redirect the user to the stats URL
+        window.location.href = url;
+      });
+    });
+    const copyButtons = document.querySelectorAll('.copy-button');
+    // Add click event listener to each copy button
+    copyButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Get the URL from the data-url attribute of the button
+        const url = button.getAttribute('data-url');
+
+        // Create a temporary input element to copy the URL
+        const tempInput = document.createElement('input');
+        tempInput.value = url;
+        document.body.appendChild(tempInput);
+
+        // Select the URL in the input element
+        tempInput.select();
+        tempInput.setSelectionRange(0, 99999); // For mobile devices
+
+        // Copy the URL to the clipboard
+        document.execCommand('copy');
+
+        // Remove the temporary input element
+        document.body.removeChild(tempInput);
+
+        // Provide visual feedback to indicate successful copying
+        button.innerText = 'Copied!';
+        setTimeout(() => {
+          button.innerText = 'Copy';
+        }, 1000);
+      });
+    });
+    // Get all elements with the "qr-code" class
+    const qrCodeElements = document.querySelectorAll('.qr-code');
+
+    // Iterate over each QR code element
+    qrCodeElements.forEach(element => {
+      // Get the URL from the data-url attribute
+      const url = element.getAttribute('data-url');
+
+      // Generate the QR code using QRCode.js
+      const qrcode = new QRCode(element, {
+        text: url,
+        width: 40,
+        height: 40,
+        correctLevel: QRCode.CorrectLevel.L,
+        margin: 0,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+      });
+    });
+  </script>
+</body>
+
+</html>
