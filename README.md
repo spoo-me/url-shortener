@@ -46,6 +46,14 @@ _**Note**: You cannot view statistics for a password-protected page without prov
 
 For detailed API documentation, please visit [https://jinxed.cf/api](https://jinxed.cf/api)
 
+# Feedback / Issues / Support
+
+To give feedback, ask a question or make a feature request, you can either use the [Github Discussions](https://github.com/Zingzy/jinxed.cf/discussions) 
+
+Bugs are logged using the github issue system. To report a bug, simply [open a new issue](https://github.com/Zingzy/jinxed.cf/issues/new).
+
+For URL deletion requests / any other issues feel free to [grill us](mailto:support@jinxed.cf)
+
 # Visual Previews 👀
 
 **Main Page**
