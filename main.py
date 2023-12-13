@@ -486,11 +486,6 @@ def serve_robots():
     return send_file("misc/robots.txt")
 
 
-@app.route("/favicon.png")
-def favicon():
-    return send_file("misc/favicon.png")
-
-
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template("error.html", error="404 URL NOT FOUND!", host_url=request.host_url), 404
