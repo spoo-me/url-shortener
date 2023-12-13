@@ -1,0 +1,132 @@
+*:not(.navbar) {
+    box-sizing: border-box;
+    color: white;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-image: linear-gradient(to left, rgb(74, 116, 196), rgb(26, 21, 56));
+}
+
+a {
+    all: unset;
+    color: white;
+    text-decoration: underline;
+    font-size: 35px;
+    cursor: pointer;
+}
+
+@media only screen and (min-width: 960px) {
+    #short-url {
+        margin-top: 35px;
+        margin-bottom: 35px;
+    }
+}
+
+@media (max-width: 800px) {
+    a {
+        font-size: 20px;
+    }
+}
+
+.copy-button {
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    margin-top: 10px;
+    border-radius: 10px;
+    padding: 7px 7px 4px 7px;
+}
+
+.copy-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease-in-out;
+}
+
+.copy-button:focus {
+    background-color: rgba(255, 255, 255, 0.25);
+    transition: background-color 0.3s
+}
+
+.sharethis-inline-share-buttons {
+    padding: 15px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+@media (max-width: 800px) {
+    .sharethis-inline-share-buttons {
+        padding: 15px 10px;
+    }
+}
+
+
+#qr-code-container {
+    padding: 20px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.flex-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.flex-container>* {
+    flex: 0 0 auto;
+    margin: 10px;
+}
+
+#short-another-button {
+    background-color: #333;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: background-color 0.2s ease-in-out;
+    margin-top: -15px;
+}
+
+#short-another-button:hover {
+    background-color: #555;
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+#qr-code-button {
+    background-color: #333;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 15px;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+#qr-code-button:hover {
+    background-color: #555;
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+#qr-code-container {
+    text-align: center;
+}
+
+#download-qr-button {
+    margin-top: 10px;
+}
+
+.for-middle {
+    text-align: center;
+}

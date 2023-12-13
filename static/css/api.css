@@ -1,0 +1,73 @@
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.navbar {
+    background-color: rgba(0, 0, 0, 0.45);
+    padding: 16px;
+    text-align: right;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    display: flex;
+    justify-content: flex-end;
+}
+
+body::-webkit-scrollbar {
+    display: none;
+}
+
+body::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+
+.navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+.navbar li {
+    display: inline-block;
+    margin-right: 20px;
+}
+
+.navbar a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+    padding: 5px;
+    transition: color 0.3s ease;
+}
+
+.navbar a:hover {
+    color: #aaa;
+}
+
+.navbar a.active {
+    font-weight: bold;
+}
+
+.json .string {
+    color: green;
+}
+
+.json .number {
+    color: darkorange;
+}
+
+.json .boolean {
+    color: blue;
+}
+
+.json .null {
+    color: magenta;
+}
+
+.json .key {
+    color: red;
+}
+
+.language-json {
+    font-weight: normal;
+}

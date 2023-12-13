@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>URL Stats</title>
+    <link rel="icon" type="image/png" href="https://spoo.me/static/images/favicon-stats.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <meta name="keywords" content="url shortener, link statistics, analytics"> -->
+    <meta name="description" content="View detailed statistics of your shortened links.">
+    <meta name="author" content="Zane">
+    <link rel="canonical" href="https://spoo.me/stats">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Link Statistics - spoo.me">
+    <meta property="og:description" content="View detailed statistics of your shortened links.">
+    <meta property="og:image:url" content="https://spoo.me/static/images/stats-gradient.jpg">
+    <meta property="og:url" content="https://spoo.me/stats">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Link Statistics - spoo.me">
+    <meta name="twitter:description" content="View detailed statistics of your shortened links.">
+    <meta name="twitter:image:url" content="https://spoo.me/static/images/favicon-stats.png">
+    <meta property="twitter:domain" content="https://spoo.me">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats-error.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+
+    <script src="{{ url_for('static', filename='js/stats-script.js') }}"></script>
+
+</head>
+
+<body>
+    <div class="navbar">
+        <ul>
+            <li><a href="/">Shorten</a></li>
+            <li><a href="/api">API</a></li>
+            <li><a href="#" class="active">Stats</a></li>
+            <li><a href="mailto:support@spoo.me">Contact</a></li>
+        </ul>
+    </div>
+    <h1>URL Stats</h1>
+
+    {% if geterror %}
+    <p id="password-error">{{ geterror }}</p>
+    <script>removeErrorMessage();</script>
+    {% endif %}
+
+
+    <form action="/stats" method="POST" onsubmit="return checkURL();">
+        <p id="url-error"></p>
+        <label for="short_code">Enter the full Url</label>
+        <input type="text" id="short_code" name="short_code" required
+            placeholder="https://{{ host_url }}/your-short-code" value="{{ url }}">
+
+        {% if error %}
+        <p id="password-error">{{ error }}</p>
+        <script>removeErrorMessage();</script>
+        {% endif %}
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Optional">
+
+        <button type="submit">View Stats</button>
+    </form>
+
+    <script>
+        function checkURL() {
+            var hostURL = "{{ host_url }}";
+            var enteredURL = document.getElementById("short_code").value.trim();
+
+            if (!enteredURL.startsWith(hostURL)) {
+                document.getElementById("url-error").innerText = "Invalid URL: The entered URL must begin with the host's URL.";
+                document.getElementById("url-error").style.background = "rgba(255, 255, 255, 0.15)"
+                document.getElementById("url-error").style.marginTop = "-15px"
+                setTimeout(function () {
+                    document.getElementById("url-error").innerText = "";
+                    document.getElementById("url-error").style.background = "";
+                    document.getElementById("url-error").style.marginTop = "-30px";
+                }, 3000);
+                return false;
+            }
+            return true;
+        }
+
+    </script>
+
+</body>
+
+</html>

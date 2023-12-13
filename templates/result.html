@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>URL Shortener Result</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/result.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <script type="text/javascript" src="https://platform-api.sharethis.com/js/sharethis.js#property=6475df2888ae9600196fa8ec&amp;product=inline-share-buttons" async="async"></script>
+
+    <script src="{{ url_for('static', filename='js/result-script.js') }}"></script>
+
+    <script>
+        function viewStats() {
+            window.location.href = "/stats/{{ short_code }}";
+        }
+    </script>
+
+</head>
+
+<body>
+    <div class="navbar">
+        <ul>
+            <li><a href="/">Shorten</a></li>
+            <li><a href="/api">API</a></li>
+            <li><a href="/stats">Stats</a></li>
+            <li><a href="mailto:support@spoo.me">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="flex-container">
+        <div>
+            <h3 id="short-url"><a href="{{short_url}}" target="_blank">{{ short_url }}</a></h3>
+        </div>
+        <div>
+            <button class="copy-button" onclick="copyShortUrl()">
+                <img src="https://i.imgur.com/bt4jpow.png" alt="Copy" width="25" height="25"> </button>
+        </div>
+    </div>
+
+    <div class="flex-container">
+        <div class="for-middle">
+            <div id="qr-code-container"></div>
+            <button id="qr-code-button" onclick="downloadQRCode()">Download QR Code</button>
+        </div>
+        <div class="sharethis-inline-share-buttons" data-url="{{ short_url }}"></div>
+    </div>
+
+    <br>
+
+    <div class="flex-container">
+        <div>
+            <button id="short-another-button" onclick="viewStats()">View Stats of <b>{{ short_code }}</b></button>
+        </div>
+        <div>
+            <button id="short-another-button" onclick="shortenAnotherLink()">Shorten another link</button>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('load', generateQRCode);
+    </script>
+</body>
+
+</html>

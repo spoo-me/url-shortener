@@ -1,0 +1,33 @@
+.navbar {
+    background-color: rgba(255, 255, 255, 0.15);
+    padding: 16px;
+    text-align: right;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar li {
+    display: inline-block;
+    margin-right: 20px;
+}
+
+.navbar a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+    padding: 5px;
+    transition: color 0.3s ease;
+}
+
+.navbar a:hover {
+    color: #ccc;
+}
+
+.navbar a.active {
+    font-weight: bold;
+}

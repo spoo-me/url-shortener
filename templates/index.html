@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <script type="text/javascript">
+        (function (c, l, a, r, i, t, y) {
+            c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+            t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+            y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+        })(window, document, "clarity", "script", "hi3dzq9xec");
+    </script>
+
+    <title>spoo.me URL Shortener</title>
+    <link rel="icon" type="image/png" href="https://spoo.me/static/images/favicon.png">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="spoo.me is a free and easy-to-use URL shortener that lets you create short links for any website. You can even choose your own alias, set a password, and limit the number of clicks.">
+    <meta name="author" content="Zane">
+    <link rel="canonical" href="https://spoo.me">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Shorten Your URLs, Not Your Possiblities | spoo.me">
+    <meta property="og:site_name" content="Shorten Your URLs, Not Your Possiblities | spoo.me">
+    <meta property="og:description" content="spoo.me is a free and easy-to-use URL shortener that lets you create short links for any website.">
+    <meta property="og:image:url" content="https://spoo.me/static/images/main-gradient.jpg">
+    <meta property="og:url" content="https://spoo.me">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="spoo.me URL Shortener">
+    <meta name="twitter:description" content="spoo.me is a free and easy-to-use URL shortener that lets you create short links for any website.">
+    <meta name="twitter:image:src" content="https://spoo.me/static/images/favicon.png">
+
+    <meta property="twitter:domain" content="https://spoo.me">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+
+    <script src="{{ url_for('static', filename='js/index-validate.js') }}" defer=""></script>
+    <script src="{{ url_for('static', filename='js/index-script.js') }}" defer=""></script>
+
+</head>
+
+<body>
+    <div class="navbar">
+        <ul>
+            <li><a href="#" class="active">Shorten</a></li>
+            <li><a href="/api">API</a></li>
+            <li><a href="/stats">Stats</a></li>
+            <li><a href="mailto:support@spoo.me">Contact</a></li>
+        </ul>
+    </div>
+
+    <form action="/" method="POST" onsubmit="return validateURL() && validatePassword();">
+
+        <p id="url-error"></p>
+        <h1>
+            <label for="long-url" id="tagline"><b>Shorten Your URLs, Not Your Possiblities.</b></label>
+        </h1>
+        <input type="text" id="long-url" name="url" required placeholder="https://your-long-url.com" value="{{ url }}">
+
+        {% if error %}
+        <p id="alias-error">{{ error }}</p>
+        <script>removeErrorMessage();</script>
+        {% endif %}
+
+        <label for="alias">Custom Alias</label>
+        <input type="text" id="alias" name="alias" placeholder="your-custom-alias*">
+        <p id="non-imp">* leave blank for random url slug</p>
+
+        <p id="password-error"></p>
+
+        <div id="password-div">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="optional" class="invalid">
+        </div>
+
+        <div id="clicks-div">
+            <label for="max-clicks">Max Clicks</label>
+            <input type="number" id="max-clicks" name="max-clicks" placeholder="optional" min="1">
+        </div>
+        <div id="sub">
+            <button type="submit">Shorten URL</button>
+        </div>
+    </form>
+
+
+    {% if recentURLs %}
+    <hr style="margin:10px 30% 20px 30%; border: 1px solid rgba(255, 255, 255, 0.15);">
+    <div id="recentURLs"> {% for url in recentURLs %} <div class="url-container">
+            <div class="section-1">
+                <div class="left-section">
+                    <span class="short-url">
+                        <a href="/{{ url}}" target="_blank">{{ host_url }}{{ url }}</a>
+                    </span>
+                </div>
+                <div class="right-section">
+                    <div class="qr-code" data-url="{{ host_url }}{{ url }}"></div>
+                </div>
+            </div>
+            <div class="section-2">
+                <div class="button-container">
+                    <button class="copy-button" data-url="{{ host_url }}{{ url }}">Copy</button>
+                    <button class="stats-button">Stats</button>
+                </div>
+            </div>
+        </div> {% endfor %} </div>
+    {% endif %}
+
+    <!-- Include QRCode.js library -->
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+
+    <script src="{{ url_for('static', filename='js/index-qrcode.js') }}"></script>
+
+</body>
+
+</html>

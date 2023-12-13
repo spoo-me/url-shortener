@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>URL Stats</title>
+    <link rel="icon" type="image/png" href="https://spoo.me/static/images/favicon-stats-view.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="View detailed statistics of your shortened links.">
+    <link rel="canonical" href="https://spoo.me/stats">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Link Statistics - spoo.me">
+    <meta property="og:description" content="View detailed statistics of your shortened links.">
+    <meta property="og:image:url" content="https://spoo.me/static/images/stats-view-gradient.jpg">
+    <meta property="og:url" content="https://spoo.me/stats">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Link Statistics - spoo.me">
+    <meta name="twitter:description" content="View detailed statistics of your shortened links.">
+    <meta name="twitter:image:url" content="https://spoo.me/static/images/favicon-stats-view.png">
+    <meta property="twitter:domain" content="https://spoo.me">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.0/dist/html2canvas.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats-view.css') }}">
+
+    <script src="{{ url_for('static', filename='stats/stats-view/js/script.js') }}" defer=""></script>
+
+</head>
+
+<body>
+    <div class="navbar">
+        <ul>
+            <li><a href="/">Shorten</a></li>
+            <li><a href="/api">API</a></li>
+            <li><a href="/stats" class="active">Stats</a></li>
+            <li><a href="mailto:support@spoo.me">Contact</a></li>
+        </ul>
+    </div>
+    <div class="main-data-container">
+        <div class="main-data">
+            <h2 class="main-data-heading">General Stats</h2>
+            <p>
+                <b>Original URL</b> &nbsp; <code
+                    id="url_long_code"><input id="url_long_input" oninput="adjustWidth()" type="text" value="{{ json_data['url']}} " readonly></code>
+            </p>
+            <p><b>Total Clicks</b> &nbsp; <code>{{ json_data["total-clicks"] }}</code></p>
+            <p>
+                <b>Total Unique Clicks</b> &nbsp; <code>{{ json_data["total_unique_clicks"] }}</code>
+            </p>
+            <p><b>Short Code</b> &nbsp; <code>{{ json_data["short_code"] }}</code></p>
+            <p><b>Creation Date</b> &nbsp; <code>{{ json_data["creation-date"] }}</code></p>
+            <p><b>Max Clicks</b> &nbsp; <code>{{ json_data["max-clicks"] }}</code></p>
+            <p><b>Expired</b> &nbsp; <code id="expire">{{ json_data["expired"] }}</code></p>
+            <p><b>Last Click</b> &nbsp;
+                <code><input id="last_click_long_input" type="text" value="{{ json_data['last-click']}} " readonly></code>
+            </p>
+            <p>
+                <b>Last Click Browser Name</b> &nbsp; <code>{{ json_data["last-click-browser"] }}</code>
+            </p>
+            <p><b>Last Click OS Name</b> &nbsp; <code>{{ json_data["last-click-os"] }}</code></p>
+        </div>
+        <div class="clicks-data">
+            <h2>Click Counter</h2>
+            <div class="chart-container">
+                <canvas id="counterChart"></canvas>
+                <pre id="counterJson" class="json-data" style="display: none"></pre>
+            </div>
+            <label for="counterOption" style="color: white">Select Range:</label>
+            <select id="counterOption" onchange="updateCounterChart()">
+                <option value="last7days" selected>Last 7 Days</option>
+                <option value="last30days">Last 30 Days</option>
+                <option value="alltime">All Time</option>
+            </select>
+            <button onclick="counterToggleView('counter')">Toggle View</button>
+            <select id="counterDataOption" onchange="updateCounterChart()">
+                <option value="collectiveData" selected>Collective Data</option>
+                <option value="uniqueData">Unique Data</option>
+            </select>
+        </div>
+    </div>
+    <div class="charts-container">
+        <div class="browsers-data">
+            <h2>Browsers</h2>
+            <div class="chart-container">
+                <canvas id="browserChart"></canvas>
+                <pre id="browserJson" class="json-data" style="display: none"></pre>
+            </div>
+            <button onclick="toggleView('browser')">Toggle View</button>
+            <select id="browserDataOption" onchange="updateBrowserChart()">
+                <option value="collectiveData" selected>Collective Data</option>
+                <option value="uniqueData">Unique Data</option>
+            </select>
+        </div>
+        <div class="os-data">
+            <h2>Platforms</h2>
+            <div class="chart-container">
+                <canvas id="osChart"></canvas>
+                <pre id="osJson" class="json-data" style="display: none"></pre>
+            </div>
+            <button onclick="toggleView('os')">Toggle View</button>
+            <select id="osDataOption" onchange="updateOsChart()">
+                <option value="collectiveData" selected>Collective Data</option>
+                <option value="uniqueData">Unique Data</option>
+            </select>
+        </div>
+    </div>
+    <div class="charts-container">
+        <div class="referrer-data">
+            <h2>Referrers</h2>
+            <div class="chart-container">
+                <canvas id="referrerChart"></canvas>
+                <pre id="referrerJson" class="json-data" style="display: none"></pre>
+            </div>
+            <button onclick="toggleView('referrer')">Toggle View</button>
+            <select id="referrerDataOption" onchange="updateReferrerChart()">
+                <option value="collectiveData" selected>Collective Data</option>
+                <option value="uniqueData">Unique Data</option>
+            </select>
+        </div>
+        <div class="country-data">
+            <h2>Countries</h2>
+            <div class="chart-container" id="country-container">
+                <canvas id="countryChart"></canvas>
+                <pre id="countryJson" class="json-data" style="display: none"></pre>
+            </div>
+            <button onclick="toggleView('country')">Toggle View</button>
+            <select id="countryDataOption" onchange="updateCountryChart()">
+                <option value="collectiveData" selected>Collective Data</option>
+                <option value="uniqueData">Unique Data</option>
+            </select>
+        </div>
+    </div>
+    <div class="charts-container">
+        <div class="average-data">
+            <h2>Clicks Analysis</h2>
+            <div class="chart-container">
+                <canvas id="analysisChart"></canvas>
+                <pre id="analysisJson" class="json-data" style="display: none"></pre>
+            </div>
+            <button onclick="toggleView('analysis')">Toggle View</button>
+        </div>
+        <div class="qr-code">
+            <h2 style="text-align: left; margin-bottom: 20px;">Qr Code</h2>
+            <div
+                style="border-radius: 12px; background: rgba(255, 255, 255, 0.125); justify-items: center; padding: 10px;">
+                <img style="max-width: 350px; max-height: 250px; border-radius: 12px; margin: 10px;"
+                    src="https://qr.spoo.me/gradient?text=https://{{ host_url }}/{{json_data['short_code']}}">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function adjustWidth() {
+            var input = document.getElementById("last_click_long_input");
+            var value = input.value;
+            var width = value.length * 7;
+            input.style.width = width + "px";
+            var input2 = document.getElementById("url_long_input");
+            if (input2.value.length < 50) {
+                input2.style.width = input2.value.length * 7 + "px";
+                input2.style.textAlign = "center";
+            }
+            var p = document.getElementById("expire");
+            if (p.innerText === "True") {
+                p.style.background = "rgba(255, 0, 0, 0.5)";
+            }
+            if (p.innerText === "False") {
+                p.style.background = "rgba(0, 255, 0, 0.5)";
+            }
+        }
+
+        window.onload = adjustWidth;
+
+        const jsonResponse = {{ json_data| tojson }};
+
+        function counterToggleView(chartType) {
+            const chartContainer = document.getElementById(`counterContainer`);
+            const chartCanvas = document.getElementById(`counterChart`);
+            const jsonDataElement = document.getElementById(`counterJson`);
+
+            if (chartCanvas.style.display === 'none') {
+                chartCanvas.style.display = 'block';
+                jsonDataElement.style.display = 'none';
+            } else {
+                chartCanvas.style.display = 'none';
+                jsonDataElement.style.display = 'block';
+                jsonDataElement.textContent = JSON.stringify(getCounterData() || jsonResponse.os_name || {}, null, 2);
+            }
+        }
+
+        function toggleView(chartType) {
+            const chartContainer = document.getElementById(`${chartType}Container`);
+            const chartCanvas = document.getElementById(`${chartType}Chart`);
+            const jsonDataElement = document.getElementById(`${chartType}Json`);
+
+            if (chartType === 'analysis') {
+                console.log('hello')
+                if (chartCanvas.style.display === 'none') {
+                    chartCanvas.style.display = 'block';
+                    jsonDataElement.style.display = 'none';
+                } else {
+                    chartCanvas.style.display = 'none';
+                    jsonDataElement.style.display = 'block';
+                    jsonDataElement.textContent = JSON.stringify(jsonResponse['analysis_data'] || jsonResponse.os_name || {}, null, 2);
+                }
+            }
+            else {
+                if (chartCanvas.style.display === 'none') {
+                    chartCanvas.style.display = 'block';
+                    jsonDataElement.style.display = 'none';
+                }
+                else {
+                    chartCanvas.style.display = 'none';
+                    jsonDataElement.style.display = 'block';
+                    const dataOption = document.getElementById(`${chartType}DataOption`).value;
+                    jsonDataElement.textContent = dataOption === "collectiveData" ? JSON.stringify(jsonResponse[chartType] || jsonResponse.os_name || {}, null, 2) : JSON.stringify(jsonResponse['unique_' + chartType] || jsonResponse.unique_os_name || {}, null, 2);
+                }
+            }
+        }
+
+        function getCounterData() {
+            const option = document.getElementById('counterOption').value;
+            const dataOption = document.getElementById('counterDataOption').value;
+
+            switch (option) {
+                case 'last7days':
+                    return getLastNDaysCounterData(7);
+                case 'last30days':
+                    return getLastNDaysCounterData(30);
+                case 'alltime':
+                    if (dataOption === "collectiveData") {
+                        return jsonResponse.counter;
+                    }
+                    else {
+                        return jsonResponse.unique_counter;
+                    }
+                default:
+                    return jsonResponse.counter;
+            }
+        }
+
+        function getLastNDaysCounterData(days) {
+            const dataOption = document.getElementById('counterDataOption').value;
+            const counter = dataOption === "collectiveData" ? jsonResponse.counter : jsonResponse.unique_counter;
+            const counterKeys = Object.keys(counter);
+            const lastNDaysKeys = counterKeys.slice(-days);
+
+            const lastNDaysCounterData = {};
+            lastNDaysKeys.forEach((key) => {
+                lastNDaysCounterData[key] = counter[key];
+            });
+
+            return lastNDaysCounterData;
+        }
+
+        function updateCounterChart() {
+            const counterData = getCounterData();
+            const counterChartCanvas = document.getElementById('counterChart');
+
+            // Destroy the existing chart to clear the canvas
+            if (counterChartCanvas.chart) {
+                counterChartCanvas.chart.destroy();
+            }
+
+            const counterChart = new Chart(counterChartCanvas, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(counterData),
+                    datasets: [
+                        {
+                            label: 'Click Counter',
+                            data: Object.values(counterData),
+                            fill: 'start',
+                            backgroundColor: 'rgba(255, 99, 132, 0.4)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1,
+                            tension: 0.3,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true, // Enable responsiveness
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    scales: {
+                        x: {
+                            // grid: {
+                            //   color: '#fff', // Change the color of the x-axis grid lines
+                            // },
+                            ticks: {
+                                color: '#fff', // Change the color of the x-axis labels
+                            },
+                        },
+                        y: {
+                            // grid: {
+                            //   color: '#fff', // Change the color of the y-axis grid lines
+                            // },
+                            ticks: {
+                                color: '#fff', // Change the color of the y-axis labels
+                            },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff', // Change the color of the legend labels
+                            },
+                        },
+                    },
+                },
+            });
+
+            counterChartCanvas.chart = counterChart;
+        }
+
+        function updateOsChart() {
+            const osChartCanvas = document.getElementById('osChart');
+
+            if (osChartCanvas.chart) {
+                osChartCanvas.chart.destroy();
+            }
+            const dataOption = document.getElementById('osDataOption').value;
+            const dt = dataOption === "collectiveData" ? jsonResponse.sorted_os_name : jsonResponse.sorted_unique_os_name;
+
+            const osChart = new Chart(osChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(dt),
+                    datasets: [
+                        {
+                            label: 'Platforms',
+                            data: Object.values(dt),
+                            backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                            borderRadius: 20,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true, // Enable responsiveness
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            // grid: {
+                            //   color: '#fff', // Change the color of the x-axis grid lines
+                            // },
+                            ticks: {
+                                color: '#fff', // Change the color of the x-axis labels
+                            },
+                        },
+                        y: {
+                            // grid: {
+                            //   color: '#fff', // Change the color of the y-axis grid lines
+                            // },
+                            ticks: {
+                                color: '#fff', // Change the color of the y-axis labels
+                            },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff', // Change the color of the legend labels
+                            },
+                        },
+                    },
+                },
+            });
+            osChartCanvas.chart = osChart;
+        }
+
+        function updateAnalysisChart() {
+            const analysisChartCanvas = document.getElementById('analysisChart');
+
+            if (analysisChartCanvas.chart) {
+                osChartCanvas.chart.destroy();
+            }
+
+            const analysisChart = new Chart(analysisChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: ['Daily', 'Weekly', 'Monthly'],
+                    datasets: [
+                        {
+                            label: 'Clicks Analysis',
+                            data: [`{{ json_data["average_daily_clicks"]}}`, `{{ json_data["average_weekly_clicks"]}}`, `{{ json_data["average_monthly_clicks"]}}`],
+                            backgroundColor: 'rgba(255, 205, 86, 0.4)',
+                            borderColor: 'rgba(255, 205, 86, 1)',
+                            borderWidth: 1,
+                            borderRadius: 20,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            // grid: {
+                            //   color: '#fff', // Change the color of the x-axis grid lines
+                            // },
+                            ticks: {
+                                color: '#fff', // Change the color of the x-axis labels
+                            },
+                        },
+                        y: {
+                            // grid: {
+                            //   color: '#fff', // Change the color of the y-axis grid lines
+                            // },
+                            ticks: {
+                                color: '#fff', // Change the color of the y-axis labels
+                            },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff', // Change the color of the legend labels
+                            },
+                        },
+                    },
+                },
+            });
+            analysisChartCanvas.chart = analysisChart;
+        }
+
+        function updateBrowserChart() {
+            const browserChartCanvas = document.getElementById('browserChart');
+            if (browserChartCanvas.chart) {
+                browserChartCanvas.chart.destroy();
+            }
+
+            const dataOption = document.getElementById('browserDataOption').value;
+            const dt = dataOption === "collectiveData" ? jsonResponse.sorted_browser : jsonResponse.sorted_unique_browser;
+
+            const browserChart = new Chart(browserChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(dt),
+                    datasets: [
+                        {
+                            label: 'Browsers',
+                            data: Object.values(dt),
+                            backgroundColor: 'rgba(153, 102, 255, 0.4)',
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            borderWidth: 1,
+                            borderRadius: 20,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true, // Enable responsiveness
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            // grid: {
+                            //   color: '#fff', // Change the color of the x-axis grid lines
+                            // },
+                            ticks: {
+                                color: '#fff', // Change the color of the x-axis labels
+                            },
+                        },
+                        y: {
+                            // grid: {
+                            //   color: '#fff', // Change the color of the y-axis grid lines
+                            // },
+                            ticks: {
+                                color: '#fff', // Change the color of the y-axis labels
+                            },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff', // Change the color of the legend labels
+                            },
+                        },
+                    },
+                },
+            });
+            browserChartCanvas.chart = browserChart;
+        }
+
+        function updateReferrerChart() {
+            const referrerChartCanvas = document.getElementById('referrerChart');
+
+            if (referrerChartCanvas.chart) {
+                referrerChartCanvas.chart.destroy();
+            }
+            const dataOption = document.getElementById('referrerDataOption').value;
+            const dt = dataOption === "collectiveData" ? JSON.parse(jsonResponse.sorted_referrer) : JSON.parse(jsonResponse.sorted_unique_referrer);
+
+            const referrerChart = new Chart(referrerChartCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(dt),
+                    datasets: [
+                        {
+                            label: 'Referrers',
+                            data: Object.values(dt),
+                            backgroundColor:
+                                ["rgba(128, 0, 128, 0.6)", "rgba(255, 0, 255, 0.6)", "rgba(153, 51, 255, 0.6)", "rgba(204, 153, 255, 0.6)", "rgba(230, 230, 250, 0.6)"],
+                            borderColor:
+                                ["rgba(128, 0, 128, 1)", "rgba(255, 0, 255, 1)", "rgba(153, 51, 255, 1)", "rgba(204, 153, 255, 1)", "rgba(230, 230, 250, 1)"],
+                            borderWidth: 0.8,
+                            hoverOffset: 4,
+                            borderRadius: 5,
+                            spacing: 5,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true, // Enable responsiveness
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff', // Change the color of the legend labels
+                                boxWidth: 12
+                            }
+                        }
+                    }
+                },
+            });
+            referrerChartCanvas.chart = referrerChart;
+        }
+
+        function updateCountryChart() {
+            const countryChartCanvas = document.getElementById('countryChart');
+
+            if (countryChartCanvas.chart) {
+                countryChartCanvas.chart.destroy();
+            }
+            const dataOption = document.getElementById('countryDataOption').value;
+            const dt = dataOption === "collectiveData" ? jsonResponse.sorted_country : jsonResponse.sorted_unique_country;
+
+
+            const countryChart = new Chart(countryChartCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(dt),
+                    datasets: [
+                        {
+                            label: 'Countries',
+                            data: Object.values(dt),
+                            backgroundColor: [
+                                'rgba(217, 210, 138, 0.6)',
+                                'rgba(255, 130, 118, 0.6)',
+                                'rgba(255, 221, 213, 0.6)',
+                                'rgba(148, 108, 214, 0.6)',
+                                'rgba(100, 100, 100, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgba(217, 210, 138, 1)',
+                                'rgba(255, 130, 118, 1)',
+                                'rgba(255, 221, 213, 1)',
+                                'rgba(148, 108, 214, 1)',
+                                'rgba(100, 100, 100, 1)'
+                            ],
+                            borderWidth: 0.8,
+                            hoverOffset: 4,
+                            borderRadius: 5,
+                            spacing: 5,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true, // Enable responsiveness
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff', // Change the color of the legend labels
+                                boxWidth: 12
+                            }
+                        }
+                    }
+                },
+            });
+            countryChartCanvas.chart = countryChart;
+        }
+
+        const counterData = getLastNDaysCounterData(7);
+        updateCounterChart(counterData);
+        updateOsChart();
+        updateBrowserChart();
+        updateReferrerChart();
+        updateCountryChart();
+        updateAnalysisChart();
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,275 @@
+body {
+    background-image: linear-gradient(355deg, #2f281f, #320ea2);
+    padding: 0 20px;
+}
+
+.navbar {
+    margin: 0 -20px;
+}
+
+p {
+    -ms-overflow-style: none;
+}
+
+p::-webkit-scrollbar {
+    display: none;
+}
+
+p::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+.main-data-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.main-data,
+.clicks-data,
+.browsers-data,
+.os-data,
+.referrer-data,
+.country-data,
+.average-data,
+.qr-code {
+    background-color: rgba(255, 255, 255, 0.15);
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-basis: 49.5%;
+    margin-bottom: 20px;
+}
+
+.charts-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.chart-container {
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 20px;
+    background-color: rgba(255, 255, 255, 0.125);
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-left: 20px;
+    margin-top: 20px;
+}
+
+.json-data {
+    white-space: pre-wrap;
+    font-family: monospace;
+    background-color: #f0f0ee;
+    border-radius: 5px;
+    padding: 10px;
+    border: 1px solid #ccccca;
+    height: 280px;
+    overflow: auto;
+}
+
+select,
+button {
+    margin-top: 10px;
+}
+
+#countryChart,
+#referrerChart,
+#browserChart,
+#osChart,
+#counterChart,
+#analysisChart {
+    height: 281px;
+}
+
+.qr-code {
+    text-align: center;
+}
+
+@media screen and (max-width: 1350px) and (min-width: 601px) {
+
+    .charts-container,
+    .main-data-container {
+        flex-wrap: wrap;
+    }
+
+    .chart-container,
+    .data-container {
+        flex-basis: 49.5%;
+        max-width: 90%;
+    }
+}
+
+@media screen and (max-width: 1000px) {
+    .charts-container {
+        flex-direction: column;
+    }
+
+    .main-data-container {
+        flex-direction: column;
+    }
+
+    .chart-container {
+        margin-left: 0;
+        margin-top: 0;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    body {
+        padding: 10px;
+        padding-top: 0;
+    }
+
+    .navbar {
+        padding-left: -10px;
+        padding-right: -10px;
+    }
+
+    .main-data p,
+    .clicks-data p {
+        font-size: 14px;
+    }
+
+    .main-data,
+    .clicks-data,
+    .browsers-data,
+    .os-data,
+    .referrer-data,
+    .country-data,
+    .average-data,
+    .qr-code {
+        margin: 0 auto 20px;
+        width: 100%;
+    }
+
+    .charts-container,
+    .main-data-container {
+        flex-direction: column;
+    }
+
+    .json-data {
+        height: 150px;
+    }
+
+    #countryChart,
+    #referrerChart,
+    #countryJson,
+    #referrerJson {
+        height: 280px;
+    }
+
+    #counterChart,
+    #counterJson {
+        height: 250px;
+    }
+
+    #browserChart,
+    #osChart,
+    #browserJson,
+    #osJson,
+    #analysisChart,
+    #analysisJson {
+        height: 200px;
+    }
+
+    #url_long_input {
+        max-width: 45%;
+    }
+}
+
+h2 {
+    color: white;
+    padding-bottom: 10px;
+}
+
+p {
+    margin-bottom: 20px;
+    color: white;
+    font-size: 17px;
+}
+
+.main-data-heading {
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 10px 10px;
+    border-radius: 12px;
+    margin-left: 10px;
+    border: 0;
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+button:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transition: background-color 0.2s ease-in-out;
+}
+
+#counterOption,
+#browserDataOption,
+#osDataOption,
+#countryDataOption,
+#referrerDataOption,
+#counterDataOption {
+    padding: 10px 8px;
+    border-radius: 12px;
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+    margin-left: 10px;
+    border: 0;
+}
+
+#counterOption:hover,
+#browserDataOption:hover,
+#osDataOption:hover,
+#countryDataOption:hover,
+#referrerDataOption:hover,
+#counterDataOption:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transition: background-color 0.2s ease-in-out;
+}
+
+option {
+    color: black;
+}
+
+code {
+    background-color: rgba(225, 225, 225, 0.125);
+    border-radius: 10px;
+    padding: 5px 10px;
+    font-family: Arial, sans-serif;
+}
+
+#url_long_input {
+    background: none;
+    border: none;
+    color: white;
+    width: 50%;
+    font-size: 16px;
+}
+
+#last_click_long_input {
+    background: none;
+    border: none;
+    color: white;
+    max-width: 50%;
+    font-size: 15px;
+}
+
+input:focus {
+    all: unset;
+}
+
+h3 {
+    color: white;
+    padding: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.125);
+}

@@ -1,0 +1,9 @@
+cryptography
+Flask
+Flask-Cors
+geoip2
+pymongo
+python-dotenv
+requests
+user-agents
+black

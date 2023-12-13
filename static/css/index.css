@@ -1,0 +1,308 @@
+body {
+    background-image: linear-gradient(to bottom, rgb(23, 5, 22), rgb(33, 77, 171));
+}
+
+button[type="submit"]:hover {
+    background-color: #555;
+    transition: background-color 0.3s ease;
+}
+
+h1 {
+    text-align: left;
+    margin-top: 40px;
+    color: #333;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+form {
+    max-width: 1000px;
+    margin: 0 auto;
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+
+label {
+    display: block;
+    margin-bottom: 12px;
+    color: white;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="number"] {
+    width: 100%;
+    padding: 15px;
+    border-radius: 20px;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 20px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+input[type="text"]::placeholder,
+input[type="password"]::placeholder,
+input[type="number"]::placeholder {
+    color: #999;
+    color: rgba(255, 255, 255, 0.6)
+}
+
+input:focus {
+    outline: none;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.5);
+}
+
+input[type="text"]:focus::placeholder,
+input[type="password"]:focus::placeholder,
+input[type="number"]:focus::placeholder {
+    color: #ccc;
+}
+
+#alias {
+    margin-bottom: 0px;
+}
+
+#non-imp {
+    font-size: 12px;
+    margin-top: 5px;
+    margin-right: 5px;
+    text-align: right;
+    color: white;
+}
+
+details {
+    margin-bottom: 20px;
+}
+
+button[type="submit"] {
+    background-color: #333;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 15px;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+button[type="submit"]:hover {
+    background-color: #555;
+    background-color: rgba(255, 255, 255, 0.25);
+    transition: background-color 0.2s ease-in-out;
+}
+
+#tagline {
+    letter-spacing: 1px;
+    font-size: 17px;
+    color: white;
+    margin-bottom: 10px;
+}
+
+#password-div {
+    float: left;
+    width: 48%;
+}
+
+#clicks-div {
+    float: right;
+    width: 48%;
+}
+
+#sub {
+    text-align: center;
+}
+
+#password-error {
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    padding: 10px 20px;
+    border-radius: 15px;
+    color: white;
+    margin-left: 10%;
+    margin-right: 10%;
+    transition: all 0.3s ease-in-out;
+    margin-top: -25px;
+}
+
+#url-error {
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    padding: 10px 20px;
+    border-radius: 15px;
+    color: white;
+    margin-left: 10%;
+    margin-right: 10%;
+    transition: all 0.3s ease-in-out;
+    margin-top: -30px;
+}
+
+#alias-error {
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    padding: 10px 20px;
+    border-radius: 15px;
+    color: white;
+    margin-left: 10%;
+    margin-right: 10%;
+    transition: all 0.3s ease-in-out;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+#recentURLs {
+    list-style: none;
+    padding: 0;
+}
+
+.url-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    padding: 5px;
+    margin-left: 20%;
+    margin-right: 20%;
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, .175) !important;
+    padding-right: 1.25rem;
+    padding-left: 1.25rem;
+    max-width: 83.33333%;
+}
+
+.left-section {
+    flex: 1;
+}
+
+.short-url {
+    font-weight: bold;
+}
+
+.right-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    margin-top: 10px;
+    margin-left: auto;
+}
+
+
+.copy-button,
+.stats-button {
+    margin-left: 0;
+    border-radius: 13px;
+    height: 40px;
+    width: 90px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    font-size: 15px;
+    color: white;
+    margin-right: 10px;
+}
+
+button:hover {
+    background-color: #555;
+    background-color: rgba(255, 255, 255, 0.25);
+    transition: background-color 0.2s ease-in-out;
+}
+
+.qr-code {
+    width: 50px;
+    height: 50px;
+}
+
+a {
+    all: unset;
+    color: white;
+    font-weight: normal;
+    font-size: 17px;
+    letter-spacing: 0.8px;
+    cursor: pointer;
+}
+
+a:hover {
+    text-decoration: underline;
+    transition: all 0.3s ease-in-out;
+}
+
+.navbar a:hover {
+    color: #ccc;
+    text-decoration: none;
+}
+
+.section-1 {
+    width: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.section-2 {
+    width: auto;
+    display: flex;
+    justify-content: right;
+    align-items: center;
+    margin-left: auto;
+}
+
+@media screen and (max-width: 480px) {
+    .url-container {
+        margin-left: 10%;
+        margin-right: 10%;
+    }
+}
+
+@media screen and (max-width: 900px) {
+    .right-section {
+        margin-left: 15px;
+    }
+
+    .url-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .section-1 {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .section-2 {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .qr-code {
+        width: 50px;
+        height: 50px;
+        margin-right: 10px;
+    }
+
+    .copy-button,
+    .stats-button {
+        margin: 5px;
+    }
+}

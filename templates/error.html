@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="https://spoo.me/static/images/favicon-error.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Oops! Something went wrong." />
+    <meta name="author" content="Zane">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Error - spoo.me">
+    <meta property="og:description" content="Oops! Something went wrong.">
+    <meta property="og:image:url" content="https://spoo.me/static/images/error-gradient.jpg">
+    <meta property="og:url" content="https://spoo.me/error">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Error - spoo.me">
+    <meta name="twitter:description" content="Oops! Something went wrong.">
+    <meta name="twitter:image:url" content="https://spoo.me/static/images/favicon-error.png">
+    <meta property="twitter:domain" content="https://spoo.me">
+
+    <title>Error</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+
+    <style>
+        .error {
+            text-align: center;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            padding: 10px 20px;
+            border-radius: 15px;
+            color: white;
+            margin-left: 10%;
+            margin-right: 10%;
+            transition: all 0.3s ease-in-out;
+            margin-top: 80px;
+        }
+
+        h2 {
+            color: white;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            margin-left: 10%;
+            margin-right: 10%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="navbar">
+        <ul>
+            <li><a href="/">Shorten</a></li>
+            <li><a href="/api">API</a></li>
+            <li><a href="/stats">Stats</a></li>
+            <li><a href="mailto:support@spoo.me">Contact</a></li>
+        </ul>
+    </div>
+    <div class="error">
+        <h2>{{error}}</h2>
+    </div>
+</body>
+
+</html>
