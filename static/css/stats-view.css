@@ -5,6 +5,9 @@ body {
 
 .navbar {
     margin: 0 -20px;
+    position: sticky;
+    top: 0;
+    backdrop-filter: blur(10px);
 }
 
 p {
