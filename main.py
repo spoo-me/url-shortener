@@ -26,7 +26,9 @@ def index():
     serialized_list = request.cookies.get("shortURL")
     my_list = json.loads(serialized_list) if serialized_list else []
     if my_list:
-        return render_template("index.html", recentURLs=my_list, host_url=request.host_url)
+        return render_template(
+            "index.html", recentURLs=my_list, host_url=request.host_url
+        )
     else:
         return render_template("index.html", host_url=request.host_url)
 
@@ -48,7 +50,15 @@ def shorten_url():
         ):
             return jsonify({"AliasError": "Invalid Alias", "alias": f"{alias}"}), 400
         else:
-            return render_template("index.html", error="Invalid Alias", url=url, host_url=request.host_url), 400
+            return (
+                render_template(
+                    "index.html",
+                    error="Invalid Alias",
+                    url=url,
+                    host_url=request.host_url,
+                ),
+                400,
+            )
 
     elif alias:
         short_code = alias[:11]
@@ -64,7 +74,12 @@ def shorten_url():
             )
         else:
             return (
-                render_template("index.html", error="Alias already exists", url=url, host_url=request.host_url),
+                render_template(
+                    "index.html",
+                    error="Alias already exists",
+                    url=url,
+                    host_url=request.host_url,
+                ),
                 400,
             )
     elif alias:
@@ -136,10 +151,15 @@ def result(short_code):
         short_code = url_data["_id"]
         short_url = f"{request.host_url}{short_code}"
         return render_template(
-            "result.html", short_url=short_url, short_code=short_code, host_url=request.host_url
+            "result.html",
+            short_url=short_url,
+            short_code=short_code,
+            host_url=request.host_url,
         )
     else:
-        return render_template("error.html", error="404 URL NOT FOUND", host_url=request.host_url)
+        return render_template(
+            "error.html", error="404 URL NOT FOUND", host_url=request.host_url
+        )
 
 
 def get_country(ip_address):
@@ -170,14 +190,18 @@ def redirect_url(short_code):
     url_data = load_url_by_id(short_code)
 
     if not url_data:
-        return render_template("error.html", error="404 URL NOT FOUND", host_url=request.host_url)
+        return render_template(
+            "error.html", error="404 URL NOT FOUND", host_url=request.host_url
+        )
 
     url = url_data["url"]
     # check if the URL is password protected
     if not "password" in url_data:
         if "max-clicks" in url_data:
             if int(url_data["total-clicks"]) >= int(url_data["max-clicks"]):
-                return render_template("error.html", error="404 Link Expired", host_url=request.host_url)
+                return render_template(
+                    "error.html", error="404 Link Expired", host_url=request.host_url
+                )
 
     if "password" in url_data:
         # check if the user provided the password through the URL parameter
@@ -188,9 +212,15 @@ def redirect_url(short_code):
             # prompt the user for the password
             if "max-clicks" in url_data:
                 if int(url_data["total-clicks"]) >= int(url_data["max-clicks"]):
-                    return render_template("error.html", error="404 Link Expired", host_url=request.host_url)
+                    return render_template(
+                        "error.html",
+                        error="404 Link Expired",
+                        host_url=request.host_url,
+                    )
 
-            return render_template("password.html", short_code=short_code, host_url=request.host_url)
+            return render_template(
+                "password.html", short_code=short_code, host_url=request.host_url
+            )
 
     # store the device and browser information
     user_agent = request.headers.get("User-Agent")
@@ -286,11 +316,16 @@ def check_password(short_code):
             else:
                 # show error message for incorrect password
                 return render_template(
-                    "password.html", short_code=short_code, error="Incorrect password", host_url=request.host_url
+                    "password.html",
+                    short_code=short_code,
+                    error="Incorrect password",
+                    host_url=request.host_url,
                 )
     # show error message for invalid short code
     return render_template(
-        "error.html", error="404 Invalid short code or URL not password-protected", host_url=request.host_url
+        "error.html",
+        error="404 Invalid short code or URL not password-protected",
+        host_url=request.host_url,
     )
 
 
@@ -304,13 +339,18 @@ def stats():
         url_data = load_url_by_id(short_code)
 
         if not url_data:
-            return render_template("stats.html", error="Invalid URL", url=short_code, host_url=request.host_url)
+            return render_template(
+                "stats.html",
+                error="Invalid URL",
+                url=short_code,
+                host_url=request.host_url,
+            )
 
         if not password and "password" in url_data:
             return render_template(
                 "stats.html",
                 error="Password Not Provided",
-                url={{ request.host_url }}+short_code,
+                url={{request.host_url}} + short_code,
                 host_url=request.host_url,
             )
 
@@ -318,7 +358,7 @@ def stats():
             return render_template(
                 "stats.html",
                 error="Invalid Password!",
-                url={{ request.host_url }}+short_code,
+                url={{request.host_url}} + short_code,
                 host_url=request.host_url,
             )
 
@@ -338,7 +378,9 @@ def analytics(short_code):
 
     if not url_data:
         if request.method == "GET":
-            return render_template("error.html", error="404 URL not Found!", host_url=request.host_url)
+            return render_template(
+                "error.html", error="404 URL not Found!", host_url=request.host_url
+            )
         else:
             return jsonify({"UrlError": "The requested Url never existed"}), 404
 
@@ -359,7 +401,8 @@ def analytics(short_code):
                 return render_template(
                     "stats_error.html",
                     url=request.host_url + short_code,
-                    geterror={{request.host_url}} + f"{short_code} is a password protected Url, please enter the password to view its stats.",
+                    geterror={{request.host_url}}
+                    + f"{short_code} is a password protected Url, please enter the password to view its stats.",
                     host_url=request.host_url,
                 )
 
@@ -468,7 +511,9 @@ def analytics(short_code):
             }
         except:
             pass
-        return render_template("stats_view.html", json_data=url_data, host_url=request.host_url)
+        return render_template(
+            "stats_view.html", json_data=url_data, host_url=request.host_url
+        )
 
 
 @app.route("/api", methods=["GET"])
@@ -488,7 +533,12 @@ def serve_robots():
 
 @app.errorhandler(404)
 def page_not_found(error):
-    return render_template("error.html", error="404 URL NOT FOUND!", host_url=request.host_url), 404
+    return (
+        render_template(
+            "error.html", error="404 URL NOT FOUND!", host_url=request.host_url
+        ),
+        404,
+    )
 
 
 @atexit.register

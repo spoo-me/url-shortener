@@ -48,11 +48,25 @@ a {
     transition: background-color 0.3s
 }
 
-.sharethis-inline-share-buttons {
-    padding: 15px;
-    border-radius: 15px;
-    background: rgba(255, 255, 255, 0.15);
+
+#share-buttons {
+    border-radius: 10px;
+    padding: 5px 5px 0.5px 5px;
+    width: 308px;
     border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.share-button {
+    margin: 0 auto;
+    margin-left: 5px;
+    padding: 4px;
+}
+
+.share-button:hover {
+
+    transition: 0.15s linear;
+    transform: scale(1.1);
 }
 
 @media (max-width: 800px) {

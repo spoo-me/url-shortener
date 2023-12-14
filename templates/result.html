@@ -48,7 +48,23 @@
             <div id="qr-code-container"></div>
             <button id="qr-code-button" onclick="downloadQRCode()">Download QR Code</button>
         </div>
-        <div class="sharethis-inline-share-buttons" data-url="{{ short_url }}"></div>
+        <div class="inline-share-buttons">
+            <div id="share-buttons">
+                <a href="https://twitter.com/intent/tweet?url={{short_url}}" rel="noopener" target="_blank" data-platform="twitter"><img class="share-button" width="40" height="40"
+                        src="https://img.icons8.com/ios-filled/80/ffffff/twitterx--v1.png" alt="TwitterX" /></a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u={{short_url}}" rel="noopener" target="_blank" data-platform="facebook"><img class="share-button" width="40" height="40"
+                        src="https://img.icons8.com/ios-filled/80/ffffff/facebook-new.png" alt="FaceBook" /></a>
+                <a href="https://t.me/share/url?url={{short_url}}" rel="noopener" data-platform="telegram" target="_blank"><img style="scale: 0.9;" class="share-button" width="40"
+                        height="40" src="https://img.icons8.com/ios-filled/80/ffffff/telegram.png" alt="Telegram" /></a>
+                <a href="https://api.whatsapp.com/send?text={{short_url}}" rel="noopener" data-platform="whatsapp" target="_blank"><img style="scale: 0.9;" class="share-button" width="40"
+                        height="40" src="https://img.icons8.com/ios-filled/80/ffffff/whatsapp--v4.png" alt="WhatsApp" /></a>
+                <a href="https://www.reddit.com/submit?url={{short_url}}" rel="noopener" data-platform="reddit" target="_blank"><img class="share-button" width="40" height="40"
+                        src="https://img.icons8.com/ios-filled/80/ffffff/reddit--v2.png" alt="Reddit" /></a>
+                <a href="https://snapchat.com/scan?attachmentUrl={{short_url}}" rel="noopener" data-platform="snapchat" target="_blank"><img class="share-button" width="40" height="40"
+                        src="https://img.icons8.com/ios-filled/80/ffffff/snapchat--v2.png" alt="snapchat" /></a>
+            </div>
+        </div>
+
     </div>
 
     <br>
