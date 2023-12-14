@@ -77,6 +77,9 @@ def validate_url(url):
         r"^(https?:\/\/)?(www\.)?[a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,6}(\:[0-9]{1,5})?(\/.*)?$"
     )
 
+    if "spoo.me" in url:
+        return False
+
     if re.fullmatch(pattern, url):
         return True
     else:
