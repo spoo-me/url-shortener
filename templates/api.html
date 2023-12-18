@@ -27,7 +27,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/themes/prism.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/themes/prism-twilight.css">
+
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/plugins/line-numbers/prism-line-numbers.min.css"
+        rel="stylesheet" />
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/api.css') }}">
 
@@ -50,19 +54,32 @@
         <p>Welcome to the URL Shortener API documentation. This page provides information on how to use the API to
             shorten URLs and retrieve analytics.</p>
 
-        <h3>API Base URL</h3>
-        <p>https://spoo.me</p>
+        <p><strong>Base URL:</strong> <code>https://spoo.me</code></p>
+        <p><strong>API Version:</strong> <code>v1</code></p>
 
-        <h2 style="text-align: center;">API Endpoints</h2>
 
+        <br>
+        <hr>
+        <br>
+
+        <h1 style="text-align: center;">API Endpoints</h1>
+        <br>
 
         <h4>Shorten a URL</h4>
+        <br>
+        <p>This endpoint is used to shorten a URL. The request payload must contain the URL to be shortened. The
+            response contains the shortened URL.</p>
+
         <p><strong>Endpoint:</strong> <code> POST / </code></p>
-        <p><strong>Parameters:</strong></p>
+        <br>
+
+        <h5>Parameters</h5>
+        <p>The following parameters are used in the API requests and responses:</p>
         <table class="table">
             <thead>
                 <tr>
                     <th>Parameter</th>
+                    <th>Data Type</th>
                     <th>Description</th>
                     <th>Required</th>
                 </tr>
@@ -70,31 +87,38 @@
             <tbody>
                 <tr>
                     <td>url</td>
+                    <td>String</td>
                     <td>The long URL to be shortened.</td>
                     <td>Yes</td>
                 </tr>
                 <tr>
                     <td>alias</td>
+                    <td>String</td>
                     <td>Custom alias for the shortened URL.</td>
                     <td>No</td>
                 </tr>
                 <tr>
                     <td>password</td>
+                    <td>String</td>
                     <td>Password to access the shortened URL.</td>
                     <td>No</td>
                 </tr>
                 <tr>
                     <td>max-clicks</td>
+                    <td>Integer</td>
                     <td>Maximum number of clicks allowed for the shortened URL.</td>
                     <td>No</td>
                 </tr>
                 <tr>
                     <td>json*</td>
+                    <td>Boolean</td>
                     <td>To get the response in JSON.</td>
                     <td>No</td>
                 </tr>
             </tbody>
         </table>
+        <br>
+
         <h5>Headers</h5>
         <p>The following headers are used in the API requests and responses:</p>
 
@@ -109,40 +133,51 @@
                 <tr>
                     <td><code>Accept*</code></td>
                     <td>Specifies the format of the request payload. Accepted values: <code>application/json</code>,
-                        <code>application/xml</code></td>
+                        <code>application/xml</code>
+                    </td>
                 </tr>
             </tbody>
         </table>
-        <p> * The Json parameter or The Accept Header is <b>requiered</b> to get a non Html Response from the API</p>
+        <p> * The <b>Json parameter</b> or The <b>Accept Header</b> is <b>requiered</b> to get a non-Html Response from
+            the API</p>
+        <br>
         <p><strong>Example Request: (Python)</strong></p>
-        <pre>
-      <code class="language-python">
-import requests
+        <pre class="line-numbers">
+<code class="language-python" id="shorten-code">import requests
 import json
 
 url = "https://spoo.me"
 
+# Replace these with your actual values
 payload = {
-  "url": "https://example.com",
-  "alias": "anything", 
-  "max-clicks": 100, 
-  "password": "YourPass@1234"
+    "url": "your_long_url",
+    "alias": "your_alias",
+    "max-clicks": your_max_clicks,
+    "password": "your_password"
 }
 
+# Necessary to get a non-html response
 headers = {
-  "Accept": "application/json"
+    "Accept": "application/json"
 }
 
 response = requests.post(url, data=payload, headers=headers)
-print(json.loads(response.text))
+if response.status_code == 200:
+    # If the request was successful, print the shortened URL
+    shortened_url = response.json()
+    print(json.dumps(shortened_url, indent=4))
+else:
+    # If the request failed, print the error message
+    print(f"Error: {response.status_code}")
+    print(response.text)
 
->>> {'short_url': 'https://spoo.me/anything'}
-      </code>
-    </pre>
+>>> {'short_url': 'https://spoo.me/anything'}</code></pre>
+
+        <br>
 
         <h5>Errors</h5>
-        <p>This section provides information about the various errors that could occur while making requests through the
-            API.</p>
+        <p>This section provides information about the various errors that could occur while making requests through
+            this endpoint.</p>
         <table class="table">
             <thead>
                 <tr>
@@ -181,9 +216,18 @@ print(json.loads(response.text))
         <hr>
         <br>
 
-        <h4>Retrieve Shortened URL Stats</h4>
+        <h4>URL Statistics</h4>
+        <br>
+
+        <p>This endpoint is used to retrieve statistics about a shortened URL. The request must contain the short code
+            of the URL. The response contains the statistics.</p>
+
         <p><strong>Endpoint:</strong> <code>POST /</code>stats/{shortCode}</p>
-        <p><strong>Parameters:</strong></p>
+        <br>
+
+        <h5>Parameters</h5>
+        <p>The following parameters are used in the API requests and responses:</p>
+
         <table class="table">
             <thead>
                 <tr>
@@ -194,37 +238,98 @@ print(json.loads(response.text))
             </thead>
             <tbody>
                 <tr>
-                    <td>password*</td>
+                    <td>password</td>
                     <td>Password of the shortened url if any.</td>
-                    <td>No</td>
+                    <td>Optional *</td>
                 </tr>
             </tbody>
         </table>
         <p>* if the Short Url is password protected then the password parameter is a <b>must</b>.</p>
+        <br>
 
         <p><strong>Example Request: (Python)</strong></p>
-        <pre>
-      <code class="language-python" >
-import requests
+        <pre class="line-numbers">
+<code class="language-python" id="stats-code">import requests
 import json
 
-short_code = "ex"
-url = f"https://spoo.me/{short_code}"
+# Replace these with your actual values
+short_code = "your_short_code"
+password = "your_password"
+base_url = "https://spoo.me"
 
-payload = { 
-  "password": "Example@9012"
-}
+# Make the request
+response = requests.post(
+    f"{base_url}/stats/{short_code}",
+    params={"password": password}
+)
 
-response = requests.post(url, data=payload)
+# Check the response
+if response.status_code == 200:
+    # If the request was successful, print the URL statistics
+    url_stats = response.json()
+    print(json.dumps(url_stats, indent=4))
+else:
+    # If the request failed, print the error message
+    print(f"Error: {response.status_code}")
+    print(response.text)</code>
+</pre>
 
-print(json.loads(response.text))
-      </code>
-    </pre>
         <p><strong>Example Response:</strong></p>
-        <pre>
-      <code class="language-json">
-      </code>
-    </pre>
+        <pre style="max-height: 300px;" class="line-numbers">
+<code class="language-json">{
+    "_id": "exa",
+    "average_daily_clicks": 1.0,
+    "average_monthly_clicks": 0.03,
+    "average_weekly_clicks": 0.14,
+    "browser": {
+        "Edge": 1
+    },
+    "counter": {
+        "2023-12-18": 1
+    },
+    "country": {
+        "France": 1
+    },
+    "creation-date": "2023-12-18",
+    "expired": null,
+    "last-click": "2023-12-18 22:06:02.298005+00:00",
+    "last-click-browser": "Edge",
+    "last-click-os": "Windows",
+    "max-clicks": null,
+    "os_name": {
+        "Windows": 1
+    },
+    "password": "Example@12",
+    "referrer": {
+        "spoo.me": 1
+    },
+    "short_code": "exa",
+    "total-clicks": 1,
+    "total_unique_clicks": 1,
+    "unique_browser": {
+        "Edge": 1
+    },
+    "unique_counter": {
+        "2023-12-18": 1
+    },
+    "unique_country": {
+        "France": 1
+    },
+    "unique_os_name": {
+        "Windows": 1
+    },
+    "unique_referrer": {
+        "spoo.me": 1
+    },
+    "url": "https://example.com"
+}
+</code></pre>
+
+        <br>
+
+        <h5>Response</h5>
+        <p>The following parameters are used in the API requests and responses:</p>
+
         <table class="table">
             <thead>
                 <tr>
@@ -235,14 +340,44 @@ print(json.loads(response.text))
             </thead>
             <tbody>
                 <tr>
+                    <td><code>_id</code></td>
+                    <td>Str</td>
+                    <td>The Short Code of the Short Link.</td>
+                </tr>
+                <tr>
+                    <td><code>average_daily_clicks</code></td>
+                    <td>Float</td>
+                    <td>Average Clicks per day since the link was created.</td>
+                </tr>
+                <tr>
+                    <td><code>average_monthly_clicks</code></td>
+                    <td>Float</td>
+                    <td>Average Clicks per month since the link was created.</td>
+                </tr>
+                <tr>
+                    <td><code>average_weekly_clicks</code></td>
+                    <td>Float</td>
+                    <td>Average Clicks per week since the link was created.</td>
+                </tr>
+                <tr>
                     <td><code>browser</code></td>
                     <td>Dict</td>
                     <td>Data about the Browsers in which the short link was accessed.</td>
                 </tr>
                 <tr>
+                    <td><code>creation-date</code></td>
+                    <td>Str</td>
+                    <td>Date when the short link was created.</td>
+                </tr>
+                <tr>
                     <td><code>counter</code></td>
                     <td>Dict</td>
                     <td>Data about the clicks per day since the link was created.</td>
+                </tr>
+                <tr>
+                    <td><code>country</code></td>
+                    <td>Dict</td>
+                    <td>Data about the Countries in which the short link was accessed.</td>
                 </tr>
                 <tr>
                     <td><code>expired*</code></td>
@@ -270,11 +405,6 @@ print(json.loads(response.text))
                     <td>Information about the Max Clicks set my the User on the Short Link.</td>
                 </tr>
                 <tr>
-                    <td><code>creation-date</code></td>
-                    <td>Str</td>
-                    <td>Date when the short link was created.</td>
-                </tr>
-                <tr>
                     <td><code>os_name</code></td>
                     <td>Dict</td>
                     <td>Data about the Os names in which the short link was accessed.</td>
@@ -295,13 +425,47 @@ print(json.loads(response.text))
                     <td>Count of the total clicks made since the short link was created.</td>
                 </tr>
                 <tr>
+                    <td><code>total_unique_clicks</code></td>
+                    <td>Int</td>
+                    <td>Count of the total unique clicks made since the short link was created.</td>
+                </tr>
+
+                <tr>
+                    <td><code>unique_browser</code></td>
+                    <td>Dict</td>
+                    <td>Data about the Unique Browsers in which the short link was accessed.</td>
+                </tr>
+                <tr>
+                    <td><code>unique_counter</code></td>
+                    <td>Dict</td>
+                    <td>Data about the Unique clicks per day since the link was created.</td>
+                </tr>
+                <tr>
+                    <td><code>unique_country</code></td>
+                    <td>Dict</td>
+                    <td>Data about the Unique Countries in which the short link was accessed.</td>
+                </tr>
+                <tr>
+                    <td><code>unique_os_name</code></td>
+                    <td>Dict</td>
+                    <td>Data about the Unique Os names in which the short link was accessed.</td>
+                </tr>
+                <tr>
+                    <td><code>unique_referrer</code></td>
+                    <td>Dict</td>
+                    <td>Data about the Unique Referrers in which the short link was accessed.</td>
+                </tr>
+                <tr>
                     <td><code>url</code></td>
                     <td>Str</td>
                     <td>Original Long Url which the short link redirects to.</td>
                 </tr>
+
             </tbody>
         </table>
         <p>* <b>Null (None)</b> if the Short link didnt have max-clicks set or was not password protected.</p>
+
+        <br>
 
         <h5>Stats Errors</h5>
         <p>This section provides information about the various errors that could occur while making requests through the
@@ -325,17 +489,17 @@ print(json.loads(response.text))
                     <td>400</td>
                     <td>The user entered password is invalid.</td>
                 </tr>
-                <!-- Add more error codes and descriptions as needed -->
             </tbody>
         </table>
 
-        <!-- Add more endpoint information as needed -->
+        <br>
 
     </div>
 
-    <!-- Include your custom JavaScript file -->
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/prism.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
 
     <script src="{{ url_for('static', filename='api/js/script.js') }}"></script>
 

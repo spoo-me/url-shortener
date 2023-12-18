@@ -7,3 +7,4 @@ poetry.lock
 .idea
 .vscode
 .hintrc
+misc/*.py

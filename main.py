@@ -401,8 +401,7 @@ def analytics(short_code):
                 return render_template(
                     "stats_error.html",
                     url=request.host_url + short_code,
-                    geterror={{request.host_url}}
-                    + f"{short_code} is a password protected Url, please enter the password to view its stats.",
+                    geterror=f"{request.host_url}{short_code} is a password protected Url, please enter the password to view its stats.",
                     host_url=request.host_url,
                 )
 
