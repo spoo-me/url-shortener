@@ -263,6 +263,13 @@ a:hover {
     margin-left: auto;
 }
 
+#producthunt {
+    position: absolute;
+    bottom: 0;
+    margin: 20px;
+    right: 0;
+}
+
 @media screen and (max-width: 480px) {
     .url-container {
         margin-left: 10%;
