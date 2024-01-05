@@ -26,7 +26,7 @@ limiter = Limiter(
     app=app,
     default_limits=["3 per minute", "75 per day", "20 per hour"],
     storage_uri=MONGO_URI,
-    strategy="fixed-window"
+    strategy="fixed-window",
 )
 
 
@@ -565,12 +565,11 @@ def page_not_found(error):
         404,
     )
 
+
 @app.errorhandler(429)
 def ratelimit_handler(e):
-    return make_response(
-            jsonify(error=f"ratelimit exceeded {e.description}")
-            , 429
-    )
+    return make_response(jsonify(error=f"ratelimit exceeded {e.description}"), 429)
+
 
 @atexit.register
 def cleanup():
