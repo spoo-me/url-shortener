@@ -1,5 +1,6 @@
 body {
     background-image: linear-gradient(to bottom, rgb(23, 5, 22), rgb(33, 77, 171));
+    height: 100vh;
 }
 
 button[type="submit"]:hover {
@@ -242,10 +243,6 @@ a:hover {
     transition: all 0.3s ease-in-out;
 }
 
-.navbar a:hover {
-    color: #ccc;
-    text-decoration: none;
-}
 
 .section-1 {
     width: auto;
@@ -267,12 +264,22 @@ a:hover {
     position: absolute;
     padding: 20px;
     right: 0;
+    bottom: 0;
+    transition: all 0.3s ease-in-out;
+}
+
+#producthunt:hover {
+    transform: scale(1.1);
 }
 
 @media screen and (max-width: 480px) {
     .url-container {
         margin-left: 10%;
         margin-right: 10%;
+    }
+
+    #producthunt:hover {
+        transform: none;
     }
 }
 
@@ -310,5 +317,9 @@ a:hover {
     .copy-button,
     .stats-button {
         margin: 5px;
+    }
+
+    #producthunt:hover {
+        transform:none;
     }
 }
