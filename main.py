@@ -14,14 +14,24 @@ from user_agents import parse
 import geoip2.database
 import tldextract
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import atexit
 from utils import *
 
 app = Flask(__name__)
 CORS(app)
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["3 per minute", "75 per day", "20 per hour"],
+    storage_uri=MONGO_URI,
+    strategy="fixed-window"
+)
 
 
 @app.route("/", methods=["GET"])
+@limiter.exempt
 def index():
     serialized_list = request.cookies.get("shortURL")
     my_list = json.loads(serialized_list) if serialized_list else []
@@ -117,6 +127,9 @@ def shorten_url():
         data["max-clicks"] = max_clicks
 
     data["creation-date"] = datetime.now().strftime("%Y-%m-%d")
+    data["creation-time"] = datetime.now().strftime("%H:%M:%S")
+
+    data["creation-ip-address"] = get_client_ip()
 
     add_url_by_id(short_code, data)
 
@@ -144,6 +157,7 @@ def shorten_url():
 
 
 @app.route("/result/<short_code>", methods=["GET"])
+@limiter.exempt
 def result(short_code):
     url_data = load_url_by_id(short_code)
 
@@ -186,6 +200,7 @@ def get_client_ip():
 
 
 @app.route("/<short_code>", methods=["GET"])
+@limiter.exempt
 def redirect_url(short_code):
     url_data = load_url_by_id(short_code)
 
@@ -304,6 +319,7 @@ def redirect_url(short_code):
 
 
 @app.route("/<short_code>/password", methods=["POST"])
+@limiter.exempt
 def check_password(short_code):
     url_data = load_url_by_id(short_code)
 
@@ -330,6 +346,7 @@ def check_password(short_code):
 
 
 @app.route("/stats", methods=["GET", "POST"])
+@limiter.exempt
 def stats():
     if request.method == "POST":
         short_code = request.form["short_code"]
@@ -371,6 +388,7 @@ def stats():
 
 
 @app.route("/stats/<short_code>", methods=["GET", "POST"])
+@limiter.exempt
 def analytics(short_code):
     password = request.args.get("password")
 
@@ -458,7 +476,11 @@ def analytics(short_code):
             url_data["average_monthly_clicks"],
         ) = calculate_click_averages(url_data)
 
-        del url_data["ips"]
+        try:
+            del url_data["ips"]
+            del url_data["creation-ip-address"]
+        except:
+            pass
     except:
         if "browser" and "os_name" in url_data:
             url_data["unique_browser"] = {}
@@ -472,6 +494,7 @@ def analytics(short_code):
                 url_data["os_name"][i] = url_data["os_name"][i]["counts"]
         try:
             del url_data["ips"]
+            del url_data["creation-ip-address"]
         except:
             pass
 
@@ -516,16 +539,19 @@ def analytics(short_code):
 
 
 @app.route("/api", methods=["GET"])
+@limiter.exempt
 def api():
     return render_template("api.html", host_url=request.host_url)
 
 
 @app.route("/sitemap.xml")
+@limiter.exempt
 def serve_sitemap():
     return send_file("misc/sitemap.xml")
 
 
 @app.route("/robots.txt")
+@limiter.exempt
 def serve_robots():
     return send_file("misc/robots.txt")
 
