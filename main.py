@@ -15,12 +15,14 @@ import geoip2.database
 import tldextract
 from flask_cors import CORS
 from flask_limiter import Limiter
+from flask_talisman import Talisman
 from flask_limiter.util import get_remote_address
 import atexit
 from utils import *
 
 app = Flask(__name__)
 CORS(app)
+Talisman(app)
 limiter = Limiter(
     get_remote_address,
     app=app,
@@ -565,6 +567,12 @@ def page_not_found(error):
         404,
     )
 
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    return make_response(
+            jsonify(error=f"ratelimit exceeded {e.description}")
+            , 429
+    )
 
 @atexit.register
 def cleanup():

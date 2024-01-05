@@ -9,3 +9,4 @@ user-agents
 black
 tldextract
 Flask-Limiter
+flask-tailman
