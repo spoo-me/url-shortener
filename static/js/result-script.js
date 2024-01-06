@@ -9,33 +9,27 @@ function copyShortUrl() {
         });
 }
 
-function generateQRCode() {
-    const shortUrl = document.getElementById('short-url').textContent;
-    const qrCodeContainer = document.getElementById('qr-code-container');
-    qrCodeContainer.innerHTML = ''; // Clear previous QR code, if any
-
-    const qrcode = new QRCode(qrCodeContainer, {
-        text: shortUrl,
-        width: 200,
-        height: 200,
-        correctLevel: QRCode.CorrectLevel.H,
-        colorDark: "#000000",
-        colorLight: "#ffffff"
-    });
-}
-
 function downloadQRCode() {
-    const qrCodeContainer = document.getElementById('qr-code-container');
-    const qrCodeImage = qrCodeContainer.querySelector('canvas');
+    var qrcode = document.getElementById("qrcode");
+    var qrCodeSrc = qrcode.src;
 
-    qrCodeImage.toBlob(function (blob) {
-        const url = URL.createObjectURL(blob);
-        const downloadLink = document.createElement('a');
-        downloadLink.href = url;
-        downloadLink.download = 'qr_code.png';
-        downloadLink.click();
-        URL.revokeObjectURL(url);
-    });
+    var link = document.createElement("a");
+
+    var xhr = new XMLHttpRequest();
+    xhr.responseType = "blob";
+    xhr.onload = function () {
+        var reader = new FileReader();
+        reader.onloadend = function () {
+            link.href = reader.result;  // Use the result from the FileReader
+            link.download = "qrcode.png";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);  // Clean up the link element
+        };
+        reader.readAsDataURL(xhr.response);
+    };
+    xhr.open("GET", qrCodeSrc);
+    xhr.send();
 }
 
 function shortenAnotherLink() {

@@ -3,12 +3,17 @@
 }
 
 .navbar {
-    background-color: rgba(0, 0, 0, 0.45);
-    padding: 16px;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px 16px;
     text-align: right;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
-    justify-content: flex-end;
+    backdrop-filter: blur(60px);
+    top:0;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    position: sticky;
+    z-index: 2;
 }
 
 body::-webkit-scrollbar {
@@ -32,16 +37,23 @@ td {
     text-align: left;
 }
 
+.navbar .links {
+    padding: 0px 10px;
+    width: -webkit-fill-available;
+}
+
 .navbar ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
+    height: 100%;
+    justify-content: space-around;
     display: flex;
+    align-items: center;
 }
 
 .navbar li {
     display: inline-block;
-    margin-right: 20px;
 }
 
 .navbar a {
@@ -51,6 +63,11 @@ td {
     padding: 5px;
     transition: color 0.3s ease;
 }
+
+.navbar-image {
+    height: 25px;
+}
+
 
 .navbar a:hover {
     color: #aaa;

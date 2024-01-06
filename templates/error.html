@@ -60,13 +60,17 @@
 
 <body>
     <div class="navbar">
-        <ul>
-            <li><a href="/">Shorten</a></li>
-            <li><a href="/api">API</a></li>
-            <li><a href="/stats">Stats</a></li>
-            <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a></li>
-            <li><a href="mailto:support@spoo.me">Contact ↗</a></li>
-        </ul>
+        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}">
+        <div class="links">
+            <ul>
+                <li><a href="/">Shorten</a></li>
+                <li><a href="/api">API</a></li>
+                <li><a href="/stats">Stats</a></li>
+                <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
+                </li>
+                <li><a href="mailto:support@spoo.me">Contact ↗</a></li>
+            </ul>
+        </div>
     </div>
     <div class="error">
         <h2>{{error}}</h2>

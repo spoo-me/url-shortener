@@ -16,19 +16,6 @@ a {
     cursor: pointer;
 }
 
-@media only screen and (min-width: 960px) {
-    #short-url {
-        margin-top: 35px;
-        margin-bottom: 35px;
-    }
-}
-
-@media (max-width: 800px) {
-    a {
-        font-size: 20px;
-    }
-}
-
 .copy-button {
     cursor: pointer;
     background: transparent;
@@ -48,10 +35,31 @@ a {
     transition: background-color 0.3s
 }
 
+#url-container {
+    margin-top: 20px;
+}
+
+#short-url a {
+    border-radius: 10px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    transition: all 0.3s ease-in-out;
+}
+
+#short-url a:hover {
+    background: rgba(255, 255, 255, 0.25);
+    cursor: pointer;
+}
+
+#short-url a {
+    font-size: 30px;
+    text-decoration: none;
+}
 
 #share-buttons {
     border-radius: 10px;
-    padding: 5px 5px 0.5px 5px;
+    padding: 10px 5px 0.5px 5px;
     width: 308px;
     border: 1px solid rgba(255, 255, 255, 0.18);
     background: rgba(255, 255, 255, 0.15);
@@ -67,12 +75,6 @@ a {
 
     transition: 0.15s linear;
     transform: scale(1.1);
-}
-
-@media (max-width: 800px) {
-    .sharethis-inline-share-buttons {
-        padding: 15px 10px;
-    }
 }
 
 
@@ -93,6 +95,12 @@ a {
 .flex-container>* {
     flex: 0 0 auto;
     margin: 10px;
+}
+
+.qrcode {
+    width: 200px;
+    height: 200px;
+    border-radius: 10px;
 }
 
 #short-another-button {
@@ -143,4 +151,25 @@ a {
 
 .for-middle {
     text-align: center;
+}
+
+@media screen and (max-width: 800px) {
+    #short-url a {
+        font-size: 22px;
+    }
+
+    .sharethis-inline-share-buttons {
+        padding: 15px 10px;
+    }
+
+    a {
+        font-size: 20px;
+    }
+}
+
+@media only screen and (min-width: 960px) {
+    #short-url {
+        margin-top: 35px;
+        margin-bottom: 35px;
+    }
 }
