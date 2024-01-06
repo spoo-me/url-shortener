@@ -50,11 +50,9 @@
         </div>
     </div>
 
-    <h1>URL Stats</h1>
-
     <form action="/stats" method="POST" onsubmit="return checkURL();">
         <p id="url-error"></p>
-        <label for="short-code">Enter the full Url</label>
+        <label for="short-code" style="font-weight: bold;">Enter the full Url</label>
         <input type="text" id="short_code" name="short_code" required
             placeholder="{{ host_url }}your-short-code" value="{{ url }}">
 
