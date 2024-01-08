@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" type="image/png" href="https://spoo.me/static/images/favicon-error.png" />
+    <link rel="icon" type="image/png" href="https://spoo.me/static/images/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Oops! Something went wrong." />
 
@@ -25,37 +25,8 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/error.css') }}">
 
-    <style>
-        body {
-            background-image: linear-gradient(7deg, #c96bb8, #110d3b);
-        }
-
-        .error {
-            text-align: center;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 15px;
-            padding: 10px 20px;
-            border-radius: 15px;
-            color: white;
-            margin-left: 10%;
-            margin-right: 10%;
-            transition: all 0.3s ease-in-out;
-            margin-top: 80px;
-        }
-
-        h2 {
-            color: white;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 15px;
-            margin-left: 10%;
-            margin-right: 10%;
-        }
-    </style>
 </head>
 
 <body>
@@ -72,9 +43,19 @@
             </ul>
         </div>
     </div>
-    <div class="error">
-        <h2>{{error}}</h2>
+
+    <div class="gif-upper"><img class="gif"
+            src="https://media0.giphy.com/media/kF0ngyP7S1DfmzKqiN/giphy.gif?cid=ecf05e47lax6sim75vmaebu243djb82b6vx903706movksga&ep=v1_gifs_search&rid=giphy.gif&ct=g"
+            alt="404 GIF"></div>
+
+    <div class="error-message">
+        <pre>{{ error_code }}, {{ error_message }}</pre>
     </div>
+
+    <div class="container">
+        <div class="btn"><a href="/"><pre>Home</pre></a></div>
+    </div>
+
 </body>
 
 </html>
