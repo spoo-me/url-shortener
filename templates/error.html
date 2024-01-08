@@ -49,11 +49,17 @@
             alt="404 GIF"></div>
 
     <div class="error-message">
-        <pre>{{ error_code }}, {{ error_message }}</pre>
+        <div class="glitch-wrapper">
+            <div class="glitch" data-glitch="{{ error_code }}, {{ error_message }}">
+                {{ error_code }}, {{ error_message }}
+            </div>
+        </div>
     </div>
 
     <div class="container">
-        <div class="btn"><a href="/"><pre>Home</pre></a></div>
+        <div class="btn"><a href="/">
+                <pre>Home</pre>
+            </a></div>
     </div>
 
 </body>
