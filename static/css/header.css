@@ -34,12 +34,12 @@
     text-decoration: none;
     font-size: 16px;
     padding: 5px;
-    transition: color 0.3s ease;
+    transition: all 0.1s ease-in;
 }
 
 .navbar a:hover {
-    color: #ccc;
     text-decoration: none;
+    text-shadow: 0 0 5px #fff, 0 0 15px #fff, 0 0 20px #fff, 0 0 40px #fff, 0 0 25px #fff, 0 0 1px #fff, 0 0 2px #fff;
 }
 
 .navbar a.active {
