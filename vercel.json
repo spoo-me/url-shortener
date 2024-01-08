@@ -5,6 +5,12 @@
             "use": "@vercel/python"
         }
     ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "main.py"
+        }
+    ],
     "headers": [
         {
             "source": "/static/css/(.*).css",
