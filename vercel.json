@@ -9,6 +9,10 @@
         {
             "src": "/(.*)",
             "dest": "main.py"
+        },
+        {
+            "src": "/static/css/(.*).css",
+            "dest": "/static/css/$1.css?v=1234"
         }
     ]
 }
