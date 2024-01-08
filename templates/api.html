@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>spoo.me URL Shortener API Documentation</title>
-    <link rel="icon" type="image/png" href="https://spoo.me/static/images/favicon-api.png" />
+    <link rel="icon" type="image/png" href="https://spoo.me/static/images/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Documentation for the API of spoo.me URL shortener service." />
     <link rel="canonical" href="https://spoo.me/api">
@@ -27,11 +27,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/themes/prism-twilight.css">
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/themes/prism-synthwave84.min.css"> -->
 
     <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/plugins/line-numbers/prism-line-numbers.min.css"
-        rel="stylesheet" />
+        href="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/plugins/line-numbers/prism-line-numbers.min.css"/>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/api.css') }}">
 
@@ -79,7 +78,7 @@
 
         <h5>Parameters</h5>
         <p>The following parameters are used in the API requests and responses:</p>
-        <table class="table">
+        <table class="custom-table">
             <thead>
                 <tr>
                     <th>Parameter</th>
@@ -126,7 +125,7 @@
         <h5>Headers</h5>
         <p>The following headers are used in the API requests and responses:</p>
 
-        <table class="table">
+        <table class="custom-table">
             <thead>
                 <tr>
                     <th>Header</th>
@@ -182,11 +181,11 @@ else:
         <h5>Errors</h5>
         <p>This section provides information about the various errors that could occur while making requests through
             this endpoint.</p>
-        <table class="table">
+        <table class="custom-table">
             <thead>
                 <tr>
                     <th>Error Name</th>
-                    <th>Error Code</th>
+                    <th>Code</th>
                     <th>Description</th>
                 </tr>
             </thead>
@@ -232,7 +231,7 @@ else:
         <h5>Parameters</h5>
         <p>The following parameters are used in the API requests and responses:</p>
 
-        <table class="table">
+        <table class="custom-table">
             <thead>
                 <tr>
                     <th>Parameter</th>
@@ -334,7 +333,7 @@ else:
         <h5>Response</h5>
         <p>The following parameters are used in the API requests and responses:</p>
 
-        <table class="table">
+        <table class="custom-table">
             <thead>
                 <tr>
                     <th>Key</th>
@@ -474,11 +473,11 @@ else:
         <h5>Stats Errors</h5>
         <p>This section provides information about the various errors that could occur while making requests through the
             API.</p>
-        <table class="table">
+        <table class="custom-table">
             <thead>
                 <tr>
                     <th>Error Name</th>
-                    <th>Error Code</th>
+                    <th>Code</th>
                     <th>Description</th>
                 </tr>
             </thead>
