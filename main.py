@@ -172,7 +172,10 @@ def result(short_code):
         )
     else:
         return render_template(
-            "error.html", error="404 URL NOT FOUND", host_url=request.host_url
+            "error.html",
+            error_code="404",
+            error_message="URL NOT FOUND",
+            host_url=request.host_url,
         )
 
 
@@ -206,7 +209,10 @@ def redirect_url(short_code):
 
     if not url_data:
         return render_template(
-            "error.html", error="404 URL NOT FOUND", host_url=request.host_url
+            "error.html",
+            error_code="404",
+            error_message="URL NOT FOUND",
+            host_url=request.host_url,
         )
 
     url = url_data["url"]
@@ -214,8 +220,14 @@ def redirect_url(short_code):
     if not "password" in url_data:
         if "max-clicks" in url_data:
             if int(url_data["total-clicks"]) >= int(url_data["max-clicks"]):
-                return render_template(
-                    "error.html", error="404 Link Expired", host_url=request.host_url
+                return (
+                    render_template(
+                        "error.html",
+                        error_code="400",
+                        error_message="SHORT CODE EXPIRED",
+                        host_url=request.host_url,
+                    ),
+                    400,
                 )
 
     if "password" in url_data:
@@ -227,10 +239,14 @@ def redirect_url(short_code):
             # prompt the user for the password
             if "max-clicks" in url_data:
                 if int(url_data["total-clicks"]) >= int(url_data["max-clicks"]):
-                    return render_template(
-                        "error.html",
-                        error="404 Link Expired",
-                        host_url=request.host_url,
+                    return (
+                        render_template(
+                            "error.html",
+                            error_code="400",
+                            error_message="SHORT CODE EXPIRED",
+                            host_url=request.host_url,
+                        ),
+                        400,
                     )
 
             return render_template(
@@ -309,7 +325,9 @@ def redirect_url(short_code):
     url_data["ips"][user_ip] = url_data["ips"].get(user_ip, 0) + 1
 
     url_data["total-clicks"] += 1
-    url_data["last-click"] = str(datetime.now(timezone.utc))
+    url_data["last-click"] = str(
+        datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    )
     url_data["last-click-browser"] = browser
     url_data["last-click-os"] = os_name
 
@@ -338,10 +356,14 @@ def check_password(short_code):
                     host_url=request.host_url,
                 )
     # show error message for invalid short code
-    return render_template(
-        "error.html",
-        error="404 Invalid short code or URL not password-protected",
-        host_url=request.host_url,
+    return (
+        render_template(
+            "error.html",
+            error_code="400",
+            error_message="Invalid short code or URL not password-protected",
+            host_url=request.host_url,
+        ),
+        400,
     )
 
 
@@ -397,7 +419,10 @@ def analytics(short_code):
     if not url_data:
         if request.method == "GET":
             return render_template(
-                "error.html", error="404 URL not Found!", host_url=request.host_url
+                "error.html",
+                error_code="404",
+                error_message="URL NOT FOUND",
+                host_url=request.host_url,
             )
         else:
             return jsonify({"UrlError": "The requested Url never existed"}), 404
@@ -560,7 +585,10 @@ def serve_robots():
 def page_not_found(error):
     return (
         render_template(
-            "error.html", error="404 URL NOT FOUND!", host_url=request.host_url
+            "error.html",
+            error_code="404",
+            error_message="URL NOT FOUND!",
+            host_url=request.host_url,
         ),
         404,
     )
