@@ -5,14 +5,15 @@
             "use": "@vercel/python"
         }
     ],
-    "routes": [
+    "headers": [
         {
-            "src": "/(.*)",
-            "dest": "main.py"
-        },
-        {
-            "src": "/static/css/(.*).css",
-            "dest": "/static/css/$1.css?v=1234"
+            "source": "/static/css/(.*).css",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "no-cache, no-store, must-revalidate"
+                }
+            ]
         }
     ]
 }
