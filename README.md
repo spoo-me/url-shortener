@@ -142,8 +142,9 @@ We welcome contributions to **spoo.me**. Feel free to fork the repository and su
 # 👀 Visual Previews
 
 **Main Page**
+![spoo me main page](https://github.com/spoo-me/url-shortener/assets/90309290/7ddf6b48-a952-4b5f-a64d-26e4ece3c972)
 
-![image](https://github.com/Zingzy/spoo.me/assets/90309290/f50c90b2-bae2-4862-8383-f46300c3ae7b)
+![spoo me result page](https://github.com/spoo-me/url-shortener/assets/90309290/5e930dff-f922-418b-95df-dc47894d4db1)
 
 **Example Stats Page**
 
