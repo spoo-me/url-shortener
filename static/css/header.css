@@ -2,10 +2,11 @@
     background-color: rgba(255, 255, 255, 0.05);
     padding: 10px 16px;
     text-align: right;
+    border-radius: 4px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     position: sticky;
     top: 0;
-    backdrop-filter: blur(60px);
+    backdrop-filter: blur(20px);
     display: flex;
     flex-direction: row;
 }

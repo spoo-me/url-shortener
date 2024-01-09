@@ -261,7 +261,7 @@ a:hover {
 }
 
 #producthunt {
-    position: absolute;
+    position: fixed;
     padding: 20px;
     right: 0;
     bottom: 0;

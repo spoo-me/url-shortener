@@ -33,6 +33,8 @@
         href="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/plugins/line-numbers/prism-line-numbers.min.css"/>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/api.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}">
 
 </head>
 
@@ -51,9 +53,28 @@
         </div>
     </div>
 
+    <div class="mobile-navbar" style="z-index: 100;">
+        <div class="mobile-logo">
+            <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png"></a>
+        </div>
+        <button type="button" class="burger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul class="mobile-menu">
+            <li><a href="/" class="active">Shorten</a></li>
+            <li><a href="/api">API</a></li>
+            <li><a href="/stats">Stats</a></li>
+            <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
+            </li>
+            <li><a href="mailto:support@spoo.me">Contact ↗</a></li>
+        </ul>
+    </div>
+
     <!-- Main Content -->
     <div class="container mt-4">
-        <h2>URL Shortener API Documentation</h2>
+        <h2 id="title-text">URL Shortener API Documentation</h2>
         <p>Welcome to the URL Shortener API documentation. This page provides information on how to use the API to
             shorten URLs and retrieve analytics.</p>
 

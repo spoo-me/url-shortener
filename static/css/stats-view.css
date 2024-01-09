@@ -276,3 +276,10 @@ h3 {
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.125);
 }
+
+@media screen and (max-width: 768px) {
+    .main-data-container {
+        margin-top: 70px;
+    }
+
+}

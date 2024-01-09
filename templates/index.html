@@ -55,8 +55,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
-
-    <script src="{{ url_for('static', filename='js/index-validate.js') }}" defer=""></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}" <script
+        src="{{ url_for('static', filename='js/index-validate.js') }}" defer="">
+    </script>
     <script src="{{ url_for('static', filename='js/index-script.js') }}" defer=""></script>
 
 </head>
@@ -74,6 +75,25 @@
                 <li><a href="mailto:support@spoo.me">Contact ↗</a></li>
             </ul>
         </div>
+    </div>
+
+    <div class="mobile-navbar">
+        <div class="mobile-logo">
+            <a href="#"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png"></a>
+        </div>
+        <button type="button" class="burger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul class="mobile-menu">
+            <li><a href="#" class="active">Shorten</a></li>
+            <li><a href="/api">API</a></li>
+            <li><a href="/stats">Stats</a></li>
+            <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
+            </li>
+            <li><a href="mailto:support@spoo.me">Contact ↗</a></li>
+        </ul>
     </div>
 
     <form action="/" method="POST" onsubmit="return validateURL() && validatePassword();">

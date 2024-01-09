@@ -1,0 +1,109 @@
+.mobile-navbar {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    box-shadow: 0px 1px 6px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    color: white;
+    margin: 0;
+}
+
+.mobile-logo {
+    padding: 9px 5px 6px 35px;
+}
+
+.mobile-logo-image {
+    height: 25px;
+}
+
+.mobile-logo a {
+    text-decoration: none;
+    color: #333;
+    font-size: 1em;
+}
+
+button.burger {
+    position: absolute;
+    left: 0;
+    top: 0;
+    border: 0;
+    background: transparent;
+    padding: 8px 15px;
+    cursor: pointer;
+    outline: none;
+}
+
+button.burger span {
+    display: block;
+    width: 4px;
+    height: 4px;
+    background: #fff;
+    margin: 3px 0;
+    border-radius: 4px;
+    transition: all .4s ease-in-out;
+}
+
+button.burger:focus span:first-child {
+    transform-origin: 2px 9px;
+    transform: rotate(-90deg);
+}
+
+button.burger:focus span:last-child {
+    transform-origin: 2px -5px;
+    transform: rotate(-90deg);
+}
+
+button.burger:focus+ul {
+    max-height: 500px;
+}
+
+ul.mobile-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    max-height: 0;
+    transition: all 0.6s ease-in-out;
+}
+
+ul.mobile-menu>li {
+    display: block;
+    padding: 10px 15px 12px;
+    transition: all 0.2s ease;
+}
+
+ul.mobile-menu>li>a {
+    display: block;
+    text-decoration: none;
+    color: white;
+}
+
+ul.mobile-menu>li>a:hover {
+    text-decoration: none;
+}
+
+ul.mobile-menu>li:hover {
+    /* background: linear-gradient(141deg, #48ded4 0%, #a026bf 51%, #e82c75 75%);*/
+    background: rgba(255, 255, 255, 0.125);
+    cursor: pointer;
+}
+
+
+@media screen and (min-width: 768px) {
+    .mobile-navbar {
+        display: none;
+    }
+
+}
+
+@media screen and (max-width: 768px) {
+    .navbar {
+        display: none;
+    }
+
+}
