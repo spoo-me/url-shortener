@@ -12,14 +12,14 @@
     </script>
 
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YTZ6ZXKFS6"></script>
+    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-YTZ6ZXKFS6"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
 
         gtag('config', 'G-YTZ6ZXKFS6');
-    </script>
+    </script> -->
 
     <title>spoo.me URL Shortener</title>
     <link rel="icon" type="image/png" href="https://spoo.me/static/images/favicon.png">
@@ -60,11 +60,15 @@
     </script>
     <script src="{{ url_for('static', filename='js/index-script.js') }}" defer=""></script>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Allerta+Stencil&display=swap" rel="stylesheet">
+
 </head>
 
 <body>
     <div class="navbar">
-        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}">
+        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image">
         <div class="links">
             <ul>
                 <li><a href="#" class="active">Shorten</a></li>
@@ -79,9 +83,10 @@
 
     <div class="mobile-navbar">
         <div class="mobile-logo">
-            <a href="#"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png"></a>
+            <a href="#"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png"
+                    alt="Spoo.me Banner Image"></a>
         </div>
-        <button type="button" class="burger">
+        <button type="button" class="burger" title="Menu">
             <span></span>
             <span></span>
             <span></span>

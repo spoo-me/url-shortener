@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Allerta+Stencil&display=swap');
+
 .navbar {
     background-color: rgba(255, 255, 255, 0.05);
     padding: 10px 16px;
@@ -9,6 +11,7 @@
     backdrop-filter: blur(20px);
     display: flex;
     flex-direction: row;
+    font-family: 'Allerta Stencil', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .navbar ul {

@@ -29,7 +29,7 @@
 
 <body>
     <div class="navbar">
-        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}">
+        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image">
         <div class="links">
             <ul>
                 <li><a href="/">Shorten</a></li>
@@ -44,9 +44,9 @@
 
     <div class="mobile-navbar">
         <div class="mobile-logo">
-            <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png"></a>
+            <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png" alt="Spoo.me Banner Image"></a>
         </div>
-        <button type="button" class="burger">
+        <button type="button" class="burger" title="Menu">
             <span></span>
             <span></span>
             <span></span>
@@ -73,7 +73,7 @@
 
     <div class="flex-container">
         <div class="for-middle">
-            <div id="qr-code-container"><img class="qrcode" id="qrcode"
+            <div id="qr-code-container"><img class="qrcode" id="qrcode" alt="Qr Code for Sharing the ShortURL"
                     src="https://qr.spoo.me/gradient?text={{ short_url }}&width=100&height=100"></div>
             <button id="qr-code-button" onclick="downloadQRCode()">Download QR Code</button>
         </div>
