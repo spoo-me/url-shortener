@@ -44,7 +44,6 @@ def index():
 
 
 @app.route("/", methods=["POST"])
-@limiter.exempt
 def shorten_url():
     url = request.form["url"]
     password = request.form.get("password")
