@@ -49,6 +49,7 @@ def shorten_url():
     password = request.form.get("password")
     max_clicks = request.form.get("max-clicks")
     alias = request.form.get("alias")
+    json = request.form.get("json")
 
     app.logger.info(f"Received request data: {request.form}")
 
@@ -138,6 +139,8 @@ def shorten_url():
     response = jsonify({"short_url": f"{request.host_url}{short_code}"})
 
     if request.args.get("json") == "true":
+        return response
+    elif json==True:
         return response
     elif (
         "Accept" in request.headers and request.headers["Accept"] == "application/json"
