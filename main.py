@@ -50,6 +50,8 @@ def shorten_url():
     max_clicks = request.form.get("max-clicks")
     alias = request.form.get("alias")
 
+    app.logger.info(f"Received request data: {request.form}")
+
     if not validate_url(url):
         return jsonify({"UrlError": "Invalid URL"}), 400
 
