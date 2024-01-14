@@ -55,6 +55,9 @@ def shorten_url():
     if not validate_url(url):
         return jsonify({"UrlError": "Invalid URL"}), 400
 
+    if not validate_blocked_url(url):
+        return jsonify({"UrlError": "Blocked URL ⛔"}), 403
+
     if alias and not validate_string(alias):
         if (
             request.args.get("json") == "true"
