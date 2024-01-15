@@ -1,3 +1,5 @@
+<image src="https://spoo.me/static/images/banner-rounded.png">
+
 # **Welcome to spoo.me - Shorten Your Url not Your Possibilities** 🚀
 
 Dive into the magic of **spoo.me**, your shortcut to URL wizardry! 🚀 Transform lengthy links into sleek, memorable ones with our free, open-sourced service. 🌟
