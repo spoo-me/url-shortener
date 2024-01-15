@@ -55,10 +55,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}" <script
-        src="{{ url_for('static', filename='js/index-validate.js') }}" defer="">
-    </script>
-    <script src="{{ url_for('static', filename='js/index-script.js') }}" defer=""></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -103,10 +100,10 @@
 
     <form action="/" method="POST" onsubmit="return validateURL() && validatePassword();">
 
-        <p id="url-error"></p>
         <h1>
             <label for="long-url" id="tagline"><b>Shorten Your URLs, Not Your Possiblities.</b></label>
         </h1>
+        <p id="url-error"></p>
         <input type="text" id="long-url" name="url" required placeholder="https://your-long-url.com" value="{{ url }}">
 
         {% if error %}
@@ -168,6 +165,8 @@
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
 
     <script src="{{ url_for('static', filename='js/index-qrcode.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/index-validate.js') }}" defer=""></script>
+    <script src="{{ url_for('static', filename='js/index-script.js') }}" defer=""></script>
 
 </body>
 

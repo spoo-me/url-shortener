@@ -16,7 +16,7 @@ function validatePassword() {
             document.getElementById("password-error").innerText = "";
             document.getElementById("password-error").style.background = "";
             document.getElementById("password-error").style.marginTop = "-25px";
-        }, 3000);
+        }, 5000);
         return false;
     }
     else {
@@ -33,12 +33,14 @@ function validateURL() {
     if (!urlRegex.test(url) || url.includes('spoo.me')) {
         document.getElementById("url-error").innerText = "Please Enter a Valid URL";
         document.getElementById("url-error").style.background = "rgba(255, 255, 255, 0.15)"
-        document.getElementById("url-error").style.marginTop = "-15px"
+        document.getElementById("url-error").style.marginTop = "0";
+        document.getElementById("url-error").style.marginBottom = "20px";
         setTimeout(function () {
             document.getElementById("url-error").innerText = "";
             document.getElementById("url-error").style.background = "";
             document.getElementById("url-error").style.marginTop = "-30px";
-        }, 3000);
+            document.getElementById("url-error").style.marginBottom = "15px";
+        }, 5000);
         return false;
     } else {
         document.getElementById("url-error").innerText = "";
@@ -54,6 +56,6 @@ function removeErrorMessage() {
     if (aliasError) {
         setTimeout(function () {
             aliasError.remove();
-        }, 3000);
+        }, 5000);
     }
 }

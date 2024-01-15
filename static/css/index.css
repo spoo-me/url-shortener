@@ -10,7 +10,7 @@ button[type="submit"]:hover {
 
 h1 {
     text-align: left;
-    margin-top: 40px;
+    margin-top: 30px;
     color: #333;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -132,7 +132,7 @@ button[type="submit"]:hover {
     color: white;
     margin-left: 10%;
     margin-right: 10%;
-    transition: all 0.3s ease-in-out;
+    transition: all 0.3s;
     margin-top: -25px;
 }
 
@@ -147,7 +147,7 @@ button[type="submit"]:hover {
     color: white;
     margin-left: 10%;
     margin-right: 10%;
-    transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease;
     margin-top: -30px;
 }
 
@@ -162,7 +162,7 @@ button[type="submit"]:hover {
     color: white;
     margin-left: 10%;
     margin-right: 10%;
-    transition: all 0.3s ease-in-out;
+    transition: all 0.3s;
     background: rgba(255, 255, 255, 0.15);
 }
 
