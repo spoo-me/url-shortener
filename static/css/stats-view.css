@@ -66,12 +66,13 @@ p::-webkit-scrollbar-track {
 .json-data {
     white-space: pre-wrap;
     font-family: monospace;
-    background-color: #f0f0ee;
+    background-color: #262625;
     border-radius: 5px;
     padding: 10px;
-    border: 1px solid #ccccca;
-    height: 280px;
+    border: 1px solid #262625;
+    height: 255px;
     overflow: auto;
+    color: white;
 }
 
 select,
