@@ -492,11 +492,10 @@ def analytics(short_code):
             url_data["average_monthly_clicks"],
         ) = calculate_click_averages(url_data)
 
-        try:
+        if "ips" in url_data:
             del url_data["ips"]
+        if "creation-ip-address" in url_data:
             del url_data["creation-ip-address"]
-        except:
-            pass
     except:
         if "browser" and "os_name" in url_data:
             url_data["unique_browser"] = {}
@@ -508,11 +507,11 @@ def analytics(short_code):
             for i in url_data["os_name"]:
                 url_data["unique_os_name"][i] = len(url_data["os_name"][i]["ips"])
                 url_data["os_name"][i] = url_data["os_name"][i]["counts"]
-        try:
+
+        if "ips" in url_data:
             del url_data["ips"]
+        if "creation-ip-address" in url_data:
             del url_data["creation-ip-address"]
-        except:
-            pass
 
     if request.method == "POST":
         if url_data["counter"] != {}:
