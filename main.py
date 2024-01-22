@@ -45,12 +45,12 @@ def index():
 
 @app.route("/", methods=["POST"])
 def shorten_url():
-    url = request.form["url"]
-    password = request.form.get("password")
-    max_clicks = request.form.get("max-clicks")
-    alias = request.form.get("alias")
+    url = request.values.get("url")
+    password = request.values.get("password")
+    max_clicks = request.values.get("max-clicks")
+    alias = request.values.get("alias")
 
-    app.logger.info(f"Received request data: {request.form}")
+    app.logger.info(f"Received request data: {request.values}")
 
     if not validate_url(url):
         return jsonify({"UrlError": "Invalid URL"}), 400
@@ -59,10 +59,7 @@ def shorten_url():
         return jsonify({"UrlError": "Blocked URL ⛔"}), 403
 
     if alias and not validate_string(alias):
-        if (
-            request.args.get("json") == "true"
-            or request.headers.get("Accept") == "application/json"
-        ):
+        if request.headers.get("Accept") == "application/json":
             return jsonify({"AliasError": "Invalid Alias", "alias": f"{alias}"}), 400
         else:
             return (
@@ -79,10 +76,7 @@ def shorten_url():
         short_code = alias[:11]
 
     if alias and check_if_slug_exists(alias[:11]):
-        if (
-            request.args.get("json") == "true"
-            or request.headers.get("Accept") == "application/json"
-        ):
+        if request.headers.get("Accept") == "application/json":
             return (
                 jsonify({"AliasError": "Alias already exists", "alias": f"{alias}"}),
                 400,
@@ -140,11 +134,7 @@ def shorten_url():
 
     response = jsonify({"short_url": f"{request.host_url}{short_code}"})
 
-    if request.args.get("json") == "true":
-        return response
-    elif (
-        "Accept" in request.headers and request.headers["Accept"] == "application/json"
-    ):
+    if request.headers.get("Accept") == "application/json":
         return response
     else:
         serialized_list = request.cookies.get("shortURL")
@@ -417,7 +407,7 @@ def stats():
 @app.route("/stats/<short_code>", methods=["GET", "POST"])
 @limiter.exempt
 def analytics(short_code):
-    password = request.args.get("password")
+    password = request.values.get("password")
 
     url_data = load_url_by_id(short_code)
 
@@ -433,10 +423,6 @@ def analytics(short_code):
             return jsonify({"UrlError": "The requested Url never existed"}), 404
 
     if "password" in url_data:
-        if request.method == "GET":
-            password = request.args.get("password")
-        else:
-            password = request.args.get("password")
         if password != url_data["password"]:
             if request.method == "POST":
                 return (

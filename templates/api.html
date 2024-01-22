@@ -6,12 +6,14 @@
     <title>spoo.me - API Documentation</title>
     <link rel="icon" type="image/png" href="https://spoo.me/static/images/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Access the full power of spoo.me’s URL shortener service with our API. You can create and manage short links programmatically with our simple and secure API. You can also retrieve the statistics of your links with our API and analyze the data with our user-friendly interface. Explore the possibilities and enhance your online presence with spoo.me. 🚀" />
+    <meta name="description"
+        content="Access the full power of spoo.me’s URL shortener service with our API. You can create and manage short links programmatically with our simple and secure API. You can also retrieve the statistics of your links with our API and analyze the data with our user-friendly interface. Explore the possibilities and enhance your online presence with spoo.me. 🚀" />
     <link rel="canonical" href="https://spoo.me/api">
 
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="API Documentation - spoo.me">
-    <meta property="og:description" content="Access the full power of spoo.me’s URL shortener service with our API. You can create and manage short links programmatically with our simple and secure API. You can also retrieve the statistics of your links with our API and analyze the data with our user-friendly interface. Explore the possibilities and enhance your online presence with spoo.me. 🚀">
+    <meta property="og:description"
+        content="Access the full power of spoo.me’s URL shortener service with our API. You can create and manage short links programmatically with our simple and secure API. You can also retrieve the statistics of your links with our API and analyze the data with our user-friendly interface. Explore the possibilities and enhance your online presence with spoo.me. 🚀">
     <meta property="og:image:url" content="https://spoo.me/static/images/api-banner.webp">
     <meta property="og:url" content="https://spoo.me/api">
     <meta property="og:type" content="website">
@@ -19,7 +21,8 @@
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="API Documentation - spoo.me">
-    <meta name="twitter:description" content="Access the full power of spoo.me’s URL shortener service with our API. You can create and manage short links programmatically with our simple and secure API. You can also retrieve the statistics of your links with our API and analyze the data with our user-friendly interface. Explore the possibilities and enhance your online presence with spoo.me. 🚀">
+    <meta name="twitter:description"
+        content="Access the full power of spoo.me’s URL shortener service with our API. You can create and manage short links programmatically with our simple and secure API. You can also retrieve the statistics of your links with our API and analyze the data with our user-friendly interface. Explore the possibilities and enhance your online presence with spoo.me. 🚀">
     <meta name="twitter:image" content="https://spoo.me/static/images/api-banner.webp">
     <meta property="twitter:domain" content="https://spoo.me">
 
@@ -33,7 +36,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
 
     <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/plugins/line-numbers/prism-line-numbers.min.css"/>
+        href="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/plugins/line-numbers/prism-line-numbers.min.css" />
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/api.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
@@ -51,7 +54,8 @@
                 <li><a href="/">Shorten</a></li>
                 <li><a href="#" class="active">API</a></li>
                 <li><a href="/stats">Stats</a></li>
-                <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a></li>
+                <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
+                </li>
                 <li><a href="mailto:support@spoo.me">Contact ↗</a></li>
             </ul>
         </div>
@@ -59,7 +63,8 @@
 
     <div class="mobile-navbar" style="z-index: 100;">
         <div class="mobile-logo">
-            <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png" alt="Spoo.me Banner Image"></a>
+            <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png"
+                    alt="Spoo.me Banner Image"></a>
         </div>
         <button type="button" class="burger" title="Menu">
             <span></span>
@@ -101,12 +106,12 @@
         <p><strong>Endpoint:</strong> <code> POST / </code></p>
         <br>
 
-        <h5>Parameters</h5>
-        <p>The following parameters are used in the API requests and responses:</p>
+        <h5>Payload</h5>
+        <p>The following payloads are used in the API requests and responses:</p>
         <table class="custom-table">
             <thead>
                 <tr>
-                    <th>Parameter</th>
+                    <th>Payload</th>
                     <th>Data Type</th>
                     <th>Description</th>
                     <th>Required</th>
@@ -137,12 +142,6 @@
                     <td>Maximum number of clicks allowed for the shortened URL.</td>
                     <td>No</td>
                 </tr>
-                <tr>
-                    <td>json*</td>
-                    <td>Boolean</td>
-                    <td>To get the response in JSON.</td>
-                    <td>No</td>
-                </tr>
             </tbody>
         </table>
         <br>
@@ -159,15 +158,13 @@
             </thead>
             <tbody>
                 <tr>
-                    <td><code>Accept*</code></td>
-                    <td>Specifies the format of the request payload. Accepted values: <code>application/json</code>,
-                        <code>application/xml</code>
+                    <td><code>Accept</code></td>
+                    <td>Specifies the format of the request payload. Accepted values: <code>application/json</code> *
                     </td>
                 </tr>
             </tbody>
         </table>
-        <p> * The <b>Json parameter</b> or The <b>Accept Header</b> is <b>requiered</b> to get a non-Html Response from
-            the API</p>
+        <p> * If the header is not specified, the response will be in HTML format.</p>
         <br>
         <p><strong>Example Request: (Python)</strong></p>
         <pre class="line-numbers">
@@ -178,10 +175,10 @@ url = "https://spoo.me"
 
 # Replace these with your actual values
 payload = {
-    "url": "your_long_url",
-    "alias": "your_alias",
-    "max-clicks": your_max_clicks,
-    "password": "your_password"
+    "url": "https://example.com",
+    "alias": "example",  # you can choose any other alias
+    "max-clicks": 10,
+    "password": "SuperStrongPassword@18322"
 }
 
 # Necessary to get a non-html response
@@ -190,16 +187,19 @@ headers = {
 }
 
 response = requests.post(url, data=payload, headers=headers)
+
 if response.status_code == 200:
     # If the request was successful, print the shortened URL
     shortened_url = response.json()
-    print(json.dumps(shortened_url, indent=4))
 else:
     # If the request failed, print the error message
     print(f"Error: {response.status_code}")
     print(response.text)
+        </code></pre>
 
->>> {'short_url': 'https://spoo.me/anything'}</code></pre>
+        <p><strong>Example Response:</strong></p>
+        <pre style="max-height: 300px;" class="line-numbers">
+        <code class="language-json">{'short_url': 'https://spoo.me/example'}</code></pre>
 
         <br>
 
@@ -250,16 +250,16 @@ else:
         <p>This endpoint is used to retrieve statistics about a shortened URL. The request must contain the short code
             of the URL. The response contains the statistics.</p>
 
-        <p><strong>Endpoint:</strong> <code>POST /</code>stats/{shortCode}</p>
+        <p><strong>Endpoint:</strong> <code>POST</code> /stats/{shortCode}</p>
         <br>
 
-        <h5>Parameters</h5>
-        <p>The following parameters are used in the API requests and responses:</p>
+        <h5>Payload</h5>
+        <p>The following payloads are used in the API requests and responses:</p>
 
         <table class="custom-table">
             <thead>
                 <tr>
-                    <th>Parameter</th>
+                    <th>Payload</th>
                     <th>Description</th>
                     <th>Required</th>
                 </tr>
@@ -281,14 +281,18 @@ else:
 import json
 
 # Replace these with your actual values
-short_code = "your_short_code"
-password = "your_password"
+short_code = "exa"
+password = "Example@12"
 base_url = "https://spoo.me"
+
+payload = {
+    "password": password
+}
 
 # Make the request
 response = requests.post(
     f"{base_url}/stats/{short_code}",
-    params={"password": password}
+    data = payload
 )
 
 # Check the response
