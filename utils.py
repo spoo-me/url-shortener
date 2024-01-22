@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import os
 import sys
 
-load_dotenv()
+load_dotenv(override=True)
 
 MONGO_URI = os.environ["MONGODB_URI"]
 
@@ -22,6 +22,7 @@ except Exception as e:
 db = client["url-shortener"]
 collection = db["urls"]
 blocked_urls_collection = db["blocked-urls"]
+
 
 def load_url_by_id(id):
     try:
@@ -86,8 +87,8 @@ def validate_url(url):
     else:
         return False
 
-def validate_blocked_url(url):
 
+def validate_blocked_url(url):
     blocked_urls = blocked_urls_collection.find()
     blocked_urls = [doc["_id"] for doc in blocked_urls]
 
@@ -96,6 +97,7 @@ def validate_blocked_url(url):
             return False
 
     return True
+
 
 def is_positive_integer(value):
     try:
