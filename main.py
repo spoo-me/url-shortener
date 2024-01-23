@@ -24,7 +24,7 @@ CORS(app)
 limiter = Limiter(
     get_remote_address,
     app=app,
-    default_limits=["3 per minute", "75 per day", "20 per hour"],
+    default_limits=["5 per minute", "200 per day", "25 per hour"],
     storage_uri=MONGO_URI,
     strategy="fixed-window",
 )
