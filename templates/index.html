@@ -56,6 +56,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -73,7 +74,7 @@
                 <li><a href="/stats">Stats</a></li>
                 <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
                 </li>
-                <li><a href="mailto:support@spoo.me">Contact ↗</a></li>
+                <li onclick="showContactModal();"><a href="#">Contact</a></li>
             </ul>
         </div>
     </div>
@@ -94,8 +95,21 @@
             <li><a href="/stats">Stats</a></li>
             <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
             </li>
-            <li><a href="mailto:support@spoo.me">Contact ↗</a></li>
+            <li onclick="showContactModal();">Contact</li>
         </ul>
+    </div>
+
+    <div id="modalPopup" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-header">Contact Us</h2>
+            <div class="button-container">
+                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/discord-logo.png"><p>Discord</p></button>
+                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/twitterx--v1.png"><p>Twitter</p></button>
+                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/instagram-new.png"><p>Instagram</p></button>
+                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img src="https://img.icons8.com/pastel-glyph/100/b1b8d3/new-post--v1.png"><p>Email</p></button>
+                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/github.png"><p>Github</p></button>
+            </div>
+        </div>
     </div>
 
     <form action="/" method="POST" onsubmit="return validateURL() && validatePassword();">
@@ -167,6 +181,7 @@
     <script src="{{ url_for('static', filename='js/index-qrcode.js') }}"></script>
     <script src="{{ url_for('static', filename='js/index-validate.js') }}" defer=""></script>
     <script src="{{ url_for('static', filename='js/index-script.js') }}" defer=""></script>
+    <script src="{{ url_for('static', filename='js/contacts-popup.js') }}" defer=""></script>
 
 </body>
 

@@ -1,0 +1,107 @@
+.modal {
+    overflow-y: auto;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+}
+
+.modal-content {
+    margin: auto auto 80px;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 8px 32px 0 rgba( 0, 0, 0, 0.37 );
+    width: 80%;
+    max-width: 500px;
+    font-family: 'Allerta Stencil', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: rgba(30, 30, 46, 0.4);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba( 0, 0, 0, 0.18 );
+    color: white;
+    animation: scaleUp 0.4s;
+}
+
+.modal-content h2 {
+    color: #dfdfdf;
+    font-size: 37px;
+    margin-bottom: 40px;
+    font-weight: 500;
+    text-align: center;
+    margin-top: 10px;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.modal-content .button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    flex-direction: column;
+}
+
+.modal-content button {
+    display: flex;
+    align-items: center;
+    font-family: 'Allerta Stencil', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    width: 300px;
+    height: 50px;
+    padding: 0 20px;
+    cursor: pointer;
+    margin: 20px 10px;
+    border-radius: 10px;
+    color: white;
+    font-size: 20px;
+    border: 2px solid rgba(17, 17, 27, 1);
+    background: rgba(17, 17, 27, 0.5);
+}
+
+.modal-content button img {
+    width: 30px;
+    height: 30px;
+}
+
+.modal-content button p {
+    margin: 0 auto;
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.modal-content button:hover {
+    background: rgba(17, 17, 27, 0.7);
+}
+
+@keyframes scaleUp {
+    from {
+        transform: scale(0.1);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .modal-content {
+        margin: auto auto;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 8px 32px 0 rgba( 0, 0, 0, 0.37 );
+        width: 90%;
+        max-width: 500px;
+        font-family: 'Allerta Stencil', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: rgba(30, 30, 46, 0.4);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        border: 1px solid rgba( 0, 0, 0, 0.18 );
+        color: white;
+        animation: scaleUp 0.4s;
+    }
+}

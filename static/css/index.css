@@ -261,14 +261,19 @@ a:hover {
 }
 
 #producthunt {
-    position: fixed;
+    position: relative;
+    text-align: right;
     padding: 20px;
     right: 0;
     bottom: 0;
     transition: all 0.3s ease-in-out;
 }
 
-#producthunt:hover {
+#producthunt img {
+    transition: all 0.3s ease-in-out;
+}
+
+#producthunt img:hover {
     transform: scale(1.1);
 }
 
@@ -278,7 +283,7 @@ a:hover {
         margin-right: 10%;
     }
 
-    #producthunt:hover {
+    #producthunt img:hover {
         transform: none;
     }
 }
