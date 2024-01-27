@@ -87,8 +87,8 @@ For detailed API documentation, please visit [https://spoo.me/api](https://spoo.
 ## Method 1 - Direct Deployment
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fspoo-me%2Furl-shortener&env=MONGODB_URI&envDescription=This%20is%20the%20URI%20of%20your%20MongoDB%20cluster%20which%20would%20be%20used%20to%20store%20the%20data%20of%20this%20URL%20Shortener%20API) &nbsp;
-<a href="https://render.com/deploy?repo=https://github.com/spoo-me/url-shortener"></a><img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" height="30px"/></a> &nbsp;
-<a href="https://render.com/deploy?repo=https://github.com/spoo-me/url-shortener"><img src="https://img.shields.io/website?color=cyan&down_message=Deploy%20to%20Replit&label=%20&logo=replit&up_message=Deploy&url=https%3A%2F%2Freplit.com" height="30px" alt="Deploy to Replit Button"></a> &nbsp;
+<a href="https://render.com/deploy?repo=https://github.com/spoo-me/url-shortener"><img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" height="30px"/></a> &nbsp;
+<a href="https://replit.com/new/github/spoo-me/url-shortener"><img src="https://img.shields.io/website?color=cyan&down_message=Deploy%20to%20Replit&label=%20&logo=replit&up_message=Deploy&url=https%3A%2F%2Freplit.com" height="30px" alt="Deploy to Replit Button"></a> &nbsp;
 
 **Note**: You need to set the `MONGODB_URI` environment variable to the URI of your MongoDB cluster.
 
