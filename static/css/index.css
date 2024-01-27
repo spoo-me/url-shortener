@@ -168,7 +168,8 @@ button[type="submit"]:hover {
 
 #recentURLs {
     list-style: none;
-    padding: 0;
+    padding: 30px;
+    padding-bottom: 70px;
 }
 
 .url-container {
@@ -178,8 +179,8 @@ button[type="submit"]:hover {
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 10px;
     padding: 5px;
-    margin-left: 20%;
-    margin-right: 20%;
+    margin-left: 15%;
+    margin-right: 15%;
     background: rgba(255, 255, 255, 0.15);
     box-shadow: 0 1rem 3rem rgba(0, 0, 0, .175) !important;
     padding-right: 1.25rem;
@@ -261,10 +262,11 @@ a:hover {
 }
 
 #producthunt {
-    position: relative;
-    text-align: right;
+    position: fixed;
+    z-index: 888888;
+    text-align: left;
     padding: 20px;
-    right: 0;
+    left: 0;
     bottom: 0;
     transition: all 0.3s ease-in-out;
 }
@@ -279,8 +281,8 @@ a:hover {
 
 @media screen and (max-width: 480px) {
     .url-container {
-        margin-left: 10%;
-        margin-right: 10%;
+        margin-left: 6%;
+        margin-right: 6%;
     }
 
     #producthunt img:hover {
