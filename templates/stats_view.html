@@ -37,7 +37,7 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats-view.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats-view.css') }}?v=1">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}">
 
@@ -94,20 +94,20 @@
         <div class="main-data">
             <h2 class="main-data-heading">General Stats</h2>
             <p>
-                <b>Original URL</b> &nbsp; <code
+                Original URL &nbsp; <code
                     id="url_long_code"><input id="url_long_input" oninput="adjustWidth()" type="text" value="{{ json_data['url']}} " readonly></code>
             </p>
-            <p><b>Total Clicks</b> &nbsp; <code>{{ json_data["total-clicks"] }}</code></p>
+            <p>Total Clicks &nbsp; <code>{{ json_data["total-clicks"] }}</code></p>
             <p>
-                <b>Total Unique Clicks</b> &nbsp; <code>{{ json_data["total_unique_clicks"] }}</code>
+                Total Unique Clicks &nbsp; <code>{{ json_data["total_unique_clicks"] }}</code>
             </p>
-            <p><b>Short Code</b> &nbsp; <code>{{ json_data["short_code"] }}</code></p>
-            <p><b>Creation Date</b> &nbsp; <code>{{ json_data["creation-date"] }}</code></p>
-            <p><b>Max Clicks</b> &nbsp; <code>{{ json_data["max-clicks"] }}</code></p>
-            <p><b>Expired</b> &nbsp; <code id="expire">{{ json_data["expired"] }}</code></p>
-            <p><b>Last Click</b> &nbsp; <code>{{ json_data['last-click']}}</code></p>
-            <p><b>Last Click Browser Name</b> &nbsp; <code>{{ json_data["last-click-browser"] }}</code></p>
-            <p><b>Last Click OS Name</b> &nbsp; <code>{{ json_data["last-click-os"] }}</code></p>
+            <p>Short Code &nbsp; <code>{{ json_data["short_code"] }}</code></p>
+            <p>Creation Date &nbsp; <code>{{ json_data["creation-date"] }}</code></p>
+            <p>Max Clicks &nbsp; <code>{{ json_data["max-clicks"] }}</code></p>
+            <p>Expired &nbsp; <code id="expire">{{ json_data["expired"] }}</code></p>
+            <p>Last Click &nbsp; <code>{{ json_data['last-click']}}</code></p>
+            <p>Last Click Browser Name &nbsp; <code>{{ json_data["last-click-browser"] }}</code></p>
+            <p>Last Click OS Name &nbsp; <code>{{ json_data["last-click-os"] }}</code></p>
         </div>
         <div class="clicks-data">
             <h2>Click Counter</h2>
@@ -645,6 +645,8 @@
         updateAnalysisChart();
     </script>
     <script src="{{ url_for('static', filename='js/contacts-popup.js') }}" defer=""></script>
+
+    <script src="//code.jivosite.com/widget/hJuQcxUqnJ" async></script>
 
 </body>
 
