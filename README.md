@@ -20,14 +20,22 @@ Simplify your links, amplify your reach – join **spoo.me** and make URLs an ar
 - [📊 URL statistics Features](#-url-statistics-features)
 - [🛠️ URL Shortener API](#️-url-shortener-api)
 - [🚀 Getting Started](#-getting-started)
+  - [Method 1 - Direct Deployment](#method-1---direct-deployment)
+  - [Method 2 - Docker (Recommended)](#method-2---docker-recommended)
     - [📋 Prerequisites](#-prerequisites)
     - [📂 Clone the repository](#-clone-the-repository)
+    - [Rename .env.example to .env](#rename-envexample-to-env)
+    - [➕ Adding environment variables to .env file](#-adding-environment-variables-to-env-file)
+    - [🚀 Starting the server](#-starting-the-server)
+  - [Method 3 - Manual](#method-3---manual)
+    - [📋 Prerequisites](#-prerequisites-1)
+    - [📂 Clone the repository](#-clone-the-repository-1)
     - [Creating a virtual environment (Optional)](#creating-a-virtual-environment-optional)
     - [Activate the virtual environment (Optional)](#activate-the-virtual-environment-optional)
     - [📦 Install dependencies](#-install-dependencies)
-    - [Creating a .env file in the root directory](#creating-a-env-file-in-the-root-directory)
-    - [➕ Adding environment variables to .env file](#-adding-environment-variables-to-env-file)
-    - [🚀 Starting the server](#-starting-the-server)
+    - [Rename .env.example to .env](#rename-envexample-to-env-1)
+    - [➕ Adding environment variables to .env file](#-adding-environment-variables-to-env-file-1)
+    - [🚀 Starting the server](#-starting-the-server-1)
 - [🤝 Contributing](#-contributing)
 - [📧 Feedback / Issues / Support](#-feedback--issues--support)
 - [👀 Visual Previews](#-visual-previews)
@@ -76,9 +84,52 @@ For detailed API documentation, please visit [https://spoo.me/api](https://spoo.
 
 # 🚀 Getting Started
 
+## Method 1 - Direct Deployment
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fspoo-me%2Furl-shortener&env=MONGODB_URI&envDescription=This%20is%20the%20URI%20of%20your%20MongoDB%20cluster%20which%20would%20be%20used%20to%20store%20the%20data%20of%20this%20URL%20Shortener%20API) &nbsp;
+<a href="https://render.com/deploy?repo=https://github.com/spoo-me/url-shortener"></a><img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" height="30px"/></a> &nbsp;
+<a href="https://render.com/deploy?repo=https://github.com/spoo-me/url-shortener"><img src="https://img.shields.io/website?color=cyan&down_message=Deploy%20to%20Replit&label=%20&logo=replit&up_message=Deploy&url=https%3A%2F%2Freplit.com" height="30px" alt="Deploy to Replit Button"></a> &nbsp;
+
+**Note**: You need to set the `MONGODB_URI` environment variable to the URI of your MongoDB cluster.
+
+## Method 2 - Docker (Recommended)
+
+### 📋 Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) 🐳
+
+### 📂 Clone the repository
+
+```bash
+git clone https://github.com/zingzy/spoo.me.git
+```
+
+### Rename .env.example to .env
+
+```bash
+mv .env.example .env
+```
+
+### ➕ Adding environment variables to .env file
+
+```bash
+MONGO_URI=<your_mongo_uri>
+```
+
+**Note**: With this method, you can either use a cloud service like [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) to store the data remotely or you can use a local MongoDB instance. If you want to use a local MongoDB instance, your MongoDB URI would be `mongodb://localhost:27017/`.
+
+### 🚀 Starting the server
+
+```bash
+docker-compose up
+```
+
+## Method 3 - Manual
+
 ### 📋 Prerequisites
 
 - [MongoDB](https://www.mongodb.com/try/download/community) 🌿
+  - MongoDB is only required if you want to store the **data locally**. You can also use a cloud service like [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) to store the data remotely.
 - [Python](https://www.python.org/downloads/) 🐍
 - [PIP](https://pip.pypa.io/en/stable/installing/) 📦
 - [Virtualenv](https://pypi.org/project/virtualenv/) (Optional) 🌐
@@ -107,10 +158,10 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Creating a .env file in the root directory
+### Rename .env.example to .env
 
 ```bash
-touch .env
+mv .env.example .env
 ```
 
 ### ➕ Adding environment variables to .env file
@@ -118,7 +169,8 @@ touch .env
 ```bash
 MONGO_URI=<your_mongo_uri>
 ```
-  To get your free MongoDB Atlas Cluster, visit [https://www.mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
+
+**Note**: If you installed MongoDB locally, your MongoDB URI would be `mongodb://localhost:27017/` or if you are using MongoDB Atlas, you can find your MongoDB URI in the **Connect** tab of your cluster.
 
 
 ### 🚀 Starting the server
@@ -127,11 +179,9 @@ MONGO_URI=<your_mongo_uri>
 python main.py
 ```
 
-
 # 🤝 Contributing
 
 We welcome contributions to **spoo.me**. Feel free to fork the repository and submit a pull request. For major changes, please open an issue first to discuss what you would like to change.
-
 
 # 📧 Feedback / Issues / Support
 

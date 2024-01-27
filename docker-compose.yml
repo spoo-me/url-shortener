@@ -1,0 +1,15 @@
+version: "3"
+services:
+  flask:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+    env_file:
+      - .env
+
+  mongo:
+    image: "mongo:latest"
+    ports:
+      - "27017:27017"
