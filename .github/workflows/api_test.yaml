@@ -9,6 +9,9 @@ jobs:
   test-api:
     runs-on: ubuntu-latest
 
+    env:
+      NGROK_URL: ""
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
