@@ -3,7 +3,7 @@ name: Format Code
 on:
   push:
     branches:
-      - main  # Change this to your main branch name
+      - main
 
 jobs:
   format_code:
@@ -24,4 +24,4 @@ jobs:
           pip install black
 
       - name: Format Python Files
-        run: black .
+        run: python -m black *.py
