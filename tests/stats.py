@@ -3,7 +3,7 @@ import json
 
 short_code = "exa"
 password = "Example@12"
-base_url = "https://localhost:8000"
+base_url = "http://localhost:8000"
 
 payload = {
     "password": password
