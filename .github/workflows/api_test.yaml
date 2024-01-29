@@ -30,15 +30,15 @@ jobs:
       run: python main.py &
 
     - name: Wait for server to start
-      run: sleep 10
+      run: sleep 3
 
-    - name: Start ngrok
-      run: |
-        ./ngrok http 8000 > /dev/null 2>&1 &
-        sleep 15
+    # - name: Start ngrok
+    #   run: |
+    #     ./ngrok http 8000 > /dev/null 2>&1 &
+    #     sleep 15
 
-    - name: Get ngrok public URL
-      run: echo "::set-env name=NGROK_URL::$(curl -s http://localhost:4040/api/tunnels | jq -r .tunnels[0].public_url)"
+    # - name: Get ngrok public URL
+    #   run: echo "::set-env name=NGROK_URL::$(curl -s http://localhost:4040/api/tunnels | jq -r .tunnels[0].public_url)"
 
     - name: Run API test
-      run: python tests/shorten.py "${{ env.NGROK_URL }}"
+      run: python tests/shorten.py # "${{ env.NGROK_URL }}"
