@@ -52,11 +52,11 @@
     <meta name="moz-appearance" content="#adb1ff">
     <meta content="#adb1ff" name="msapplication-TileColor">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=1">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=1">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -126,7 +126,13 @@
         {% endif %}
 
         <label for="alias">Custom Alias</label>
-        <input type="text" id="alias" name="alias" placeholder="your-custom-alias*">
+        <div class="buttonIn">
+            <div id="input-prefix">
+                <span>https://spoo.me/</span>
+            </div>
+            <input type="text" id="alias" name="alias" placeholder="your-custom-alias*">
+
+        </div>
         <p id="non-imp">* leave blank for random url slug</p>
 
         <p id="password-error"></p>
@@ -171,7 +177,7 @@
     <div id="producthunt">
         <a href="https://www.producthunt.com/posts/spoo-me-url-shortener?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-spoo&#0045;me&#0045;url&#0045;shortener"
             target="_blank" rel="noopener"><img
-                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=431671&theme=light"
+                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=431671&theme=dark"
                 alt="Spoo&#0046;me&#0032;Url&#0032;Shortener - Shorten&#0032;Your&#0032;URLs&#0044;&#0032;Not&#0032;Your&#0032;Possibilities&#0046; | Product Hunt"
                 style="width: 200px; height: 40px;" width="200" height="40" /></a>
     </div>
@@ -180,7 +186,7 @@
 
     <script src="{{ url_for('static', filename='js/index-qrcode.js') }}"></script>
     <script src="{{ url_for('static', filename='js/index-validate.js') }}" defer=""></script>
-    <script src="{{ url_for('static', filename='js/index-script.js') }}" defer=""></script>
+    <script src="{{ url_for('static', filename='js/index-script.js') }}?v=1" defer=""></script>
     <script src="{{ url_for('static', filename='js/contacts-popup.js') }}" defer=""></script>
 
     <script src="//code.jivosite.com/widget/hJuQcxUqnJ" async></script>

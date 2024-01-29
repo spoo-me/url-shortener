@@ -39,6 +39,7 @@
     font-size: 16px;
     padding: 5px;
     transition: all 0.1s ease-in;
+    letter-spacing: 0.8px;
 }
 
 .navbar a:hover {
