@@ -3,12 +3,6 @@ import requests
 import random
 import string
 
-# if len(sys.argv) != 2:
-#     print("Usage: python test_api.py <ngrok_url>")
-#     sys.exit(1)
-
-# ngrok_url = sys.argv[1]
-
 url = "http://localhost:8000/"
 
 alias = ''.join(random.choice(string.ascii_lowercase) for i in range(6))
