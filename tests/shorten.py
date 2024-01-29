@@ -9,7 +9,7 @@ import string
 
 # ngrok_url = sys.argv[1]
 
-url = "http://localhost:8000"
+url = "http://localhost:8000/"
 
 alias = ''.join(random.choice(string.ascii_lowercase) for i in range(6))
 
@@ -24,7 +24,7 @@ headers = {
     "Accept": "application/json"
 }
 
-response = requests.post(url, json=payload, headers=headers)
+response = requests.post(url, data=payload, headers=headers)
 
 if response.status_code == 200:
     shortened_url = response.json()
