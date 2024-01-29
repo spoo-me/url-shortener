@@ -20,8 +20,8 @@
     max-width: 500px;
     font-family: 'Allerta Stencil', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: rgba(30, 30, 46, 0.4);
-    backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
+    backdrop-filter: blur(30px);
     border: 1px solid rgba( 0, 0, 0, 0.18 );
     color: white;
     animation: scaleUp 0.4s;
@@ -35,8 +35,8 @@
     text-align: center;
     margin-top: 10px;
     -ms-user-select: none;
-    user-select: none;
     -webkit-user-select: none;
+    user-select: none;
     -webkit-touch-callout: none;
 }
 
@@ -98,8 +98,8 @@
         max-width: 500px;
         font-family: 'Allerta Stencil', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background-color: rgba(30, 30, 46, 0.4);
-        backdrop-filter: blur(30px);
         -webkit-backdrop-filter: blur(30px);
+        backdrop-filter: blur(30px);
         border: 1px solid rgba( 0, 0, 0, 0.18 );
         color: white;
         animation: scaleUp 0.4s;

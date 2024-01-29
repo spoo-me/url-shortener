@@ -14,8 +14,8 @@
         src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js">
     </script>
     <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/16327/gsap-latest-beta.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=1">
 
 </head>
 
@@ -57,11 +57,11 @@
         <div class="modal-content">
             <h2 class="modal-header">Contact Us</h2>
             <div class="button-container">
-                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/discord-logo.png"><p>Discord</p></button>
-                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/twitterx--v1.png"><p>Twitter</p></button>
-                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/instagram-new.png"><p>Instagram</p></button>
-                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img src="https://img.icons8.com/pastel-glyph/100/b1b8d3/new-post--v1.png"><p>Email</p></button>
-                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/github.png"><p>Github</p></button>
+                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/discord-logo.png"alt="Discord Logo"><p>Discord</p></button>
+                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/twitterx--v1.png" alt="Twitter Logo"><p>Twitter</p></button>
+                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/instagram-new.png" alt="Instagram Logo"><p>Instagram</p></button>
+                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img src="https://img.icons8.com/pastel-glyph/100/b1b8d3/new-post--v1.png" alt="Email Icon"><p>Email</p></button>
+                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/github.png" alt="Github Logo"><p>Github</p></button>
             </div>
         </div>
     </div>
@@ -127,7 +127,7 @@
             window.location.href = "/stats/{{ short_code }}";
         }
     </script>
-    <script src="//code.jivosite.com/widget/hJuQcxUqnJ" async></script>
+    <script src="https://code.jivosite.com/widget/hJuQcxUqnJ" async></script>
 
 </body>
 
