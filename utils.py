@@ -25,7 +25,7 @@ except Exception as e:
 db = client["url-shortener"]
 collection = db["urls"]
 blocked_urls_collection = db["blocked-urls"]
-emoji_collection = db["emojis"]
+# emoji_collection = db["emojis"]
 
 def load_url_by_id(id):
     try:
@@ -197,12 +197,12 @@ def generate_emoji_alias():
     return ''.join(random.choice(EMOJIES) for _ in range(3))
 
 
-def check_if_emoji_alias_exists(emoji_alias):
-    try:
-        emoji_data = emoji_collection.find_one({"_id": emoji_alias})
-    except:
-        emoji_data = None
-    return emoji_data is not None
+# def check_if_emoji_alias_exists(emoji_alias):
+#     try:
+#         emoji_data = collection.find_one({"_id": emoji_alias})
+#     except:
+#         emoji_data = None
+#     return emoji_data is not None
 
 def validate_emoji_alias(alias):
     alias = unquote(alias)
@@ -213,21 +213,21 @@ def validate_emoji_alias(alias):
     else:
         return True
 
-def load_emoji_by_alias(alias):
-    try:
-        emoji_data = emoji_collection.find_one({"_id": alias})
-    except:
-        emoji_data = None
-    return emoji_data
+# def load_emoji_by_alias(alias):
+#     try:
+#         emoji_data = collection.find_one({"_id": alias})
+#     except:
+#         emoji_data = None
+#     return emoji_data
 
-def add_emoji_by_alias(alias, emoji_data):
-    try:
-        emoji_collection.insert_one({"_id": alias, **emoji_data})
-    except:
-        pass
+# def add_emoji_by_alias(alias, emoji_data):
+#     try:
+#         collection.insert_one({"_id": alias, **emoji_data})
+#     except:
+#         pass
 
-def update_emoji_by_alias(alias, emoji_data):
-    try:
-        emoji_collection.update_one({"_id": alias}, {"$set": emoji_data})
-    except:
-        pass
+# def update_emoji_by_alias(alias, emoji_data):
+#     try:
+#         collection.update_one({"_id": alias}, {"$set": emoji_data})
+#     except:
+#         pass
