@@ -151,10 +151,81 @@ def shorten_url():
     return response
 
 
+@app.route("/emoji", methods=["GET", "POST"])
+def emoji():
+    emojies = request.values.get("emojies", None)
+    url = request.values.get("url")
+    password = request.values.get("password")
+    max_clicks = request.values.get("max-clicks")
+
+
+    if emojies:
+        # emojies = unquote(emojies)
+        if not validate_emoji_alias(emojies):
+            return jsonify({"EmojiError": "Invalid emoji"}), 400
+
+        if check_if_emoji_alias_exists(emojies):
+            return jsonify({"EmojiError": "Emoji already exists"}), 400
+    else:
+        while True:
+            emojies = generate_emoji_alias()
+
+            if not check_if_emoji_alias_exists(emojies):
+                break
+
+    if not validate_url(url):
+        return jsonify({"UrlError": "Invalid URL"}), 400
+
+    if not validate_blocked_url(url):
+        return jsonify({"UrlError": "Blocked URL ⛔"}), 403
+
+    data = {"url": url, "counter": {}, "total-clicks": 0}
+
+    if password:
+        if not validate_password(password):
+            return (
+                jsonify(
+                    {
+                        "PasswordError": "Invalid password, password must be atleast 8 characters long, must contain a letter and a number and a special character either '@' or '.' and cannot be consecutive"
+                    }
+                ),
+                400,
+            )
+        data["password"] = password
+
+    if max_clicks:
+        if not is_positive_integer(max_clicks):
+            return (
+                jsonify({"MaxClicksError": "max-clicks must be an positive integer"}),
+                400,
+            )
+        else:
+            max_clicks = str(abs(int(str(max_clicks))))
+        data["max-clicks"] = max_clicks
+
+    data["creation-date"] = datetime.now().strftime("%Y-%m-%d")
+    data["creation-time"] = datetime.now().strftime("%H:%M:%S")
+
+    data["creation-ip-address"] = get_client_ip()
+
+    add_emoji_by_alias(emojies, data)
+
+    response = jsonify({"short_url": f"{request.host_url}{emojies}"})
+
+    if request.headers.get("Accept") == "application/json":
+        return response
+
+    return redirect(url_for("result", short_code=emojies))
+
+
 @app.route("/result/<short_code>", methods=["GET"])
 @limiter.exempt
 def result(short_code):
-    url_data = load_url_by_id(short_code)
+
+    if validate_emoji_alias(short_code):
+        url_data = load_emoji_by_alias(short_code)
+    else:
+        url_data = load_url_by_id(short_code)
 
     if url_data:
         short_code = url_data["_id"]
@@ -200,7 +271,10 @@ def get_client_ip():
 @app.route("/<short_code>", methods=["GET"])
 @limiter.exempt
 def redirect_url(short_code):
-    url_data = load_url_by_id(short_code)
+    if validate_emoji_alias(short_code):
+        url_data = load_emoji_by_alias(short_code)
+    else:
+        url_data = load_url_by_id(short_code)
 
     if not url_data:
         return render_template(
@@ -326,7 +400,10 @@ def redirect_url(short_code):
     url_data["last-click-browser"] = browser
     url_data["last-click-os"] = os_name
 
-    update_url_by_id(short_code, url_data)
+    if validate_emoji_alias(short_code):
+        update_emoji_by_alias(short_code, url_data)
+    else:
+        update_url_by_id(short_code, url_data)
 
     return redirect(url)
 
@@ -334,7 +411,11 @@ def redirect_url(short_code):
 @app.route("/<short_code>/password", methods=["POST"])
 @limiter.exempt
 def check_password(short_code):
-    url_data = load_url_by_id(short_code)
+
+    if validate_emoji_alias(short_code):
+        url_data = load_emoji_by_alias(short_code)
+    else:
+        url_data = load_url_by_id(short_code)
 
     if url_data:
         # check if the URL is password protected
@@ -370,7 +451,10 @@ def stats():
         short_code = short_code[short_code.rfind("/") + 1 :]
         password = request.form["password"]
 
-        url_data = load_url_by_id(short_code)
+        if validate_emoji_alias(short_code):
+            url_data = load_emoji_by_alias(short_code)
+        else:
+            url_data = load_url_by_id(short_code)
 
         if not url_data:
             return render_template(
@@ -409,7 +493,10 @@ def stats():
 def analytics(short_code):
     password = request.values.get("password")
 
-    url_data = load_url_by_id(short_code)
+    if validate_emoji_alias(short_code):
+        url_data = load_emoji_by_alias(short_code)
+    else:
+        url_data = load_url_by_id(short_code)
 
     if not url_data:
         if request.method == "GET":
