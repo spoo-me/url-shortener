@@ -18,7 +18,6 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import atexit
 from utils import *
-import logging
 
 app = Flask(__name__)
 CORS(app)
@@ -159,19 +158,18 @@ def emoji():
     password = request.values.get("password")
     max_clicks = request.values.get("max-clicks")
 
-
     if emojies:
         # emojies = unquote(emojies)
         if not validate_emoji_alias(emojies):
             return jsonify({"EmojiError": "Invalid emoji"}), 400
 
-        if check_if_slug_exists(emojies):
+        if check_if_emoji_alias_exists(emojies):
             return jsonify({"EmojiError": "Emoji already exists"}), 400
     else:
         while True:
             emojies = generate_emoji_alias()
 
-            if not check_if_slug_exists(emojies):
+            if not check_if_emoji_alias_exists(emojies):
                 break
 
     if not validate_url(url):
@@ -209,7 +207,7 @@ def emoji():
 
     data["creation-ip-address"] = get_client_ip()
 
-    add_url_by_id(emojies, data)
+    add_emoji_by_alias(emojies, data)
 
     response = jsonify({"short_url": f"{request.host_url}{emojies}"})
 
@@ -223,11 +221,11 @@ def emoji():
 @limiter.exempt
 def result(short_code):
 
-    # if validate_emoji_alias(short_code):
-    #     url_data = load_emoji_by_alias(short_code)
-    # else:
     short_code = unquote(short_code)
-    url_data = load_url_by_id(short_code)
+    if validate_emoji_alias(short_code):
+        url_data = load_emoji_by_alias(short_code)
+    else:
+        url_data = load_url_by_id(short_code)
 
     if url_data:
         short_code = url_data["_id"]
@@ -239,12 +237,15 @@ def result(short_code):
             host_url=request.host_url,
         )
     else:
-        return render_template(
-            "error.html",
-            error_code="404",
-            error_message="URL NOT FOUND",
-            host_url=request.host_url,
-        ), 404
+        return (
+            render_template(
+                "error.html",
+                error_code="404",
+                error_message="URL NOT FOUND",
+                host_url=request.host_url,
+            ),
+            404,
+        )
 
 
 def get_country(ip_address):
@@ -273,19 +274,23 @@ def get_client_ip():
 @app.route("/<short_code>", methods=["GET"])
 @limiter.exempt
 def redirect_url(short_code):
-    # if validate_emoji_alias(short_code):
-    #     url_data = load_emoji_by_alias(short_code)
-    # else:
+
     short_code = unquote(short_code)
-    url_data = load_url_by_id(short_code)
+    if validate_emoji_alias(short_code):
+        url_data = load_emoji_by_alias(short_code)
+    else:
+        url_data = load_url_by_id(short_code)
 
     if not url_data:
-        return render_template(
-            "error.html",
-            error_code="404",
-            error_message="URL NOT FOUND",
-            host_url=request.host_url,
-        ), 404
+        return (
+            render_template(
+                "error.html",
+                error_code="404",
+                error_message="URL NOT FOUND",
+                host_url=request.host_url,
+            ),
+            404,
+        )
 
     url = url_data["url"]
     # check if the URL is password protected
@@ -403,10 +408,10 @@ def redirect_url(short_code):
     url_data["last-click-browser"] = browser
     url_data["last-click-os"] = os_name
 
-    # if validate_emoji_alias(short_code):
-    #     update_emoji_by_alias(short_code, url_data)
-    # else:
-    update_url_by_id(short_code, url_data)
+    if validate_emoji_alias(short_code):
+        update_emoji_by_alias(short_code, url_data)
+    else:
+        update_url_by_id(short_code, url_data)
 
     return redirect(url)
 
@@ -416,10 +421,10 @@ def redirect_url(short_code):
 def check_password(short_code):
 
     short_code = unquote(short_code)
-    # if validate_emoji_alias(short_code):
-    #     url_data = load_emoji_by_alias(short_code)
-    # else:
-    url_data = load_url_by_id(short_code)
+    if validate_emoji_alias(short_code):
+        url_data = load_emoji_by_alias(short_code)
+    else:
+        url_data = load_url_by_id(short_code)
 
     if url_data:
         # check if the URL is password protected
@@ -456,10 +461,11 @@ def stats():
         password = request.form["password"]
 
         short_code = unquote(short_code)
-        # if validate_emoji_alias(short_code):
-        #     url_data = load_emoji_by_alias(short_code)
-        # else:
-        url_data = load_url_by_id(short_code)
+
+        if validate_emoji_alias(short_code):
+            url_data = load_emoji_by_alias(short_code)
+        else:
+            url_data = load_url_by_id(short_code)
 
         if not url_data:
             return render_template(
@@ -498,20 +504,24 @@ def stats():
 def analytics(short_code):
     password = request.values.get("password")
 
-    # if validate_emoji_alias(short_code):
-    #     url_data = load_emoji_by_alias(short_code)
-    # else:
     short_code = unquote(short_code)
-    url_data = load_url_by_id(short_code)
+
+    if validate_emoji_alias(short_code):
+        url_data = load_emoji_by_alias(short_code)
+    else:
+        url_data = load_url_by_id(short_code)
 
     if not url_data:
         if request.method == "GET":
-            return render_template(
-                "error.html",
-                error_code="404",
-                error_message="URL NOT FOUND",
-                host_url=request.host_url,
-            ), 404
+            return (
+                render_template(
+                    "error.html",
+                    error_code="404",
+                    error_message="URL NOT FOUND",
+                    host_url=request.host_url,
+                ),
+                404,
+            )
         else:
             return jsonify({"UrlError": "The requested Url never existed"}), 404
 
@@ -525,11 +535,14 @@ def analytics(short_code):
                     400,
                 )
             else:
-                return render_template(
-                    "stats_error.html",
-                    url=request.host_url + short_code,
-                    geterror=f"{request.host_url}{short_code} is a password protected Url, please enter the password to view its stats.",
-                    host_url=request.host_url,
+                return (
+                    render_template(
+                        "stats_error.html",
+                        url=request.host_url + short_code,
+                        geterror=f"{request.host_url}{short_code} is a password protected Url, please enter the password to view its stats.",
+                        host_url=request.host_url,
+                    ),
+                    400,
                 )
 
     if "max-clicks" in url_data:
