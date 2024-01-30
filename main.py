@@ -226,6 +226,7 @@ def result(short_code):
     # if validate_emoji_alias(short_code):
     #     url_data = load_emoji_by_alias(short_code)
     # else:
+    short_code = unquote(short_code)
     url_data = load_url_by_id(short_code)
 
     if url_data:
@@ -275,6 +276,7 @@ def redirect_url(short_code):
     # if validate_emoji_alias(short_code):
     #     url_data = load_emoji_by_alias(short_code)
     # else:
+    short_code = unquote(short_code)
     url_data = load_url_by_id(short_code)
 
     if not url_data:
@@ -413,6 +415,7 @@ def redirect_url(short_code):
 @limiter.exempt
 def check_password(short_code):
 
+    short_code = unquote(short_code)
     # if validate_emoji_alias(short_code):
     #     url_data = load_emoji_by_alias(short_code)
     # else:
@@ -452,6 +455,7 @@ def stats():
         short_code = short_code[short_code.rfind("/") + 1 :]
         password = request.form["password"]
 
+        short_code = unquote(short_code)
         # if validate_emoji_alias(short_code):
         #     url_data = load_emoji_by_alias(short_code)
         # else:
@@ -497,6 +501,7 @@ def analytics(short_code):
     # if validate_emoji_alias(short_code):
     #     url_data = load_emoji_by_alias(short_code)
     # else:
+    short_code = unquote(short_code)
     url_data = load_url_by_id(short_code)
 
     if not url_data:
