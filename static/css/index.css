@@ -79,6 +79,7 @@ input[type="number"]:focus::placeholder {
     align-items: center;
     background-color: rgba(255, 255, 255, 0.05);
     border: 2px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
 }
 
 .buttonIn.focus {
@@ -93,6 +94,7 @@ input[type="number"]:focus::placeholder {
     padding-left: 3px;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+    backdrop-filter: none;
 }
 
 #alias:focus {
@@ -112,7 +114,6 @@ input[type="number"]:focus::placeholder {
     border-top-left-radius: 19px;
     border-bottom-left-radius: 18px;
     padding-left: 15px;
-    backdrop-filter: blur(20px);
 }
 
 svg {

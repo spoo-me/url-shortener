@@ -35,3 +35,33 @@ function downloadQRCode() {
 function shortenAnotherLink() {
     window.location.href = "/";
 }
+
+var qrcode = document.getElementById("qrcode");
+
+qrcode.onload = function () {
+
+    var qrcodeContainer = document.getElementById("qr-code-container");
+    qrcodeContainer.style.animation = "none";
+
+    qrcodeContainer.addEventListener("mouseenter", function () {
+        qrcodeContainer.style.cursor = "pointer";
+        var qrcodeOverlay = document.getElementById("qrcode-overlay");
+        qrcodeOverlay.style.display = "flex";
+    });
+
+    qrcodeContainer.addEventListener("mouseleave", function () {
+        const qrcodeOverlay = document.getElementById("qrcode-overlay");
+        qrcodeOverlay.style.display = "none";
+    });
+
+    qrcodeContainer.addEventListener("click", function () {
+        downloadQRCode();
+    });
+
+};
+
+var copyButton = document.querySelector(".copy-button");
+
+copyButton.addEventListener("click", function () {
+    copyShortUrl();
+});
