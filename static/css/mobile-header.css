@@ -15,7 +15,20 @@
     color: white;
     margin: 0;
     font-family: "Allerta Stencil", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    transition: margin 0.2s cubic-bezier(0.8, 0, 0.2, 1);
 }
+
+.mobile-navbar.scrolled {
+    position: fixed;
+    width: -webkit-fill-available;
+    margin: 10px;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 0px 4px 0px, rgba(0, 0, 0, 0.06) 0px 5px 20px 5px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: saturate(1.5) blur(12px);
+}
+
 
 .mobile-logo {
     padding: 9px 5px 6px 35px;
