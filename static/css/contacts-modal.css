@@ -5,7 +5,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: rgba(0, 0, 0, 0.5);
     z-index: 9999;
     display: none;
     align-items: center;
@@ -19,10 +19,10 @@
     width: 80%;
     max-width: 500px;
     font-family: 'Allerta Stencil', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: rgba(30, 30, 46, 0.4);
+    background-color: rgba(0,0,0,0.5);
     -webkit-backdrop-filter: blur(30px);
     backdrop-filter: blur(30px);
-    border: 1px solid rgba( 0, 0, 0, 0.18 );
+    border: 1px solid rgba( 0, 0, 0, 0.8 );
     color: white;
     animation: scaleUp 0.4s;
 }
@@ -60,7 +60,7 @@
     border-radius: 10px;
     color: white;
     font-size: 20px;
-    border: 2px solid rgba(17, 17, 27, 1);
+    border: 2px solid rgba(0,0,0, 1);
     background: rgba(255, 255, 255, 0.125);
 }
 

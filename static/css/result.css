@@ -324,8 +324,13 @@ body {
         padding: 8px 20px 7px 20px;
     }
 
+    .copy-button img {
+        width: 28px;
+        height: 28px;
+    }
+
     #short-url {
-        font-size: 20px;
+        font-size: 19px;
     }
 
     #share-buttons {
@@ -339,5 +344,10 @@ body {
     .qrcode {
         width: 200px;
         height: 200px;
+    }
+
+    #short-another-button {
+        padding: 12px 25px;
+        font-size: 13px;
     }
 }
