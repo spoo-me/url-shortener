@@ -116,6 +116,11 @@ def generate_short_code():
     return "".join(random.choice(letters) for i in range(6))
 
 
+def generate_passkey():
+    letters = string.ascii_lowercase + string.ascii_uppercase + string.digits
+    return "".join(random.choice(letters) for i in range(22))
+
+
 def validate_string(string):
     pattern = r"^[a-zA-Z0-9_-]*$"
     return bool(re.search(pattern, string))

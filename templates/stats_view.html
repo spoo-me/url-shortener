@@ -37,7 +37,7 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=1">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats-view.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats-view.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=1">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}">
 
@@ -191,10 +191,12 @@
         </div>
         <div class="qr-code">
             <h2 style="text-align: left; margin-bottom: 20px;">Qr Code</h2>
-            <div
-                style="border-radius: 12px; background: rgba(255, 255, 255, 0.125); justify-items: center; padding: 10px;">
-                <img style="max-width: 350px; max-height: 250px; border-radius: 12px; margin: 10px;" alt="QR Code For Sharing the Stats"
-                    src="https://qr.spoo.me/gradient?text={{ host_url }}{{json_data['short_code']}}">
+            <div class="qr-code-upper">
+                <div id="qr-code-container">
+                    <img class="qrcode" id="qrcode" alt="Qr Code for Sharing the ShortURL"
+                        src="https://qr.spoo.me/gradient?text={{ host_url }}{{json_data['short_code']}}">
+                    <span id="qrcode-overlay">Download</span>
+                </div>
             </div>
         </div>
     </div>
@@ -643,6 +645,53 @@
         updateReferrerChart();
         updateCountryChart();
         updateAnalysisChart();
+
+        var qrcode = document.getElementById("qrcode");
+
+        function downloadQRCode() {
+            var qrCodeSrc = qrcode.src;
+
+            var link = document.createElement("a");
+
+            var xhr = new XMLHttpRequest();
+            xhr.responseType = "blob";
+            xhr.onload = function () {
+                var reader = new FileReader();
+                reader.onloadend = function () {
+                    link.href = reader.result;  // Use the result from the FileReader
+                    link.download = "qrcode.png";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);  // Clean up the link element
+                };
+                reader.readAsDataURL(xhr.response);
+            };
+            xhr.open("GET", qrCodeSrc);
+            xhr.send();
+        }
+
+        qrcode.onload = function () {
+
+            var qrcodeContainer = document.getElementById("qr-code-container");
+            qrcodeContainer.style.animation = "none";
+
+            qrcodeContainer.addEventListener("mouseenter", function () {
+                qrcodeContainer.style.cursor = "pointer";
+                var qrcodeOverlay = document.getElementById("qrcode-overlay");
+                qrcodeOverlay.style.display = "flex";
+            });
+
+            qrcodeContainer.addEventListener("mouseleave", function () {
+                const qrcodeOverlay = document.getElementById("qrcode-overlay");
+                qrcodeOverlay.style.display = "none";
+            });
+
+            qrcodeContainer.addEventListener("click", function () {
+                downloadQRCode();
+            });
+
+        };
+
     </script>
     <script src="{{ url_for('static', filename='js/contacts-popup.js') }}" defer=""></script>
 

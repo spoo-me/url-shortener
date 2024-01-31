@@ -1,5 +1,6 @@
 body {
     background-image: linear-gradient(355deg, #2f281f, #320ea2);
+    background-image: linear-gradient(355deg, #1c150c, #000000);
     padding: 0 20px;
 }
 
@@ -37,10 +38,11 @@ p::-webkit-scrollbar-track {
 .country-data,
 .average-data,
 .qr-code {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.1);
     padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
+    border: rgba(255, 255, 255, 0.05) 1px solid;
     flex-basis: 49.5%;
     margin-bottom: 20px;
 }
@@ -53,7 +55,7 @@ p::-webkit-scrollbar-track {
 
 .chart-container {
     width: 100%;
-    max-width: 600px;
+    max-width: 650px;
     margin-bottom: 20px;
     background-color: rgba(255, 255, 255, 0.125);
     padding: 20px;
@@ -76,8 +78,13 @@ p::-webkit-scrollbar-track {
 }
 
 select,
-button {
+button:not(.burger)  {
     margin-top: 10px;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+}
+
+select:focus {
+    outline: none;
 }
 
 #countryChart,
@@ -91,6 +98,108 @@ button {
 
 .qr-code {
     text-align: center;
+}
+
+.qr-code-upper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.qrcode {
+    height: 300px;
+    width: 300px;
+    border-radius: 15px;
+}
+
+#qr-code-container {
+    padding: 20px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+    animation: qrcode-loading 1.5s infinite;
+}
+
+#qrcode-overlay {
+    display: none;
+    position: absolute;
+    right: 0;
+    left: 0;
+    top: 0;
+    height: -webkit-fill-available;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    font-size: 25px;
+    background: rgba(0,0,0, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    color: white;
+    letter-spacing: 1.8px;
+    animation: fade-in 0.3s ease;
+}
+
+@keyframes qrcode-loading {
+    0% {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    50% {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    100% {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+}
+
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 0.1;
+    }
+
+    20% {
+        opacity: 0.2;
+    }
+
+    30% {
+        opacity: 0.3;
+    }
+
+    40% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    60% {
+        opacity: 0.6;
+    }
+
+    70% {
+        opacity: 0.7;
+    }
+
+    80% {
+        opacity: 0.8;
+    }
+
+    90% {
+        opacity: 0.9;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 @media screen and (max-width: 1350px) and (min-width: 601px) {
@@ -189,6 +298,7 @@ h2 {
     color: white;
     padding-bottom: 10px;
     font-weight: 400;
+    margin: 0;
 }
 
 p {
