@@ -456,9 +456,9 @@ def check_password(short_code):
 @limiter.exempt
 def stats():
     if request.method == "POST":
-        short_code = request.form["short_code"]
+        short_code = request.values.get("short_code")
         short_code = short_code[short_code.rfind("/") + 1 :]
-        password = request.form["password"]
+        password = request.values.get("password")
 
         short_code = unquote(short_code)
 
@@ -470,7 +470,7 @@ def stats():
         if not url_data:
             return render_template(
                 "stats.html",
-                error="Invalid URL",
+                error="Invalid Short Code",
                 url=short_code,
                 host_url=request.host_url,
             )
@@ -478,16 +478,16 @@ def stats():
         if not password and "password" in url_data:
             return render_template(
                 "stats.html",
-                error="Password Not Provided",
-                url={{request.host_url}} + short_code,
+                password_error=f"{request.host_url}{short_code} is a password protected Url, please enter the password to continue.",
+                url=short_code,
                 host_url=request.host_url,
             )
 
         if "password" in url_data and url_data["password"] != password:
             return render_template(
                 "stats.html",
-                error="Invalid Password!",
-                url={{request.host_url}} + short_code,
+                password_error="Invalid Password! please enter the correct password to continue.",
+                url=short_code,
                 host_url=request.host_url,
             )
 
@@ -537,9 +537,9 @@ def analytics(short_code):
             else:
                 return (
                     render_template(
-                        "stats_error.html",
-                        url=request.host_url + short_code,
-                        geterror=f"{request.host_url}{short_code} is a password protected Url, please enter the password to view its stats.",
+                        "stats.html",
+                        url=short_code,
+                        password_error=f"{request.host_url}{short_code} is a password protected Url, please enter the password to continue.",
                         host_url=request.host_url,
                     ),
                     400,
