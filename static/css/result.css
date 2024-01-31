@@ -53,6 +53,7 @@ body {
     border-right: 1px solid rgba(255, 255, 255, 0.18);
     border-top-left-radius: 11px;
     border-bottom-left-radius: 11px;
+    transition: background-color 0.3s ease-in-out;
 }
 
 #short-url:hover {
@@ -61,12 +62,12 @@ body {
 }
 
 .copy-button:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.1);
     transition: all 0.3s ease-in-out;
 }
 
 .copy-button:focus {
-    background-color: rgba(255, 255, 255, 0.25);
+    background-color: rgba(255, 255, 255, 0.15);
     transition: background-color 0.3s
 }
 
@@ -148,6 +149,7 @@ body {
     border-radius: 15px;
     color: white;
     letter-spacing: 1.8px;
+    animation: fade-in 0.3s ease;
 }
 
 @keyframes qrcode-loading {
@@ -161,6 +163,98 @@ body {
 
     100% {
         background-color: rgba(255, 255, 255, 0.1);
+    }
+}
+
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 0.1;
+    }
+
+    20% {
+        opacity: 0.2;
+    }
+
+    30% {
+        opacity: 0.3;
+    }
+
+    40% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    60% {
+        opacity: 0.6;
+    }
+
+    70% {
+        opacity: 0.7;
+    }
+
+    80% {
+        opacity: 0.8;
+    }
+
+    90% {
+        opacity: 0.9;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes fade-out {
+    0% {
+        opacity: 1;
+    }
+
+    10% {
+        opacity: 0.9;
+    }
+
+    20% {
+        opacity: 0.8;
+    }
+
+    30% {
+        opacity: 0.7;
+    }
+
+    40% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    60% {
+        opacity: 0.4;
+    }
+
+    70% {
+        opacity: 0.3;
+    }
+
+    80% {
+        opacity: 0.2;
+    }
+
+    90% {
+        opacity: 0.1;
+    }
+
+    100% {
+        opacity: 0;
     }
 }
 
@@ -179,6 +273,7 @@ body {
     margin-top: -15px;
     box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
     border: 1px solid rgba(255, 255, 255, 0.18);
+    font-family: inherit;
 }
 
 #short-another-button:hover {
