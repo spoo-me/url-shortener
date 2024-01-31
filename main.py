@@ -470,7 +470,7 @@ def stats():
         if not url_data:
             return render_template(
                 "stats.html",
-                error="Invalid Short Code",
+                error="Invalid Short Code, short code does not exist!",
                 url=short_code,
                 host_url=request.host_url,
             )
