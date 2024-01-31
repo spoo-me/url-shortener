@@ -126,13 +126,14 @@
         {% endif %}
 
         <label for="alias">Custom Alias</label>
+
         <div class="buttonIn">
             <div id="input-prefix">
-                <span>https://spoo.me/</span>
+                <span>{{ host_url }}</span>
             </div>
             <input type="text" id="alias" name="alias" placeholder="your-custom-alias*">
-
         </div>
+
         <p id="non-imp">* leave blank for random url slug</p>
 
         <p id="password-error"></p>

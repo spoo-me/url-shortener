@@ -31,7 +31,7 @@
     <meta name="moz-appearance" content="#6af5dd">
     <meta content="#6af5dd" name="msapplication-TileColor">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=1">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=1">
@@ -56,7 +56,8 @@
 
     <div class="mobile-navbar">
         <div class="mobile-logo">
-            <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png" alt="Spoo.me Banner Image"></a>
+            <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png"
+                    alt="Spoo.me Banner Image"></a>
         </div>
         <button type="button" class="burger" title="Menu">
             <span></span>
@@ -77,55 +78,104 @@
         <div class="modal-content">
             <h2 class="modal-header">Contact Us</h2>
             <div class="button-container">
-                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/discord-logo.png"alt="Discord Logo"><p>Discord</p></button>
-                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/twitterx--v1.png" alt="Twitter Logo"><p>Twitter</p></button>
-                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/instagram-new.png" alt="Instagram Logo"><p>Instagram</p></button>
-                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img src="https://img.icons8.com/pastel-glyph/100/b1b8d3/new-post--v1.png" alt="Email Icon"><p>Email</p></button>
-                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img src="https://img.icons8.com/ios-filled/100/b1b8d3/github.png" alt="Github Logo"><p>Github</p></button>
+                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
+                        src="https://img.icons8.com/ios-filled/100/b1b8d3/discord-logo.png" alt="Discord Logo">
+                    <p>Discord</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img
+                        src="https://img.icons8.com/ios-filled/100/b1b8d3/twitterx--v1.png" alt="Twitter Logo">
+                    <p>Twitter</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img
+                        src="https://img.icons8.com/ios-filled/100/b1b8d3/instagram-new.png" alt="Instagram Logo">
+                    <p>Instagram</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img
+                        src="https://img.icons8.com/pastel-glyph/100/b1b8d3/new-post--v1.png" alt="Email Icon">
+                    <p>Email</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img
+                        src="https://img.icons8.com/ios-filled/100/b1b8d3/github.png" alt="Github Logo">
+                    <p>Github</p>
+                </button>
             </div>
         </div>
     </div>
 
-    <form action="/stats" method="POST" onsubmit="return checkURL();">
+    <form action="/stats" method="post" onsubmit="return checkURL();">
         <p id="url-error"></p>
-        <label for="short-code" style="font-weight: bold;">Enter the full Url</label>
-        <input type="text" id="short_code" name="short_code" required placeholder="{{ host_url }}your-short-code"
-            value="{{ url }}">
 
         {% if error %}
-        <p id="password-error">{{ error }}</p>
-        <script>removeErrorMessage();</script>
+        <label for="short-code" style="font-weight: bold;">{{ error }}</label>
+        {% elif password_error %}
+        <label for="short-code" style="font-weight: bold;">{{ password_error }}</label>
+        {% else %}
+        <label for="short-code" style="font-weight: bold;">Enter the alias</label>
+
         {% endif %}
 
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="Optional">
+        <div class="buttonIn">
+            <div id="input-prefix">
+                <span>{{ host_url }}</span>
+            </div>
+            <input type="text" id="short_code" name="short_code" required placeholder="alias" value="{{ url }}" spellcheck="false">
 
-        <button type="submit">View Stats</button>
+            <button type="submit" value="Submit" id="submit" title="Submit Form"><svg class="icon-arrow"
+                    viewBox="0 0 31.49 31.49">
+                    <path
+                        d="M21.205 5.007c-.429-.444-1.143-.444-1.587 0-.429.429-.429 1.143 0 1.571l8.047 8.047H1.111C.492 14.626 0 15.118 0 15.737c0 .619.492 1.127 1.111 1.127h26.554l-8.047 8.032c-.429.444-.429 1.159 0 1.587.444.444 1.159.444 1.587 0l9.952-9.952c.444-.429.444-1.143 0-1.571l-9.952-9.953z" />
+                </svg></button>
+        </div>
+
+        {% if password_error %}
+        <input type="password" id="password" name="password" placeholder="Password">
+        <script>
+            document.getElementById("password").focus();
+            document.getElementById("password").classList.add("shake");
+            setTimeout(function () {
+                document.getElementById("password").classList.remove("shake");
+            }, 1000);
+        </script>
+
+        {% else %}
+        <input type="password" id="password" name="password" placeholder="Password (optional)">
+
+        {% endif %}
+
     </form>
 
     <script src="{{ url_for('static', filename='js/stats-script.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/contacts-popup.js') }}" defer=""></script>
 
+
+    {% if error %}
+        <script>
+            document.querySelector(".buttonIn").classList.add("shake");
+            setTimeout(function () {
+                document.querySelector(".buttonIn").classList.remove("shake");
+            }, 1000);
+        </script>
+    {% endif %}
+
     <script>
+        document.getElementById("short_code").focus();
+
         function checkURL() {
-            var hostURL = "{{ host_url }}";
             var enteredURL = document.getElementById("short_code").value.trim();
+            var regex = /^[^\!@#\$%\^&\*\(\)_\+\/\<\>\?:"\{\}\|\/~]+$/;
 
-            if (!enteredURL.startsWith(hostURL)) {
-                document.getElementById("url-error").innerText = "Invalid URL: The entered URL must begin with the host's URL.";
-                document.getElementById("url-error").style.background = "rgba(255, 255, 255, 0.15)"
-                document.getElementById("url-error").style.marginTop = "-15px"
+            if (!regex.test(enteredURL)) {
+                document.querySelector(".buttonIn").classList.add("shake");
                 setTimeout(function () {
-                    document.getElementById("url-error").innerText = "";
-                    document.getElementById("url-error").style.background = "";
-                    document.getElementById("url-error").style.marginTop = "-30px";
-                }, 3000);
+                    document.querySelector(".buttonIn").classList.remove("shake");
+                }, 1000);
                 return false;
+            } else {
+                return true;
             }
-            return true;
         }
-
     </script>
+
     <script src="https://code.jivosite.com/widget/hJuQcxUqnJ" async></script>
 
 </body>
