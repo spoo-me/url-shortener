@@ -1,0 +1,54 @@
+.self-promo {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 10px;
+    background-color: #000336;
+}
+
+.self-promo-inner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: -webkit-fill-available;
+}
+
+.self-promo-inner a {
+    text-align: center;
+    all: unset;
+    color: white;
+    font-weight: normal;
+    font-size: 17px;
+    letter-spacing: 0.8px;
+    cursor: pointer;
+}
+
+.self-promo button {
+    background-color: rgba(255, 255, 255, 0.125);
+    backdrop-filter: blur(10px);
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    outline: none;
+    border-radius: 50%;
+    height: 27px;
+    width: 27px;
+    padding: 3px;
+    margin: 0;
+}
+
+.self-promo button:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+.self-promo.hidden {
+    display: none;
+}
+
+@media screen and (max-width: 500px) {
+    .self-promo-inner a {
+        font-size: 12px;
+    }
+}

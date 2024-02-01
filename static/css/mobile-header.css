@@ -3,7 +3,7 @@
 .mobile-navbar {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 4px;
-    position: fixed;
+    position: sticky;
     z-index: 9999999999999999999;
     top: 0;
     left: 0;
