@@ -92,9 +92,11 @@ select:focus {
 }
 
 #url_long_code {
-    max-width: 300px;
+    max-width: 200px;
     display: inline-flex;
     overflow-x: scroll;
+    height: 24px;
+    text-wrap: nowrap;
 }
 
 #url_long_code::-webkit-scrollbar {
