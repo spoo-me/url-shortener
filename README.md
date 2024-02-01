@@ -192,3 +192,16 @@ We welcome contributions to **spoo.me**. Feel free to fork the repository and su
 **Example Stats Page**
 
 ![image](https://github.com/Zingzy/spoo.me/assets/90309290/3eb2b44d-f8aa-490e-a11a-700845165e3b)
+
+---
+
+<h6 align="center">
+<img src="https://spoo.me/static/images/favicon.png" height=30>
+<br>
+© spoo.me . 2024
+
+All Rights Reserved</h6>
+
+<p align="center">
+	<a href="https://github.com/spoo-me/py_spoo_url/blob/master/LICENSE.txt"><img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=MIT&logoColor=d9e0ee&colorA=363a4f&colorB=b7bdf8"/></a>
+</p>
