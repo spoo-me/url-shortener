@@ -37,8 +37,8 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats-view.css') }}?v=5">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/self-promo.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats-view.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/self-promo.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=2">
 
@@ -206,7 +206,7 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/header.js') }}" defer=""></script>
+    <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
     <script src="{{ url_for('static', filename='js/self-promo.js') }}" defer=""></script>
 
     <script>
@@ -250,7 +250,6 @@
             const jsonDataElement = document.getElementById(`${chartType}Json`);
 
             if (chartType === 'analysis') {
-                console.log('hello')
                 if (chartCanvas.style.display === 'none') {
                     chartCanvas.style.display = 'block';
                     jsonDataElement.style.display = 'none';

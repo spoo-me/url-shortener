@@ -23,6 +23,11 @@
     letter-spacing: 0.8px;
     cursor: pointer;
     text-align: center;
+    font-family: "Allerta Stencil", sans-serif;
+}
+
+.self-promo-inner a:hover {
+    text-decoration: underline;
 }
 
 .self-promo button {
@@ -42,6 +47,10 @@
 
 .self-promo button:hover {
     background-color: rgba(255, 255, 255, 0.25);
+}
+
+.self-promo button img {
+    vertical-align: initial;
 }
 
 .self-promo.hidden {
