@@ -26,7 +26,7 @@ db = client["url-shortener"]
 collection = db["urls"]
 blocked_urls_collection = db["blocked-urls"]
 emoji_collection = db["emojis"]
-
+ip_bypasses = db["ip-exceptions"]
 
 def load_url_by_id(id):
     try:

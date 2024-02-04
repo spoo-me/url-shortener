@@ -29,6 +29,15 @@ limiter = Limiter(
     strategy="fixed-window",
 )
 
+@limiter.request_filter
+def ip_whitelist():
+    bypasses = ip_bypasses.find()
+    bypasses = [doc["_id"] for doc in bypasses]
+
+    if request.method == "GET":
+        return True
+    return request.remote_addr in bypasses
+
 
 @app.route("/", methods=["GET"])
 @limiter.exempt
@@ -44,6 +53,7 @@ def index():
 
 
 @app.route("/", methods=["POST"])
+@limiter.request_filter
 def shorten_url():
     url = request.values.get("url")
     password = request.values.get("password")
@@ -52,10 +62,10 @@ def shorten_url():
 
     app.logger.info(f"Received request data: {request.values}")
 
-    if not validate_url(url):
+    if url and not validate_url(url):
         return jsonify({"UrlError": "Invalid URL"}), 400
 
-    if not validate_blocked_url(url):
+    if url and not validate_blocked_url(url):
         return jsonify({"UrlError": "Blocked URL ⛔"}), 403
 
     if alias and not validate_string(alias):
