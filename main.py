@@ -29,13 +29,15 @@ limiter = Limiter(
     strategy="fixed-window",
 )
 
+
 @limiter.request_filter
 def ip_whitelist():
+    if request.method == "GET":
+        return True
+
     bypasses = ip_bypasses.find()
     bypasses = [doc["_id"] for doc in bypasses]
 
-    if request.method == "GET":
-        return True
     return request.remote_addr in bypasses
 
 
@@ -53,7 +55,6 @@ def index():
 
 
 @app.route("/", methods=["POST"])
-@limiter.request_filter
 def shorten_url():
     url = request.values.get("url")
     password = request.values.get("password")
