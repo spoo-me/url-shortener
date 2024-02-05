@@ -37,17 +37,20 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats-view.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats-view.css') }}?v=7">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/self-promo.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/synthwave-84.css') }}">
 
 </head>
 
 <body>
     <div class="self-promo" style="background: transparent;">
-        <div class="self-promo-inner"><a href="https://pypi.org/project/py-spoo-url/" target="_blank" rel="noopener">🥳 We just launched our Own Python Package ↗ 🐍</a></div>
-        <button id="close-button" class="self-promo-close"><img width="20" height="20" src="https://img.icons8.com/metro/26/ffffff/delete-sign.png" alt="delete-sign"/></button>
+        <div class="self-promo-inner"><a href="https://pypi.org/project/py-spoo-url/" target="_blank" rel="noopener">🥳
+                We just launched our Own Python Package ↗ 🐍</a></div>
+        <button id="close-button" class="self-promo-close"><img width="20" height="20"
+                src="https://img.icons8.com/metro/26/ffffff/delete-sign.png" alt="delete-sign" /></button>
     </div>
     <div class="navbar">
         <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image">
@@ -65,7 +68,8 @@
 
     <div class="mobile-navbar">
         <div class="mobile-logo">
-            <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png" alt="Spoo.me Banner Image"></a>
+            <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png"
+                    alt="Spoo.me Banner Image"></a>
         </div>
         <button type="button" class="burger" style="margin: 0;" title="Menu">
             <span></span>
@@ -86,11 +90,26 @@
         <div class="modal-content">
             <h2 class="modal-header">Contact Us</h2>
             <div class="button-container">
-                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png"alt="Discord Logo"><p>Discord</p></button>
-                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo"><p>Twitter</p></button>
-                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo"><p>Instagram</p></button>
-                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img src="https://img.icons8.com/pastel-glyph/100/ffffff/new-post--v1.png" alt="Email Icon"><p>Email</p></button>
-                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img src="https://img.icons8.com/material-sharp/100/ffffff/github.png" alt="Github Logo"><p>Github</p></button>
+                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png" alt="Discord Logo">
+                    <p>Discord</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo">
+                    <p>Twitter</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo">
+                    <p>Instagram</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img
+                        src="https://img.icons8.com/pastel-glyph/100/ffffff/new-post--v1.png" alt="Email Icon">
+                    <p>Email</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img
+                        src="https://img.icons8.com/material-sharp/100/ffffff/github.png" alt="Github Logo">
+                    <p>Github</p>
+                </button>
             </div>
         </div>
     </div>
@@ -99,8 +118,7 @@
         <div class="main-data">
             <h2 class="main-data-heading">General Stats</h2>
             <p>
-                Original URL &nbsp; <code
-                    id="url_long_code">{{ json_data['url']}}</code>
+                Original URL &nbsp; <code id="url_long_code">{{ json_data['url']}}</code>
             </p>
             <p>Total Clicks &nbsp; <code>{{ json_data["total-clicks"] }}</code></p>
             <p>
@@ -118,7 +136,7 @@
             <h2>Click Counter</h2>
             <div class="chart-container">
                 <canvas id="counterChart"></canvas>
-                <pre id="counterJson" class="json-data" style="display: none"></pre>
+                <pre class="counterJsonPre" style="padding: 0.318em;"><code id="counterJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
             </div>
             <label for="counterOption" style="color: white">Select Range:</label>
             <select id="counterOption" onchange="updateCounterChart()">
@@ -126,10 +144,11 @@
                 <option value="last30days">Last 30 Days</option>
                 <option value="alltime">All Time</option>
             </select>
-            <button onclick="counterToggleView('counter')">Toggle View</button>
+            <button onclick="toggleView('counter')">Toggle View</button>
             <select id="counterDataOption" onchange="updateCounterChart()" title="Counter Data Option">
-                <option value="collectiveData" selected>Collective Data</option>
-                <option value="uniqueData">Unique Data</option>
+                <option value="collectiveData" selected>Overall Clicks</option>
+                <option value="uniqueData">Unique Clicks</option>
+                <option value="compareBoth">Compare Both</option>
             </select>
         </div>
     </div>
@@ -138,24 +157,26 @@
             <h2>Browsers</h2>
             <div class="chart-container">
                 <canvas id="browserChart"></canvas>
-                <pre id="browserJson" class="json-data" style="display: none"></pre>
+                <pre class="browserJsonPre" style="padding: 0.318em;"><code id="browserJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
             </div>
             <button onclick="toggleView('browser')">Toggle View</button>
             <select id="browserDataOption" onchange="updateBrowserChart()" title="Browser Data Option">
-                <option value="collectiveData" selected>Collective Data</option>
-                <option value="uniqueData">Unique Data</option>
+                <option value="collectiveData" selected>Overall Clicks</option>
+                <option value="uniqueData">Unique Clicks</option>
+                <option value="compareBoth">Compare Both</option>
             </select>
         </div>
         <div class="os-data">
             <h2>Platforms</h2>
             <div class="chart-container">
                 <canvas id="osChart"></canvas>
-                <pre id="osJson" class="json-data" style="display: none"></pre>
+                <pre class="osJsonPre" style="padding: 0.318em;"><code id="osJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
             </div>
             <button onclick="toggleView('os')">Toggle View</button>
             <select id="osDataOption" onchange="updateOsChart()" title="OS Data Option">
-                <option value="collectiveData" selected>Collective Data</option>
-                <option value="uniqueData">Unique Data</option>
+                <option value="collectiveData" selected>Overall Clicks</option>
+                <option value="uniqueData">Unique Clicks</option>
+                <option value="compareBoth">Compare Both</option>
             </select>
         </div>
     </div>
@@ -164,24 +185,24 @@
             <h2>Referrers</h2>
             <div class="chart-container">
                 <canvas id="referrerChart"></canvas>
-                <pre id="referrerJson" class="json-data" style="display: none"></pre>
+                <pre class="referrerJsonPre" style="padding: 0.318em;"><code id="referrerJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
             </div>
             <button onclick="toggleView('referrer')">Toggle View</button>
             <select id="referrerDataOption" onchange="updateReferrerChart()" title="Referrer Data Option">
-                <option value="collectiveData" selected>Collective Data</option>
-                <option value="uniqueData">Unique Data</option>
+                <option value="collectiveData" selected>Overall Clicks</option>
+                <option value="uniqueData">Unique Clicks</option>
             </select>
         </div>
         <div class="country-data">
             <h2>Countries</h2>
             <div class="chart-container" id="country-container">
                 <canvas id="countryChart"></canvas>
-                <pre id="countryJson" class="json-data" style="display: none"></pre>
+                <pre class="countryJsonPre" style="padding: 0.318em;"><code id="countryJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
             </div>
             <button onclick="toggleView('country')">Toggle View</button>
             <select id="countryDataOption" onchange="updateCountryChart()" title="Country Data Option">
-                <option value="collectiveData" selected>Collective Data</option>
-                <option value="uniqueData">Unique Data</option>
+                <option value="collectiveData" selected>Overall Clicks</option>
+                <option value="uniqueData">Unique Clicks</option>
             </select>
         </div>
     </div>
@@ -190,7 +211,7 @@
             <h2>Clicks Analysis</h2>
             <div class="chart-container">
                 <canvas id="analysisChart"></canvas>
-                <pre id="analysisJson" class="json-data" style="display: none"></pre>
+                <pre class="analysisJsonPre" style="padding: 0.318em;"><code id="analysisJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
             </div>
             <button onclick="toggleView('analysis')">Toggle View</button>
         </div>
@@ -210,448 +231,6 @@
     <script src="{{ url_for('static', filename='js/self-promo.js') }}" defer=""></script>
 
     <script>
-        function adjustWidth() {
-            var input2 = document.getElementById("url_long_input");
-            if (input2.value.length < 50) {
-                input2.style.width = input2.value.length * 7 + "px";
-                input2.style.textAlign = "center";
-            }
-            var p = document.getElementById("expire");
-            if (p.innerText === "True") {
-                p.style.background = "rgba(255, 0, 0, 0.5)";
-            }
-            if (p.innerText === "False") {
-                p.style.background = "rgba(0, 255, 0, 0.5)";
-            }
-        }
-
-        window.onload = adjustWidth;
-
-        const jsonResponse = {{ json_data| tojson }};
-
-        function counterToggleView(chartType) {
-            const chartContainer = document.getElementById(`counterContainer`);
-            const chartCanvas = document.getElementById(`counterChart`);
-            const jsonDataElement = document.getElementById(`counterJson`);
-
-            if (chartCanvas.style.display === 'none') {
-                chartCanvas.style.display = 'block';
-                jsonDataElement.style.display = 'none';
-            } else {
-                chartCanvas.style.display = 'none';
-                jsonDataElement.style.display = 'block';
-                jsonDataElement.textContent = JSON.stringify(getCounterData() || jsonResponse.os_name || {}, null, 2);
-            }
-        }
-
-        function toggleView(chartType) {
-            const chartContainer = document.getElementById(`${chartType}Container`);
-            const chartCanvas = document.getElementById(`${chartType}Chart`);
-            const jsonDataElement = document.getElementById(`${chartType}Json`);
-
-            if (chartType === 'analysis') {
-                if (chartCanvas.style.display === 'none') {
-                    chartCanvas.style.display = 'block';
-                    jsonDataElement.style.display = 'none';
-                } else {
-                    chartCanvas.style.display = 'none';
-                    jsonDataElement.style.display = 'block';
-                    jsonDataElement.textContent = JSON.stringify(jsonResponse['analysis_data'] || jsonResponse.os_name || {}, null, 2);
-                }
-            }
-            else {
-                if (chartCanvas.style.display === 'none') {
-                    chartCanvas.style.display = 'block';
-                    jsonDataElement.style.display = 'none';
-                }
-                else {
-                    chartCanvas.style.display = 'none';
-                    jsonDataElement.style.display = 'block';
-                    const dataOption = document.getElementById(`${chartType}DataOption`).value;
-                    jsonDataElement.textContent = dataOption === "collectiveData" ? JSON.stringify(jsonResponse[chartType] || jsonResponse.os_name || {}, null, 2) : JSON.stringify(jsonResponse['unique_' + chartType] || jsonResponse.unique_os_name || {}, null, 2);
-                }
-            }
-        }
-
-        function getCounterData() {
-            const option = document.getElementById('counterOption').value;
-            const dataOption = document.getElementById('counterDataOption').value;
-
-            switch (option) {
-                case 'last7days':
-                    return getLastNDaysCounterData(7);
-                case 'last30days':
-                    return getLastNDaysCounterData(30);
-                case 'alltime':
-                    if (dataOption === "collectiveData") {
-                        return jsonResponse.counter;
-                    }
-                    else {
-                        return jsonResponse.unique_counter;
-                    }
-                default:
-                    return jsonResponse.counter;
-            }
-        }
-
-        function getLastNDaysCounterData(days) {
-            const dataOption = document.getElementById('counterDataOption').value;
-            const counter = dataOption === "collectiveData" ? jsonResponse.counter : jsonResponse.unique_counter;
-            const counterKeys = Object.keys(counter);
-            const lastNDaysKeys = counterKeys.slice(-days);
-
-            const lastNDaysCounterData = {};
-            lastNDaysKeys.forEach((key) => {
-                lastNDaysCounterData[key] = counter[key];
-            });
-
-            return lastNDaysCounterData;
-        }
-
-        function updateCounterChart() {
-            const counterData = getCounterData();
-            const counterChartCanvas = document.getElementById('counterChart');
-
-            // Destroy the existing chart to clear the canvas
-            if (counterChartCanvas.chart) {
-                counterChartCanvas.chart.destroy();
-            }
-
-            const counterChart = new Chart(counterChartCanvas, {
-                type: 'line',
-                data: {
-                    labels: Object.keys(counterData),
-                    datasets: [
-                        {
-                            label: 'Click Counter',
-                            data: Object.values(counterData),
-                            fill: 'start',
-                            backgroundColor: 'rgba(255, 99, 132, 0.4)',
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            borderWidth: 1,
-                            tension: 0.3,
-                        },
-                    ],
-                },
-                options: {
-                    responsive: true, // Enable responsiveness
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    },
-                    scales: {
-                        x: {
-                            // grid: {
-                            //   color: '#fff', // Change the color of the x-axis grid lines
-                            // },
-                            beginAtZero: true,
-                            ticks: {
-                                color: '#fff', // Change the color of the x-axis labels
-                            },
-                        },
-                        y: {
-                            // grid: {
-                            //   color: '#fff', // Change the color of the y-axis grid lines
-                            // },
-                            beginAtZero: true,
-                            ticks: {
-                                color: '#fff', // Change the color of the y-axis labels
-                            },
-                        },
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#fff', // Change the color of the legend labels
-                            },
-                        },
-                    },
-                },
-            });
-
-            counterChartCanvas.chart = counterChart;
-        }
-
-        function updateOsChart() {
-            const osChartCanvas = document.getElementById('osChart');
-
-            if (osChartCanvas.chart) {
-                osChartCanvas.chart.destroy();
-            }
-            const dataOption = document.getElementById('osDataOption').value;
-            const dt = dataOption === "collectiveData" ? jsonResponse.sorted_os_name : jsonResponse.sorted_unique_os_name;
-
-            const osChart = new Chart(osChartCanvas, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(dt),
-                    datasets: [
-                        {
-                            label: 'Platforms',
-                            data: Object.values(dt),
-                            backgroundColor: 'rgba(75, 192, 192, 0.4)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1,
-                            borderRadius: 20,
-                        },
-                    ],
-                },
-                options: {
-                    responsive: true, // Enable responsiveness
-                    maintainAspectRatio: false,
-                    indexAxis: 'y',
-                    scales: {
-                        x: {
-                            // grid: {
-                            //   color: '#fff', // Change the color of the x-axis grid lines
-                            // },
-                            ticks: {
-                                color: '#fff', // Change the color of the x-axis labels
-                            },
-                        },
-                        y: {
-                            // grid: {
-                            //   color: '#fff', // Change the color of the y-axis grid lines
-                            // },
-                            ticks: {
-                                color: '#fff', // Change the color of the y-axis labels
-                            },
-                        },
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#fff', // Change the color of the legend labels
-                            },
-                        },
-                    },
-                },
-            });
-            osChartCanvas.chart = osChart;
-        }
-
-        function updateAnalysisChart() {
-            const analysisChartCanvas = document.getElementById('analysisChart');
-
-            if (analysisChartCanvas.chart) {
-                osChartCanvas.chart.destroy();
-            }
-
-            const analysisChart = new Chart(analysisChartCanvas, {
-                type: 'bar',
-                data: {
-                    labels: ['Daily', 'Weekly', 'Monthly'],
-                    datasets: [
-                        {
-                            label: 'Clicks Analysis',
-                            data: [`{{ json_data["average_daily_clicks"]}}`, `{{ json_data["average_weekly_clicks"]}}`, `{{ json_data["average_monthly_clicks"]}}`],
-                            backgroundColor: 'rgba(255, 205, 86, 0.4)',
-                            borderColor: 'rgba(255, 205, 86, 1)',
-                            borderWidth: 1,
-                            borderRadius: 20,
-                        },
-                    ],
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y',
-                    scales: {
-                        x: {
-                            // grid: {
-                            //   color: '#fff', // Change the color of the x-axis grid lines
-                            // },
-                            ticks: {
-                                color: '#fff', // Change the color of the x-axis labels
-                            },
-                        },
-                        y: {
-                            // grid: {
-                            //   color: '#fff', // Change the color of the y-axis grid lines
-                            // },
-                            ticks: {
-                                color: '#fff', // Change the color of the y-axis labels
-                            },
-                        },
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#fff', // Change the color of the legend labels
-                            },
-                        },
-                    },
-                },
-            });
-            analysisChartCanvas.chart = analysisChart;
-        }
-
-        function updateBrowserChart() {
-            const browserChartCanvas = document.getElementById('browserChart');
-            if (browserChartCanvas.chart) {
-                browserChartCanvas.chart.destroy();
-            }
-
-            const dataOption = document.getElementById('browserDataOption').value;
-            const dt = dataOption === "collectiveData" ? jsonResponse.sorted_browser : jsonResponse.sorted_unique_browser;
-
-            const browserChart = new Chart(browserChartCanvas, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(dt),
-                    datasets: [
-                        {
-                            label: 'Browsers',
-                            data: Object.values(dt),
-                            backgroundColor: 'rgba(153, 102, 255, 0.4)',
-                            borderColor: 'rgba(153, 102, 255, 1)',
-                            borderWidth: 1,
-                            borderRadius: 20,
-                        },
-                    ],
-                },
-                options: {
-                    responsive: true, // Enable responsiveness
-                    maintainAspectRatio: false,
-                    indexAxis: 'y',
-                    scales: {
-                        x: {
-                            // grid: {
-                            //   color: '#fff', // Change the color of the x-axis grid lines
-                            // },
-                            ticks: {
-                                color: '#fff', // Change the color of the x-axis labels
-                            },
-                        },
-                        y: {
-                            // grid: {
-                            //   color: '#fff', // Change the color of the y-axis grid lines
-                            // },
-                            ticks: {
-                                color: '#fff', // Change the color of the y-axis labels
-                            },
-                        },
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#fff', // Change the color of the legend labels
-                            },
-                        },
-                    },
-                },
-            });
-            browserChartCanvas.chart = browserChart;
-        }
-
-        function updateReferrerChart() {
-            const referrerChartCanvas = document.getElementById('referrerChart');
-
-            if (referrerChartCanvas.chart) {
-                referrerChartCanvas.chart.destroy();
-            }
-            const dataOption = document.getElementById('referrerDataOption').value;
-            const dt = dataOption === "collectiveData" ? JSON.parse(jsonResponse.sorted_referrer) : JSON.parse(jsonResponse.sorted_unique_referrer);
-
-            const referrerChart = new Chart(referrerChartCanvas, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(dt),
-                    datasets: [
-                        {
-                            label: 'Referrers',
-                            data: Object.values(dt),
-                            backgroundColor:
-                                ["rgba(128, 0, 128, 0.6)", "rgba(255, 0, 255, 0.6)", "rgba(153, 51, 255, 0.6)", "rgba(204, 153, 255, 0.6)", "rgba(230, 230, 250, 0.6)"],
-                            borderColor:
-                                ["rgba(128, 0, 128, 1)", "rgba(255, 0, 255, 1)", "rgba(153, 51, 255, 1)", "rgba(204, 153, 255, 1)", "rgba(230, 230, 250, 1)"],
-                            borderWidth: 0.8,
-                            hoverOffset: 4,
-                            borderRadius: 5,
-                            spacing: 5,
-                        },
-                    ],
-                },
-                options: {
-                    responsive: true, // Enable responsiveness
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#fff', // Change the color of the legend labels
-                                boxWidth: 12
-                            }
-                        }
-                    }
-                },
-            });
-            referrerChartCanvas.chart = referrerChart;
-        }
-
-        function updateCountryChart() {
-            const countryChartCanvas = document.getElementById('countryChart');
-
-            if (countryChartCanvas.chart) {
-                countryChartCanvas.chart.destroy();
-            }
-            const dataOption = document.getElementById('countryDataOption').value;
-            const dt = dataOption === "collectiveData" ? jsonResponse.sorted_country : jsonResponse.sorted_unique_country;
-
-
-            const countryChart = new Chart(countryChartCanvas, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(dt),
-                    datasets: [
-                        {
-                            label: 'Countries',
-                            data: Object.values(dt),
-                            backgroundColor: [
-                                'rgba(217, 210, 138, 0.6)',
-                                'rgba(255, 130, 118, 0.6)',
-                                'rgba(255, 221, 213, 0.6)',
-                                'rgba(148, 108, 214, 0.6)',
-                                'rgba(100, 100, 100, 0.6)'
-                            ],
-                            borderColor: [
-                                'rgba(217, 210, 138, 1)',
-                                'rgba(255, 130, 118, 1)',
-                                'rgba(255, 221, 213, 1)',
-                                'rgba(148, 108, 214, 1)',
-                                'rgba(100, 100, 100, 1)'
-                            ],
-                            borderWidth: 0.8,
-                            hoverOffset: 4,
-                            borderRadius: 5,
-                            spacing: 5,
-                        },
-                    ],
-                },
-                options: {
-                    responsive: true, // Enable responsiveness
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#fff', // Change the color of the legend labels
-                                boxWidth: 12
-                            }
-                        }
-                    }
-                },
-            });
-            countryChartCanvas.chart = countryChart;
-        }
-
-        const counterData = getLastNDaysCounterData(7);
-        updateCounterChart(counterData);
-        updateOsChart();
-        updateBrowserChart();
-        updateReferrerChart();
-        updateCountryChart();
-        updateAnalysisChart();
 
         var qrcode = document.getElementById("qrcode");
 
@@ -699,8 +278,610 @@
 
         };
 
+        function changeExpiredSpanColor() {
+            var p = document.getElementById("expire");
+            if (p.innerText === "True") {
+                p.style.background = "rgba(255, 0, 0, 0.5)";
+            }
+            if (p.innerText === "False") {
+                p.style.background = "rgba(0, 255, 0, 0.5)";
+            }
+        }
+
+        window.onload = changeExpiredSpanColor;
+
+        const jsonResponse = {{ json_data| tojson }};
+
+        function toggleView(chartType) {
+            const chartContainer = document.getElementById(`${chartType}Container`);
+            const chartCanvas = document.getElementById(`${chartType}Chart`);
+            const jsonPre = document.querySelector(`.${chartType}JsonPre`);
+            const jsonDataElement = document.getElementById(`${chartType}Json`);
+
+            if (chartType === 'analysis') {
+                if (chartCanvas.style.display === 'none') {
+                    chartCanvas.style.display = 'block';
+                    jsonPre.style.display = 'none';
+                    jsonDataElement.style.display = 'none';
+                } else {
+                    chartCanvas.style.display = 'none';
+                    jsonDataElement.style.display = 'block';
+                    jsonPre.style.display = 'block';
+                    jsonDataElement.textContent = JSON.stringify(jsonResponse['analysis_data'] || jsonResponse.os_name || {}, null, 2);
+                }
+            }
+            else if (chartType === 'counter') {
+                if (chartCanvas.style.display === 'none') {
+                    chartCanvas.style.display = 'block';
+                    jsonPre.style.display = 'none';
+                    jsonDataElement.style.display = 'none';
+                } else {
+                    chartCanvas.style.display = 'none';
+                    jsonPre.style.display = 'block';
+                    jsonDataElement.style.display = 'block';
+                    const dataOption = document.getElementById(`${chartType}DataOption`).value;
+                    const option = document.getElementById(`${chartType}Option`).value;
+
+                    let dt = {};
+                    let dt2 = {};
+
+                    switch (option) {
+                        case 'last7days':
+                            dt = getLastNDaysCounterData(jsonResponse.counter, 7);
+                            dt2 = getLastNDaysCounterData(jsonResponse.unique_counter, 7);
+                            break;
+                        case 'last30days':
+                            dt = getLastNDaysCounterData(jsonResponse.counter, 30);
+                            dt2 = getLastNDaysCounterData(jsonResponse.unique_counter, 30);
+                            break;
+                        case 'alltime':
+                            dt = jsonResponse.counter;
+                            dt2 = jsonResponse.unique_counter;
+                            break;
+                        default:
+                            dt = jsonResponse.counter;
+                            dt2 = jsonResponse.unique_counter;
+                    }
+
+                    if (dataOption === "collectiveData") {
+                        jsonDataElement.textContent = JSON.stringify(dt || jsonResponse.os_name || {}, null, 2);
+                    }
+                    else if (dataOption === "uniqueData") {
+                        jsonDataElement.textContent = JSON.stringify(dt2 || jsonResponse.os_name || {}, null, 2);
+                    }
+                    else {
+                        jsonDataElement.textContent = JSON.stringify({
+                            "collectiveData": dt || jsonResponse.os_name || {},
+                            "uniqueData": dt2 || jsonResponse.os_name || {}
+                        }, null, 2);
+                    }
+                }
+            }
+            else {
+                if (chartCanvas.style.display === 'none') {
+                    chartCanvas.style.display = 'block';
+                    jsonDataElement.style.display = 'none';
+                    jsonPre.style.display = 'none';
+                }
+                else {
+                    chartCanvas.style.display = 'none';
+                    jsonDataElement.style.display = 'block';
+                    jsonPre.style.display = 'block';
+
+                    const dataOption = document.getElementById(`${chartType}DataOption`).value;
+                    if(dataOption === "collectiveData")
+                        jsonDataElement.textContent = JSON.stringify(jsonResponse[chartType] || jsonResponse.os_name || {}, null, 2);
+                    else if(dataOption === "uniqueData")
+                        jsonDataElement.textContent = JSON.stringify(jsonResponse['unique_' + chartType] || jsonResponse.unique_os_name || {}, null, 2);
+                    else
+                        jsonDataElement.textContent = JSON.stringify({
+                            "collectiveData": jsonResponse[chartType] || jsonResponse.os_name || {},
+                            "uniqueData": jsonResponse['unique_' + chartType] || jsonResponse.unique_os_name || {}
+                        }, null, 2);
+                }
+            }
+        }
+
+        function getLastNDaysCounterData(counterData, days) {
+            const counterKeys = Object.keys(counterData);
+            const lastNDaysKeys = counterKeys.slice(-days);
+
+            const lastNDaysCounterData = {};
+            lastNDaysKeys.forEach((key) => {
+                lastNDaysCounterData[key] = counterData[key];
+            });
+
+            return lastNDaysCounterData;
+        }
+
+        function updateCounterChart() {
+            const counterChartCanvas = document.getElementById('counterChart');
+
+            if (counterChartCanvas.style.display === 'none') {
+                toggleView('counter');
+            }
+            // Destroy the existing chart to clear the canvas
+            if (counterChartCanvas.chart) {
+                counterChartCanvas.chart.destroy();
+            }
+
+            const dataOption = document.getElementById('counterDataOption').value;
+            const option = document.getElementById('counterOption').value;
+
+            let dt = {};
+            let dt2 = {};
+
+            switch (option) {
+                case 'last7days':
+                    dt = getLastNDaysCounterData(jsonResponse.counter, 7);
+                    dt2 = getLastNDaysCounterData(jsonResponse.unique_counter, 7);
+                    break;
+                case 'last30days':
+                    dt = getLastNDaysCounterData(jsonResponse.counter, 30);
+                    dt2 = getLastNDaysCounterData(jsonResponse.unique_counter, 30);
+                    break;
+                case 'alltime':
+                    dt = jsonResponse.counter;
+                    dt2 = jsonResponse.unique_counter;
+                    break;
+                default:
+                    dt = jsonResponse.counter;
+                    dt2 = jsonResponse.unique_counter;
+            }
+
+            console.log(dt, dt2);
+
+            if (dataOption === "collectiveData") {
+                datasets = [
+                    {
+                        label: 'Click Counter',
+                        data: Object.values(dt),
+                        fill: 'start',
+                        backgroundColor: 'rgba(255, 159, 64, 0.25)',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                    },
+                ];
+            }
+            else if (dataOption === "uniqueData") {
+                datasets = [
+                    {
+                        label: 'Unique Click Counter',
+                        data: Object.values(dt2),
+                        fill: 'start',
+                        backgroundColor: 'rgba(201, 203, 207, 0.25)',
+                        borderColor: 'rgba(201, 203, 207, 1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                    },
+                ];
+            }
+            else {
+                datasets = [
+                    {
+                        label: 'Click Counter',
+                        data: Object.values(dt),
+                        fill: 'start',
+                        backgroundColor: 'rgba(255, 159, 64, 0.15)',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                    },
+                    {
+                        label: 'Unique Click Counter',
+                        data: Object.values(dt2),
+                        fill: 'start',
+                        backgroundColor: 'rgba(201, 203, 207, 0.25)',
+                        borderColor: 'rgba(201, 203, 207, 1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                    },
+                ];
+            }
+
+            console.log(datasets);
+
+            const counterChart = new Chart(counterChartCanvas, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(dt),
+                    datasets: datasets,
+                },
+                options: {
+                    responsive: true, // Enable responsiveness
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#fff',
+                            },
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#fff',
+                            },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff',
+                            },
+                        },
+                    },
+                },
+            });
+
+            counterChartCanvas.chart = counterChart;
+        }
+
+        function updateOsChart() {
+            const osChartCanvas = document.getElementById('osChart');
+
+            if (osChartCanvas.style.display === 'none') {
+                toggleView('os');
+            }
+
+            if (osChartCanvas.chart) {
+                osChartCanvas.chart.destroy();
+            }
+            const dataOption = document.getElementById('osDataOption').value;
+            // const dt = dataOption === "collectiveData" ? jsonResponse.sorted_os_name : jsonResponse.sorted_unique_os_name;
+            if (dataOption === "collectiveData") {
+                datasets = [
+                    {
+                        label: 'Platforms',
+                        data: Object.values(jsonResponse.sorted_os_name),
+                        backgroundColor: 'rgba(144, 238, 144, 0.15)',
+                        borderColor: 'rgba(144, 238, 144, 1)',
+                        borderWidth: 2,
+                        borderRadius: 20,
+                    },
+                ];
+            }
+            else if (dataOption === "uniqueData") {
+                datasets = [
+                    {
+                        label: 'Unique Platforms',
+                        data: Object.values(jsonResponse.sorted_unique_os_name),
+                        backgroundColor: 'rgba(255, 69, 0, 0.25)',
+                        borderColor: 'rgba(255, 69, 0, 1)',
+                        borderWidth: 2,
+                        borderRadius: 20,
+                    },
+                ];
+            }
+            else {
+                datasets = [
+                    {
+                        label: 'Platforms',
+                        data: Object.values(jsonResponse.sorted_os_name),
+                        backgroundColor: 'rgba(144, 238, 144, 0.15)',
+                        borderColor: 'rgba(144, 238, 144, 1)',
+                        borderWidth: 2,
+                        borderRadius: 20,
+                    },
+                    {
+                        label: 'Unique Platforms',
+                        data: Object.values(jsonResponse.sorted_unique_os_name),
+                        backgroundColor: 'rgba(255, 69, 0, 0.25)',
+                        borderColor: 'rgba(255, 69, 0, 0.9)',
+                        borderWidth: 2,
+                        borderRadius: 20,
+                    },
+                ];
+            }
+
+            const osChart = new Chart(osChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(jsonResponse.sorted_os_name),
+                    datasets: datasets,
+                },
+                options: {
+                    responsive: true, // Enable responsiveness
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#fff', // Change the color of the x-axis labels
+                            },
+                        },
+                        y: {
+                            stacked: true,
+                            ticks: {
+                                color: '#fff', // Change the color of the y-axis labels
+                            },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff', // Change the color of the legend labels
+                            },
+                        },
+                    },
+                },
+            });
+            osChartCanvas.chart = osChart;
+        }
+
+        function updateBrowserChart() {
+            const browserChartCanvas = document.getElementById('browserChart');
+
+            if (browserChartCanvas.style.display === 'none') {
+                toggleView('browser');
+            }
+
+            if (browserChartCanvas.chart) {
+                browserChartCanvas.chart.destroy();
+            }
+
+            const dataOption = document.getElementById('browserDataOption').value;
+
+            if (dataOption === "collectiveData") {
+                datasets = [
+                    {
+                        label: 'Browsers',
+                        data: Object.values(jsonResponse.sorted_browser),
+                        backgroundColor: 'rgba(153, 102, 255, 0.25)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 2,
+                        borderRadius: 20,
+                    },
+                ];
+            }
+            else if (dataOption === "uniqueData") {
+                datasets = [
+                    {
+                        label: 'Unique Browsers',
+                        data: Object.values(jsonResponse.sorted_unique_browser),
+                        backgroundColor: 'rgba(255, 159, 64, 0.25)',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 2,
+                        borderRadius: 20,
+                    },
+                ];
+            }
+            else {
+                datasets = [
+                    {
+                        label: 'Browsers',
+                        data: Object.values(jsonResponse.sorted_browser),
+                        backgroundColor: 'rgba(153, 102, 255, 0.15)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 2,
+                        borderRadius: 20,
+                    },
+                    {
+                        label: 'Unique Browsers',
+                        data: Object.values(jsonResponse.sorted_unique_browser),
+                        backgroundColor: 'rgba(255, 159, 64, 0.25)',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 2,
+                        borderRadius: 20,
+                    },
+                ];
+            }
+
+            const browserChart = new Chart(browserChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(jsonResponse.sorted_browser),
+                    datasets: datasets,
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#fff',
+                            },
+                        },
+                        y: {
+                            stacked: true,
+                            ticks: {
+                                color: '#fff',
+                            },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff',
+                            },
+                        },
+                    },
+                },
+            });
+            browserChartCanvas.chart = browserChart;
+        }
+
+        function updateReferrerChart() {
+            const referrerChartCanvas = document.getElementById('referrerChart');
+
+            if (referrerChartCanvas.style.display === 'none') {
+                toggleView('referrer');
+            }
+
+            if (referrerChartCanvas.chart) {
+                referrerChartCanvas.chart.destroy();
+            }
+            const dataOption = document.getElementById('referrerDataOption').value;
+            const dt = dataOption === "collectiveData" ? JSON.parse(jsonResponse.sorted_referrer) : JSON.parse(jsonResponse.sorted_unique_referrer);
+
+            const referrerChart = new Chart(referrerChartCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(dt),
+                    datasets: [
+                        {
+                            label: 'Referrers',
+                            data: Object.values(dt),
+                            backgroundColor:
+                                ["rgba(128, 0, 128, 0.4)", "rgba(255, 0, 255, 0.4)", "rgba(153, 51, 255, 0.4)", "rgba(204, 153, 255, 0.4)", "rgba(230, 230, 250, 0.4)"],
+                            borderColor:
+                                ["rgba(128, 0, 128, 1)", "rgba(255, 0, 255, 1)", "rgba(153, 51, 255, 1)", "rgba(204, 153, 255, 1)", "rgba(230, 230, 250, 1)"],
+                            borderWidth: 2,
+                            hoverOffset: 4,
+                            borderRadius: 5,
+                            spacing: 5,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true, // Enable responsiveness
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff', // Change the color of the legend labels
+                                boxWidth: 12
+                            }
+                        }
+                    }
+                },
+            });
+            referrerChartCanvas.chart = referrerChart;
+        }
+
+        function updateCountryChart() {
+            const countryChartCanvas = document.getElementById('countryChart');
+
+            if (countryChartCanvas.style.display === 'none') {
+                toggleView('country');
+            }
+
+            if (countryChartCanvas.chart) {
+                countryChartCanvas.chart.destroy();
+            }
+            const dataOption = document.getElementById('countryDataOption').value;
+            const dt = dataOption === "collectiveData" ? jsonResponse.sorted_country : jsonResponse.sorted_unique_country;
+
+
+            const countryChart = new Chart(countryChartCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(dt),
+                    datasets: [
+                        {
+                            label: 'Countries',
+                            data: Object.values(dt),
+                            backgroundColor: [
+                                'rgba(217, 210, 138, 0.4)',
+                                'rgba(255, 130, 118, 0.4)',
+                                'rgba(255, 221, 213, 0.4)',
+                                'rgba(148, 108, 214, 0.4)',
+                                'rgba(100, 100, 100, 0.4)'
+                            ],
+                            borderColor: [
+                                'rgba(217, 210, 138, 1)',
+                                'rgba(255, 130, 118, 1)',
+                                'rgba(255, 221, 213, 1)',
+                                'rgba(148, 108, 214, 1)',
+                                'rgba(100, 100, 100, 1)'
+                            ],
+                            borderWidth: 2,
+                            hoverOffset: 4,
+                            borderRadius: 5,
+                            spacing: 5,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true, // Enable responsiveness
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff', // Change the color of the legend labels
+                                boxWidth: 12,
+                            }
+                        }
+                    }
+                },
+            });
+            countryChartCanvas.chart = countryChart;
+        }
+
+        function updateAnalysisChart() {
+            const analysisChartCanvas = document.getElementById('analysisChart');
+
+            if (analysisChartCanvas.chart) {
+                osChartCanvas.chart.destroy();
+            }
+
+            const analysisChart = new Chart(analysisChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: ['Daily', 'Weekly', 'Monthly'],
+                    datasets: [
+                        {
+                            label: 'Clicks Analysis',
+                            data: [`{{ json_data["average_daily_clicks"]}}`, `{{ json_data["average_weekly_clicks"]}}`, `{{ json_data["average_monthly_clicks"]}}`],
+                            backgroundColor: 'rgba(255, 205, 86, 0.25)',
+                            borderColor: 'rgba(255, 205, 86, 1)',
+                            borderWidth: 2,
+                            borderRadius: 20,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#fff',
+                            },
+                        },
+                        y: {
+                            ticks: {
+                                color: '#fff',
+                            },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff',
+                            },
+                        },
+                    },
+                },
+            });
+            analysisChartCanvas.chart = analysisChart;
+        }
+
+        try {
+            updateCounterChart();
+            updateOsChart();
+            updateBrowserChart();
+            updateReferrerChart();
+            updateCountryChart();
+            updateAnalysisChart();
+        } catch (error) {
+            console.error("An error occurred while updating the charts: ", error);
+        }
+
     </script>
+
     <script src="{{ url_for('static', filename='js/contacts-popup.js') }}" defer=""></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js"></script>
 
     <script src="https://code.jivosite.com/widget/hJuQcxUqnJ" async></script>
 

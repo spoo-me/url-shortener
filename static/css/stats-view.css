@@ -46,7 +46,7 @@ p::-webkit-scrollbar-track {
     background-color: rgba(255, 255, 255, 0.1);
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0.9px 1.8px 1.8px hsl(0deg 0% 0% / 0.47);
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     border: rgba(255, 255, 255, 0.05) 1px solid;
     flex-basis: 49.5%;
     margin-bottom: 20px;
@@ -76,10 +76,32 @@ p::-webkit-scrollbar-track {
     background-color: #262625;
     border-radius: 5px;
     padding: 10px;
-    border: 1px solid #262625;
+    border: 1px solid transparent;
     height: 255px;
     overflow: auto;
     color: white;
+}
+
+.counterJsonPre, .browserJsonPre, .osJsonPre, .countryJsonPre, .referrerJsonPre, .analysisJsonPre {
+    display: none;
+}
+
+.json-data::-webkit-scrollbar {
+    width: 10px;
+}
+
+.json-data::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.json-data::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+.json-data::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.4);
 }
 
 select,
@@ -93,10 +115,10 @@ select:focus {
 }
 
 #url_long_code {
-    max-width: 200px;
+    max-width: 220px;
     display: inline-flex;
     overflow-x: scroll;
-    height: 24px;
+    height: 28px;
     text-wrap: nowrap;
 }
 
