@@ -9,6 +9,12 @@ import sys
 from emojies import EMOJIES
 from urllib.parse import unquote
 import emoji
+import pandas as pd
+from flask import send_file
+import io
+import zipfile
+from dicttoxml import dicttoxml
+import json
 
 load_dotenv(override=True)
 
@@ -241,3 +247,125 @@ def update_emoji_by_alias(alias, emoji_data):
         emoji_collection.update_one({"_id": alias}, {"$set": emoji_data})
     except:
         pass
+
+
+def export_to_excel(data):
+    output = io.BytesIO()
+
+    df_browser = pd.DataFrame(data['browser'].items(), columns=['Browser', 'Count'])
+    df_counter = pd.DataFrame(data['counter'].items(), columns=['Date', 'Count'])
+    df_country = pd.DataFrame(data['country'].items(), columns=['Country', 'Count'])
+    df_os_name = pd.DataFrame(data['os_name'].items(), columns=['OS_Name', 'Count'])
+    df_referrer = pd.DataFrame(data['referrer'].items(), columns=['Referrer', 'Count'])
+    df_unique_browser = pd.DataFrame(data['unique_browser'].items(), columns=['Browser', 'Count'])
+    df_unique_counter = pd.DataFrame(data['unique_counter'].items(), columns=['Date', 'Count'])
+    df_unique_country = pd.DataFrame(data['unique_country'].items(), columns=['Country', 'Count'])
+    df_unique_os_name = pd.DataFrame(data['unique_os_name'].items(), columns=['OS_Name', 'Count'])
+    df_unique_referrer = pd.DataFrame(data['unique_referrer'].items(), columns=['Referrer', 'Count'])
+
+    df_general_info = pd.DataFrame({
+        'TOTAL CLICKS': [data['total-clicks']],
+        'TOTAL UNIQUE CLICKS': [data['total_unique_clicks']],
+        'URL': [data['url']],
+        'SHORT CODE': [data['_id']],
+        'MAX CLICKS': [data['max-clicks']],
+        "PASSWORD": [data['password']],
+        'CREATION DATE': [data['creation-date']],
+        'EXPIRED': [data['expired']],
+        'AVERAGE DAILY CLICKS': [data['average_daily_clicks']],
+        'AVERAGE MONTHLY CLICKS': [data['average_monthly_clicks']],
+        'AVERAGE WEEKLY CLICKS': [data['average_weekly_clicks']],
+        'LAST CLICK': [data['last-click']],
+        'LAST CLICK BROSWER': [data['last-click-browser']],
+        'LAST CLICK OS': [data['last-click-os']],
+    })
+
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df_general_info.to_excel(writer, sheet_name='General_Info', index=False)
+
+        df_browser.to_excel(writer, sheet_name='Browser', index=False)
+        df_counter.to_excel(writer, sheet_name='Counter', index=False)
+        df_country.to_excel(writer, sheet_name='Country', index=False)
+        df_os_name.to_excel(writer, sheet_name='OS_Name', index=False)
+        df_referrer.to_excel(writer, sheet_name='Referrer', index=False)
+        df_unique_browser.to_excel(writer, sheet_name='Unique_Browser', index=False)
+        df_unique_counter.to_excel(writer, sheet_name='Unique_Counter', index=False)
+        df_unique_country.to_excel(writer, sheet_name='Unique_Country', index=False)
+        df_unique_os_name.to_excel(writer, sheet_name='Unique_OS_Name', index=False)
+        df_unique_referrer.to_excel(writer, sheet_name='Unique_Referrer', index=False)
+
+    output.seek(0)
+
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='spoo-me-export.xlsx')
+
+def export_to_csv(data):
+    output = io.BytesIO()
+
+    df_browser = pd.DataFrame(data['browser'].items(), columns=['Browser', 'Count'])
+    df_counter = pd.DataFrame(data['counter'].items(), columns=['Date', 'Count'])
+    df_country = pd.DataFrame(data['country'].items(), columns=['Country', 'Count'])
+    df_os_name = pd.DataFrame(data['os_name'].items(), columns=['OS_Name', 'Count'])
+    df_referrer = pd.DataFrame(data['referrer'].items(), columns=['Referrer', 'Count'])
+    df_unique_browser = pd.DataFrame(data['unique_browser'].items(), columns=['Browser', 'Count'])
+    df_unique_counter = pd.DataFrame(data['unique_counter'].items(), columns=['Date', 'Count'])
+    df_unique_country = pd.DataFrame(data['unique_country'].items(), columns=['Country', 'Count'])
+    df_unique_os_name = pd.DataFrame(data['unique_os_name'].items(), columns=['OS_Name', 'Count'])
+    df_unique_referrer = pd.DataFrame(data['unique_referrer'].items(), columns=['Referrer', 'Count'])
+
+    df_general_info = pd.DataFrame({
+        'TOTAL CLICKS': [data['total-clicks']],
+        'TOTAL UNIQUE CLICKS': [data['total_unique_clicks']],
+        '': [data['url']],
+        'SHORT CODE': [data['_id']],
+        'MAX CLICKS': [data['max-clicks']],
+        "PASSWORD": [data['password']],
+        'CREATION DATE': [data['creation-date']],
+        'EXPIRED': [data['expired']],
+        'AVERAGE DAILY CLICKS': [data['average_daily_clicks']],
+        'AVERAGE MONTHLY CLICKS': [data['average_monthly_clicks']],
+        'AVERAGE WEEKLY CLICKS': [data['average_weekly_clicks']],
+        'LAST CLICK': [data['last-click']],
+        'LAST CLICK BROSWER': [data['last-click-browser']],
+        'LAST CLICK OS': [data['last-click-os']],
+    })
+
+    with zipfile.ZipFile(output, mode='w') as zipf:
+        df_general_info.to_csv(zipf.open('general_info.csv', 'w'), index=False)
+        df_browser.to_csv(zipf.open('browser.csv', 'w'), index=False)
+        df_counter.to_csv(zipf.open('counter.csv', 'w'), index=False)
+        df_country.to_csv(zipf.open('country.csv', 'w'), index=False)
+        df_os_name.to_csv(zipf.open('os_name.csv', 'w'), index=False)
+        df_referrer.to_csv(zipf.open('referrer.csv', 'w'), index=False)
+        df_unique_browser.to_csv(zipf.open('unique_browser.csv', 'w'), index=False)
+        df_unique_counter.to_csv(zipf.open('unique_counter.csv', 'w'), index=False)
+        df_unique_country.to_csv(zipf.open('unique_country.csv', 'w'), index=False)
+        df_unique_os_name.to_csv(zipf.open('unique_os_name.csv', 'w'), index=False)
+        df_unique_referrer.to_csv(zipf.open('unique_referrer.csv', 'w'), index=False)
+
+    output.seek(0)
+
+    return send_file(output, mimetype='application/zip',
+                        as_attachment=True, download_name=f'spoo-me-export-csv.zip')
+
+def export_to_json(data):
+    output = io.StringIO()
+
+    json.dump(data, output, indent=4)
+    output.seek(0)
+
+    output_bytes = io.BytesIO(output.getvalue().encode())
+
+    return send_file(output_bytes, mimetype='application/json', as_attachment=True, download_name='spoo-me-export.json')
+
+def export_to_xml(data):
+    # Convert dictionary to XML
+    xml = dicttoxml(data)
+
+    # Create BytesIO object and write XML data to it
+    output = io.BytesIO()
+    output.write(xml)
+    output.seek(0)
+
+    # Send file
+    return send_file(output, mimetype='application/xml',
+                        as_attachment=True, download_name='data.xml')
