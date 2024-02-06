@@ -114,114 +114,123 @@
         </div>
     </div>
 
-    <div class="main-data-container">
-        <div class="main-data">
-            <h2 class="main-data-heading">General Stats</h2>
-            <p>
-                Original URL &nbsp; <code id="url_long_code">{{ json_data['url']}}</code>
-            </p>
-            <p>Total Clicks &nbsp; <code>{{ json_data["total-clicks"] }}</code></p>
-            <p>
-                Total Unique Clicks &nbsp; <code>{{ json_data["total_unique_clicks"] }}</code>
-            </p>
-            <p>Short Code &nbsp; <code>{{ json_data["short_code"] }}</code></p>
-            <p>Creation Date &nbsp; <code>{{ json_data["creation-date"] }}</code></p>
-            <p>Max Clicks &nbsp; <code>{{ json_data["max-clicks"] }}</code></p>
-            <p>Expired &nbsp; <code id="expire">{{ json_data["expired"] }}</code></p>
-            <p>Last Click &nbsp; <code>{{ json_data['last-click']}}</code></p>
-            <p>Last Click Browser Name &nbsp; <code>{{ json_data["last-click-browser"] }}</code></p>
-            <p>Last Click OS Name &nbsp; <code>{{ json_data["last-click-os"] }}</code></p>
-        </div>
-        <div class="clicks-data">
-            <h2>Click Counter</h2>
-            <div class="chart-container">
-                <canvas id="counterChart"></canvas>
-                <pre class="counterJsonPre" style="padding: 0.318em;"><code id="counterJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+    <div class="wrapper">
+        <div class="main-data-container">
+            <div class="main-data">
+                <h2 class="main-data-heading">General Stats</h2>
+                <p>
+                    Original URL &nbsp; <code id="url_long_code">{{ json_data['url']}}</code>
+                </p>
+                <p>Total Clicks &nbsp; <code>{{ json_data["total-clicks"] }}</code></p>
+                <p>
+                    Total Unique Clicks &nbsp; <code>{{ json_data["total_unique_clicks"] }}</code>
+                </p>
+                <p>Short Code &nbsp; <code>{{ json_data["short_code"] }}</code></p>
+                <p>Creation Date &nbsp; <code>{{ json_data["creation-date"] }}</code></p>
+                <p>Max Clicks &nbsp; <code>{{ json_data["max-clicks"] }}</code></p>
+                {% if json_data["expiry"] %}
+                <p>Expired &nbsp; <code id="expire">{{ json_data["expired"] }}</code></p>
+                {% endif %}
+                <p>Last Click &nbsp; <code>{{ json_data['last-click']}}</code></p>
+                <p>Last Click Browser Name &nbsp; <code>{{ json_data["last-click-browser"] }}</code></p>
+                <p>Last Click OS Name &nbsp; <code>{{ json_data["last-click-os"] }}</code></p>
             </div>
-            <label for="counterOption" style="color: white">Select Range:</label>
-            <select id="counterOption" onchange="updateCounterChart()">
-                <option value="last7days" selected>Last 7 Days</option>
-                <option value="last30days">Last 30 Days</option>
-                <option value="alltime">All Time</option>
-            </select>
-            <button onclick="toggleView('counter')">Toggle View</button>
-            <select id="counterDataOption" onchange="updateCounterChart()" title="Counter Data Option">
-                <option value="collectiveData" selected>Overall Clicks</option>
-                <option value="uniqueData">Unique Clicks</option>
-                <option value="compareBoth">Compare Both</option>
-            </select>
-        </div>
-    </div>
-    <div class="charts-container">
-        <div class="browsers-data">
-            <h2>Browsers</h2>
-            <div class="chart-container">
-                <canvas id="browserChart"></canvas>
-                <pre class="browserJsonPre" style="padding: 0.318em;"><code id="browserJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+            <div class="clicks-data">
+                <h2>Click Counter</h2>
+                <div class="chart-container">
+                    <canvas id="counterChart"></canvas>
+                    <pre class="counterJsonPre"
+                        style="padding: 0.318em;"><code id="counterJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+                </div>
+                <select id="counterOption" onchange="updateCounterChart()">
+                    <option value="last7days" selected>Last 7 Days</option>
+                    <option value="last30days">Last 30 Days</option>
+                    <option value="alltime">All Time</option>
+                </select>
+                <button onclick="toggleView('counter')">Toggle View</button>
+                <select id="counterDataOption" onchange="updateCounterChart()" title="Counter Data Option">
+                    <option value="collectiveData" selected>Overall Clicks</option>
+                    <option value="uniqueData">Unique Clicks</option>
+                    <option value="compareBoth">Compare Both</option>
+                </select>
             </div>
-            <button onclick="toggleView('browser')">Toggle View</button>
-            <select id="browserDataOption" onchange="updateBrowserChart()" title="Browser Data Option">
-                <option value="collectiveData" selected>Overall Clicks</option>
-                <option value="uniqueData">Unique Clicks</option>
-                <option value="compareBoth">Compare Both</option>
-            </select>
         </div>
-        <div class="os-data">
-            <h2>Platforms</h2>
-            <div class="chart-container">
-                <canvas id="osChart"></canvas>
-                <pre class="osJsonPre" style="padding: 0.318em;"><code id="osJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+        <div class="charts-container">
+            <div class="browsers-data">
+                <h2>Browsers</h2>
+                <div class="chart-container">
+                    <canvas id="browserChart"></canvas>
+                    <pre class="browserJsonPre"
+                        style="padding: 0.318em;"><code id="browserJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+                </div>
+                <button onclick="toggleView('browser')">Toggle View</button>
+                <select id="browserDataOption" onchange="updateBrowserChart()" title="Browser Data Option">
+                    <option value="collectiveData" selected>Overall Clicks</option>
+                    <option value="uniqueData">Unique Clicks</option>
+                    <option value="compareBoth">Compare Both</option>
+                </select>
             </div>
-            <button onclick="toggleView('os')">Toggle View</button>
-            <select id="osDataOption" onchange="updateOsChart()" title="OS Data Option">
-                <option value="collectiveData" selected>Overall Clicks</option>
-                <option value="uniqueData">Unique Clicks</option>
-                <option value="compareBoth">Compare Both</option>
-            </select>
-        </div>
-    </div>
-    <div class="charts-container">
-        <div class="referrer-data">
-            <h2>Referrers</h2>
-            <div class="chart-container">
-                <canvas id="referrerChart"></canvas>
-                <pre class="referrerJsonPre" style="padding: 0.318em;"><code id="referrerJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+            <div class="os-data">
+                <h2>Platforms</h2>
+                <div class="chart-container">
+                    <canvas id="osChart"></canvas>
+                    <pre class="osJsonPre"
+                        style="padding: 0.318em;"><code id="osJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+                </div>
+                <button onclick="toggleView('os')">Toggle View</button>
+                <select id="osDataOption" onchange="updateOsChart()" title="OS Data Option">
+                    <option value="collectiveData" selected>Overall Clicks</option>
+                    <option value="uniqueData">Unique Clicks</option>
+                    <option value="compareBoth">Compare Both</option>
+                </select>
             </div>
-            <button onclick="toggleView('referrer')">Toggle View</button>
-            <select id="referrerDataOption" onchange="updateReferrerChart()" title="Referrer Data Option">
-                <option value="collectiveData" selected>Overall Clicks</option>
-                <option value="uniqueData">Unique Clicks</option>
-            </select>
         </div>
-        <div class="country-data">
-            <h2>Countries</h2>
-            <div class="chart-container" id="country-container">
-                <canvas id="countryChart"></canvas>
-                <pre class="countryJsonPre" style="padding: 0.318em;"><code id="countryJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+        <div class="charts-container">
+            <div class="referrer-data">
+                <h2>Referrers</h2>
+                <div class="chart-container">
+                    <canvas id="referrerChart"></canvas>
+                    <pre class="referrerJsonPre"
+                        style="padding: 0.318em;"><code id="referrerJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+                </div>
+                <button onclick="toggleView('referrer')">Toggle View</button>
+                <select id="referrerDataOption" onchange="updateReferrerChart()" title="Referrer Data Option">
+                    <option value="collectiveData" selected>Overall Clicks</option>
+                    <option value="uniqueData">Unique Clicks</option>
+                </select>
             </div>
-            <button onclick="toggleView('country')">Toggle View</button>
-            <select id="countryDataOption" onchange="updateCountryChart()" title="Country Data Option">
-                <option value="collectiveData" selected>Overall Clicks</option>
-                <option value="uniqueData">Unique Clicks</option>
-            </select>
-        </div>
-    </div>
-    <div class="charts-container">
-        <div class="average-data">
-            <h2>Clicks Analysis</h2>
-            <div class="chart-container">
-                <canvas id="analysisChart"></canvas>
-                <pre class="analysisJsonPre" style="padding: 0.318em;"><code id="analysisJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+            <div class="country-data">
+                <h2>Countries</h2>
+                <div class="chart-container" id="country-container">
+                    <canvas id="countryChart"></canvas>
+                    <pre class="countryJsonPre"
+                        style="padding: 0.318em;"><code id="countryJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+                </div>
+                <button onclick="toggleView('country')">Toggle View</button>
+                <select id="countryDataOption" onchange="updateCountryChart()" title="Country Data Option">
+                    <option value="collectiveData" selected>Overall Clicks</option>
+                    <option value="uniqueData">Unique Clicks</option>
+                </select>
             </div>
-            <button onclick="toggleView('analysis')">Toggle View</button>
         </div>
-        <div class="qr-code">
-            <h2 style="text-align: left; margin-bottom: 20px;">Qr Code</h2>
-            <div class="qr-code-upper">
-                <div id="qr-code-container">
-                    <img class="qrcode" id="qrcode" alt="Qr Code for Sharing the ShortURL"
-                        src="https://qr.spoo.me/gradient?text={{ host_url }}{{json_data['short_code']}}">
-                    <span id="qrcode-overlay">Download</span>
+        <div class="charts-container">
+            <div class="average-data">
+                <h2>Clicks Analysis</h2>
+                <div class="chart-container">
+                    <canvas id="analysisChart"></canvas>
+                    <pre class="analysisJsonPre"
+                        style="padding: 0.318em;"><code id="analysisJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+                </div>
+                <button onclick="toggleView('analysis')">Toggle View</button>
+            </div>
+            <div class="qr-code">
+                <h2 style="text-align: left; margin-bottom: 20px;">Qr Code</h2>
+                <div class="qr-code-upper">
+                    <div id="qr-code-container">
+                        <img class="qrcode" id="qrcode" alt="Qr Code for Sharing the ShortURL"
+                            src="https://qr.spoo.me/gradient?text={{ host_url }}{{json_data['short_code']}}">
+                        <span id="qrcode-overlay">Download</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -229,54 +238,9 @@
 
     <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
     <script src="{{ url_for('static', filename='js/self-promo.js') }}" defer=""></script>
+    <script src="{{ url_for('static', filename='js/stats-view-script.js') }}" defer=""></script>
 
     <script>
-
-        var qrcode = document.getElementById("qrcode");
-
-        function downloadQRCode() {
-            var qrCodeSrc = qrcode.src;
-
-            var link = document.createElement("a");
-
-            var xhr = new XMLHttpRequest();
-            xhr.responseType = "blob";
-            xhr.onload = function () {
-                var reader = new FileReader();
-                reader.onloadend = function () {
-                    link.href = reader.result;  // Use the result from the FileReader
-                    link.download = "qrcode.png";
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);  // Clean up the link element
-                };
-                reader.readAsDataURL(xhr.response);
-            };
-            xhr.open("GET", qrCodeSrc);
-            xhr.send();
-        }
-
-        qrcode.onload = function () {
-
-            var qrcodeContainer = document.getElementById("qr-code-container");
-            qrcodeContainer.style.animation = "none";
-
-            qrcodeContainer.addEventListener("mouseenter", function () {
-                qrcodeContainer.style.cursor = "pointer";
-                var qrcodeOverlay = document.getElementById("qrcode-overlay");
-                qrcodeOverlay.style.display = "flex";
-            });
-
-            qrcodeContainer.addEventListener("mouseleave", function () {
-                const qrcodeOverlay = document.getElementById("qrcode-overlay");
-                qrcodeOverlay.style.display = "none";
-            });
-
-            qrcodeContainer.addEventListener("click", function () {
-                downloadQRCode();
-            });
-
-        };
 
         function changeExpiredSpanColor() {
             var p = document.getElementById("expire");
@@ -287,8 +251,6 @@
                 p.style.background = "rgba(0, 255, 0, 0.5)";
             }
         }
-
-        window.onload = changeExpiredSpanColor;
 
         const jsonResponse = {{ json_data| tojson }};
 
@@ -369,9 +331,9 @@
                     jsonPre.style.display = 'block';
 
                     const dataOption = document.getElementById(`${chartType}DataOption`).value;
-                    if(dataOption === "collectiveData")
+                    if (dataOption === "collectiveData")
                         jsonDataElement.textContent = JSON.stringify(jsonResponse[chartType] || jsonResponse.os_name || {}, null, 2);
-                    else if(dataOption === "uniqueData")
+                    else if (dataOption === "uniqueData")
                         jsonDataElement.textContent = JSON.stringify(jsonResponse['unique_' + chartType] || jsonResponse.unique_os_name || {}, null, 2);
                     else
                         jsonDataElement.textContent = JSON.stringify({
@@ -429,8 +391,6 @@
                     dt2 = jsonResponse.unique_counter;
             }
 
-            console.log(dt, dt2);
-
             if (dataOption === "collectiveData") {
                 datasets = [
                     {
@@ -479,8 +439,6 @@
                     },
                 ];
             }
-
-            console.log(datasets);
 
             const counterChart = new Chart(counterChartCanvas, {
                 type: 'line',
@@ -769,7 +727,6 @@
             const dataOption = document.getElementById('countryDataOption').value;
             const dt = dataOption === "collectiveData" ? jsonResponse.sorted_country : jsonResponse.sorted_unique_country;
 
-
             const countryChart = new Chart(countryChartCanvas, {
                 type: 'doughnut',
                 data: {
@@ -875,6 +832,8 @@
         } catch (error) {
             console.error("An error occurred while updating the charts: ", error);
         }
+
+        window.onload = changeExpiredSpanColor;
 
     </script>
 
