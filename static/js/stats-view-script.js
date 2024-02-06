@@ -37,6 +37,7 @@ function downloadQRCode() {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);  // Clean up the link element
+            qrcode.style.animation = "none";
         };
         reader.readAsDataURL(xhr.response);
     };
