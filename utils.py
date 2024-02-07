@@ -15,6 +15,7 @@ import io
 import zipfile
 from dicttoxml import dicttoxml
 import json
+import validators
 
 load_dotenv(override=True)
 
@@ -84,19 +85,21 @@ def validate_password(password):
     return True
 
 
+# def validate_url(url):   (OLD DEPRECATED FUNCTION)
+#     pattern = re.compile(
+#         r"^(https?:\/\/)?(www\.)?[a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,6}(\:[0-9]{1,5})?(\/.*)?$"
+#     )
+
+#     if "spoo.me" in url:
+#         return False
+
+#     if re.fullmatch(pattern, url):
+#         return True
+#     else:
+#         return False
+
 def validate_url(url):
-    pattern = re.compile(
-        r"^(https?:\/\/)?(www\.)?[a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,6}(\:[0-9]{1,5})?(\/.*)?$"
-    )
-
-    if "spoo.me" in url:
-        return False
-
-    if re.fullmatch(pattern, url):
-        return True
-    else:
-        return False
-
+    return validators.url(url, skip_ipv4_addr=True, skip_ipv6_addr=True) and not "spoo.me" in url
 
 def validate_blocked_url(url):
     blocked_urls = blocked_urls_collection.find()

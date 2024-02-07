@@ -13,3 +13,4 @@ emoji
 pandas
 openpyxl
 dicttoxml
+validators

@@ -24,7 +24,7 @@ CORS(app)
 limiter = Limiter(
     get_remote_address,
     app=app,
-    default_limits=["5 per minute", "200 per day", "25 per hour"],
+    default_limits=["5 per minute", "500 per day", "50 per hour"],
     storage_uri=MONGO_URI,
     strategy="fixed-window",
 )
@@ -64,7 +64,7 @@ def shorten_url():
     app.logger.info(f"Received request data: {request.values}")
 
     if url and not validate_url(url):
-        return jsonify({"UrlError": "Invalid URL"}), 400
+        return jsonify({"UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"}), 400
 
     if url and not validate_blocked_url(url):
         return jsonify({"UrlError": "Blocked URL ⛔"}), 403
