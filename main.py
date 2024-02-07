@@ -80,7 +80,7 @@ def shorten_url():
         return jsonify({"UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"}), 400
 
     if url and not validate_blocked_url(url):
-        return jsonify({"UrlError": "Blocked URL ⛔"}), 403
+        return jsonify({"BlockedUrlError": "Blocked URL ⛔"}), 403
 
     if alias and not validate_string(alias):
         if request.headers.get("Accept") == "application/json":
