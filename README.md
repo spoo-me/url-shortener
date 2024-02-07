@@ -58,6 +58,7 @@ Simplify your links, amplify your reach – join **spoo.me** and make URLs an ar
 
 - **Productivity Trick**: Enter the password like this: `https://spoo.me/<short_code>?password=<password>`
 
+
 ### 📈 Viewing URL Statistics
 
 **_Basic Structure_**: `https://spoo.me/stats/<short_code>`
@@ -185,23 +186,30 @@ We welcome contributions to **spoo.me**. Feel free to fork the repository and su
 # 👀 Visual Previews
 
 **Main Page**
-![spoo me main page](https://github.com/spoo-me/url-shortener/assets/90309290/7ddf6b48-a952-4b5f-a64d-26e4ece3c972)
 
-![spoo me result page](https://github.com/spoo-me/url-shortener/assets/90309290/5e930dff-f922-418b-95df-dc47894d4db1)
+![spoo me main page](https://raw.githubusercontent.com/spoo-me/url-shortener/main/static/previews/main.png)
 
-**Example Stats Page**
+**Result Page**
 
-![image](https://github.com/Zingzy/spoo.me/assets/90309290/3eb2b44d-f8aa-490e-a11a-700845165e3b)
+![spoo me result page](https://raw.githubusercontent.com/spoo-me/url-shortener/main/static/previews/result.png)
+
+**Stats Page**
+
+![image](https://raw.githubusercontent.com/spoo-me/url-shortener/main/static/previews/stats.png)
+
+**API Page**
+
+![image](https://raw.githubusercontent.com/spoo-me/url-shortener/main/static/previews/api.png)
 
 ---
 
 <h6 align="center">
-<img src="https://spoo.me/static/images/favicon.png" height=30>
+<img src="https://spoo.me/static/images/favicon.png" height=30 title="Spoo.me Copyright">
 <br>
 © spoo.me . 2024
 
 All Rights Reserved</h6>
 
 <p align="center">
-	<a href="https://github.com/spoo-me/py_spoo_url/blob/master/LICENSE.txt"><img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=MIT&logoColor=d9e0ee&colorA=363a4f&colorB=b7bdf8"/></a>
+	<a href="https://github.com/spoo-me/url-shortener/blob/master/LICENSE.txt"><img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=APACHE-2.0&logoColor=d9e0ee&colorA=363a4f&colorB=b7bdf8"/></a>
 </p>
