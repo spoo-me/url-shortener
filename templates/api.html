@@ -39,7 +39,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/api.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/synthwave-84.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prism-duotone-dark.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=2">
 
 </head>
@@ -47,7 +47,8 @@
 <body>
     <!-- Navbar -->
     <div class="navbar">
-        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image" loading="lazy">
+        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image"
+            loading="lazy">
         <div class="links">
             <ul>
                 <li><a href="/">Shorten</a></li>
@@ -63,7 +64,7 @@
     <div class="mobile-navbar" style="z-index: 100;">
         <div class="mobile-logo">
             <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png"
-                    alt="Spoo.me Banner Image"></a>
+                    alt="Spoo.me Banner Image" loading="lazy"></a>
         </div>
         <button type="button" class="burger" title="Menu">
             <span></span>
@@ -84,33 +85,51 @@
         <div class="modal-content">
             <h2 class="modal-header">Contact Us</h2>
             <div class="button-container">
-                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png"alt="Discord Logo" loading="lazy"><p>Discord</p></button>
-                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo" loading="lazy"><p>Twitter</p></button>
-                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo" loading="lazy"><p>Instagram</p></button>
-                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img src="https://img.icons8.com/pastel-glyph/100/ffffff/new-post--v1.png" alt="Email Icon" loading="lazy"><p>Email</p></button>
-                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img src="https://img.icons8.com/material-sharp/100/ffffff/github.png" alt="Github Logo" loading="lazy"><p>Github</p></button>
+                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png" alt="Discord Logo"
+                        loading="lazy">
+                    <p>Discord</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo"
+                        loading="lazy">
+                    <p>Twitter</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo"
+                        loading="lazy">
+                    <p>Instagram</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img
+                        src="https://img.icons8.com/pastel-glyph/100/ffffff/new-post--v1.png" alt="Email Icon"
+                        loading="lazy">
+                    <p>Email</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img
+                        src="https://img.icons8.com/material-sharp/100/ffffff/github.png" alt="Github Logo"
+                        loading="lazy">
+                    <p>Github</p>
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Main Content -->
     <div class="container mt-4">
-        <h2 id="title-text">URL Shortener API Documentation</h2>
-        <p>Welcome to the URL Shortener API documentation. This page provides information on how to use the API to
-            shorten URLs and retrieve analytics.</p>
 
+        <span class="api-emoji ft-8r">🛠️</span>
+
+        <h1 id="title-text" style="font-weight: bolder;">Spoo.me Api Documentation</h1>
+
+        <br>
+        <h6>Welcome to the URL Shortener API documentation. This page provides information on how to use the API to
+            shorten URLs and retrieve analytics.</h6>
+        <br>
         <p><strong>Base URL:</strong> <code>https://spoo.me</code></p>
-        <p><strong>API Version:</strong> <code>v1</code></p>
-
 
         <br>
-        <hr>
-        <br>
 
-        <h1 style="text-align: center;">API Endpoints</h1>
-        <br>
-
-        <h4>Shorten a URL</h4>
+        <h2>✂️ Shorten Long URLs</h2>
         <br>
         <p>This endpoint is used to shorten a URL. The request payload must contain the URL to be shortened. The
             response contains the shortened URL.</p>
@@ -118,8 +137,8 @@
         <p><strong>Endpoint:</strong> <code> POST / </code></p>
         <br>
 
-        <h5>Payload</h5>
-        <p>The following payloads are used in the API requests and responses:</p>
+        <h4>Data</h4>
+        <p>The following data parameters that the API understands</p>
         <table class="custom-table">
             <thead>
                 <tr>
@@ -156,31 +175,56 @@
                 </tr>
             </tbody>
         </table>
+
+        <p><strong>Note: password must be atleast <code>8 characters long</code>, must contain
+                atleast <code>a letter</code> and <code>a number</code> and <code>a special character</code>
+                either <code>'@' or '.'</code> and <code>cannot be consecutive</code>.</strong></p>
+
         <br>
 
-        <h5>Headers</h5>
+        <h4>Headers</h4>
         <p>The following headers are used in the API requests and responses:</p>
 
         <table class="custom-table">
             <thead>
                 <tr>
                     <th>Header</th>
-                    <th>Description</th>
+                    <th>Value</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td><code>Accept</code></td>
-                    <td>Specifies the format of the request payload. Accepted values: <code>application/json</code> *
-                    </td>
+                    <td><code>Accept</code>*</td>
+                    <td><code>application/json</code></td>
+                </tr>
+                <tr>
+                    <td><code>Content-Type</code>*</td>
+                    <td><code>application/x-www-form-urlencoded</code></td>
                 </tr>
             </tbody>
         </table>
-        <p> * If the header is not specified, the response will be in HTML format.</p>
+        <p class="fw-bold">Note: Both of the above headers are compuslary</p>
         <br>
-        <p><strong>Example Request: (Python)</strong></p>
-        <pre class="line-numbers">
-<code class="language-python" id="shorten-code">import requests
+
+        <h3><strong>🧑🏻‍💻 Code Examples</strong></h3>
+
+        <div class="languages-dock">
+            <button class="language-button active" data-language="python">Python</button>
+            <button class="language-button" data-language="node">Node.js</button>
+            <button class="language-button" data-language="csharp">C#</button>
+            <button class="language-button" data-language="javascript">JavaScript</button>
+            <button class="language-button" data-language="java">Java</button>
+            <button class="language-button" data-language="go">Go</button>
+            <button class="language-button" data-language="ruby">Ruby</button>
+        </div>
+
+        <div class="example-codes">
+
+            <div class="example-python active-code">
+
+                <pre class="line-numbers">
+<code class="language-python">
+import requests
 import json
 
 url = "https://spoo.me"
@@ -209,13 +253,256 @@ else:
     print(response.text)
         </code></pre>
 
-        <p><strong>Example Response:</strong></p>
-        <pre style="max-height: 300px;" class="line-numbers">
-<code class="language-json">{'short_url': 'https://spoo.me/example'}</code></pre>
+                <p><strong>Response:</strong></p>
+                <pre style="max-height: 300px;" class="line-numbers">
+<code class="language-json">{"short_url": "https://spoo.me/example"}</code></pre>
+            </div>
+
+            <div class="example-node">
+                <pre class="line-numbers">
+<code class="language-javascript" id="shorten-code">
+const axios = require('axios');
+const data = {
+    url: 'https://example.com',
+    alias: 'node-exampl',
+    password: 'NodeIsCool@Example2',
+    'max-clicks': '200'
+};
+
+axios.post('https://spoo.me/', data, {
+    headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+    },
+})
+
+.then(function (response) {
+    console.log(response.data);
+})
+
+.catch(function (error) {
+    console.error(error);
+});
+        </code></pre>
+
+                <p><strong>Response:</strong></p>
+                <pre style="max-height: 300px;" class="line-numbers">
+<code class="language-json">{"short_url": "https://spoo.me/node-exampl"}</code></pre>
+
+            </div>
+
+            <div class="example-csharp">
+                <pre class="line-numbers">
+<code class="language-csharp">
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Collections.Generic;
+
+var client = new HttpClient();
+var request = new HttpRequestMessage
+{
+    Method = HttpMethod.Post,
+    RequestUri = new Uri("https://spoo.me/"),
+    Headers =
+    {
+        { "Accept", "application/json" },
+    },
+    Content = new FormUrlEncodedContent(new Dictionary&lt;string, string&gt;
+    {
+        { "url", "https://example.com" }, { "alias", "cSharpExa" }, { "password", "HelloC_sharp1@" }, { "max-clicks", "200" }
+    }),
+};
+try
+{
+    using (var response = await client.SendAsync(request))
+    {
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadAsStringAsync();
+        Console.WriteLine(body);
+    }
+}
+catch (HttpRequestException ex)
+{
+    Console.WriteLine($"HTTP request error: {ex.Message}");
+}
+        </code></pre>
+                <p><strong>Response:</strong></p>
+                <pre style="max-height: 300px;" class="line-numbers">
+<code class="language-json">{"short_url": "https://spoo.me/cSharpExa"}</code></pre>
+            </div>
+
+            <div class="example-javascript">
+                <pre class="line-numbers">
+<code class="language-javascript" id="shorten-code">
+const url = 'https://spoo.me/';
+const data = new URLSearchParams();
+data.append('url', 'https://example.com');
+data.append('alias', 'jsExample1');
+data.append('password', 'jsIsAlsoCool@12');
+data.append('max-clicks', '200');
+
+const xhr = new XMLHttpRequest();
+xhr.open('POST', url, true);
+xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+xhr.setRequestHeader('Accept', 'application/json');
+
+xhr.onreadystatechange = function () {
+    if (xhr.readyState == 4) {
+        if (xhr.status == 200) {
+            console.log(xhr.responseText);
+        } else {
+            console.error(`HTTP error! Status: ${xhr.status}`);
+        }
+    }
+};
+
+xhr.send(data);
+        </code></pre>
+                <p><strong>Response:</strong></p>
+                <pre style="max-height: 300px;" class="line-numbers">
+<code class="language-json">{"short_url": "https://spoo.me/jsExample1"}</code></pre>
+            </div>
+
+            <div class="example-java">
+                <pre class="line-numbers">
+<code class="language-java" id="shorten-code">
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+public class HttpRequestExample {
+
+    public static void main(String[] args) {
+        // Define the URL
+        String url = "https://spoo.me/";
+
+        // Build the request body
+        String requestBody = "url=https://example.com&alias=JavaIsHard&password=JavaHardNGL@1000&max-clicks=200";
+
+        // Create and configure the HttpClient
+        HttpClient httpClient = HttpClient.newHttpClient();
+
+        // Build the HttpRequest
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+        try {
+            // Send the request and receive the response
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            // Print the response status code and body
+            System.out.println("Response Code: " + response.statusCode());
+            System.out.println("Response Body: " + response.body());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+        </code></pre>
+                <p><strong>Response:</strong></p>
+                <pre style="max-height: 300px;" class="line-numbers">
+<code class="language-json">{"short_url": "https://spoo.me/JavaIsHard"}</code></pre>
+            </div>
+
+            <div class="example-go">
+                <pre class="line-numbers">
+<code class="language-go" id="shorten-code">
+package main
+
+import (
+    "context"
+    "fmt"
+    "io"
+    "net"
+    "net/http"
+    "strings"
+    "time"
+)
+
+func main() {
+    // Set DNS resolver to use Google's public DNS server
+    net.DefaultResolver = &net.Resolver{
+        Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+            d := net.Dialer{Timeout: 500 * time.Millisecond}
+            return d.DialContext(ctx, "udp", "8.8.8.8:53")
+        },
+    }
+
+    url := "https://spoo.me/"
+    payload := strings.NewReader("url=https://example.com&alias=GoExample&max-clicks=200&password=GoIsNew@Yes5")
+
+    req, err := http.NewRequest("POST", url, payload)
+    if err != nil {
+        fmt.Println("Error creating request:", err)
+        return
+    }
+
+    req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+    req.Header.Add("Accept", "application/json")
+
+    res, err := http.DefaultClient.Do(req)
+    if err != nil {
+        fmt.Println("Error making request:", err)
+        return
+    }
+
+    defer res.Body.Close()
+    body, err := io.ReadAll(res.Body)
+    if err != nil {
+        fmt.Println("Error reading response:", err)
+        return
+    }
+
+    fmt.Println(res)
+    fmt.Println(string(body))
+}
+        </code></pre>
+                <p><strong>Response:</strong></p>
+                <pre style="max-height: 300px;" class="line-numbers">
+<code class="language-json">{"short_url": "https://spoo.me/GoExample"}</code></pre>
+            </div>
+
+            <div class="example-ruby">
+                <pre class="line-numbers">
+<code class="language-ruby" id="shorten-code">
+require 'uri'
+require 'net/http'
+
+url = URI("https://spoo.me")
+
+http = Net::HTTP.new(url.host, url.port)
+http.use_ssl = true
+
+request = Net::HTTP::Post.new(url)
+request["content-type"] = 'application/x-www-form-urlencoded'
+request["Accept"] = 'application/json'
+request.body = "url=https://google.com&alias=RubyIsRuby&password=FHVygyg@132o&max-clicks=200"
+
+response = http.request(request)
+puts response.read_body
+        </code></pre>
+                <p><strong>Response:</strong></p>
+                <pre style="max-height: 300px;" class="line-numbers">
+<code class="language-json">{"short_url": "https://spoo.me/RubyIsRuby"}</code></pre>
+            </div>
+
+        </div>
 
         <br>
 
-        <h5>Errors</h5>
+        <h6>
+            For More code samples you can try the <code>/get-code</code> command of our official discord-bot,
+            <code><a href="https://spoo.me/spooBot">spooBot</a></code> 🤖
+        </h6>
+
+        <br>
+
+        <h3>🪲 Errors</h3>
         <p>This section provides information about the various errors that could occur while making requests through
             this endpoint.</p>
         <table class="custom-table">
@@ -228,27 +515,35 @@ else:
             </thead>
             <tbody>
                 <tr>
-                    <td><code>UrlError</code></td>
+                    <td>UrlError</td>
                     <td>400</td>
-                    <td>The request contains an invalid url.</td>
+                    <td>The request does not contain the long URL or contains an invalid url. The url must contain a
+                        valid protocol like <code>https</code>, <code>http</code> and must follow <code><a
+                                href="https://spoo.me/rfc-1034" target="_blank" rel="noopener">rfc-1034</a></code> &
+                        <code><a
+                                href="https://spoo.me/rfc-2727" target="_blank" rel="noopener">rfc-2727</a></code>
+                    </td>
                 </tr>
                 <tr>
-                    <td><code>AliasError</code></td>
+                    <td>AliasError</td>
                     <td>400</td>
-                    <td>The User requested Alias is not avalibale or already taken.</td>
+                    <td>The User requested Alias is invalid or already taken. The alias must be
+                        <code>alphanumeric</code> & must
+                        be <code>under 15 chars</code>, anything beyond 15 chars would be stripped by the API
+                    </td>
                 </tr>
                 <tr>
-                    <td><code>PasswordError</code></td>
+                    <td>PasswordError</td>
                     <td>400</td>
-                    <td>The user entered password must be atleast 8 characters long, must contain a letter and a number
-                        and a special character either '@' or '.' and cannot be consecutive.</td>
+                    <td>The user entered password must be atleast <code>8 characters long</code>, must contain
+                        atleast <code>a letter</code> and <code>a number</code> and <code>a special character</code>
+                        either <code>'@' or '.'</code> and <code>cannot be consecutive</code>.</td>
                 </tr>
                 <tr>
-                    <td><code>MaxClicksError</code></td>
+                    <td>MaxClicksError</td>
                     <td>400</td>
-                    <td>The user entered max-clicks is not a positive integer.</td>
+                    <td>The user entered max-clicks is not a <code>positive integer</code>.</td>
                 </tr>
-                <!-- Add more error codes and descriptions as needed -->
             </tbody>
         </table>
 
@@ -256,17 +551,430 @@ else:
         <hr>
         <br>
 
-        <h4>URL Statistics</h4>
+        <h2>😉 Emoji URLs</h2>
+        <br>
+        <h6>Spoo.me also provides the ability to shorten URLs with custom emojis.</h6>
+        <br>
+        <p><strong>Endpoint:</strong> <code>POST /emoji</code></p>
         <br>
 
-        <p>This endpoint is used to retrieve statistics about a shortened URL. The request must contain the short code
+        <h4>Data</h4>
+        <p>The following data parameters that the API understands</p>
+
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Payload</th>
+                    <th>Data Type</th>
+                    <th>Description</th>
+                    <th>Required</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>url</td>
+                    <td>String</td>
+                    <td>The long URL to be shortened.</td>
+                    <td>Yes</td>
+                </tr>
+                <tr>
+                    <td>emojies</td>
+                    <td>String</td>
+                    <td><code>Custom emojies sequence</code> for the shortened URL. Must contain
+                        <code>only emojies</code>, no other character is allowed.
+                    </td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td>password</td>
+                    <td>String</td>
+                    <td>Password to access the shortened URL.</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td>max-clicks</td>
+                    <td>Integer</td>
+                    <td>Maximum number of clicks allowed for the shortened URL.</td>
+                    <td>No</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p><strong>Note: password must be atleast <code>8 characters long</code>, must contain
+                atleast <code>a letter</code> and <code>a number</code> and <code>a special character</code>
+                either <code>'@' or '.'</code> and <code>cannot be consecutive</code>.</strong></p>
+
+        <br>
+
+        <h4>Headers</h4>
+        <p>The following headers are used in the API requests and responses:</p>
+
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Header</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>Accept</code>*</td>
+                    <td><code>application/json</code></td>
+                </tr>
+                <tr>
+                    <td><code>Content-Type</code>*</td>
+                    <td><code>application/x-www-form-urlencoded</code></td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="fw-bold">Note: Both of the above headers are compuslary</p>
+
+        <br>
+
+        <h3><strong>🧑🏻‍💻 Code Examples</strong></h3>
+
+        <div class="emoji-languages-dock">
+            <button class="emoji-language-button active" data-language="python">Python</button>
+            <button class="emoji-language-button" data-language="node">Node.js</button>
+            <button class="emoji-language-button" data-language="csharp">C#</button>
+            <button class="emoji-language-button" data-language="javascript">JavaScript</button>
+            <button class="emoji-language-button" data-language="java">Java</button>
+            <button class="emoji-language-button" data-language="go">Go</button>
+            <button class="emoji-language-button" data-language="ruby">Ruby</button>
+        </div>
+
+        <div class="emoji-example-codes">
+
+            <div class="emoji-example-python active-code">
+
+                <pre class="line-numbers">
+<code class="language-python">
+import requests
+
+url = "https://spoo.me/emoji/"
+
+payload = {
+    "url": "https://example.com",
+    "alias": "🐍🐍",
+    "password": 1000,
+    "max-clicks": "Python.Snake63"
+}
+headers = {
+    "Accept": "application/json",
+}
+
+response = requests.post(url, data=payload, headers=headers)
+
+if response.status_code == 200:
+    print(response.json())
+else:
+    print(response.text)
+        </code></pre>
+
+                <p><strong>Response:</strong></p>
+                <pre style="max-height: 300px;" class="line-numbers">
+<code class="language-json">{"short_url": "https://spoo.me/🐍🐍"}</code></pre>
+            </div>
+
+            <div class="emoji-example-node">
+                <pre class="line-numbers">
+<code class="language-javascript" id="shorten-code">
+const axios = require('axios');
+const data = {
+    url: 'https://example.com/emoji/',
+    alias: '🚀🚀',
+    password: 'Node.emojiIsCool1',
+    'max-clicks': '200'
+};
+
+axios.post('https://spoo.me/', data, {
+    headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+    },
+})
+
+.then(function (response) {
+    console.log(response.data);
+})
+
+.catch(function (error) {
+    console.error(error);
+});
+        </code></pre>
+
+                <p><strong>Response:</strong></p>
+                <pre style="max-height: 300px;" class="line-numbers">
+<code class="language-json">{"short_url": "https://spoo.me/🚀🚀"}</code></pre>
+
+            </div>
+
+            <div class="emoji-example-csharp">
+                <pre class="line-numbers">
+<code class="language-csharp">
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Collections.Generic;
+
+var client = new HttpClient();
+var request = new HttpRequestMessage
+{
+    Method = HttpMethod.Post,
+    RequestUri = new Uri("https://spoo.me/emoji/"),
+    Headers =
+    {
+        { "Accept", "application/json" },
+    },
+    Content = new FormUrlEncodedContent(new Dictionary&lt;string, string&gt;
+    {
+        { "url", "https://example.com" }, { "alias", "🌊#️⃣" }, { "password", "Emoji@C_sharp1" }, { "max-clicks", "200" }
+    }),
+};
+try
+{
+    using (var response = await client.SendAsync(request))
+    {
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadAsStringAsync();
+        Console.WriteLine(body);
+    }
+}
+catch (HttpRequestException ex)
+{
+    Console.WriteLine($"HTTP request error: {ex.Message}");
+}
+        </code></pre>
+                <p><strong>Response:</strong></p>
+                <pre style="max-height: 300px;" class="line-numbers">
+<code class="language-json">{"short_url": "https://spoo.me/🌊#️⃣"}</code></pre>
+            </div>
+
+            <div class="emoji-example-javascript">
+                <pre class="line-numbers">
+<code class="language-javascript" id="shorten-code">
+const url = 'https://spoo.me/emoji/';
+const data = new URLSearchParams();
+data.append('url', 'https://example.com');
+data.append('alias', '☕📜');
+data.append('password', 'jsIsAlsoCool@12');
+data.append('max-clicks', '200');
+
+const xhr = new XMLHttpRequest();
+xhr.open('POST', url, true);
+xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+xhr.setRequestHeader('Accept', 'application/json');
+
+xhr.onreadystatechange = function () {
+    if (xhr.readyState == 4) {
+        if (xhr.status == 200) {
+            console.log(xhr.responseText);
+        } else {
+            console.error(`HTTP error! Status: ${xhr.status}`);
+        }
+    }
+};
+
+xhr.send(data);
+</code></pre>
+                <p><strong>Response:</strong></p>
+                <pre style="max-height: 300px;" class="line-numbers">
+<code class="language-json">{"short_url": "https://spoo.me/☕📜"}</code></pre>
+            </div>
+
+            <div class="emoji-example-java">
+                <pre class="line-numbers">
+<code class="language-java" id="shorten-code">
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+public class HttpRequestExample {
+
+    public static void main(String[] args) {
+        // Define the URL
+        String url = "https://spoo.me/emoji/";
+
+        // Build the request body
+        String requestBody = "url=https://example.com&alias=☕&password=JavaHardNGL@1000&max-clicks=200";
+
+        // Create and configure the HttpClient
+        HttpClient httpClient = HttpClient.newHttpClient();
+
+        // Build the HttpRequest
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+        try {
+            // Send the request and receive the response
+            HttpResponse response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            // Print the response status code and body
+            System.out.println("Response Code: " + response.statusCode());
+            System.out.println("Response Body: " + response.body());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+        </code></pre>
+                <p><strong>Response:</strong></p>
+                <pre style="max-height: 300px;" class="line-numbers">
+<code class="language-json">{"short_url": "https://spoo.me/☕"}</code></pre>
+            </div>
+
+            <div class="emoji-example-go">
+                <pre class="line-numbers">
+<code class="language-go" id="shorten-code">
+package main
+
+import (
+    "context"
+    "fmt"
+    "io"
+    "net"
+    "net/http"
+    "strings"
+    "time"
+)
+
+func main() {
+    // Set DNS resolver to use Google's public DNS server
+    net.DefaultResolver = &net.Resolver{
+        Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+            d := net.Dialer{Timeout: 500 * time.Millisecond}
+            return d.DialContext(ctx, "udp", "8.8.8.8:53")
+        },
+    }
+
+    url := "https://spoo.me/emoji/"
+    payload := strings.NewReader("url=https://example.com&alias=💨👋🏻&max-clicks=200&password=GoIsNew@Yes5")
+
+    req, err := http.NewRequest("POST", url, payload)
+    if err != nil {
+        fmt.Println("Error creating request:", err)
+        return
+    }
+
+    req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+    req.Header.Add("Accept", "application/json")
+
+    res, err := http.DefaultClient.Do(req)
+    if err != nil {
+        fmt.Println("Error making request:", err)
+        return
+    }
+
+    defer res.Body.Close()
+    body, err := io.ReadAll(res.Body)
+    if err != nil {
+        fmt.Println("Error reading response:", err)
+        return
+    }
+
+    fmt.Println(res)
+    fmt.Println(string(body))
+}
+        </code></pre>
+                <p><strong>Response:</strong></p>
+                <pre style="max-height: 300px;" class="line-numbers">
+<code class="language-json">{"short_url": "https://spoo.me/👋🏻💨"}</code></pre>
+            </div>
+
+            <div class="emoji-example-ruby">
+                <pre class="line-numbers">
+<code class="language-ruby" id="shorten-code">
+require 'uri'
+require 'net/http'
+
+url = URI("https://spoo.me/emoji/")
+
+http = Net::HTTP.new(url.host, url.port)
+http.use_ssl = true
+
+request = Net::HTTP::Post.new(url)
+request["content-type"] = 'application/x-www-form-urlencoded'
+request["Accept"] = 'application/json'
+request.body = "url=https://google.com&alias=💎&password=FHVygyg@132o&max-clicks=200"
+
+response = http.request(request)
+puts response.read_body
+        </code></pre>
+                <p><strong>Response:</strong></p>
+                <pre style="max-height: 300px;" class="line-numbers">
+<code class="language-json">{"short_url": "https://spoo.me/💎"}</code></pre>
+            </div>
+
+        </div>
+
+        <br>
+
+        <h3>🪲 Errors</h3>
+        <p>This section provides information about the various errors that could occur while making requests through
+            this endpoint.</p>
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Error Name</th>
+                    <th>Code</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>UrlError</td>
+                    <td>400</td>
+                    <td>The request does not contain the long URL or contains an invalid url. The url must contain a
+                        valid protocol like <code>https</code>, <code>http</code> and must follow <code><a
+                                href="https://spoo.me/rfc-1034" target="_blank" rel="noopener">rfc-1034</a></code> &
+                        <code><a
+                                href="https://spoo.me/rfc-2727" target="_blank" rel="noopener">rfc-2727</a></code>
+                    </td>
+                </tr>
+                <tr>
+                    <td>EmojiError</td>
+                    <td>400</td>
+                    <td>The User requested Emoji sequence is invalid or already taken. The emoji sequence must contain
+                        <code>only emojies</code>, no other character is allowed.
+                    </td>
+                </tr>
+                <tr>
+                    <td>PasswordError</td>
+                    <td>400</td>
+                    <td>The user entered password must be atleast <code>8 characters long</code>, must contain
+                        atleast <code>a letter</code> and <code>a number</code> and <code>a special character</code>
+                        either <code>'@' or '.'</code> and <code>cannot be consecutive</code>.</td>
+                </tr>
+                <tr>
+                    <td>MaxClicksError</td>
+                    <td>400</td>
+                    <td>The user entered max-clicks is not a <code>positive integer</code>.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br>
+        <hr>
+        <br>
+
+        <h2>📊 URL Statistics</h2>
+        <br>
+
+        <p>This endpoint is used to retrieve statistics about a shortened URL. The request must contain the short
+            code
             of the URL. The response contains the statistics.</p>
 
-        <p><strong>Endpoint:</strong> <code>POST</code> /stats/{shortCode}</p>
+        <p><strong>Endpoint:</strong> <code>POST /stats/{shortCode}</code></p>
+
         <br>
 
-        <h5>Payload</h5>
-        <p>The following payloads are used in the API requests and responses:</p>
+        <h4>Data</h4>
+
+        <p>The following data are used in the API requests and responses:</p>
 
         <table class="custom-table">
             <thead>
@@ -280,25 +988,60 @@ else:
                 <tr>
                     <td>password</td>
                     <td>Password of the shortened url if any.</td>
-                    <td>Optional *</td>
+                    <td>Yes, if and only if the short url is password protected.</td>
                 </tr>
             </tbody>
         </table>
-        <p>* if the Short Url is password protected then the password parameter is a <b>must</b>.</p>
+
         <br>
 
-        <p><strong>Example Request: (Python)</strong></p>
-        <pre class="line-numbers">
-<code class="language-python" id="stats-code">import requests
+        <h4>Headers</h4>
+        <p>The following headers are used in the API requests and responses:</p>
+
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Header</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>Content-Type</code>*</td>
+                    <td><code>application/x-www-form-urlencoded</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br>
+
+        <h3><strong>🧑🏻‍💻 Code Examples</strong></h3>
+
+        <div class="stats-languages-dock">
+            <button class="stats-language-button active" data-language="python">Python</button>
+            <button class="stats-language-button" data-language="node">Node.js</button>
+            <button class="stats-language-button" data-language="csharp">C#</button>
+            <button class="stats-language-button" data-language="javascript">JavaScript</button>
+            <button class="stats-language-button" data-language="java">Java</button>
+            <button class="stats-language-button" data-language="go">Go</button>
+            <button class="stats-language-button" data-language="ruby">Ruby</button>
+        </div>
+
+        <div class="stats-example-codes">
+
+            <div class="stats-example-python active-code">
+
+                <pre class="line-numbers">
+<code class="language-python">
+import requests
 import json
 
 # Replace these with your actual values
 short_code = "exa"
-password = "Example@12"
 base_url = "https://spoo.me"
 
-payload = {
-    "password": password
+payload = {                      # not required if your short url is not password protected
+    "password": "Example@12"
 }
 
 # Make the request
@@ -315,10 +1058,217 @@ if response.status_code == 200:
 else:
     # If the request failed, print the error message
     print(f"Error: {response.status_code}")
-    print(response.text)</code>
-</pre>
+    print(response.text)
+        </code></pre>
+            </div>
 
-        <p><strong>Example Response:</strong></p>
+            <div class="stats-example-node">
+                <pre class="line-numbers">
+<code class="language-javascript" id="shorten-code">
+const axios = require('axios');
+
+const data = {                 // not required if your short url is not password protected
+    password: 'Example@12',
+};
+
+axios.post('https://spoo.me/stats/exa', data, {
+    headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+    },
+})
+
+.then(function (response) {
+    console.log(response.data);
+})
+
+.catch(function (error) {
+    console.error(error);
+});
+        </code></pre>
+            </div>
+
+            <div class="stats-example-csharp">
+                <pre class="line-numbers">
+<code class="language-csharp">
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Collections.Generic;
+
+var client = new HttpClient();
+var request = new HttpRequestMessage
+{
+    Method = HttpMethod.Post,
+    RequestUri = new Uri("https://spoo.me/stats/exa"),
+    Headers =
+    {
+        { "Content-Type", "application/x-www-form-urlencoded" },
+    },
+    Content = new FormUrlEncodedContent(new Dictionary&lt;string, string&gt;   // not required if your short url is not password protected
+    {
+        { "password", "Example@12" }
+    }),
+};
+try
+{
+    using (var response = await client.SendAsync(request))
+    {
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadAsStringAsync();
+        Console.WriteLine(body);
+    }
+}
+catch (HttpRequestException ex)
+{
+    Console.WriteLine($"HTTP request error: {ex.Message}");
+}
+        </code></pre>
+            </div>
+
+            <div class="stats-example-javascript">
+                <pre class="line-numbers">
+<code class="language-javascript" id="shorten-code">
+const url = 'https://spoo.me/stats/exa';
+const data = new URLSearchParams();
+data.append('password', 'Example@12');   // not required if your short url is not password protected
+
+const xhr = new XMLHttpRequest();
+xhr.open('POST', url, true);
+xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+xhr.onreadystatechange = function () {
+    if (xhr.readyState == 4) {
+        if (xhr.status == 200) {
+            console.log(xhr.responseText);
+        } else {
+            console.error(`HTTP error! Status: ${xhr.status}`);
+        }
+    }
+};
+
+xhr.send(data);
+        </code></pre>
+            </div>
+
+            <div class="stats-example-java">
+                <pre class="line-numbers">
+<code class="language-java" id="shorten-code">
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+public class HttpRequestExample {
+
+    public static void main(String[] args) {
+        // Define the URL
+        String url = "https://spoo.me/stats/exa";
+
+        // Build the request body
+        String requestBody = "password=Example@12";   // not required if your short url is not password protected
+
+        // Create and configure the HttpClient
+        HttpClient httpClient = HttpClient.newHttpClient();
+
+        // Build the HttpRequest
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+        try {
+            // Send the request and receive the response
+            HttpResponse response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            // Print the response status code and body
+            System.out.println("Response Code: " + response.statusCode());
+            System.out.println("Response Body: " + response.body());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+}
+        </code></pre>
+            </div>
+
+            <div class="stats-example-go">
+                <pre class="line-numbers">
+<code class="language-go" id="shorten-code">
+package main
+
+import (
+    "context"
+    "fmt"
+    "io"
+    "net"
+    "net/http"
+    "strings"
+    "time"
+)
+
+func main() {
+    // Set DNS resolver to use Google's public DNS server
+    net.DefaultResolver = &net.Resolver{
+        Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+            d := net.Dialer{Timeout: 500 * time.Millisecond}
+            return d.DialContext(ctx, "udp", "8.8.8.8:53")
+        },
+    }
+
+    url := "https://spoo.me/stats/exa"
+    payload := strings.NewReader("password=Example@12")    // not required if your short url is not password protected
+
+    req, err := http.NewRequest("POST", url, payload)
+    if err != nil {
+        fmt.Println("Error creating request:", err)
+        return
+    }
+
+    req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+    res, err := http.DefaultClient.Do(req)
+    if err != nil {
+        fmt.Println("Error making request:", err)
+        return
+    }
+
+    defer res.Body.Close()
+    body, err := io.ReadAll(res.Body)
+    if err != nil {
+        fmt.Println("Error reading response:", err)
+        return
+    }
+
+    fmt.Println(res)
+    fmt.Println(string(body))
+}
+        </code></pre>
+            </div>
+
+            <div class="stats-example-ruby">
+                <pre class="line-numbers">
+<code class="language-ruby" id="shorten-code">
+require 'uri'
+require 'net/http'
+
+url = URI("https://spoo.me/stats/exa")
+
+http = Net::HTTP.new(url.host, url.port)
+http.use_ssl = true
+
+request = Net::HTTP::Post.new(url)
+request["content-type"] = 'application/x-www-form-urlencoded'
+request.body = "password=Example@12"   # not required if your short url is not password protected
+
+response = http.request(request)
+puts response.read_body
+        </code></pre>
+            </div>
+
+        </div>
+
+        <p><strong>Response:</strong></p>
         <pre style="max-height: 300px;" class="line-numbers">
 <code class="language-json">{
     "_id": "exa",
@@ -371,8 +1321,8 @@ else:
 
         <br>
 
-        <h5>Response</h5>
-        <p>The following parameters are used in the API requests and responses:</p>
+        <h4><strong>📑 Response Analysis</strong></h4>
+        <p>The response contains the following data:</p>
 
         <table class="custom-table">
             <thead>
@@ -384,135 +1334,137 @@ else:
             </thead>
             <tbody>
                 <tr>
-                    <td><code>_id</code></td>
+                    <td>_id</td>
                     <td>Str</td>
                     <td>The Short Code of the Short Link.</td>
                 </tr>
                 <tr>
-                    <td><code>average_daily_clicks</code></td>
+                    <td>average_daily_clicks</td>
                     <td>Float</td>
                     <td>Average Clicks per day since the link was created.</td>
                 </tr>
                 <tr>
-                    <td><code>average_monthly_clicks</code></td>
+                    <td>average_monthly_clicks</td>
                     <td>Float</td>
                     <td>Average Clicks per month since the link was created.</td>
                 </tr>
                 <tr>
-                    <td><code>average_weekly_clicks</code></td>
+                    <td>average_weekly_clicks</td>
                     <td>Float</td>
                     <td>Average Clicks per week since the link was created.</td>
                 </tr>
                 <tr>
-                    <td><code>browser</code></td>
+                    <td>browser</td>
                     <td>Dict</td>
                     <td>Data about the Browsers in which the short link was accessed.</td>
                 </tr>
                 <tr>
-                    <td><code>creation-date</code></td>
+                    <td>creation-date</td>
                     <td>Str</td>
                     <td>Date when the short link was created.</td>
                 </tr>
                 <tr>
-                    <td><code>counter</code></td>
+                    <td>counter</td>
                     <td>Dict</td>
                     <td>Data about the clicks per day since the link was created.</td>
                 </tr>
                 <tr>
-                    <td><code>country</code></td>
+                    <td>country</td>
                     <td>Dict</td>
                     <td>Data about the Countries in which the short link was accessed.</td>
                 </tr>
                 <tr>
-                    <td><code>expired*</code></td>
+                    <td>expired*</td>
                     <td>Bool</td>
                     <td>Tells whether the link has expired or not.</td>
                 </tr>
                 <tr>
-                    <td><code>last-click</code></td>
+                    <td>last-click</td>
                     <td>Str</td>
                     <td>Last Time when the short link was accessed.</td>
                 </tr>
                 <tr>
-                    <td><code>last-click-browser</code></td>
+                    <td>last-click-browser</td>
                     <td>Str</td>
                     <td>Last Browser in which the short link was accessed.</td>
                 </tr>
                 <tr>
-                    <td><code>last-click-os</code></td>
+                    <td>last-click-os</td>
                     <td>Str</td>
                     <td>Last Os name in which the short link was accessed.</td>
                 </tr>
                 <tr>
-                    <td><code>max-clicks*</code></td>
+                    <td>max-clicks*</td>
                     <td>Str</td>
                     <td>Information about the Max Clicks set my the User on the Short Link.</td>
                 </tr>
                 <tr>
-                    <td><code>os_name</code></td>
+                    <td>os_name</td>
                     <td>Dict</td>
                     <td>Data about the Os names in which the short link was accessed.</td>
                 </tr>
                 <tr>
-                    <td><code>password*</code></td>
+                    <td>password*</td>
                     <td>Str</td>
                     <td>The password set by the User on the Short Link.</td>
                 </tr>
                 <tr>
-                    <td><code>short_code</code></td>
+                    <td>short_code</td>
                     <td>Str</td>
                     <td>The Short Code of the Short Link.</td>
                 </tr>
                 <tr>
-                    <td><code>total-clicks</code></td>
+                    <td>total-clicks</td>
                     <td>Int</td>
                     <td>Count of the total clicks made since the short link was created.</td>
                 </tr>
                 <tr>
-                    <td><code>total_unique_clicks</code></td>
+                    <td>total_unique_clicks</td>
                     <td>Int</td>
                     <td>Count of the total unique clicks made since the short link was created.</td>
                 </tr>
 
                 <tr>
-                    <td><code>unique_browser</code></td>
+                    <td>unique_browser</td>
                     <td>Dict</td>
                     <td>Data about the Unique Browsers in which the short link was accessed.</td>
                 </tr>
                 <tr>
-                    <td><code>unique_counter</code></td>
+                    <td>unique_counter</td>
                     <td>Dict</td>
                     <td>Data about the Unique clicks per day since the link was created.</td>
                 </tr>
                 <tr>
-                    <td><code>unique_country</code></td>
+                    <td>unique_country</td>
                     <td>Dict</td>
                     <td>Data about the Unique Countries in which the short link was accessed.</td>
                 </tr>
                 <tr>
-                    <td><code>unique_os_name</code></td>
+                    <td>unique_os_name</td>
                     <td>Dict</td>
                     <td>Data about the Unique Os names in which the short link was accessed.</td>
                 </tr>
                 <tr>
-                    <td><code>unique_referrer</code></td>
+                    <td>unique_referrer</td>
                     <td>Dict</td>
                     <td>Data about the Unique Referrers in which the short link was accessed.</td>
                 </tr>
                 <tr>
-                    <td><code>url</code></td>
+                    <td>url</td>
                     <td>Str</td>
                     <td>Original Long Url which the short link redirects to.</td>
                 </tr>
 
             </tbody>
         </table>
-        <p>* <b>Null (None)</b> if the Short link didnt have max-clicks set or was not password protected.</p>
+        <p>* <b>Null</b> if the Short link didnt have max-clicks set or was not password protected.
+        </p>
 
         <br>
 
-        <h5>Stats Errors</h5>
-        <p>This section provides information about the various errors that could occur while making requests through the
+        <h3><strong>🪲 Errors</strong></h3>
+        <p>This section provides information about the various errors that could occur while making requests
+            through the
             API.</p>
         <table class="custom-table">
             <thead>
@@ -538,12 +1490,90 @@ else:
 
         <br>
 
+        <hr>
+
+        <br>
+
+        <h2>📜 API Rate Limits</h2>
+
+        <br>
+
+        <p>Spoo.me API has a rate limit of <code>5 requests per minute</code>, <code>50 requests per hour</code> and
+            <code>500 requests per day</code> for the <code>POST /</code>, <code>POST /emoji</code> endpoints. If you
+            exceed
+            this limit, you will receive a <code>429</code> status code in response to your requests.
+        </p>
+
+        <br>
+
+        <hr>
+
+        <br>
+
+        <h6 align="center">
+            <img src="https://spoo.me/static/images/favicon.png" height=30 alt="Spoo.me Icon">
+            <br>
+            <br>
+            © spoo.me . 2024
+            <br>
+            All Rights Reserved
+        </h6>
+        <p align="center">
+            <a href="https://github.com/spoo-me/url-shortener/blob/master/LICENSE.txt"><img
+                    src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=Apache-2.0&logoColor=d9e0ee&colorA=363a4f&colorB=b7bdf8" title="Spoo.me Copyright"/></a>
+        </p>
+
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/prism.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+    <script>
+        function handleLanguageButtonClick(buttons, exampleSelector, languagePrefix) {
+            buttons.forEach(button => {
+                button.addEventListener('click', function () {
+                    // Remove active class from all buttons
+                    buttons.forEach(btn => btn.classList.remove('active'));
+
+                    // Add active class to clicked button
+                    this.classList.add('active');
+
+                    // Get language from button's data attribute
+                    let language = this.getAttribute('data-language');
+
+                    // Get all code examples
+                    let codeExamples = document.querySelectorAll(`${exampleSelector} > div`);
+
+                    // Hide all code examples
+                    codeExamples.forEach(example => example.classList.remove('active-code'));
+
+                    // Show code example for clicked language
+                    let activeExample = document.querySelector(`.${languagePrefix}-${language}`);
+                    activeExample.classList.add('active-code');
+                });
+            });
+        }
+
+        // Get all language buttons
+        let languageButtons = document.querySelectorAll('.language-button');
+        handleLanguageButtonClick(languageButtons, '.example-codes', 'example');
+
+        // Get all emoji language buttons
+        let emojiLanguageButtons = document.querySelectorAll('.emoji-language-button');
+        handleLanguageButtonClick(emojiLanguageButtons, '.emoji-example-codes', 'emoji-example');
+
+        // Get all stats language buttons
+        let statsLanguageButtons = document.querySelectorAll('.stats-language-button');
+        handleLanguageButtonClick(statsLanguageButtons, '.stats-example-codes', 'stats-example');
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/prism.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-javascript.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-csharp.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-ruby.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-java.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-go.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/plugins/line-numbers/prism-line-numbers.min.js"
+        defer></script>
     <script src="{{ url_for('static', filename='js/contacts-popup.js') }}" defer=""></script>
     <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
 
