@@ -63,6 +63,19 @@ def shorten_url():
 
     app.logger.info(f"Received request data: {request.values}")
 
+    if not url:
+        if request.headers.get("Accept") == "application/json":
+            return jsonify({"UrlError": "URL is required"}), 400
+        else:
+            return (
+                render_template(
+                    "index.html",
+                    error="URL is required",
+                    host_url=request.host_url,
+                ),
+                400,
+            )
+
     if url and not validate_url(url):
         return jsonify({"UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"}), 400
 
@@ -169,6 +182,9 @@ def emoji():
     password = request.values.get("password")
     max_clicks = request.values.get("max-clicks")
 
+    if not url:
+        return jsonify({"UrlError": "URL is required"}), 400
+
     if emojies:
         # emojies = unquote(emojies)
         if not validate_emoji_alias(emojies):
@@ -183,10 +199,10 @@ def emoji():
             if not check_if_emoji_alias_exists(emojies):
                 break
 
-    if not validate_url(url):
-        return jsonify({"UrlError": "Invalid URL"}), 400
+    if url and not validate_url(url):
+        return jsonify({"UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"}), 400
 
-    if not validate_blocked_url(url):
+    if url and not validate_blocked_url(url):
         return jsonify({"UrlError": "Blocked URL ⛔"}), 403
 
     data = {"url": url, "counter": {}, "total-clicks": 0}
