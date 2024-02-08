@@ -138,7 +138,8 @@
         <br>
 
         <h4>Data</h4>
-        <p>The following data parameters that the API understands</p>
+        <p>The following data parameters that the API understands:</p>
+
         <table class="custom-table">
             <thead>
                 <tr>
@@ -559,7 +560,7 @@ puts response.read_body
         <br>
 
         <h4>Data</h4>
-        <p>The following data parameters that the API understands</p>
+        <p>The following data parameters that the API understands:</p>
 
         <table class="custom-table">
             <thead>
@@ -970,11 +971,12 @@ puts response.read_body
 
         <p><strong>Endpoint:</strong> <code>POST /stats/{shortCode}</code></p>
 
+        <p><code>shortCode</code> can also represent the short code of an emoji URL.</p>
+
         <br>
 
         <h4>Data</h4>
-
-        <p>The following data are used in the API requests and responses:</p>
+        <p>The following data parameters that the API understands:</p>
 
         <table class="custom-table">
             <thead>
@@ -1067,11 +1069,13 @@ else:
 <code class="language-javascript" id="shorten-code">
 const axios = require('axios');
 
+const short_code = 'exa';
+
 const data = {                 // not required if your short url is not password protected
     password: 'Example@12',
 };
 
-axios.post('https://spoo.me/stats/exa', data, {
+axios.post('https://spoo.me/stats/${short_code}', data, {
     headers: {
         'content-type': 'application/x-www-form-urlencoded',
     },
@@ -1127,6 +1131,8 @@ catch (HttpRequestException ex)
             <div class="stats-example-javascript">
                 <pre class="line-numbers">
 <code class="language-javascript" id="shorten-code">
+// define the short_code & url
+
 const url = 'https://spoo.me/stats/exa';
 const data = new URLSearchParams();
 data.append('password', 'Example@12');   // not required if your short url is not password protected
@@ -1160,11 +1166,15 @@ import java.net.http.HttpResponse;
 public class HttpRequestExample {
 
     public static void main(String[] args) {
+
+        // Define the short_code
+        String short_code = "exa";
+
         // Define the URL
-        String url = "https://spoo.me/stats/exa";
+        String url = "https://spoo.me/stats/"+short_code;
 
         // Build the request body
-        String requestBody = "password=Example@12";   // not required if your short url is not password protected
+        String requestBody = "password=Example@12";    // not required if your short url is not password protected
 
         // Create and configure the HttpClient
         HttpClient httpClient = HttpClient.newHttpClient();
@@ -1216,7 +1226,8 @@ func main() {
         },
     }
 
-    url := "https://spoo.me/stats/exa"
+    short_code := "exa"
+    url := "https://spoo.me/stats/" + short_code
     payload := strings.NewReader("password=Example@12")    // not required if your short url is not password protected
 
     req, err := http.NewRequest("POST", url, payload)
@@ -1249,10 +1260,10 @@ func main() {
             <div class="stats-example-ruby">
                 <pre class="line-numbers">
 <code class="language-ruby" id="shorten-code">
-require 'uri'
 require 'net/http'
 
-url = URI("https://spoo.me/stats/exa")
+short_code = "exa"
+url = URI("https://spoo.me/stats/#{short_code}")
 
 http = Net::HTTP.new(url.host, url.port)
 http.use_ssl = true
@@ -1489,9 +1500,533 @@ puts response.read_body
         </table>
 
         <br>
-
         <hr>
+        <br>
 
+        <h2>📤 Exporting Data</h2>
+
+        <br>
+
+        <p>This endpoint is used to export the data of your shortened URL. The request must contain the short code
+            of the URL along with the format in which you want to recieve your data. The response contains the data of
+            the shortened URL.</p>
+
+        <br>
+
+        <p><strong>Endpoint:</strong> <code>POST /export/{shortCode}/{exportFormat}</code></p>
+
+        <p><code>shortCode</code> can also represent the short code of an emoji URL.</p>
+
+        <br>
+
+        <h4>Available Export Formats</h4>
+
+        <p>The following export formats are available:</p>
+
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Format</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>json</td>
+                    <td>Export the data in JSON format.</td>
+                </tr>
+                <tr>
+                    <td>csv</td>
+                    <td>Export the data in CSV format. The API will return the data divided in many files zipped
+                        together.</td>
+                </tr>
+                <tr>
+                    <td>xlsx</td>
+                    <td>Export the data in XLSX (Excel file) format.</td>
+                </tr>
+                <tr>
+                    <td>xml</td>
+                    <td>Export the data in XML format.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p><strong>You can choose anyone of these formats and pass it in the request parameter</strong></p>
+
+        <p><strong><code>Important Note</code>: The API returns raw data in the specified format, which you may need to
+                store in a file.</strong></p>
+
+        <br>
+
+        <h4>Data</h4>
+        <p>The following data parameters that the API understands:</p>
+
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Payload</th>
+                    <th>Description</th>
+                    <th>Required</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>password</td>
+                    <td>Password of the shortened url if any.</td>
+                    <td>Yes, if and only if the short url is password protected.</td>
+                </tr>
+            </tbody>
+
+        </table>
+
+        <br>
+
+        <h4>Headers</h4>
+        <p>The following headers are used in the API requests and responses:</p>
+
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Header</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>Content-Type</code>*</td>
+                    <td><code>application/x-www-form-urlencoded</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br>
+
+        <h3><strong>🧑🏻‍💻 Code Examples</strong></h3>
+
+        <div class="export-languages-dock">
+            <button class="export-language-button active" data-language="python">Python</button>
+            <button class="export-language-button" data-language="node">Node.js</button>
+            <button class="export-language-button" data-language="csharp">C#</button>
+            <button class="export-language-button" data-language="javascript">JavaScript</button>
+            <button class="export-language-button" data-language="java">Java</button>
+            <button class="export-language-button" data-language="go">Go</button>
+            <button class="export-language-button" data-language="ruby">Ruby</button>
+        </div>
+
+        <div class="export-example-codes">
+
+            <div class="export-example-python active-code">
+
+                <pre class="line-numbers">
+<code class="language-python">
+import requests
+import json
+
+# Replace these with your actual values
+short_code = "exa"
+base_url = "https://spoo.me"
+export_format = "xlsx"    # You can choose from ["json", "csv", "xlsx", "xml"]
+
+payload = {                      # not required if your short url is not password protected
+    "password": "Example@12"
+}
+
+# Make the request
+
+response = requests.post(
+    f"{base_url}/export/{short_code}/{export_format}",
+    data = payload
+)
+
+# Check the response
+if response.status_code == 200:
+    # If the request was successful, store the data in a file
+    with open(f"{short_code}.{export_format}", "wb") as file:    # Note if the export format is csv, the file will be a zip file
+        file.write(response.content)
+else:
+    # If the request failed, print the error message
+    print(f"Error: {response.status_code}")
+    print(response.text)
+        </code></pre>
+            </div>
+
+            <div class="export-example-node">
+                <pre class="line-numbers">
+<code class="language-javascript" id="shorten-code">
+const axios = require("axios");
+const fs = require("fs");
+const querystring = require("querystring");
+
+// Replace these with your actual values
+const short_code = "exa";
+const base_url = "https://spoo.me";
+const export_format = "xlsx"; // You can choose from ["json", "csv", "xlsx", "xml"]
+
+const payload = {
+    // not required if your short url is not password protected
+    password: "Example@12",
+};
+
+// Make the request
+axios
+    .post(
+        `${base_url}/export/${short_code}/${export_format}`,
+        querystring.stringify(payload), // Convert the object to a URL-encoded string
+        {
+            responseType: "arraybuffer",
+            headers: {
+                "content-type": "application/x-www-form-urlencoded", // Specify the content type
+            },
+        }
+    )
+    .then((response) => {
+        // If the request was successful, store the data in a file
+        fs.writeFile(`${short_code}.${export_format}`, response.data, (err) => {     // Note if the export format is csv, the file will be a zip file
+            if (err) {
+                console.error(err);
+            } else {
+                console.log("File saved successfully");
+            }
+        });
+    })
+    .catch((error) => {
+        // If the request failed, print the error message
+        console.error(`Error: ${error.response.status}`);
+        console.error(error.response.data.toString());
+    });
+        </code></pre>
+            </div>
+
+            <div class="export-example-csharp">
+                <pre class="line-numbers">
+<code class="language-csharp">
+// Import HttpClient module
+using System;
+using System.IO;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+// Replace these with your actual values
+const string short_code = "exa";
+const string base_url = "https://spoo.me";
+const string export_format = "xlsx"; // You can choose from ["json", "csv", "xlsx", "xml"]
+
+// Create an instance of HttpClient
+var client = new HttpClient();
+
+// Set the content
+var content = new FormUrlEncodedContent(new Dictionary<string, string>   // not required if your short url is not password protected
+{
+    { "password", "Example@12" }
+});
+
+// Make the request
+var response = await client.PostAsync($"{base_url}/export/{short_code}/{export_format}", content);    // Note if the export format is csv, the file will be a zip file
+
+// Check the response
+if (response.IsSuccessStatusCode)
+{
+    // If the request was successful, store the data in a file
+    var data = await response.Content.ReadAsByteArrayAsync();
+    File.WriteAllBytes($"{short_code}.{export_format}", data);
+    Console.WriteLine("File saved successfully");
+}
+else
+{
+    // If the request failed, print the error message
+    Console.WriteLine($"Error: {response.StatusCode}");
+    Console.WriteLine(await response.Content.ReadAsStringAsync());
+}
+        </code></pre>
+            </div>
+
+            <div class="export-example-javascript">
+                <pre class="line-numbers">
+<code class="language-javascript" id="shorten-code">
+// Create a new XMLHttpRequest object
+var xhr = new XMLHttpRequest();
+
+// Replace these with your actual values
+var short_code = "exa";
+var base_url = "https://spoo.me";
+var export_format = "xlsx"; // You can choose from ["json", "csv", "xlsx", "xml"]
+
+var payload = new FormData(); // not required if your short url is not password protected
+payload.append("password", "Example@12");
+
+// Open a connection by specifying the request type and endpoint
+xhr.open("POST", `${base_url}/export/${short_code}/${export_format}`, true);
+
+// Set the response type to blob or arraybuffer
+xhr.responseType = "blob"; // or "arraybuffer"
+
+// Send the request
+xhr.send(payload);
+
+// Listen to xhr events for response
+xhr.onload = function () {
+    // If the request was successful, store the data in a file
+    if (xhr.status == 200) {
+        var data = xhr.response;
+        var blob = new Blob([data], { type: "application/octet-stream" });
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = `${short_code}.${export_format}`;    // Note if the export format is csv, the file will be a zip file
+        a.click();
+        window.URL.revokeObjectURL(url);
+        console.log("File saved successfully");
+    } else {
+        // If the request failed, print the error message
+        console.error(`Error: ${xhr.status}`);
+        console.error(xhr.responseText);
+    }
+};
+        </code></pre>
+            </div>
+
+            <div class="export-example-java">
+                <pre class="line-numbers">
+<code class="language-java" id="shorten-code">
+// Import java.net.http package
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+public class ExportExample {
+
+    public static void main(String[] args) {
+        // Define the URL
+        String short_code = "exa";
+        String base_url = "https://spoo.me";
+        String export_format = "csv"; // You can choose from ["json", "csv", "xlsx", "xml"]
+
+        // Create a map for form data
+        Map<Object, Object> data = Map.of("password", "Example@12");
+
+        // Convert map to form data string
+        String formData = data.entrySet().stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining("&"));
+
+        // Create a HttpClient object
+        HttpClient client = HttpClient.newHttpClient();
+
+        // Create a HttpRequest object
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(base_url + "/export/" + short_code + "/" + export_format))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(formData))
+                .build();
+
+        try {
+            // Send the request and get the response
+            HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+
+            // Check the response status code
+            if (response.statusCode() == 200) {
+                // If the request was successful, store the data in a file
+                byte[] responseData = response.body();
+                FileOutputStream file = new FileOutputStream(short_code + "." + export_format);    // Note if the export format is csv, the file will be a zip file
+                file.write(responseData);
+                file.close();
+                System.out.println("File saved successfully");
+            } else {
+                // If the request failed, print the error message
+                System.out.println("Error: " + response.statusCode());
+                System.out.println(new String(response.body(), StandardCharsets.UTF_8));
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+        </code></pre>
+            </div>
+
+            <div class="export-example-go">
+                <pre class="line-numbers">
+<code class="language-go" id="shorten-code">
+package main
+
+import (
+    "context"
+    "fmt"
+    "io"
+    "net"
+    "net/http"
+    "strings"
+    "time"
+    "os"
+    "net/url"
+)
+
+func main() {
+    // Set DNS resolver to use Google's public DNS server
+    net.DefaultResolver = &net.Resolver{
+        Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+            d := net.Dialer{Timeout: 500 * time.Millisecond}
+            return d.DialContext(ctx, "udp", "8.8.8.8:53")
+        },
+    }
+
+    base_url := "https://spoo.me"
+    short_code := "exa"
+    export_format := "xlsx" // You can choose from ["json", "csv", "xlsx", "xml"]
+
+    // Create a form data with the password (not required if your short url is not password protected)
+    formData := url.Values{}
+    formData.Set("password", "Example@12")
+
+    // Convert the form data to a URL-encoded string
+    payload := formData.Encode()
+
+    req, err := http.NewRequest("POST", base_url+"/export/"+short_code+"/"+export_format, strings.NewReader(payload))
+    if err != nil {
+        fmt.Println("Error creating request:", err)
+        return
+    }
+
+    req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+    res, err := http.DefaultClient.Do(req)
+
+    if err != nil {
+        fmt.Println("Error making request:", err)
+        return
+    }
+
+    defer res.Body.Close()
+
+    if res.StatusCode == 200 {
+        // If the request was successful, store the data in a file
+        file, err := os.Create(short_code + "." + export_format)    // Note if the export format is csv, the file will be a zip file
+        if err != nil {
+            fmt.Println("Error creating file:", err)
+            return
+        }
+        defer file.Close()
+
+        _, err = io.Copy(file, res.Body)
+        if err != nil {
+            fmt.Println("Error copying data to file:", err)
+            return
+        }
+
+        fmt.Println("File saved successfully")
+    } else {
+        // If the request failed, print the error message
+        fmt.Println("Error:", res.StatusCode)
+        body, err := io.ReadAll(res.Body)
+        if err != nil {
+            fmt.Println("Error reading response:", err)
+            return
+        }
+        fmt.Println(string(body))
+    }
+}
+        </code></pre>
+            </div>
+
+            <div class="export-example-ruby">
+                <pre class="line-numbers">
+<code class="language-ruby" id="shorten-code">
+require 'net/http'
+
+short_code = "exa"
+base_url = "https://spoo.me"
+export_format = "xlsx" # You can choose from ["json", "csv", "xlsx", "xml"]
+
+url = URI("#{base_url}/export/#{short_code}/#{export_format}")
+
+http = Net::HTTP.new(url.host, url.port)
+http.use_ssl = true
+
+request = Net::HTTP::Post.new(url)
+request["content-type"] = 'application/x-www-form-urlencoded'
+request.body = "password=Example@12"   # not required if your short url is not password protected
+
+response = http.request(request)
+
+File.open("#{short_code}.#{export_format}", "w") do |file|    # Note if the export format is csv, the file will be a zip file
+    file.write(response.read_body)
+
+    puts "File saved successfully"
+
+end
+        </code></pre>
+            </div>
+
+        </div>
+
+        <p><strong>Response:</strong></p>
+
+        <p>The API returns raw data in the specified format, which you may need to store in a file.</p>
+
+        <div class="export-sample-files">
+            <a href="https://spoo.me/export/exa/json?password=Example@12" download="exa-export-json.json"
+                class="export-sample-file">Download
+                Sample JSON File</a>
+            <a href="https://spoo.me/export/exa/csv?password=Example@12" download="exa-export-csv.zip"
+                class="export-sample-file">Download
+                Sample CSV File</a>
+            <a href="https://spoo.me/export/exa/xlsx?password=Example@12" download="exa-export-xlsx.xlsx"
+                class="export-sample-file">Download
+                Sample XLSX File</a>
+            <a href="https://spoo.me/export/exa/xml?password=Example@12" download="exa-export-xml.xml"
+                class="export-sample-file">Download
+                Sample XML File</a>
+        </div>
+
+        <br>
+
+        <h3><strong>🪲 Errors</strong></h3>
+
+        <p>This section provides information about the various errors that could occur while making requests
+            through the
+            API.</p>
+
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Error Name</th>
+                    <th>Code</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>UrlError</code></td>
+                    <td>404</td>
+                    <td>The user requested Url (short_code) never existed.</td>
+                </tr>
+                <tr>
+                    <td><code>PasswordError</code></td>
+                    <td>400</td>
+                    <td>The user entered password is invalid.</td>
+                </tr>
+                <tr>
+                    <td><code>FormatError</code></td>
+                    <td>400</td>
+                    <td>The user entered an invalid export format. The Exportformat must either xml, xlsx, json or csv
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p><strong>Note: If you're exporting your data in CSV format, ensure you save the file with a <code>.zip</code>
+                extension, not <code>.csv</code>. Failure to do so may result in logical errors in your code. You need
+                to save it in a zip file because the API returns the data divided in many files zipped
+                together.</strong></p>
+
+        <br>
+        <hr>
         <br>
 
         <h2>📜 API Rate Limits</h2>
@@ -1520,7 +2055,8 @@ puts response.read_body
         </h6>
         <p align="center">
             <a href="https://github.com/spoo-me/url-shortener/blob/master/LICENSE.txt"><img
-                    src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=Apache-2.0&logoColor=d9e0ee&colorA=363a4f&colorB=b7bdf8" title="Spoo.me Copyright"/></a>
+                    src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=Apache-2.0&logoColor=d9e0ee&colorA=363a4f&colorB=b7bdf8"
+                    title="Spoo.me Copyright" /></a>
         </p>
 
     </div>
@@ -1562,6 +2098,10 @@ puts response.read_body
         // Get all stats language buttons
         let statsLanguageButtons = document.querySelectorAll('.stats-language-button');
         handleLanguageButtonClick(statsLanguageButtons, '.stats-example-codes', 'stats-example');
+
+        // Get all export language buttons
+        let exportLanguageButtons = document.querySelectorAll('.export-language-button');
+        handleLanguageButtonClick(exportLanguageButtons, '.export-example-codes', 'export-example');
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/prism.min.js" defer></script>

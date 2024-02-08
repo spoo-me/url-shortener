@@ -44,20 +44,28 @@ body {
     font-size: 8rem;
 }
 
-table {
+.custom-table {
     width: 100%;
     border-collapse: collapse;
     margin: 20px 0;
+    background-color: #1F1F1F;
+    color: #F5F5F5;
 }
 
-th {
-    background-color: #090909;
+.custom-table th {
+    background-color: #282828;
+    color: #F5F5F5;
+    font-weight: 600;
+    padding: 10px;
 }
 
-th,
-td {
-    border: 1px solid #ddd;
-    padding: 8px;
+.custom-table td {
+    color: #B3B3B3;
+    padding: 10px;
+}
+
+.custom-table th, .custom-table td {
+    border: 1px solid #353535;
     text-align: left;
 }
 
@@ -65,46 +73,27 @@ td {
     font-weight: bold;
 }
 
-.custom-table {
-    background-color: #121212;
-    color: #fff;
-}
-
-.custom-table th,
-.custom-table td {
-    border-color: #353535;
-}
-
 h1, h2, h3, h4 {
     font-weight: bolder;
 }
 
-.example-codes > div {
+.example-codes > div,
+.emoji-example-codes > div,
+.stats-example-codes > div,
+.export-example-codes > div {
     display: none;
 }
 
-.example-codes > div.active-code {
+.example-codes > div.active-code,
+.emoji-example-codes > div.active-code,
+.stats-example-codes > div.active-code,
+.export-example-codes > div.active-code {
     display: block;
 }
 
-.emoji-example-codes > div {
-    display: none;
-}
-
-.emoji-example-codes > div.active-code {
-    display: block;
-}
-
-.stats-example-codes > div {
-    display: none;
-}
-
-.stats-example-codes > div.active-code {
-    display: block;
-}
 
 /* Dock styling */
-.languages-dock, .emoji-languages-dock, .stats-languages-dock {
+.languages-dock, .emoji-languages-dock, .stats-languages-dock, .export-languages-dock {
     display: flex;
     justify-content: flex-start;
     gap: 3px;
@@ -115,17 +104,17 @@ h1, h2, h3, h4 {
     overflow-x: scroll;
 }
 
-.languages-dock::-webkit-scrollbar, .emoji-languages-dock::-webkit-scrollbar, .stats-languages-dock::-webkit-scrollbar {
+.languages-dock::-webkit-scrollbar, .emoji-languages-dock::-webkit-scrollbar, .stats-languages-dock::-webkit-scrollbar, .export-languages-dock::-webkit-scrollbar {
     display: none;
 }
 
-.languages-dock::-webkit-scrollbar-track, .emoji-languages-dock::-webkit-scrollbar-track, .stats-languages-dock::-webkit-scrollbar-track {
+.languages-dock::-webkit-scrollbar-track, .emoji-languages-dock::-webkit-scrollbar-track, .stats-languages-dock::-webkit-scrollbar-track, .export-languages-dock::-webkit-scrollbar-track {
     background-color: transparent;
 }
 
 
 /* Button styling */
-.language-button, .emoji-language-button, .stats-language-button {
+.language-button, .emoji-language-button, .stats-language-button, .export-language-button {
     background-color: #444;
     color: white;
     border: none;
@@ -142,13 +131,13 @@ h1, h2, h3, h4 {
 }
 
 /* Button hover effect */
-.language-button:hover, .emoji-language-button:hover, .stats-language-button:hover {
+.language-button:hover, .emoji-language-button:hover, .stats-language-button:hover, .export-language-button:hover {
     background-color: #555;
     color: white;
 }
 
 /* Active button styling */
-.language-button.active, .emoji-language-button.active, .stats-language-button.active {
+.language-button.active, .emoji-language-button.active, .stats-language-button.active, .export-language-button.active {
     background-color: rgb(25, 25, 25);
     color: white;
     border: none;
@@ -188,6 +177,26 @@ h1, h2, h3, h4 {
 .language-button:hover::before, .emoji-language-button:hover::before, .stats-language-button:hover::before {
     visibility: visible;
     transform: scaleX(1);
+}
+
+.export-sample-files {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.export-sample-files .export-sample-file {
+    color: rgb(212, 212, 212);
+    background-color: #333;
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: 1px solid #444;
+    transition: background-color 0.3s ease;
+}
+
+.export-sample-files .export-sample-file:hover {
+    background-color: #444;
 }
 
 code {
