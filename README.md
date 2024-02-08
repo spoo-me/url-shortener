@@ -187,19 +187,19 @@ We welcome contributions to **spoo.me**. Feel free to fork the repository and su
 
 **Main Page**
 
-![spoo me main page](https://raw.githubusercontent.com/spoo-me/url-shortener/main/static/previews/main.png)
+[![spoo me main page](https://raw.githubusercontent.com/spoo-me/url-shortener/main/static/previews/main.png)](https://spoo.me)
 
 **Result Page**
 
-![spoo me result page](https://raw.githubusercontent.com/spoo-me/url-shortener/main/static/previews/result.png)
+[![spoo me result page](https://raw.githubusercontent.com/spoo-me/url-shortener/main/static/previews/result.png)](https://spoo.me/result/ga)
 
 **Stats Page**
 
-![image](https://raw.githubusercontent.com/spoo-me/url-shortener/main/static/previews/stats.png)
+[![image](https://raw.githubusercontent.com/spoo-me/url-shortener/main/static/previews/stats.png)](https://spoo.me/stats/ga)
 
 **API Page**
 
-![image](https://raw.githubusercontent.com/spoo-me/url-shortener/main/static/previews/api.png)
+[![image](https://raw.githubusercontent.com/spoo-me/url-shortener/main/static/previews/api.png)](https://spoo.me/api)
 
 ---
 

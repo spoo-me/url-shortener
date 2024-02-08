@@ -40,6 +40,10 @@ body {
     color: rgb(212, 212, 212);
 }
 
+.api-emoji {
+    font-size: 8rem;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -55,10 +59,6 @@ td {
     border: 1px solid #ddd;
     padding: 8px;
     text-align: left;
-}
-
-.ft-8r {
-    font-size: 8rem;
 }
 
 .fw-bold {
@@ -206,8 +206,12 @@ a {
 
 
 @media screen and (max-width: 768px) {
+    .api-emoji {
+        font-size: 5rem;
+    }
+
     #title-text {
-        margin-top: 70px;
+        margin-top: 20px;
     }
 
 }
