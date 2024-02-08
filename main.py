@@ -698,7 +698,7 @@ def export(short_code, format):
                 render_template(
                     "error.html",
                     error_code="400",
-                    error_message="Invalid format, format must be json, csv or xlsx",
+                    error_message="Invalid format, format must be json, csv, xml or xlsx",
                     host_url=request.host_url,
                 ),
                 400,
