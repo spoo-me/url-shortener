@@ -199,6 +199,31 @@ h1, h2, h3, h4 {
     background-color: #444;
 }
 
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px 0;
+}
+
+.social-links a {
+    color: rgb(212, 212, 212);
+    transition: color 0.3s ease;
+}
+
+.social-links a:hover {
+    color: white;
+}
+
+.social-links img {
+    filter: brightness(0.8);
+    transition: filter 0.3s ease;
+}
+
+.social-links img:hover {
+    filter: brightness(1);
+}
+
 code {
     color: white;
     background-color: rgb(43, 45, 49);
