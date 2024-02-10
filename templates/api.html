@@ -34,7 +34,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 
     <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/plugins/line-numbers/prism-line-numbers.min.css" />
+        href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.css" />
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/api.css') }}?v=4">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
@@ -2195,7 +2196,7 @@ print(f"Shortened URL: {short_url}")
         handleLanguageButtonClick(exportLanguageButtons, '.export-example-codes', 'export-example');
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/prism.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-javascript.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js" defer></script>
@@ -2203,8 +2204,21 @@ print(f"Shortened URL: {short_url}")
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-ruby.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-java.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-go.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.0/plugins/line-numbers/prism-line-numbers.min.js"
-        defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js" defer></script>
+
+    <script>
+        Prism.plugins.toolbar.registerButton('copy-to-clipboard', function (env) {
+            var button = document.createElement('button');
+            button.textContent = 'Copy to Clipboard';
+            button.addEventListener('click', function () {
+                copy(env.code);
+            });
+            return button;
+        });
+    </script>
+
     <script src="{{ url_for('static', filename='js/contacts-popup.js') }}" defer=""></script>
     <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
 
