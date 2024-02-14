@@ -235,6 +235,7 @@ For the sake of consistency and maintainability, we have a few styleguides that 
 - Reference issues and pull requests liberally after the first line
 - Consider starting the commit message with an applicable emoji:
 
+  - :tada: when adding a new feature
   - :art: when improving the format/structure of the code
   - :racehorse: when improving performance
   - :memo: when writing docs

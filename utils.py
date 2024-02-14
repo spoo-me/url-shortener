@@ -101,6 +101,7 @@ def validate_password(password):
 def validate_url(url):
     return validators.url(url, skip_ipv4_addr=True, skip_ipv6_addr=True) and not "spoo.me" in url
 
+
 def validate_blocked_url(url):
     blocked_urls = blocked_urls_collection.find()
     blocked_urls = [doc["_id"] for doc in blocked_urls]
@@ -117,6 +118,17 @@ def is_positive_integer(value):
         int(value)
         return True
     except ValueError:
+        return False
+
+
+def validate_expiration_time(expiration_time):
+    try:
+        expiration_time = datetime.fromtimestamp(float(expiration_time))
+        if expiration_time < datetime.now() + timedelta(minutes=4.5):
+            return False
+        return True
+    except Exception as e:
+        print(e)
         return False
 
 
@@ -272,6 +284,7 @@ def export_to_excel(data):
         'URL': [data['url']],
         'SHORT CODE': [data['_id']],
         'MAX CLICKS': [data['max-clicks']],
+        'EXPIRATION TIME': [data['expiration-time']],
         "PASSWORD": [data['password']],
         'CREATION DATE': [data['creation-date']],
         'EXPIRED': [data['expired']],
@@ -321,6 +334,7 @@ def export_to_csv(data):
         '': [data['url']],
         'SHORT CODE': [data['_id']],
         'MAX CLICKS': [data['max-clicks']],
+        'EXPIRATION TIME': [data['expiration-time']],
         "PASSWORD": [data['password']],
         'CREATION DATE': [data['creation-date']],
         'EXPIRED': [data['expired']],

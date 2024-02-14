@@ -60,6 +60,7 @@ def shorten_url():
     password = request.values.get("password")
     max_clicks = request.values.get("max-clicks")
     alias = request.values.get("alias")
+    expiration_time = request.values.get("expiration-time")
 
     app.logger.info(f"Received request data: {request.values}")
 
@@ -149,6 +150,12 @@ def shorten_url():
             max_clicks = str(abs(int(str(max_clicks))))
         data["max-clicks"] = max_clicks
 
+    if expiration_time:
+        if not validate_expiration_time(expiration_time):
+            return jsonify({"ExpirationTimeError": "Invalid expiration-time. It must be a valid Unix timestamp and at least 5 minutes from the current time."}), 400
+        else:
+            data["expiration-time"] = expiration_time
+
     data["creation-date"] = datetime.now().strftime("%Y-%m-%d")
     data["creation-time"] = datetime.now().strftime("%H:%M:%S")
 
@@ -181,6 +188,7 @@ def emoji():
     url = request.values.get("url")
     password = request.values.get("password")
     max_clicks = request.values.get("max-clicks")
+    expiration_time = request.values.get("expiration-time")
 
     if not url:
         return jsonify({"UrlError": "URL is required"}), 400
@@ -228,6 +236,12 @@ def emoji():
         else:
             max_clicks = str(abs(int(str(max_clicks))))
         data["max-clicks"] = max_clicks
+
+    if expiration_time:
+        if not validate_expiration_time(expiration_time):
+            return jsonify({"ExpirationTimeError": "Invalid expiration-time. It must be a valid Unix timestamp and at least 5 minutes from the current time."}), 400
+        else:
+            data["expiration-time"] = expiration_time
 
     data["creation-date"] = datetime.now().strftime("%Y-%m-%d")
     data["creation-time"] = datetime.now().strftime("%H:%M:%S")
@@ -320,39 +334,34 @@ def redirect_url(short_code):
         )
 
     url = url_data["url"]
-    # check if the URL is password protected
-    if not "password" in url_data:
-        if "max-clicks" in url_data:
-            if int(url_data["total-clicks"]) >= int(url_data["max-clicks"]):
-                return (
-                    render_template(
-                        "error.html",
-                        error_code="400",
-                        error_message="SHORT CODE EXPIRED",
-                        host_url=request.host_url,
-                    ),
-                    400,
-                )
+
+    if "max-clicks" in url_data:
+        if int(url_data["total-clicks"]) >= int(url_data["max-clicks"]):
+            return (
+                render_template(
+                    "error.html",
+                    error_code="400",
+                    error_message="SHORT CODE EXPIRED",
+                    host_url=request.host_url,
+                ),
+                400,
+            )
+
+    if "expiration-time" in url_data:
+        if float(url_data["expiration-time"]) <= datetime.now().timestamp():
+            return (
+                render_template(
+                    "error.html",
+                    error_code="400",
+                    error_message="SHORT CODE EXPIRED",
+                    host_url=request.host_url,
+                ),
+                400,
+            )
 
     if "password" in url_data:
-        # check if the user provided the password through the URL parameter
-        password = request.args.get("password")
-        if password == url_data["password"]:
-            pass
-        else:
-            # prompt the user for the password
-            if "max-clicks" in url_data:
-                if int(url_data["total-clicks"]) >= int(url_data["max-clicks"]):
-                    return (
-                        render_template(
-                            "error.html",
-                            error_code="400",
-                            error_message="SHORT CODE EXPIRED",
-                            host_url=request.host_url,
-                        ),
-                        400,
-                    )
-
+        password = request.values.get("password")
+        if password != url_data["password"]:
             return render_template(
                 "password.html", short_code=short_code, host_url=request.host_url
             )
@@ -360,7 +369,7 @@ def redirect_url(short_code):
     # store the device and browser information
     user_agent = request.headers.get("User-Agent")
     ua = parse(user_agent)
-    os_name = ua.os.family  # Get the operating system name
+    os_name = ua.os.family
     browser = ua.browser.family
     user_ip = get_client_ip()
     referrer = request.headers.get("Referer")
@@ -434,6 +443,7 @@ def redirect_url(short_code):
     )
     url_data["last-click-browser"] = browser
     url_data["last-click-os"] = os_name
+    url_data["last-click-country"] = country
 
     if validate_emoji_alias(short_code):
         update_emoji_by_alias(short_code, url_data)
@@ -572,28 +582,23 @@ def analytics(short_code):
                     400,
                 )
 
+    url_data["expired"] = False
+
     if "max-clicks" in url_data:
         if url_data["total-clicks"] >= int(url_data["max-clicks"]):
             url_data["expired"] = True
-        else:
-            url_data["expired"] = False
-    else:
-        url_data["expired"] = None
 
-    url_data["max-clicks"] = (
-        None if "max-clicks" not in url_data else url_data["max-clicks"]
-    )
+    if "expiration-time" in url_data:
+        if float(url_data["expiration-time"]) <= datetime.now().timestamp():
+            url_data["expired"] = True
 
-    if "password" not in url_data:
-        url_data["password"] = None
+    url_data["max-clicks"] = url_data.get("max-clicks", None)
+    url_data["expiration-time"] = url_data.get("expiration-time", None)
+    url_data["password"] = url_data.get("password", None)
 
     url_data["short_code"] = short_code
-    url_data["last-click-browser"] = (
-        None if "last-click-browser" not in url_data else url_data["last-click-browser"]
-    )
-    url_data["last-click-os"] = (
-        None if "last-click-os" not in url_data else url_data["last-click-os"]
-    )
+    url_data["last-click-browser"] = url_data.get("last-click-browser", None)
+    url_data["last-click-os"] = url_data.get("last-click-os", None)
 
     try:
         url_data["unique_referrer"] = {}
@@ -753,6 +758,7 @@ def export(short_code, format):
         url_data["expired"] = None
 
     url_data["max-clicks"] = url_data.get("max-clicks")
+    url_data["expiration-time"] = url_data.get("expiration-time")
     url_data["password"] = url_data.get("password")
     url_data["last-click-browser"] = url_data.get("last-click-browser")
     url_data["last-click-os"] = url_data.get("last-click-os")
