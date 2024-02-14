@@ -414,6 +414,10 @@ h3 {
         padding-top: 0;
     }
 
+    .wrapper {
+        padding: 0 5px;
+    }
+
     .main-data p,
     .clicks-data p {
         font-size: 14px;
