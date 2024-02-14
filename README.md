@@ -2,11 +2,7 @@
 
 # **Welcome to spoo.me - Shorten Your Url not Your Possibilities** 🚀
 
-Dive into the magic of **spoo.me**, your shortcut to URL wizardry! 🚀 Transform lengthy links into sleek, memorable ones with our free, open-sourced service. 🌟
-
-What sets us apart? High-level URL stats for insight, free API for developers, and killer customization options! 🎨✨ Craft personalized `slugs`, add `password protection`, or control `link lifespans`. ⏳
-
-Simplify your links, amplify your reach – join **spoo.me** and make URLs an art form! 🎨🔗
+**spoo.me** is a free, open-source service for shortening URLs. It offers URL statistics, a free API, and customization options. You can create custom `slugs`, add `password protection`, and manage `link lifespans`. Join **spoo.me** to simplify your URLs.
 
 ---
 
@@ -14,11 +10,11 @@ Simplify your links, amplify your reach – join **spoo.me** and make URLs an ar
 <summary>📖 Table of Contents</summary>
 
 - [**Welcome to spoo.me - Shorten Your Url not Your Possibilities** 🚀](#welcome-to-spoome---shorten-your-url-not-your-possibilities-)
+- [✨ Features](#-features)
 - [📌 Endpoints](#-endpoints)
-    - [🔐 Password Protected URLs](#-password-protected-urls)
-    - [📈 Viewing URL Statistics](#-viewing-url-statistics)
-- [📊 URL statistics Features](#-url-statistics-features)
-- [🛠️ URL Shortener API](#️-url-shortener-api)
+  - [🔐 Accessing Password-Protected URLs](#-accessing-password-protected-urls)
+  - [📈 Checking URL Statistics](#-checking-url-statistics)
+- [🛠️ API DOCS](#️-api-docs)
 - [🚀 Getting Started](#-getting-started)
   - [Method 1 - Docker (Recommended)](#method-1---docker-recommended)
     - [📋 Prerequisites](#-prerequisites)
@@ -35,6 +31,7 @@ Simplify your links, amplify your reach – join **spoo.me** and make URLs an ar
     - [Rename .env.example to .env](#rename-envexample-to-env-1)
     - [➕ Adding environment variables to .env file](#-adding-environment-variables-to-env-file-1)
     - [🚀 Starting the server](#-starting-the-server-1)
+    - [🌐 Access the server](#-access-the-server)
 - [🤝 Contributing](#-contributing)
 - [📧 Feedback / Issues / Support](#-feedback--issues--support)
 - [👀 Visual Previews](#-visual-previews)
@@ -43,44 +40,52 @@ Simplify your links, amplify your reach – join **spoo.me** and make URLs an ar
 
 ---
 
+# ✨ Features
+
+- `Custom Slugs`: Create custom slugs for your URLs 🎯
+- `Emoji Slugs`: Use emojis as slugs for your URLs 😃
+- `Password Protection`: Protect your URLs with a password 🔒
+- `Link Max Clicks`: Set a maximum number of clicks for your URLs 📈
+- `URL Statistics`: View detailed statistics for your URLs 📊
+- `API`: A free and open-sourced API for URL shortening and statistics 🛠️
+- `QR Code`: Generate a QR code for your URLs 📱
+- `Export Click Data`: Export click data as a CSV, JSON, XLSX, or XML file 📤
+- `Dark Mode`: A beautiful dark mode for your eyes 🌙
+- `Responsive Design`: Works on all devices 📱💻
+- `No Ads`: No ads, no tracking, no nonsense 🚫
+- `Open Source`: spoo.me is open-sourced and free to use 📖
+- `Free`: No hidden costs, no premium plans, no limitations 💸
+- `No Registration`: No need to register an account to use spoo.me
+- `Self Hosted`: You can host spoo.me on your own server 🏠
+
 # 📌 Endpoints
 
-**_Basic Structure_**: `https://spoo.me/<short_code>`
+The basic structure for accessing a shortened URL is: `https://spoo.me/<short_code>`
 
-**Example**:
-- Short URL: `https://spoo.me/ga`
-  - Redirects to: `https://google.com`
-  - Short code: `ga`
+**Example**: **https://spoo.me/ga**
 
-### 🔐 Password Protected URLs
+- This redirects to: `https://google.com`
+- The short code used is: `ga`
 
-**_Basic Structure_**: `https://spoo.me/<short_code>` (_redirects to password entry page_)
+## 🔐 Accessing Password-Protected URLs
 
-- **Productivity Trick**: Enter the password like this: `https://spoo.me/<short_code>?password=<password>`
+To access a password-protected URL, use the same basic structure: `https://spoo.me/<short_code>`. This will redirect you to a password entry page.
 
+- **Pro Tip**: You can bypass the password entry page by appending the password to the URL like this: `https://spoo.me/<short_code>?password=<password>`
 
-### 📈 Viewing URL Statistics
+## 📈 Checking URL Statistics
 
-**_Basic Structure_**: `https://spoo.me/stats/<short_code>`
+To view the statistics for a URL, use the following structure: `https://spoo.me/stats/<short_code>`
 
-**Example**:
-- URL: `https://spoo.me/stats/ga`
+**Example**: **https://spoo.me/stats/ga**
 
-_**Note**: You cannot view statistics for a password-protected page without providing its password._
+_**Please note**: You won't be able to view statistics for a password-protected page unless you provide its password._
 
-# 📊 URL statistics Features
-
-- `Detailed information` about the URL, including Date of Creation, Original URL, Total Clicks, etc.
-- `Graphs` displaying URL `click history` over time, `Browser Data`, `Platforms`, `Referrers`, `Countries` (Tracks Unique Clicks too)
-- In-depth `click analysis`
-- `QR Code` for the URL
-
-# 🛠️ URL Shortener API
+# 🛠️ API DOCS
 
 spoo.me has a `free` and `open-sourced` API that allows you to shorten URLs, view URL statistics, and more for your applications, websites, and services.
 
-For detailed API documentation, please visit [https://spoo.me/api](https://spoo.me/api)
-
+**For detailed API documentation, please visit [https://spoo.me/api](https://spoo.me/api)**
 
 # 🚀 Getting Started
 
@@ -171,15 +176,20 @@ MONGO_URI=<your_mongo_uri>
 python main.py
 ```
 
+### 🌐 Access the server
+
+Open your browser and go to `http://localhost:8000` to access the **spoo.me** URL shortener.
+
 # 🤝 Contributing
 
-We welcome contributions to **spoo.me**. Feel free to fork the repository and submit a pull request. For major changes, please open an issue first to discuss what you would like to change.
+**Contributions are always welcome!** 🎉
+Please check out the [contributing guidelines](contributing.md) to get started.
 
 # 📧 Feedback / Issues / Support
 
-**To give feedback, ask a question or make a feature request, you can either use the [Github Discussions](https://github.com/Zingzy/spoo.me/discussions)**
+**To give feedback, ask a question or make a feature request, you can either use the [Github Discussions](https://github.com/spoo-me/url-shortener/discussions)**
 
-**Bugs are logged using the github issue system. To report a bug, simply [open a new issue](https://github.com/Zingzy/spoo.me/issues/new).**
+**Bugs are logged using the github issue system. To report a bug, simply [open a new issue](https://github.com/spoo-me/url-shortener/issues/new).**
 
 **For URL deletion requests / any other issues feel free to [grill us](mailto:support@spoo.me)**
 
@@ -200,6 +210,18 @@ We welcome contributions to **spoo.me**. Feel free to fork the repository and su
 **API Page**
 
 [![image](https://raw.githubusercontent.com/spoo-me/url-shortener/main/static/previews/api.png)](https://spoo.me/api)
+
+<br><br>
+
+![Contribution Charts](https://repobeats.axiom.co/api/embed/48a40934896cbcaff2812e80478ebb701ee49dd4.svg)
+
+<br><br>
+
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=spoo-me/url-shortener&type=Date&theme=dark" />
+  <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=spoo-me/url-shortener&type=Date" />
+</picture>
 
 ---
 
