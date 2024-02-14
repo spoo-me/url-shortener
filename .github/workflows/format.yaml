@@ -1,4 +1,4 @@
-name: Format Code
+name: Check Code Formatting
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  format_code:
+  check_formatting:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,5 +23,5 @@ jobs:
           python -m pip install --upgrade pip
           pip install black
 
-      - name: Format Python Files
-        run: python -m black *.py
+      - name: Check Python File Formatting
+        run: python -m black --check *.py

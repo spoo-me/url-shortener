@@ -12,7 +12,7 @@ payload = {
     "url": "https://example.com",
     "alias": alias,
     "max-clicks": 10,
-    "expiration": (datetime.datetime.now() + datetime.timedelta(minutes=5)).timestamp(),
+    "expiration": (datetime.datetime.now() + datetime.timedelta(days=5)).timestamp(),
     "password": "SuperStrongPassword@18322"
 }
 
