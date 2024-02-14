@@ -78,7 +78,14 @@ def shorten_url():
             )
 
     if url and not validate_url(url):
-        return jsonify({"UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"}), 400
+        return (
+            jsonify(
+                {
+                    "UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"
+                }
+            ),
+            400,
+        )
 
     if url and not validate_blocked_url(url):
         return jsonify({"BlockedUrlError": "Blocked URL ⛔"}), 403
@@ -152,7 +159,14 @@ def shorten_url():
 
     if expiration_time:
         if not validate_expiration_time(expiration_time):
-            return jsonify({"ExpirationTimeError": "Invalid expiration-time. It must be a valid Unix timestamp and at least 5 minutes from the current time."}), 400
+            return (
+                jsonify(
+                    {
+                        "ExpirationTimeError": "Invalid expiration-time. It must be a valid Unix timestamp and at least 5 minutes from the current time."
+                    }
+                ),
+                400,
+            )
         else:
             data["expiration-time"] = expiration_time
 
@@ -208,7 +222,14 @@ def emoji():
                 break
 
     if url and not validate_url(url):
-        return jsonify({"UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"}), 400
+        return (
+            jsonify(
+                {
+                    "UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"
+                }
+            ),
+            400,
+        )
 
     if url and not validate_blocked_url(url):
         return jsonify({"UrlError": "Blocked URL ⛔"}), 403
@@ -239,7 +260,14 @@ def emoji():
 
     if expiration_time:
         if not validate_expiration_time(expiration_time):
-            return jsonify({"ExpirationTimeError": "Invalid expiration-time. It must be a valid Unix timestamp and at least 5 minutes from the current time."}), 400
+            return (
+                jsonify(
+                    {
+                        "ExpirationTimeError": "Invalid expiration-time. It must be a valid Unix timestamp and at least 5 minutes from the current time."
+                    }
+                ),
+                400,
+            )
         else:
             data["expiration-time"] = expiration_time
 
@@ -690,6 +718,7 @@ def analytics(short_code):
             "stats_view.html", json_data=url_data, host_url=request.host_url
         )
 
+
 @app.route("/export/<short_code>/<format>", methods=["GET", "POST"])
 @limiter.exempt
 def export(short_code, format):
@@ -709,7 +738,14 @@ def export(short_code, format):
                 400,
             )
         else:
-            return jsonify({"FormatError": "Invalid format; format must be json, csv, xlsx or xml"}), 400
+            return (
+                jsonify(
+                    {
+                        "FormatError": "Invalid format; format must be json, csv, xlsx or xml"
+                    }
+                ),
+                400,
+            )
 
     if validate_emoji_alias(short_code):
         url_data = load_emoji_by_alias(short_code)
