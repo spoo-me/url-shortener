@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Privacy Policy - spoo.me</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="https://spoo.me/static/images/favicon.png" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.css" />
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prism-duotone-dark.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=4">
+
+    <style type='text/css'>
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Scrollbar Styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .navbar {
+            flex-wrap: nowrap;
+            z-index: 2;
+        }
+
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        body::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+
+        body {
+            background-color: #191919;
+            color: rgb(212, 212, 212);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        }
+
+        .emoji {
+            font-size: 8rem;
+        }
+
+        .fw-bold {
+            font-weight: bold;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-weight: bolder;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px 0;
+        }
+
+        .social-links a {
+            color: rgb(212, 212, 212);
+            transition: color 0.3s ease;
+        }
+
+        .social-links a:hover {
+            color: white;
+        }
+
+        .social-links img {
+            filter: brightness(0.8);
+            transition: filter 0.3s ease;
+        }
+
+        .social-links img:hover {
+            filter: brightness(1);
+        }
+
+        code {
+            color: white;
+            background-color: rgb(43, 45, 49);
+            padding: 2px 5px;
+            border-radius: 5px;
+        }
+
+        a {
+            all: unset;
+            cursor: pointer;
+            color: rgb(212, 212, 212);
+            text-decoration: underline;
+        }
+
+        .chart {
+            width: 100%;
+            max-width: 750px;
+        }
+
+        @media screen and (max-width: 768px) {
+            .emoji {
+                font-size: 5rem;
+            }
+
+            #title-text {
+                margin-top: 20px;
+            }
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="navbar">
+        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image"
+            loading="lazy">
+        <div class="links">
+            <ul>
+                <li><a href="/">Shorten</a></li>
+                <li><a href="#" class="active">API</a></li>
+                <li><a href="/stats">Stats</a></li>
+                <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
+                </li>
+                <li onclick="showContactModal();"><a href="#">Contact</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="mobile-navbar" style="z-index: 100;">
+        <div class="mobile-logo">
+            <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png"
+                    alt="Spoo.me Banner Image" loading="lazy"></a>
+        </div>
+        <button type="button" class="burger" title="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul class="mobile-menu">
+            <li><a href="/" class="active">Shorten</a></li>
+            <li><a href="/api">API</a></li>
+            <li><a href="/stats">Stats</a></li>
+            <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
+            </li>
+            <li onclick="showContactModal();"><a href="#">Contact</a></li>
+        </ul>
+    </div>
+
+    <div id="modalPopup" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-header">Contact Us</h2>
+            <div class="button-container">
+                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png" alt="Discord Logo"
+                        loading="lazy">
+                    <p>Discord</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo"
+                        loading="lazy">
+                    <p>Twitter</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo"
+                        loading="lazy">
+                    <p>Instagram</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img
+                        src="https://img.icons8.com/pastel-glyph/100/ffffff/new-post--v1.png" alt="Email Icon"
+                        loading="lazy">
+                    <p>Email</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img
+                        src="https://img.icons8.com/material-sharp/100/ffffff/github.png" alt="Github Logo"
+                        loading="lazy">
+                    <p>Github</p>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id='content' class="container mt-4">
+        <span class="emoji">🔒</span>
+        <h1 id="contributing-guidelines">Privacy Policy</h1>
+        <br>
+
+        <p>At Spoo.me, accessible from <a href="https://spoo.me">https://spoo.me</a>, one of our main priorities is the
+            privacy of our visitors. This
+            Privacy Policy document contains types of information that is collected and recorded by Spoo.me and how we
+            use
+            it.</p>
+
+        <p>If you have additional questions or require more information about our Privacy Policy, do not hesitate to
+            contact us.</p>
+
+        <br>
+
+        <h2>Log Files</h2>
+
+        <br>
+
+        <p>Spoo.me follows a standard procedure of using log files. These files log visitors when they visit websites.
+            All
+            hosting companies do this and a part of hosting services' analytics. The information collected by log files
+            include internet protocol (IP) addresses, browser type, Internet Service Provider (ISP), date and time
+            stamp, referring/exit pages, and possibly the number of clicks. These are not linked to any information that
+            is personally identifiable. The purpose of the information is for analyzing trends, administering the site,
+            tracking users' movement on the website, and gathering demographic information.</p>
+
+        <p>When you visit a short URL on Spoo.me, we collect your IP address. This data is anonymized and we do not
+            associate it with any login information or personally identifiable information. We use this anonymized data
+            to analyze trends and improve our service.</p>
+
+        <br>
+
+        <h2>Cookies and Web Beacons</h2>
+
+        <br>
+
+        <p>Like any other website, Spoo.me uses 'cookies'. These cookies are used to store information including
+            visitors'
+            preferences, and the pages on the website that the visitor accessed or visited. The information is used to
+            optimize the users' experience by customizing our web page content based on visitors' browser type and/or
+            other information.</p>
+
+        <br>
+
+        <h2>Privacy Policies</h2>
+
+        <br>
+
+        <p>You may consult this list to find the Privacy Policy for each of the advertising partners of Spoo.me.</p>
+
+        <p>Third-party ad servers or ad networks uses technologies like cookies, JavaScript, or Web Beacons that are
+            used
+            in their respective advertisements and links that appear on Spoo.me, which are sent directly to users'
+            browser. They automatically receive your IP address when this occurs. These technologies are used to measure
+            the effectiveness of their advertising campaigns and/or to personalize the advertising content that you see
+            on
+            websites that you visit.</p>
+
+        <p>Note that Spoo.me has no access to or control over these cookies that are used by third-party advertisers.
+        </p>
+
+        <br>
+
+        <h2>Third Party Privacy Policies</h2>
+
+        <br>
+
+        <p>Spoo.me's Privacy Policy does not apply to other advertisers or websites. Thus, we are advising you to
+            consult
+            the respective Privacy Policies of these third-party ad servers for more detailed information. It may
+            include
+            their practices and instructions about how to opt-out of certain options. You may find a complete list of
+            these Privacy Policies and their links here: Privacy Policy Links.</p>
+
+        <p>You can choose to disable cookies through your individual browser options. To know more detailed information
+            about cookie management with specific web browsers, it can be found at the browsers' respective websites.
+            What
+            Are Cookies?</p>
+
+        <br>
+
+        <h2>Analytics</h2>
+
+        <br>
+
+        <p>We use third-party analytics tools to help us measure traffic and usage trends for the Spoo.me service. These
+            tools collect information sent by your browser as part of a web page request, including the web pages you
+            visit, your browser add-ons, and other information that assists us in improving the service. We may collect
+            and use this analytics information together with your IP address to infer your approximate location.</p>
+
+        <p>Specifically, we use Microsoft Clarity and Vercel's web analytics feature for insights into our website's
+            usage and user experience. These tools record information about your interaction with our website, such as
+            mouse clicks, mouse movements, scrolling activity, and the text you type into the website, which helps us to
+            understand our users' interactions with our website and improve user experience. For more information, you
+            can refer to <a href="https://privacy.microsoft.com/en-us/privacystatement">Microsoft's Privacy Policy</a>
+            and <a href="https://vercel.com/legal/privacy-policy">Vercel's Privacy Policy</a>.</p>
+
+        <br>
+
+        <h2>Personal Data</h2>
+
+        <br>
+
+        <p>We do not collect personal data such as email addresses from our users. The only information we collect is
+            the anonymized data mentioned in the "Log Files" and "Analytics" sections of this policy. We value your
+            privacy and strive to collect the minimum amount of data necessary to provide our services.</p>
+
+        <br>
+
+        <h2>Children's Information</h2>
+
+        <br>
+
+        <p>Another part of our priority is adding protection for children while using the internet. We encourage parents
+            and guardians to observe, participate in, and/or monitor and guide their online activity.</p>
+
+        <p>Spoo.me does not knowingly collect any Personal Identifiable Information from children under the age of 13.
+            If
+            you think that your child provided this kind of information on our website, we strongly encourage you to
+            contact us immediately and we will do our best efforts to promptly remove such information from our records.
+        </p>
+
+        <br>
+
+        <h2>Online Privacy Policy Only</h2>
+
+        <br>
+
+        <p>This Privacy Policy applies only to our online activities and is valid for visitors to our website with
+            regards
+            to the information that they shared and/or collect in Spoo.me. This policy is not applicable to any
+            information collected offline or via channels other than this website.</p>
+
+        <br>
+
+        <h2>Consent</h2>
+
+        <br>
+
+        <p>By using our website, you hereby consent to our Privacy Policy and agree to its Terms and Conditions.</p>
+
+        <br>
+
+        <h2>Update</h2>
+
+        <br>
+
+        <p>This Privacy Policy was <b>last updated on Monday, March 11th, 2024</b>. If there will be any update,
+            amendment, or
+            changes to our Privacy Policy then these will be posted on this page.</p>
+
+        <br>
+
+        <h2>Contact Us</h2>
+
+        <br>
+
+        <p>If you have any questions about this Privacy Policy, you can contact us: <a
+                href="mailto:support@spoo.me">support@spoo.me</a></p>
+
+        <br>
+        <hr>
+        <br>
+
+        <h6 align="center">
+            <img src="https://spoo.me/static/images/favicon.png" height=30 alt="Spoo.me Icon">
+            <br>
+            <br>
+            © spoo.me . 2024
+            <br>
+            All Rights Reserved
+        </h6>
+        <p align="center">
+            <a href="https://github.com/spoo-me/url-shortener/blob/master/LICENSE.txt"><img
+                    src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=Apache-2.0&logoColor=d9e0ee&colorA=363a4f&colorB=b7bdf8"
+                    title="Spoo.me Copyright" /></a>
+        </p>
+
+        <div class="social-links">
+            <a href="https://twitter.com/spoo_me" target="_blank" rel="noopener">
+                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/twitter.png" alt="Twitter" />
+            </a>
+            <a href="https://www.instagram.com/spoo.me" target="_blank" rel="noopener">
+                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/instagram.png" alt="Facebook" />
+            </a>
+            <a href="https://github.com/spoo-me" target="_blank" rel="noopener">
+                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/github.png" alt="GitHub" />
+            </a>
+            <a href="https://spoo.me/discord" target="_blank" rel="noopener">
+                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/discord.png" alt="GitHub" />
+            </a>
+            <a href="https://spoo.me/producthunt" target="_blank" rel="noopener">
+                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/product-hunt.png" alt="Product Hunt" />
+            </a>
+        </div>
+
+    </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-javascript.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-bash.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"
+        defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"
+        defer></script>
+
+    <script src="{{ url_for('static', filename='js/contacts-popup.js') }}" defer=""></script>
+    <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
+
+    <script>
+        window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
+
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+
+</body>
+
+</html>
