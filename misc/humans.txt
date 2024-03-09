@@ -1,0 +1,27 @@
+  _   _                                  _        _   
+ | | | |_   _ _ __ ___   __ _ _ __  ___ | |___  _| |_ 
+ | |_| | | | | '_ ` _ \ / _` | '_ \/ __|| __\ \/ / __|
+ |  _  | |_| | | | | | | (_| | | | \__ \| |_ >  <| |_ 
+ |_| |_|\__,_|_| |_| |_|\__,_|_| |_|___(_)__/_/\_\\__|
+                                                      
+
+/* TEAM */
+    Original developer: zingzy
+    Twitter: @zingzy3
+
+    Maintainer: zingzy
+    Github: @zingzy
+
+    Desktop App Developer: ivirius
+    Github: @iviriusIviriusMain
+
+/* THANKS */
+    Flask
+    Python
+
+/* SITE */
+    Last updated: 2024-03-11
+    Language: English
+    Standards: HTML5, CSS3
+    Components: Bootstrap
+    IDE: Visual Studio Code
