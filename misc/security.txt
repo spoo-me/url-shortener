@@ -1,0 +1,5 @@
+Contact: mailto:support@spoo.me
+Contact: mailto:admin@spoo.me
+Expires: 2026-03-09T18:30:00.000Z
+Preferred-Languages: en
+Policy: https://spoo.me/legal/privacy-policy
