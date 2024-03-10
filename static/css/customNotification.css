@@ -1,0 +1,79 @@
+.custom-top-notification {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    padding: 5px 15px;
+    color: white;
+    z-index: 9999999999999999999999999999999;
+    /* background: rgba(255, 255, 255, 0.105); */
+    background-color: rgb(67, 53, 25);
+    border-radius: 6px;
+    max-width: 330px;
+    min-width: 280px;
+    margin: 20px;
+    backdrop-filter: blur(30px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 0;
+    animation: slide-in 0.5s cubic-bezier(0.42, 0, 0.58, 1);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.custom-top-notification .closebtn {
+    float: right;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.custom-top-notification .closebtn:hover {
+    color: rgb(250, 225, 0);
+}
+
+.custom-top-notification p {
+    margin: 5px 0;
+    color: white;
+    letter-spacing: 0.5px;
+    text-align: center;
+    padding-right: 25px;
+    padding-left: 8px;
+    padding-top: 5px;
+    font-weight: normal;
+    padding-bottom: 15px;
+    font-size: 16px;
+}
+
+.custom-top-notification .close-progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 5px;
+    width: -webkit-fill-available;
+    background: rgb(250, 225, 0);
+    border-bottom-left-radius: 1000px;
+    border-bottom-right-radius: 1000px;
+    margin: 0 0;
+    /* animation: progress-bar-animation 5s linear; */
+}
+
+@keyframes progress-bar-animation {
+    from {
+        width: 100%;
+    }
+
+    to {
+        width: 0;
+    }
+}
+
+@keyframes slide-in {
+    from {
+        transform: translateX(150%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
