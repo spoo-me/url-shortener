@@ -97,9 +97,11 @@
             <input type="text" id="email" name="email" placeholder="Email" required>
             <textarea id="message" name="message" placeholder="Message" required></textarea>
             <input type="submit" value="Send">
+        </form>
 
-            <p id="opts">or connect with us via</p>
+        <p id="opts">or connect with us via</p>
 
+        <div class="button-container-upper" style="display: flex; justify-content: center; align-items: center;">
             <div class="button-container">
                 <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
                         src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png" alt="Discord Logo"
@@ -122,8 +124,7 @@
                         loading="lazy">
                 </button>
             </div>
-
-        </form>
+        </div>
 
         <script src="{{ url_for('static', filename='js/stats-script.js') }}" defer></script>
 
@@ -162,6 +163,10 @@
                 else {
                     return true;
                 }
+            }
+
+            function openContactLink(link) {
+                window.open(link, '_blank');
             }
         </script>
 
