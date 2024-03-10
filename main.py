@@ -157,12 +157,14 @@ def shorten_url():
             max_clicks = str(abs(int(str(max_clicks))))
         data["max-clicks"] = max_clicks
 
+    # custom expiration time is currently really buggy and not ready for production
+
     if expiration_time:
         if not validate_expiration_time(expiration_time):
             return (
                 jsonify(
                     {
-                        "ExpirationTimeError": "Invalid expiration-time. It must be a valid Unix timestamp and at least 5 minutes from the current time."
+                        "ExpirationTimeError": "Invalid expiration-time. It must be in a valid ISO format with timezone information and at least 5 minutes from the current time."
                     }
                 ),
                 400,
@@ -258,12 +260,14 @@ def emoji():
             max_clicks = str(abs(int(str(max_clicks))))
         data["max-clicks"] = max_clicks
 
+    # custom expiration time is currently really buggy and not ready for production
+
     if expiration_time:
         if not validate_expiration_time(expiration_time):
             return (
                 jsonify(
                     {
-                        "ExpirationTimeError": "Invalid expiration-time. It must be a valid Unix timestamp and at least 5 minutes from the current time."
+                        "ExpirationTimeError": "Invalid expiration-time. It must be in a valid ISO format with timezone information and at least 5 minutes from the current time."
                     }
                 ),
                 400,
@@ -375,8 +379,13 @@ def redirect_url(short_code):
                 400,
             )
 
+    # custom expiration time is currently really buggy and not ready for production
+
     if "expiration-time" in url_data:
-        if float(url_data["expiration-time"]) <= datetime.now().timestamp():
+        expiration_time = convert_to_gmt(url_data["expiration-time"])
+        if not expiration_time:
+            print("Expiration time is not timezone aware")
+        elif expiration_time <= datetime.now(timezone.utc):
             return (
                 render_template(
                     "error.html",
@@ -563,6 +572,9 @@ def stats():
 
     return render_template("stats.html", host_url=request.host_url)
 
+@app.route("/stats/", methods=["GET", "POST"])
+def stats_redirect():
+    return redirect(url_for("stats"))
 
 @app.route("/stats/<short_code>", methods=["GET", "POST"])
 @limiter.exempt
@@ -617,7 +629,10 @@ def analytics(short_code):
             url_data["expired"] = True
 
     if "expiration-time" in url_data:
-        if float(url_data["expiration-time"]) <= datetime.now().timestamp():
+        expiration_time = convert_to_gmt(url_data["expiration-time"])
+        if not expiration_time:
+            print("Expiration time is not timezone aware")
+        elif expiration_time <= datetime.now(timezone.utc):
             url_data["expired"] = True
 
     url_data["max-clicks"] = url_data.get("max-clicks", None)
@@ -793,6 +808,13 @@ def export(short_code, format):
     else:
         url_data["expired"] = None
 
+    if url_data.get("expiration-time") is not None:
+        expiration_time = convert_to_gmt(url_data["expiration-time"])
+        if not expiration_time:
+            print("Expiration time is not timezone aware")
+        elif expiration_time <= datetime.now(timezone.utc):
+            url_data["expired"] = True
+
     url_data["max-clicks"] = url_data.get("max-clicks")
     url_data["expiration-time"] = url_data.get("expiration-time")
     url_data["password"] = url_data.get("password")
@@ -870,12 +892,45 @@ def export(short_code, format):
 def api():
     return render_template("api.html", host_url=request.host_url)
 
+@app.route("/docs/<file_name>")
+@limiter.exempt
+def serve_docs(file_name):
+    try:
+        ext = file_name.split(".")[1]
+        if ext in ["html"]:
+            return render_template(f"docs/{file_name}", host_url=request.host_url)
+        else:
+            return send_file(f"docs/{file_name}")
+    except:
+        return (
+            render_template(
+                "error.html",
+                error_code="404",
+                error_message="URL NOT FOUND",
+                host_url=request.host_url,
+            ),
+            404,
+        )
+
+@app.route("/legal/privacy-policy")
+@limiter.exempt
+def serve_privacy_policy():
+    return render_template("docs/privacy-policy.html", host_url=request.host_url)
 
 @app.route("/sitemap.xml")
 @limiter.exempt
 def serve_sitemap():
     return send_file("misc/sitemap.xml")
 
+@app.route("/security.txt")
+@limiter.exempt
+def serve_security():
+    return send_file("misc/security.txt")
+
+@app.route("/humans.txt")
+@limiter.exempt
+def serve_humans():
+    return send_file("misc/humans.txt")
 
 @app.route("/robots.txt")
 @limiter.exempt
