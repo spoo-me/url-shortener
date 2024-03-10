@@ -9,14 +9,16 @@
     z-index: 999999999999999999;
     display: none;
     align-items: center;
+    justify-content: center;
 }
 
 .modal-content {
-    margin: auto auto 50px;
+    margin: auto;
+    margin-top: 70px;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 8px 32px 0 rgba( 0, 0, 0, 0.37 );
-    width: 80%;
+    width: 100%;
     max-width: 500px;
     font-family: 'Allerta Stencil', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: rgba(255, 255, 255, 0.05);
@@ -24,7 +26,16 @@
     backdrop-filter: blur(50px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: white;
-    animation: scaleUp 0.4s;
+    animation: fadeIn 0.4s forwards;
+}
+
+.modal-content.closing {
+    animation: fadeOut 0.4s forwards;
+}
+
+.modal-content button {
+    width: 100%;
+    max-width: 300px;
 }
 
 .modal-content h2 {
@@ -55,7 +66,6 @@
     display: flex;
     align-items: center;
     font-family: 'Allerta Stencil', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    width: 300px;
     height: 50px;
     padding: 0 20px;
     cursor: pointer;
@@ -82,29 +92,43 @@
     background: rgba(255, 255, 255, 0.25);
 }
 
-@keyframes scaleUp {
+@keyframes fadeIn {
     from {
-        transform: scale(0.1);
+        opacity: 0;
+        transform: translateY(20px);
     }
     to {
-        transform: scale(1);
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(20px);
     }
 }
 
 @media screen and (max-width: 600px) {
     .modal-content {
-        margin: auto auto;
+        width: 100%;
         padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 8px 32px 0 rgba( 0, 0, 0, 0.37 );
-        width: 90%;
-        max-width: 500px;
-        font-family: 'Allerta Stencil', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: rgba(30, 30, 46, 0.4);
-        -webkit-backdrop-filter: blur(30px);
-        backdrop-filter: blur(30px);
-        border: 1px solid rgba( 0, 0, 0, 0.18 );
-        color: white;
-        animation: scaleUp 0.4s;
+        font-size: 0.9em;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-content .form-field {
+        margin-bottom: 20px;
+    }
+
+    .modal-content button {
+        padding: 0 10px;
+        margin: 20px 0;
     }
 }
