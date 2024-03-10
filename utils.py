@@ -15,11 +15,14 @@ import io
 import zipfile
 from dicttoxml import dicttoxml
 import json
+import requests
 import validators
 
 load_dotenv(override=True)
 
 MONGO_URI = os.environ["MONGODB_URI"]
+CONTACT_WEBHOOK = os.environ["CONTACT_WEBHOOK"]
+URL_REPORT_WEBHOOK = os.environ["URL_REPORT_WEBHOOK"]
 
 client = MongoClient(MONGO_URI)
 
@@ -299,6 +302,11 @@ def update_emoji_by_alias(alias, emoji_data):
         emoji_collection.update_one({"_id": alias}, {"$set": emoji_data})
     except:
         pass
+
+
+def send_webhook(url, message):
+    data = {"content": message}
+    requests.post(url, json=data)
 
 
 def export_to_excel(data):
