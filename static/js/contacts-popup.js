@@ -1,12 +1,21 @@
 var modal = document.querySelector(".modal");
+var modalContent = document.querySelector(".modal-content");
 
 function showContactModal(){
+    event.preventDefault();
     modal.style.display = "flex";
 }
 
 function closeContactModal(){
-    modal.style.display = "none";
+    modalContent.classList.add('closing');
 }
+
+modalContent.addEventListener('animationend', function() {
+    if (modalContent.classList.contains('closing')) {
+        modal.style.display = "none";
+        modalContent.classList.remove('closing');
+    }
+});
 
 function openContactLink(link){
     window.open(link, '_blank');
