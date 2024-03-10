@@ -895,6 +895,89 @@ def api():
     return render_template("api.html", host_url=request.host_url)
 
 
+@app.route("/contact", methods=["GET", "POST"])
+@limiter.limit("20/day")
+@limiter.limit("10/hour")
+@limiter.limit("3/minute")
+def contact():
+    if request.method == "POST":
+        email = request.values.get("email")
+        message = request.values.get("message")
+        if not email or not message:
+            return (
+                render_template(
+                    "contact.html",
+                    error="All fields are required",
+                    host_url=request.host_url,
+                ),
+                400,
+            )
+
+        try:
+            send_webhook(message=f"# `{email}`\n\n {message}", url=CONTACT_WEBHOOK)
+        except Exception as e:
+            print(f"Error sending webhook: {e}")
+            return render_template(
+                "contact.html",
+                error="Error sending message, please try again later",
+                host_url=request.host_url,
+            )
+
+        return render_template(
+            "contact.html",
+            success="Message sent successfully",
+            host_url=request.host_url,
+        )
+    return render_template("contact.html", host_url=request.host_url)
+
+
+@app.route("/report", methods=["GET", "POST"])
+@limiter.limit("20/day")
+@limiter.limit("10/hour")
+@limiter.limit("3/minute")
+def report():
+    if request.method == "POST":
+        short_code = request.values.get("short_code")
+        reason = request.values.get("reason")
+        if not short_code or not reason:
+            return (
+                render_template(
+                    "report.html",
+                    error="All fields are required",
+                    host_url=request.host_url,
+                ),
+                400,
+            )
+
+        short_code = short_code.split("/")[-1]
+        if not check_if_slug_exists(short_code):
+            return (
+                render_template(
+                    "report.html",
+                    error="Invalid short code, short code does not exist",
+                    host_url=request.host_url,
+                ),
+                400,
+            )
+
+        try:
+            send_webhook(
+                message=f"# Short Code: `{short_code}`\nReason: {reason}",
+                url=URL_REPORT_WEBHOOK,
+            )
+        except Exception as e:
+            print(f"Error sending webhook: {e}")
+            return render_template(
+                "report.html",
+                error="Error sending report, please try again later",
+                host_url=request.host_url,
+            )
+        return render_template(
+            "report.html", success="Report sent successfully", host_url=request.host_url
+        )
+    return render_template("report.html", host_url=request.host_url)
+
+
 @app.route("/docs/<file_name>")
 @limiter.exempt
 def serve_docs(file_name):
@@ -961,6 +1044,18 @@ def page_not_found(error):
 
 @app.errorhandler(429)
 def ratelimit_handler(e):
+    if request.path == "/contact":
+        return render_template(
+            "contact.html",
+            error=f"ratelimit exceeded {e.description}",
+            host_url=request.host_url,
+        )
+    if request.path == "/report":
+        return render_template(
+            "report.html",
+            error=f"ratelimit exceeded {e.description}",
+            host_url=request.host_url,
+        )
     return make_response(jsonify(error=f"ratelimit exceeded {e.description}"), 429)
 
 
