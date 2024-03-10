@@ -121,14 +121,10 @@
         font-size: 0.9em;
         display: flex;
         flex-direction: column;
+        margin: 10px;
     }
 
-    .modal-content .form-field {
-        margin-bottom: 20px;
-    }
-
-    .modal-content button {
-        padding: 0 10px;
-        margin: 20px 0;
+    .modal-content h2 {
+        margin-bottom: 0;
     }
 }
