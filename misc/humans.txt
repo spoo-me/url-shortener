@@ -13,7 +13,7 @@
     Github: @zingzy
 
     Desktop App Developer: ivirius
-    Github: @iviriusIviriusMain
+    Github: @IviriusMain
 
 /* THANKS */
     Flask
