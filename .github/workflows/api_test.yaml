@@ -13,6 +13,8 @@ jobs:
 
     env:
       MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      URL_REPORT_WEBHOOK : ${{ secrets.URL_REPORT_WEBHOOK }}
+      CONTACT_WEBHOOK : ${{ secrets.CONTACT_WEBHOOK }}
 
     steps:
     - name: Checkout repository
