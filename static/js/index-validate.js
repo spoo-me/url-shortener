@@ -1,61 +1,48 @@
 function validatePassword() {
     var password = document.getElementById("password").value;
+
+    console.log(password);
     if (password.trim() === "") {
-        // Password field is empty, skip validation
-        document.getElementById("password-error").innerText = "";
-        document.getElementById("password-error").style.background = ""
-        document.getElementById("password-error").style.marginTop = "-25px"
         return true;
     }
+
     var passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@.])[A-Za-z\d@.]{8,}$/;
     if (!passwordRegex.test(password)) {
-        document.getElementById("password-error").innerText = "Password must be at least 8 characters long and contain an alphabet, a number, a special character '@' or '.'";
-        document.getElementById("password-error").style.background = "rgba(255, 255, 255, 0.15)"
-        document.getElementById("password-error").style.marginTop = "0px"
-        setTimeout(function () {
-            document.getElementById("password-error").innerText = "";
-            document.getElementById("password-error").style.background = "";
-            document.getElementById("password-error").style.marginTop = "-25px";
-        }, 5000);
+        customTopNotification("PasswordError", "Password must be at least 8 characters long and contain an alphabet, a number, a special character '@' or '.'", 10);
         return false;
     }
-    else {
-        document.getElementById("password-error").innerText = "";
-        document.getElementById("password-error").style.background = ""
-        document.getElementById("password-error").style.marginTop = "-25px"
-        return true;
-    }
+    return true;
 }
+
 function validateURL() {
     var url = document.getElementById("long-url").value;
     var urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
 
     if (!urlRegex.test(url) || url.includes('spoo.me')) {
-        document.getElementById("url-error").innerText = "Please Enter a Valid URL";
-        document.getElementById("url-error").style.background = "rgba(255, 255, 255, 0.15)"
-        document.getElementById("url-error").style.marginTop = "0";
-        document.getElementById("url-error").style.marginBottom = "20px";
-        setTimeout(function () {
-            document.getElementById("url-error").innerText = "";
-            document.getElementById("url-error").style.background = "";
-            document.getElementById("url-error").style.marginTop = "-30px";
-            document.getElementById("url-error").style.marginBottom = "15px";
-        }, 5000);
+        customTopNotification("UrlError", "Please Enter a valid URL", 10);
         return false;
-    } else {
-        document.getElementById("url-error").innerText = "";
-        document.getElementById("url-error").style.background = ""
-        document.getElementById("url-error").style.marginTop = "-30px"
-        return true;
     }
+    return true;
 }
 
-function removeErrorMessage() {
-    var aliasError = document.getElementById("alias-error");
+// Custom Time Expiration is currently Buggy and not ready for Production
 
-    if (aliasError) {
-        setTimeout(function () {
-            aliasError.remove();
-        }, 5000);
-    }
-}
+// function validateExpiration() {
+//     var expiration = document.getElementById("expiration-time").value;
+
+//     if (expiration.trim() === "") {
+//         return true;
+//     }
+
+//     var expirationDate = new Date(expiration);
+//     var currentDate = new Date();
+//     var diff = expirationDate - currentDate;
+//     console.log(diff);
+
+//     if (diff < 540000) {
+//         customTopNotification("ExpirationError", "Expiration date must be at least 10 minutes from now", 10);
+//         return false;
+//     }
+
+//     return true;
+// }

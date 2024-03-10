@@ -36,6 +36,17 @@ label {
     color: white;
 }
 
+.alias-time-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.alias-time-container .child {
+    width: -webkit-fill-available;
+}
+
 input[type="text"],
 input[type="password"],
 input[type="number"] {
@@ -49,6 +60,26 @@ input[type="number"] {
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
+}
+
+input[type="datetime-local"] {
+    width: 100%;
+    padding: 15px;
+    border-radius: 20px;
+    color: #333;
+    font-size: 20px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+input[type="password"]::-ms-reveal {
+    filter: invert(1);
 }
 
 input[type="text"]::placeholder,
@@ -139,6 +170,7 @@ button[type="submit"] {
     cursor: pointer;
     margin-top: 15px;
     background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
     color: #fff;
     border-radius: 10px;
     border: 2px solid rgba(255, 255, 255, 0.2);
@@ -379,7 +411,14 @@ a:hover {
         margin: 5px;
     }
 
-    #producthunt:hover {
-        transform:none;
+    #producthunt {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 750px) {
+    .alias-time-container {
+        flex-direction: column;
+        gap: 10px;
     }
 }

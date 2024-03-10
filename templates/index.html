@@ -42,12 +42,15 @@
     <meta name="moz-appearance" content="#adb1ff">
     <meta content="#adb1ff" name="msapplication-TileColor">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/self-promo.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=4">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=5">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/customNotification.css') }}?v=2">
+
+    <script src="{{ url_for('static', filename='js/customNotification.js') }}"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -56,11 +59,14 @@
 
 <body>
     <div class="self-promo">
-        <div class="self-promo-inner"><a href="https://pypi.org/project/py-spoo-url/" target="_blank" rel="noopener">🥳 We just launched our own Python Package ↗ 🐍</a></div>
-        <button id="close-button" class="self-promo-close"><img width="20" height="20" src="https://img.icons8.com/metro/30/ffffff/delete-sign.png" alt="delete-sign"/></button>
+        <div class="self-promo-inner"><a href="https://pypi.org/project/py-spoo-url/" target="_blank" rel="noopener">🥳
+                We just launched our own Python Package ↗ 🐍</a></div>
+        <button id="close-button" class="self-promo-close"><img width="20" height="20"
+                src="https://img.icons8.com/metro/30/ffffff/delete-sign.png" alt="delete-sign" /></button>
     </div>
     <div class="navbar">
-        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image" loading="lazy">
+        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image"
+            loading="lazy">
         <div class="links">
             <ul>
                 <li><a href="#" class="active">Shorten</a></li>
@@ -97,15 +103,36 @@
         <div class="modal-content">
             <h2 class="modal-header">Contact Us</h2>
             <div class="button-container">
-                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png"alt="Discord Logo" loading="lazy"><p>Discord</p></button>
-                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo" loading="lazy"><p>Twitter</p></button>
-                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo" loading="lazy"><p>Instagram</p></button>
-                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img src="https://img.icons8.com/pastel-glyph/100/ffffff/new-post--v1.png" alt="Email Icon" loading="lazy"><p>Email</p></button>
-                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img src="https://img.icons8.com/material-sharp/100/ffffff/github.png" alt="Github Logo" loading="lazy"><p>Github</p></button>
+                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png" alt="Discord Logo"
+                        loading="lazy">
+                    <p>Discord</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo"
+                        loading="lazy">
+                    <p>Twitter</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo"
+                        loading="lazy">
+                    <p>Instagram</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img
+                        src="https://img.icons8.com/pastel-glyph/100/ffffff/new-post--v1.png" alt="Email Icon"
+                        loading="lazy">
+                    <p>Email</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img
+                        src="https://img.icons8.com/material-sharp/100/ffffff/github.png" alt="Github Logo"
+                        loading="lazy">
+                    <p>Github</p>
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- <form action="/" method="POST" id="urlForm"> -->
     <form action="/" method="POST" onsubmit="return validateURL() && validatePassword();">
 
         <h1>
@@ -115,20 +142,33 @@
         <input type="text" id="long-url" name="url" required placeholder="https://your-long-url.com" value="{{ url }}">
 
         {% if error %}
-        <p id="alias-error">{{ error }}</p>
-        <script>removeErrorMessage();</script>
+        <script>
+            customTopNotification("AliasError", "{{ error }}", 10);
+        </script>
         {% endif %}
 
-        <label for="alias">Custom Alias</label>
+        <div class="alias-time-container">
+            <div class="child">
+                <label for="alias">Custom Alias</label>
 
-        <div class="buttonIn">
-            <div id="input-prefix">
-                <span>{{ host_url }}</span>
+                <div class="buttonIn">
+                    <div id="input-prefix">
+                        <span>{{ host_url }}</span>
+                    </div>
+                    <input type="text" id="alias" name="alias" placeholder="your-custom-alias">
+                </div>
+
+                <p id="non-imp">leave blank for random url slug</p>
             </div>
-            <input type="text" id="alias" name="alias" placeholder="your-custom-alias*">
-        </div>
 
-        <p id="non-imp">* leave blank for random url slug</p>
+            <!--  Custom Time Expiration is currently Buggy and not ready for Production  -->
+
+            <!-- <div class="child">
+                <label for="expiration-time">Expiration Time</label>
+                <input type="datetime-local" id="expiration-time" name="expiration-time">
+                <p id="non-imp">leave blank for never expire</p>
+            </div> -->
+        </div>
 
         <p id="password-error"></p>
 
@@ -174,17 +214,93 @@
             target="_blank" rel="noopener"><img
                 src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=431671&theme=dark"
                 alt="Spoo&#0046;me&#0032;Url&#0032;Shortener - Shorten&#0032;Your&#0032;URLs&#0044;&#0032;Not&#0032;Your&#0032;Possibilities&#0046; | Product Hunt"
-                style="width: 200px; height: 40px;" width="200" height="40" loading="lazy"/></a>
+                style="width: 200px; height: 40px;" width="200" height="40" loading="lazy" /></a>
     </div>
 
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
 
     <script src="{{ url_for('static', filename='js/index-qrcode.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/index-validate.js') }}" defer=""></script>
+    <script src="{{ url_for('static', filename='js/index-validate.js') }}?v=1" defer=""></script>
     <script src="{{ url_for('static', filename='js/index-script.js') }}?v=1" defer=""></script>
-    <script src="{{ url_for('static', filename='js/contacts-popup.js') }}" defer=""></script>
+    <script src="{{ url_for('static', filename='js/contacts-popup.js') }}?v=1" defer=""></script>
     <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
     <script src="{{ url_for('static', filename='js/self-promo.js') }}" defer=""></script>
+
+    <!--  Custom Time Expiration is currently Buggy and not ready for Production  -->
+
+    <!-- <script>
+        var timeExpiration = document.getElementById('expiration-time');
+        var date = new Date();
+        date.setMinutes(date.getMinutes() + 10);
+
+        // Format date to 'YYYY-MM-DDTHH:mm' which is the format datetime-local expects
+        var dateTimeString = date.toISOString().slice(0, 16);
+
+        timeExpiration.min = dateTimeString;
+    </script>
+
+    <script>
+        document.getElementById('urlForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // Validate URL, password, and expiration
+            if (!validateURL() || !validatePassword() || !validateExpiration()) {
+                return;
+            }
+
+            // Get timezone offset in minutes
+            var timezoneOffset = new Date().getTimezoneOffset();
+
+            // Convert timezone offset to hours and minutes
+            var timezoneOffsetHours = Math.abs(Math.floor(timezoneOffset / 60));
+            var timezoneOffsetMinutes = Math.abs(timezoneOffset % 60);
+
+            // Format timezone offset as a string
+            var timezoneOffsetString = (timezoneOffset < 0 ? '+' : '-') +
+                String(timezoneOffsetHours).padStart(2, '0') +
+                ':' +
+                String(timezoneOffsetMinutes).padStart(2, '0');
+
+            // Get expiration time input
+            var expirationTimeInput = document.getElementById('expiration-time');
+
+            // Create a new URLSearchParams object
+            var data = new URLSearchParams();
+
+            // Append form fields to the data
+            for (var pair of new FormData(this)) {
+                data.append(pair[0], pair[1]);
+            }
+
+            // if the expiration time is empty, dont add the offset
+            // Append timezone offset to the expiration time and add it to the data
+            if (expirationTimeInput.value){
+                var expirationDateTime = new Date(expirationTimeInput.value);
+                expirationDateTime.setMinutes(expirationDateTime.getMinutes() - timezoneOffset);
+                var formattedDateTime = expirationDateTime.toISOString().slice(0, 19);
+                data.set('expiration-time', formattedDateTime + timezoneOffsetString);
+                console.log(formattedDateTime + timezoneOffsetString);
+            }
+
+            // Create a new request
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/x-www-form-urlencoded',
+                },
+                body: data,
+                redirect: 'follow'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.url;
+            })
+            .then(url => window.location.href = url)
+            .catch(error => console.error(error));
+        });
+    </script> -->
 
     <script>
         window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
