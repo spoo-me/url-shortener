@@ -41,7 +41,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/prism-duotone-dark.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=8">
 
 </head>
 
@@ -86,6 +86,11 @@
         <div class="modal-content">
             <h2 class="modal-header">Contact Us</h2>
             <div class="button-container">
+                <button class="contact-button" onclick="openContactLink('https://spoo.me/contact');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/pencil--v1.png" alt="Contact Form Symbol"
+                        loading="lazy">
+                    <p>Contact Form</p>
+                </button>
                 <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
                         src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png" alt="Discord Logo"
                         loading="lazy">
@@ -2092,9 +2097,11 @@ print(f"Shortened URL: {short_url}")
             <li>Use the <code>/get-code</code> command to get the code to shorten URLs in various languages.</li>
         </ul>
 
-        <p><strong>SpooBot is available on the Discord Bot List. You can add it to your server by clicking <a href="https://spoo.me/spooBot">here</a>.</strong></p>
+        <p><strong>SpooBot is available on the Discord Bot List. You can add it to your server by clicking <a
+                    href="https://spoo.me/spooBot">here</a>.</strong></p>
 
-        <p><strong>SpooBot is also open source. You can find the source code on <a href="https://spoo.me/spoo-bot">GitHub</a>.</strong></p>
+        <p><strong>SpooBot is also open source. You can find the source code on <a
+                    href="https://spoo.me/spoo-bot">GitHub</a>.</strong></p>
 
         <br>
         <hr>
@@ -2135,19 +2142,19 @@ print(f"Shortened URL: {short_url}")
 
         <div class="social-links">
             <a href="https://twitter.com/spoo_me" target="_blank" rel="noopener">
-                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/twitter.png" alt="Twitter"/>
+                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/twitter.png" alt="Twitter" />
             </a>
             <a href="https://www.instagram.com/spoo.me" target="_blank" rel="noopener">
-                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/instagram.png" alt="Facebook"/>
+                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/instagram.png" alt="Facebook" />
             </a>
             <a href="https://github.com/spoo-me" target="_blank" rel="noopener">
-                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/github.png" alt="GitHub"/>
+                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/github.png" alt="GitHub" />
             </a>
             <a href="https://spoo.me/discord" target="_blank" rel="noopener">
-                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/discord.png" alt="GitHub"/>
+                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/discord.png" alt="GitHub" />
             </a>
             <a href="https://spoo.me/producthunt" target="_blank" rel="noopener">
-                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/product-hunt.png" alt="Product Hunt"/>
+                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/product-hunt.png" alt="Product Hunt" />
             </a>
         </div>
 
@@ -2204,9 +2211,11 @@ print(f"Shortened URL: {short_url}")
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-ruby.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-java.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-go.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"
+        defer></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"
+        defer></script>
 
     <script>
         Prism.plugins.toolbar.registerButton('copy-to-clipboard', function (env) {

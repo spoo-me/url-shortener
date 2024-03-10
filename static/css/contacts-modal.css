@@ -69,7 +69,7 @@
     height: 50px;
     padding: 0 20px;
     cursor: pointer;
-    margin: 20px 10px;
+    margin: 15px 10px;
     border-radius: 10px;
     color: white;
     font-size: 20px;
@@ -126,10 +126,10 @@
     }
 
     .modal-content button {
-        margin: 20px 0;
+        margin: 15px 0;
     }
 
     .modal-content h2 {
-        margin-bottom: 0;
+        margin-bottom: 10px;
     }
 }

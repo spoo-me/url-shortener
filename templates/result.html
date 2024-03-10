@@ -16,17 +16,20 @@
     </script>
     <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/16327/gsap-latest-beta.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=8">
 
 </head>
 
 <body>
     <div class="self-promo" style="background-color: #1b1717;">
-        <div class="self-promo-inner"><a href="https://pypi.org/project/py-spoo-url/" target="_blank" rel="noopener">🥳 We just launched our own Python Package ↗ 🐍</a></div>
-        <button id="close-button" class="self-promo-close"><img width="20" height="20" src="https://img.icons8.com/metro/30/ffffff/delete-sign.png" alt="delete-sign"/></button>
+        <div class="self-promo-inner"><a href="https://pypi.org/project/py-spoo-url/" target="_blank" rel="noopener">🥳
+                We just launched our own Python Package ↗ 🐍</a></div>
+        <button id="close-button" class="self-promo-close"><img width="20" height="20"
+                src="https://img.icons8.com/metro/30/ffffff/delete-sign.png" alt="delete-sign" /></button>
     </div>
     <div class="navbar">
-        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image" loading="lazy">
+        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image"
+            loading="lazy">
         <div class="links">
             <ul>
                 <li><a href="/">Shorten</a></li>
@@ -41,7 +44,8 @@
 
     <div class="mobile-navbar">
         <div class="mobile-logo">
-            <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png" alt="Spoo.me Banner Image"></a>
+            <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png"
+                    alt="Spoo.me Banner Image"></a>
         </div>
         <button type="button" class="burger" title="Menu">
             <span></span>
@@ -62,11 +66,36 @@
         <div class="modal-content">
             <h2 class="modal-header">Contact Us</h2>
             <div class="button-container">
-                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png"alt="Discord Logo" loading="lazy"><p>Discord</p></button>
-                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo" loading="lazy"><p>Twitter</p></button>
-                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo" loading="lazy"><p>Instagram</p></button>
-                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img src="https://img.icons8.com/pastel-glyph/100/ffffff/new-post--v1.png" alt="Email Icon" loading="lazy"><p>Email</p></button>
-                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img src="https://img.icons8.com/material-sharp/100/ffffff/github.png" alt="Github Logo" loading="lazy"><p>Github</p></button>
+                <button class="contact-button" onclick="openContactLink('https://spoo.me/contact');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/pencil--v1.png" alt="Contact Form Symbol"
+                        loading="lazy">
+                    <p>Contact Form</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png" alt="Discord Logo"
+                        loading="lazy">
+                    <p>Discord</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo"
+                        loading="lazy">
+                    <p>Twitter</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo"
+                        loading="lazy">
+                    <p>Instagram</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img
+                        src="https://img.icons8.com/pastel-glyph/100/ffffff/new-post--v1.png" alt="Email Icon"
+                        loading="lazy">
+                    <p>Email</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img
+                        src="https://img.icons8.com/material-sharp/100/ffffff/github.png" alt="Github Logo"
+                        loading="lazy">
+                    <p>Github</p>
+                </button>
             </div>
         </div>
     </div>
@@ -75,17 +104,19 @@
         <div id="url-container-inner">
             <a href="{{short_url}}" target="_blank" id="short-url">{{ short_url }}</a>
             <div class="copy-button">
-                <img src="https://img.icons8.com/fluency-systems-filled/48/ffffff/copy.png" alt="Copy" width="35" height="35" loading="lazy">
+                <img src="https://img.icons8.com/fluency-systems-filled/48/ffffff/copy.png" alt="Copy" width="35"
+                    height="35" loading="lazy">
             </div>
         </div>
     </div>
 
     <div class="flex-container" id="main-container">
-            <div id="qr-code-container">
-                <img class="qrcode" id="qrcode" alt="Qr Code for Sharing the ShortURL"
-                    src="https://qr.spoo.me/gradient?text={{ short_url }}&width=100&height=100&gradient1=1d1919&gradient2=322c29" loading="lazy">
-                <span id="qrcode-overlay">Download</span>
-            </div>
+        <div id="qr-code-container">
+            <img class="qrcode" id="qrcode" alt="Qr Code for Sharing the ShortURL"
+                src="https://qr.spoo.me/gradient?text={{ short_url }}&width=100&height=100&gradient1=1d1919&gradient2=322c29"
+                loading="lazy">
+            <span id="qrcode-overlay">Download</span>
+        </div>
         <div class="right-container">
             <div class="inline-share-buttons">
                 <div id="share-buttons">
@@ -104,8 +135,8 @@
                     <a href="https://www.reddit.com/submit?url={{short_url}}" rel="noopener" data-platform="reddit"
                         target="_blank"><img class="share-button" width="45" height="45"
                             src="https://img.icons8.com/ios-filled/80/ffffff/reddit--v2.png" alt="Reddit" /></a>
-                    <a href="https://snapchat.com/scan?attachmentUrl={{short_url}}" rel="noopener" data-platform="snapchat"
-                        target="_blank"><img class="share-button" width="45" height="45"
+                    <a href="https://snapchat.com/scan?attachmentUrl={{short_url}}" rel="noopener"
+                        data-platform="snapchat" target="_blank"><img class="share-button" width="45" height="45"
                             src="https://img.icons8.com/ios-filled/80/ffffff/snapchat--v2.png" alt="snapchat" /></a>
                 </div>
             </div>

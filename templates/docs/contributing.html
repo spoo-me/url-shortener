@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/prism-duotone-dark.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=8">
 
     <style type='text/css'>
         * {
@@ -139,7 +139,7 @@
         <div class="links">
             <ul>
                 <li><a href="/">Shorten</a></li>
-                <li><a href="#" class="active">API</a></li>
+                <li><a href="/api">API</a></li>
                 <li><a href="/stats">Stats</a></li>
                 <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
                 </li>
@@ -172,6 +172,11 @@
         <div class="modal-content">
             <h2 class="modal-header">Contact Us</h2>
             <div class="button-container">
+                <button class="contact-button" onclick="openContactLink('https://spoo.me/contact');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/pencil--v1.png" alt="Contact Form Symbol"
+                        loading="lazy">
+                    <p>Contact Form</p>
+                </button>
                 <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
                         src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png" alt="Discord Logo"
                         loading="lazy">
@@ -249,7 +254,8 @@
 
         <h2 id="-code-of-conduct">📜 Code of Conduct</h2>
         <br>
-        <p>This project and everyone participating in it is governed by the <a target="_blank" rel="noopener" href="https://github.com/spoo-me/url-shortener/blob/main/contributing.md">Code of
+        <p>This project and everyone participating in it is governed by the <a target="_blank" rel="noopener"
+                href="https://github.com/spoo-me/url-shortener/blob/main/contributing.md">Code of
                 Conduct</a>. By participating, you are expected to uphold this code. Please report unacceptable behavior
             to <a href="mailto:support@spoo.me">support@spoo.me</a>.</p>
 
@@ -684,10 +690,11 @@
                     files</strong>. Although, it is recommended to have a basic understanding of the Jinja2 templating
                 engine incase you want to change the structure of the HTML files.</li>
         </ul>
-        <p>Take a look at the <a href="https://jinja.palletsprojects.com/en/3.0.x/templates/" target="_blank" rel="noopener">Jinja2 documentation</a>
+        <p>Take a look at the <a href="https://jinja.palletsprojects.com/en/3.0.x/templates/" target="_blank"
+                rel="noopener">Jinja2 documentation</a>
             for more information.</p>
-        <p><strong>In case of any confusion, you can ask for help in our</strong> <a
-                href="https://spoo.me/discord" target="_blank" rel="noopener"><strong>Discord Server</strong></a>.</p>
+        <p><strong>In case of any confusion, you can ask for help in our</strong> <a href="https://spoo.me/discord"
+                target="_blank" rel="noopener"><strong>Discord Server</strong></a>.</p>
 
         <br>
         <hr>
@@ -706,7 +713,8 @@
         <h2 id="-additional-notes">📝 Additional Notes</h2>
         <br>
         <p>This project is a living document and will be updated as the project evolves. Please check back regularly for
-            updates. We also reccomend you to join our <a href="https://spoo.me/discord" target="_blank" rel="noopener">Discord Server</a> to get in
+            updates. We also reccomend you to join our <a href="https://spoo.me/discord" target="_blank"
+                rel="noopener">Discord Server</a> to get in
             touch with the maintainers and other contributors.</p>
 
         <br>
@@ -715,14 +723,17 @@
 
         <h2 id="-license">⚖️ License</h2>
         <br>
-        <p>This project is licensed under the APACHE 2.0 License - see the <a href="https://github.com/spoo-me/url-shortener/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a> file for
+        <p>This project is licensed under the APACHE 2.0 License - see the <a
+                href="https://github.com/spoo-me/url-shortener/blob/main/LICENSE" target="_blank"
+                rel="noopener">LICENSE</a> file for
             details.</p>
 
         <br>
         <br>
 
-        <p align="center"><img class="chart" src="https://repobeats.axiom.co/api/embed/48a40934896cbcaff2812e80478ebb701ee49dd4.svg"
-                alt="Contribution Charts"/></p>
+        <p align="center"><img class="chart"
+                src="https://repobeats.axiom.co/api/embed/48a40934896cbcaff2812e80478ebb701ee49dd4.svg"
+                alt="Contribution Charts" /></p>
 
         <br>
         <hr>

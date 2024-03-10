@@ -25,9 +25,9 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/error.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/error.css') }}?v=1">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=8">
 
 </head>
 
@@ -69,6 +69,7 @@
         <div class="modal-content">
             <h2 class="modal-header">Contact Us</h2>
             <div class="button-container">
+                <button class="contact-button" onclick="openContactLink('https://spoo.me/contact');"><img src="https://img.icons8.com/ios-filled/100/ffffff/pencil--v1.png" alt="Contact Form Symbol" loading="lazy"><p>Contact Form</p></button>
                 <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png"alt="Discord Logo" loading="lazy"><p>Discord</p></button>
                 <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo" loading="lazy"><p>Twitter</p></button>
                 <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo" loading="lazy"><p>Instagram</p></button>
@@ -79,7 +80,7 @@
     </div>
 
     <div class="gif-upper"><img class="gif"
-            src="https://media0.giphy.com/media/kF0ngyP7S1DfmzKqiN/giphy.gif?cid=ecf05e47lax6sim75vmaebu243djb82b6vx903706movksga&ep=v1_gifs_search&rid=giphy.gif&ct=g"
+            src="{{url_for('static', filename='images/error.webp')}}"
             alt="404 GIF" loading="lazy"></div>
 
     <div class="error-message">

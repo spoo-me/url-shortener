@@ -35,7 +35,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/stats-view.css') }}?v=9">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=8">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/prism-duotone-dark.css') }}">
 
 </head>
@@ -79,6 +79,10 @@
         <div class="modal-content">
             <h2 class="modal-header">Contact Us</h2>
             <div class="button-container">
+                <button class="contact-button" onclick="openContactLink('https://spoo.me/contact');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/pencil--v1.png" alt="Contact Form Symbol" loading="lazy">
+                    <p>Contact Form</p>
+                </button>
                 <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
                         src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png" alt="Discord Logo" loading="lazy">
                     <p>Discord</p>
