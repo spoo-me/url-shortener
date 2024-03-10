@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Contributing 🤝</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="https://spoo.me/static/images/favicon.png" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.css" />
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prism-duotone-dark.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=5">
+
+    <style type='text/css'>
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Scrollbar Styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .navbar {
+            flex-wrap: nowrap;
+            z-index: 2;
+        }
+
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        body::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+
+        body {
+            background-color: #191919;
+            color: rgb(212, 212, 212);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        }
+
+        .emoji {
+            font-size: 8rem;
+        }
+
+        .fw-bold {
+            font-weight: bold;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-weight: bolder;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px 0;
+        }
+
+        .social-links a {
+            color: rgb(212, 212, 212);
+            transition: color 0.3s ease;
+        }
+
+        .social-links a:hover {
+            color: white;
+        }
+
+        .social-links img {
+            filter: brightness(0.8);
+            transition: filter 0.3s ease;
+        }
+
+        .social-links img:hover {
+            filter: brightness(1);
+        }
+
+        code {
+            color: white;
+            background-color: rgb(43, 45, 49);
+            padding: 2px 5px;
+            border-radius: 5px;
+        }
+
+        a {
+            all: unset;
+            cursor: pointer;
+            color: rgb(212, 212, 212);
+            text-decoration: underline;
+        }
+
+        .chart {
+            width: 100%;
+            max-width: 750px;
+        }
+
+        @media screen and (max-width: 768px) {
+            .emoji {
+                font-size: 5rem;
+            }
+
+            #title-text {
+                margin-top: 20px;
+            }
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="navbar">
+        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image"
+            loading="lazy">
+        <div class="links">
+            <ul>
+                <li><a href="/">Shorten</a></li>
+                <li><a href="#" class="active">API</a></li>
+                <li><a href="/stats">Stats</a></li>
+                <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
+                </li>
+                <li onclick="showContactModal();"><a href="#">Contact</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="mobile-navbar" style="z-index: 100;">
+        <div class="mobile-logo">
+            <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png"
+                    alt="Spoo.me Banner Image" loading="lazy"></a>
+        </div>
+        <button type="button" class="burger" title="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <ul class="mobile-menu">
+            <li><a href="/" class="active">Shorten</a></li>
+            <li><a href="/api">API</a></li>
+            <li><a href="/stats">Stats</a></li>
+            <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
+            </li>
+            <li onclick="showContactModal();"><a href="#">Contact</a></li>
+        </ul>
+    </div>
+
+    <div id="modalPopup" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-header">Contact Us</h2>
+            <div class="button-container">
+                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png" alt="Discord Logo"
+                        loading="lazy">
+                    <p>Discord</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo"
+                        loading="lazy">
+                    <p>Twitter</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img
+                        src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo"
+                        loading="lazy">
+                    <p>Instagram</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img
+                        src="https://img.icons8.com/pastel-glyph/100/ffffff/new-post--v1.png" alt="Email Icon"
+                        loading="lazy">
+                    <p>Email</p>
+                </button>
+                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img
+                        src="https://img.icons8.com/material-sharp/100/ffffff/github.png" alt="Github Logo"
+                        loading="lazy">
+                    <p>Github</p>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id='content' class="container mt-4">
+        <span class="emoji">🤝</span>
+        <h1 id="contributing-guidelines">Contributing Guidelines</h1>
+        <br>
+        <p>First off, thank you for considering contributing to this project! It's people like you that make the open
+            source community such a fantastic place to learn, inspire, and create. Every contribution helps and is
+            greatly appreciated!</p>
+        <p>In this document, you will find guidelines and directions for contributing to this project. Please respect
+            these guidelines as they are meant to foster a consistent and respectful approach to collaboration.</p>
+
+        <br>
+        <hr>
+        <br>
+
+        <h2 id="-table-of-contents">📖 Table of Contents</h2>
+        <br>
+        <ul>
+            <li><a href="#contributing-guidelines">Contributing Guidelines</a></li>
+            <li><a href="#-table-of-contents">📖 Table of Contents</a></li>
+            <li><a href="#-code-of-conduct">📜 Code of Conduct</a></li>
+            <li><a href="#-how-can-i-contribute">💡 How Can I Contribute?</a></li>
+            <li><a href="#-reporting-bugs">🪲 Reporting Bugs</a></li>
+            <li><a href="#-suggesting-enhancements">✨ Suggesting Enhancements</a></li>
+            <li><a href="#-pull-requests-guidelines">📥 Pull Requests Guidelines</a></li>
+            <li><a href="#️-project-structure">🏗️ Project Structure</a></li>
+            <li><a href="#-pre-requisites">📚 Pre-requisites</a></li>
+            <li><a href="#-getting-started">🚀 Getting started</a></li>
+            <li>
+                <a href="#-styleguides">🎨 Styleguides</a>
+                <ul>
+                    <li><a href="#-git-commit-messages">💬 Git Commit Messages</a></li>
+                    <li><a href="#-python-styleguide">🐍 Python Styleguide</a></li>
+                    <li><a href="#-html-css-and-javascript-styleguide">🌐 Html, css and Javascript Styleguide</a></li>
+                </ul>
+            </li>
+            <li><a href="#️-basic-jinja2-templating-engine-introduction">🛠️ Basic Jinja2 Templating Engine
+                    introduction</a></li>
+            <li><a href="#-writing-blog-posts-and-tutorials">✍🏻 Writing Blog Posts and Tutorials</a></li>
+            <li><a href="#-additional-notes">📝 Additional Notes</a></li>
+            <li><a href="#️-license">⚖️ License</a></li>
+        </ul>
+
+        <br>
+        <hr>
+        <br>
+
+        <h2 id="-code-of-conduct">📜 Code of Conduct</h2>
+        <br>
+        <p>This project and everyone participating in it is governed by the <a target="_blank" rel="noopener" href="https://github.com/spoo-me/url-shortener/blob/main/contributing.md">Code of
+                Conduct</a>. By participating, you are expected to uphold this code. Please report unacceptable behavior
+            to <a href="mailto:support@spoo.me">support@spoo.me</a>.</p>
+
+        <br>
+        <hr>
+        <br>
+
+        <h2 id="-how-can-i-contribute">💡 How Can I Contribute?</h2>
+        <br>
+        <p>You can contribute to this project in many ways. Here are a few ideas:</p>
+        <ul>
+            <li>Reporting bugs and issues on GitHub 🪲</li>
+            <li>Suggesting enhancements and new features on GitHub ✨</li>
+            <li>Fixing bugs and issues by submitting pull requests 🛠️</li>
+            <li>Implementing new features</li>
+            <li>Improving the documentation 📝</li>
+            <li>Sharing the project with others 📣</li>
+            <li>Providing support to other people who are using the project 🤝</li>
+            <li>Writing blog posts and tutorials ✍🏻</li>
+        </ul>
+        <p>We are always available to help you with your contribution. If you are unsure about anything, just ping us on
+            <a href="https://spoo.me/discord">discord</a> or submit the issue or pull request anyway. The worst that can
+            happen is that you'll be asked to change something about your contribution.
+        </p>
+
+        <br>
+        <hr>
+        <br>
+
+        <h2 id="-reporting-bugs">🪲 Reporting Bugs</h2>
+        <br>
+        <p>Before creating bug reports, please check the existing bug reports as you might find out that you don't need
+            to create one. When you are creating a bug report, please include as many details as possible.</p>
+
+        <br>
+        <hr>
+        <br>
+
+        <h2 id="-suggesting-enhancements">✨ Suggesting Enhancements</h2>
+        <br>
+        <p>Before creating enhancement suggestions, please check the existing suggestions as you might find out that you
+            don't need to create one. When you are creating an enhancement suggestion, please include as many details as
+            possible.</p>
+
+        <br>
+        <hr>
+        <br>
+
+        <h2 id="-pull-requests-guidelines">📥 Pull Requests Guidelines</h2>
+        <br>
+        <p>The process described here has several goals:</p>
+        <ul>
+            <li>Maintain the project's quality</li>
+            <li>Fix problems that are important to users</li>
+            <li>Engage the community in working toward the best possible project</li>
+            <li>Enable a sustainable system for the project's maintainers to review contributions</li>
+        </ul>
+        <p>Please follow these steps to have your contribution considered by the maintainers:</p>
+        <ol>
+            <li>Follow all instructions in the template</li>
+            <li>Adhering to the project's code of conduct</li>
+            <li>Follow the styleguides</li>
+            <li>After you submit your pull request, verify that all status checks are passing</li>
+            <li>After you create a pull request, maintainers will review your proposal and discuss it with you</li>
+        </ol>
+
+        <br>
+        <hr>
+        <br>
+
+        <h2 id="-project-structure">🏗️ Project Structure</h2>
+        <br>
+        <p>The project is structured as follows:</p>
+        <pre><code class="hljs plaintext language-plaintext">url-shortener/
+│   .env
+│   .env.example
+│   .gitignore
+│   contributing.md
+│   docker-compose.yml
+│   dockerfile
+│   emojies.py
+│   LICENSE
+│   main.py
+│   README.md
+│   requirements.txt
+│   utils.py
+│   vercel.json
+├───.github
+│   └───workflows
+│		   api_test.yaml
+│		   format.yaml
+├───misc
+├───static
+│   ├───css
+│   │	   api.css
+│   │	   base.css
+│   │	   confetti.css
+│   │	   contacts-modal.css
+│   │	   error.css
+│   │	   header.css
+│   │	   index.css
+│   │	   mobile-header.css
+│   │	   password.css
+│   │	   prism-duotone-dark.css
+│   │	   result.css
+│   │	   self-promo.css
+│   │	   stats-view.css
+│   │	   stats.css
+│   ├───images
+│   ├───js
+│   │	   confetti.js
+│   │	   contacts-popup.js
+│   │	   header.js
+│   │	   index-qrcode.js
+│   │	   index-script.js
+│   │	   index-validate.js
+│   │	   result-script.js
+│   │	   self-promo.js
+│   │	   stats-script.js
+│   │	   stats-view-script.js
+│   └───previews
+├───templates
+│	   api.html
+│	   error.html
+│	   index.html
+│	   password.html
+│	   result.html
+│	   stats.html
+│	   stats_view.html
+└───tests
+		shorten.py
+		stats.py
+</code></pre>
+
+        <br>
+        <hr>
+        <br>
+
+        <h2 id="-pre-requisites">📚 Pre-requisites</h2>
+        <br>
+        <ul>
+            <li>Python 3.9 or higher</li>
+            <li>pip</li>
+            <li>virtualenv</li>
+            <li>MongoDB</li>
+            <li>Basic knowledge of Python, HTML, CSS, and JavaScript</li>
+            <li>Basic knowledge of jinja2 templating engine; <strong>more information on this can be found in
+                    the</strong> <a href="#️-basic-jinja2-templating-engine-introduction">Basic Jinja2 Templating Engine
+                    introduction</a> <strong>section</strong></li>
+            <li>Basic knowledge of MongoDB</li>
+        </ul>
+        <p><strong>Note:</strong> If you are just here to contribute to the frontend, having knowledge of Python and
+            MongoDB is not necessary.</p>
+        <p>You need to have <strong>MongoDB installed on your machine</strong> to run the project. You can download it
+            from <a href="https://www.mongodb.com/try/download/community">here</a>. Or you can also use <strong>Instant
+                MongoDB extension</strong> available for Visual Studio Code.</p>
+
+        <br>
+        <hr>
+        <br>
+
+        <h2 id="-getting-started">🚀 Getting started</h2>
+        <br>
+        <ol>
+            <li>Fork the repository on GitHub</li>
+            <li>Clone the project to your own machine</li>
+        </ol>
+        <pre><code class="hljs bash language-bash">git <span class="hljs-built_in">clone</span> https://github.com/spoo-me/url-shortener.git
+<span class="hljs-built_in">cd</span> url-shortener
+</code></pre>
+        <ol start="3">
+            <li>Install the project dependencies</li>
+        </ol>
+        <pre><code class="hljs bash language-bash">pip install -r requirements.txt
+</code></pre>
+        <ol start="4">
+            <li>Create a new branch</li>
+        </ol>
+        <pre><code class="hljs bash language-bash">git checkout -b my-new-branch
+</code></pre>
+        <ol start="5">
+            <li>
+                <p>Creating .env file</p>
+                <ul>
+                    <li>Copy and Rename the <code>.env.example</code> file to <code>.env</code></li>
+                </ul>
+            </li>
+            <li>
+                <p>Starting the development server</p>
+                <ul>
+                    <li>
+                        <p>Creating a new virtual environment</p>
+                        <pre><code class="hljs bash language-bash">python -m venv venv
+</code></pre>
+                    </li>
+                    <li>
+                        <p>Activating the virtual environment</p>
+                        <pre><code class="hljs bash language-bash"><span class="hljs-built_in">source</span> venv/bin/activate
+</code></pre>
+                    </li>
+                    <li>
+                        <p>Running the development server</p>
+                        <pre><code class="hljs bash language-bash">python app.py
+</code></pre>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>You can access the development server at: http://127.0.0.1:8000/</p>
+            </li>
+            <li>
+                <p>Make your changes</p>
+                <p>Note: If you made some changes in the static Files, you need to update the version of the static file
+                    in the static file import syntax of the HTML files. For example, if you made some changes in the
+                    <code>style.css</code> file, you need to update the version of the <code>style.css</code> file in
+                    the <code>index.html</code> file. You can do this by adding a query parameter to the end of the file
+                    name.
+                </p>
+                <p><strong>For example:</strong></p>
+                <pre><code class="hljs html language-html"><span class="hljs-tag">&lt;<span class="hljs-name">link</span> <span class="hljs-attr">rel</span>=<span class="hljs-string">&quot;stylesheet&quot;</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;&lbrace;&lbrace; url_for(&#x27;static&#x27;, filename=&#x27;css/style.css&#x27;) &rbrace;&rbrace;?v=1&quot;</span>/&gt;</span>
+</code></pre>
+                <p>If the version of the file is already updated, you can just change the value of the query parameter
+                    to the next number. For example,</p>
+                <pre><code class="hljs html language-html"><span class="hljs-tag">&lt;<span class="hljs-name">link</span> <span class="hljs-attr">rel</span>=<span class="hljs-string">&quot;stylesheet&quot;</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;&lbrace;&lbrace; url_for(&#x27;static&#x27;, filename=&#x27;css/style.css&#x27;) &rbrace;&rbrace;?v=2&quot;</span>/&gt;</span>
+</code></pre>
+                <p>More information on how to do this can be found in the <a
+                        href="#️-basic-jinja2-templating-engine-introduction">Basic Jinja2 Templating Engine
+                        introduction</a> section.</p>
+            </li>
+            <li>
+                <p>Format you code, more information on how to do this can be found in the <a
+                        href="#styleguides">Styleguides</a> section</p>
+            </li>
+            <li>
+                <p>Commit your changes</p>
+            </li>
+            <li>
+                <p>Check if all of the workflow checks are passing</p>
+            </li>
+            <li>
+                <p>Push your branch to your fork</p>
+            </li>
+        </ol>
+
+        <br>
+        <hr>
+        <br>
+
+        <h2 id="-styleguides">🎨 Styleguides</h2>
+        <br>
+        <p>For the sake of consistency and maintainability, we have a few styleguides that we follow. Please adhere to
+            these guidelines when contributing to the project.</p>
+
+        <br>
+
+        <h3 id="-git-commit-messages">💬 Git Commit Messages</h3>
+        <br>
+        <ul>
+            <li>
+                <p>Use the present tense ("Add feature" not "Added feature")</p>
+            </li>
+            <li>
+                <p>Use the imperative mood ("Move cursor to…" not "Moves cursor to…")</p>
+            </li>
+            <li>
+                <p>Limit the first line to 72 characters or less</p>
+            </li>
+            <li>
+                <p>Reference issues and pull requests liberally after the first line</p>
+            </li>
+            <li>
+                <p>Consider starting the commit message with an applicable emoji:</p>
+            </li>
+            <li>
+                <p>🎉 when adding a new feature</p>
+            </li>
+            <li>
+                <p>🎨 when improving the format/structure of the code</p>
+            </li>
+            <li>
+                <p>🐎 when improving performance</p>
+            </li>
+            <li>
+                <p>📝 when writing docs</p>
+            </li>
+            <li>
+                <p>🐛 when fixing a bug</p>
+            </li>
+            <li>
+                <p>🔥 when removing code or files</p>
+            </li>
+            <li>
+                <p>🔒 when dealing with security</p>
+            </li>
+            <li>
+                <p>⬆️ when upgrading dependencies</p>
+            </li>
+            <li>
+                <p>⬇️ when downgrading dependencies</p>
+            </li>
+        </ul>
+
+        <br>
+
+        <h3 id="-python-styleguide">🐍 Python Styleguide</h3>
+        <br>
+        <p>All Python code should be formatted using the <strong>black code formatter</strong>. This ensures that all
+            code is formatted consistently and makes it easier to review and maintain. <strong>We have a workflow that
+                automatically checks for code formatting and will fail if the code is not formatted correctly.</strong>
+        </p>
+        <p>How to Install Black:</p>
+        <pre><code class="hljs bash language-bash">pip install black
+</code></pre>
+        <p>How to Use Black:</p>
+        <pre><code class="hljs bash language-bash">black *.py
+</code></pre>
+
+        <br>
+
+        <h3 id="-html-css-and-javascript-styleguide">🌐 Html, css and Javascript Styleguide</h3>
+        <br>
+        <p>All HTML and CSS code should be formatted using the <strong>prettier code formatter</strong>. This ensures
+            that all code is formatted consistently and makes it easier to review and maintain.</p>
+
+        <br>
+        <hr>
+        <br>
+
+        <h2 id="-basic-jinja2-templating-engine-introduction">🛠️ Basic Jinja2 Templating Engine introduction</h2>
+        <br>
+        <p>Jinja2 is a modern and designer-friendly templating language for Python, modelled after Django’s templates.
+            It is fast, widely used and secure with the optional sandboxed template execution environment.</p>
+        <p>Files are stored in the <code>templates</code> directory and the static files are stored in the
+            <code>static</code> directory. The <code>templates</code> directory contains the HTML files and the
+            <code>static</code> directory contains the CSS, JavaScript, and images.
+        </p>
+        <p>The HTML files are rendered using the Jinja2 templating engine. The Jinja2 templating engine uses the
+            <code>&lbrace;&lbrace; &rbrace;&rbrace;</code> syntax to render variables and the
+            <code>&lbrace;% %&rbrace;</code> syntax to render control
+            statements.
+        </p>
+        <p>For example, the following code will render the <code>title</code> variable sent by the server in the HTML
+            file:</p>
+        <pre><code class="hljs html language-html"><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-keyword">html</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span> <span class="hljs-attr">lang</span>=<span class="hljs-string">&quot;en&quot;</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+	<span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">charset</span>=<span class="hljs-string">&quot;UTF-8&quot;</span> /&gt;</span>
+	<span class="hljs-tag">&lt;<span class="hljs-name">meta</span>
+	  <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;viewport&quot;</span>
+	  <span class="hljs-attr">content</span>=<span class="hljs-string">&quot;width=device-width, initial-scale=1.0&quot;</span>
+	/&gt;</span>
+	<span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>&lbrace;&lbrace; title &rbrace;&rbrace;<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+	<span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>&lbrace;&lbrace; title &rbrace;&rbrace;<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+</code></pre>
+        <p><strong>Separating the static files from the HTML files makes the project more organized and easier to
+                maintain. The static files are included in the HTML files using the <code>url_for</code> function. The
+                <code>url_for</code> function takes the name of the static file as an argument and returns the URL of
+                the static file.</strong></p>
+        <p>For example, the following code will include the <code>style.css</code> file in the HTML file:</p>
+        <pre><code class="hljs html language-html"><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-keyword">html</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span> <span class="hljs-attr">lang</span>=<span class="hljs-string">&quot;en&quot;</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+	<span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">charset</span>=<span class="hljs-string">&quot;UTF-8&quot;</span> /&gt;</span>
+	<span class="hljs-tag">&lt;<span class="hljs-name">meta</span>
+	  <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;viewport&quot;</span>
+	  <span class="hljs-attr">content</span>=<span class="hljs-string">&quot;width=device-width, initial-scale=1.0&quot;</span>
+	/&gt;</span>
+	<span class="hljs-tag">&lt;<span class="hljs-name">link</span> <span class="hljs-attr">rel</span>=<span class="hljs-string">&quot;stylesheet&quot;</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;&lbrace;&lbrace; url_for(&#x27;static&#x27;, filename=&#x27;css/style.css&#x27;) &rbrace;&rbrace;&quot;</span>/&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+	<span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>&lbrace;&lbrace; title &rbrace;&rbrace;<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+</code></pre>
+        <p>In the above example, the <code>url_for</code> function takes the name of the folder where the static file is
+            stored and the name of the static file as arguments and returns the URL of the static file. In this project
+            the static files are stored in the <code>static</code> folder and the <code>style.css</code> file is stored
+            in the <code>css</code> folder.</p>
+        <p>The <code>url_for</code> function is the only way to include static files in the HTML files. You can also add
+            inline CSS and JavaScript in the HTML files but it is not recommended.</p>
+        <p>In order to add local images in the HTML files, you can use the <code>url_for</code> function. For example,
+            the following code will include the <code>logo.png</code> file in the HTML file:</p>
+        <pre><code class="hljs html language-html"><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-keyword">html</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span> <span class="hljs-attr">lang</span>=<span class="hljs-string">&quot;en&quot;</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+	<span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">charset</span>=<span class="hljs-string">&quot;UTF-8&quot;</span> /&gt;</span>
+	<span class="hljs-tag">&lt;<span class="hljs-name">meta</span>
+	  <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;viewport&quot;</span>
+	  <span class="hljs-attr">content</span>=<span class="hljs-string">&quot;width=device-width, initial-scale=1.0&quot;</span>
+	/&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+	<span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;&lbrace;&lbrace; url_for(&#x27;static&#x27;, filename=&#x27;images/logo.png&#x27;) &rbrace;&rbrace;&quot;</span> <span class="hljs-attr">alt</span>=<span class="hljs-string">&quot;Logo&quot;</span>/&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+</code></pre>
+        <p><strong>IMPORTANT STEP:</strong></p>
+        <p>If you made some changes in the static files, you need to update the version of the static file in the static
+            file import syntax of the HTML files. For example, if you made some changes in the <code>style.css</code>
+            file, you need to update the version of the <code>style.css</code> file in the <code>index.html</code> file.
+            You can do this by adding a query parameter to the end of the file name.</p>
+        <p><strong>For example:</strong></p>
+        <pre><code class="hljs html language-html"><span class="hljs-tag">&lt;<span class="hljs-name">link</span> <span class="hljs-attr">rel</span>=<span class="hljs-string">&quot;stylesheet&quot;</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;&lbrace;&lbrace; url_for(&#x27;static&#x27;, filename=&#x27;css/style.css&#x27;) &rbrace;&rbrace;?v=1&quot;</span>/&gt;</span>
+</code></pre>
+        <p>If the version of the file is <strong>already updated</strong>, you can just change the value of the query
+            parameter to the <strong>next number</strong>. For example,</p>
+        <pre><code class="hljs html language-html"><span class="hljs-tag">&lt;<span class="hljs-name">link</span> <span class="hljs-attr">rel</span>=<span class="hljs-string">&quot;stylesheet&quot;</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;&lbrace;&lbrace; url_for(&#x27;static&#x27;, filename=&#x27;css/style.css&#x27;) &rbrace;&rbrace;?v=2&quot;</span>/&gt;</span>
+</code></pre>
+        <p><strong>DOING THIS IS REALLY IMPORTANT AS VERCEL CACHES THE STATIC FILES AND IF YOU DON'T UPDATE THE VERSION
+                OF THE STATIC FILES, THE CHANGES YOU MADE IN THE STATIC FILES WILL NOT BE REFLECTED IN THE PRODUCTION
+                SERVER.</strong></p>
+        <p><strong>Important Notes:</strong></p>
+        <ul>
+            <li>The <code>url_for</code> function is a Jinja2 function and can only be used in the HTML files.</li>
+            <li>If you added some new static files, you need to add those files in the
+                <code>static/&lt;file_type&gt;</code> directory and then include them in the HTML files using the
+                <code>url_for</code> function.
+            </li>
+            <li>The <code>&lbrace;&lbrace; &rbrace;&rbrace;</code> syntax is used to render <strong>variables in HTML
+                    files only</strong>. These
+                variables are sent by the server. They cannot be accessed in the static files.</li>
+            <li>The <code>&lbrace;% %&rbrace;</code> syntax is used to render <strong>control statements in HTML files
+                    only</strong>.
+                These control statements are used to control the flow of the HTML file. They cannot be accessed in the
+                static files.</li>
+            <li>If you are here to <strong>contribute to the frontend</strong>, you <strong>don't need to worry about
+                    the html variables and control statements</strong>. <strong>You just need to focus on the static
+                    files</strong>. Although, it is recommended to have a basic understanding of the Jinja2 templating
+                engine incase you want to change the structure of the HTML files.</li>
+        </ul>
+        <p>Take a look at the <a href="https://jinja.palletsprojects.com/en/3.0.x/templates/" target="_blank" rel="noopener">Jinja2 documentation</a>
+            for more information.</p>
+        <p><strong>In case of any confusion, you can ask for help in our</strong> <a
+                href="https://spoo.me/discord" target="_blank" rel="noopener"><strong>Discord Server</strong></a>.</p>
+
+        <br>
+        <hr>
+        <br>
+
+        <h2 id="-writing-blog-posts-and-tutorials">✍🏻 Writing Blog Posts and Tutorials</h2>
+        <br>
+        <p>If you are interested in writing blog posts and tutorials, you can talk to us on <a
+                href="https://spoo.me/discord" target="_blank" rel="noopener">Discord</a> or send us an email at <a
+                href="mailto:admin@spoo.me">admin@spoo.me</a></p>
+
+        <br>
+        <hr>
+        <br>
+
+        <h2 id="-additional-notes">📝 Additional Notes</h2>
+        <br>
+        <p>This project is a living document and will be updated as the project evolves. Please check back regularly for
+            updates. We also reccomend you to join our <a href="https://spoo.me/discord" target="_blank" rel="noopener">Discord Server</a> to get in
+            touch with the maintainers and other contributors.</p>
+
+        <br>
+        <hr>
+        <br>
+
+        <h2 id="-license">⚖️ License</h2>
+        <br>
+        <p>This project is licensed under the APACHE 2.0 License - see the <a href="https://github.com/spoo-me/url-shortener/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a> file for
+            details.</p>
+
+        <br>
+        <br>
+
+        <p align="center"><img class="chart" src="https://repobeats.axiom.co/api/embed/48a40934896cbcaff2812e80478ebb701ee49dd4.svg"
+                alt="Contribution Charts"/></p>
+
+        <br>
+        <hr>
+        <br>
+
+        <h6 align="center">
+            <img src="https://spoo.me/static/images/favicon.png" height=30 alt="Spoo.me Icon">
+            <br>
+            <br>
+            © spoo.me . 2024
+            <br>
+            All Rights Reserved
+        </h6>
+        <p align="center">
+            <a href="https://github.com/spoo-me/url-shortener/blob/master/LICENSE.txt"><img
+                    src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=Apache-2.0&logoColor=d9e0ee&colorA=363a4f&colorB=b7bdf8"
+                    title="Spoo.me Copyright" /></a>
+        </p>
+
+        <div class="social-links">
+            <a href="https://twitter.com/spoo_me" target="_blank" rel="noopener">
+                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/twitter.png" alt="Twitter" />
+            </a>
+            <a href="https://www.instagram.com/spoo.me" target="_blank" rel="noopener">
+                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/instagram.png" alt="Facebook" />
+            </a>
+            <a href="https://github.com/spoo-me" target="_blank" rel="noopener">
+                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/github.png" alt="GitHub" />
+            </a>
+            <a href="https://spoo.me/discord" target="_blank" rel="noopener">
+                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/discord.png" alt="GitHub" />
+            </a>
+            <a href="https://spoo.me/producthunt" target="_blank" rel="noopener">
+                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/product-hunt.png" alt="Product Hunt" />
+            </a>
+        </div>
+
+    </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-javascript.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-bash.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"
+        defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"
+        defer></script>
+
+    <script src="{{ url_for('static', filename='js/contacts-popup.js') }}" defer=""></script>
+    <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
+
+    <script>
+        window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
+
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+
+</body>
+
+</html>
