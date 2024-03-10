@@ -1,7 +1,7 @@
 import re
 import string
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
@@ -126,15 +126,47 @@ def is_positive_integer(value):
         return False
 
 
+# custom expiration time is currently really buggy and not ready for production
+
+
 def validate_expiration_time(expiration_time):
     try:
-        expiration_time = datetime.fromtimestamp(float(expiration_time))
-        if expiration_time < datetime.now() + timedelta(minutes=4.5):
+        expiration_time = datetime.fromisoformat(expiration_time)
+        # Check if it's timezone aware
+        if expiration_time.tzinfo is None:
+            print("timezone not aware")
+            return False
+        else:
+            print("timezone aware")
+            print("Expiration Time in GMT: ", expiration_time.astimezone(timezone.utc))
+            print(expiration_time.tzinfo)
+            # Convert to GMT if it's timezone aware
+            expiration_time = expiration_time.astimezone(timezone.utc)
+        if expiration_time < datetime.now(timezone.utc) + timedelta(minutes=3):
+            print(expiration_time, datetime.now(timezone.utc) + timedelta(minutes=3))
+            print("EXPIRATION TIME IN GMT: ", expiration_time)
+            print("CURRENT TIME IN GMT: ", datetime.now(timezone.utc))
+            print(
+                "CURRENT TIME IN GMT + 5: ",
+                datetime.now(timezone.utc) + timedelta(minutes=4.5),
+            )
+            print("less than 5 minutes")
             return False
         return True
     except Exception as e:
         print(e)
         return False
+
+
+def convert_to_gmt(expiration_time):
+    expiration_time = datetime.fromisoformat(expiration_time)
+    # Check if it's timezone aware
+    if expiration_time.tzinfo is None:
+        return None
+    else:
+        # Convert to GMT if it's timezone aware
+        expiration_time = expiration_time.astimezone(timezone.utc)
+    return expiration_time
 
 
 def generate_short_code():
