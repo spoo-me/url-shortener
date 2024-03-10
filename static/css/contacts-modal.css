@@ -121,7 +121,12 @@
         font-size: 0.9em;
         display: flex;
         flex-direction: column;
-        margin: 10px;
+        justify-content: center;
+        margin: 10px 20px;
+    }
+
+    .modal-content button {
+        margin: 20px 0;
     }
 
     .modal-content h2 {
