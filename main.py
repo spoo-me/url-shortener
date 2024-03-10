@@ -572,9 +572,11 @@ def stats():
 
     return render_template("stats.html", host_url=request.host_url)
 
+
 @app.route("/stats/", methods=["GET", "POST"])
 def stats_redirect():
     return redirect(url_for("stats"))
+
 
 @app.route("/stats/<short_code>", methods=["GET", "POST"])
 @limiter.exempt
@@ -892,6 +894,7 @@ def export(short_code, format):
 def api():
     return render_template("api.html", host_url=request.host_url)
 
+
 @app.route("/docs/<file_name>")
 @limiter.exempt
 def serve_docs(file_name):
@@ -912,25 +915,30 @@ def serve_docs(file_name):
             404,
         )
 
+
 @app.route("/legal/privacy-policy")
 @limiter.exempt
 def serve_privacy_policy():
     return render_template("docs/privacy-policy.html", host_url=request.host_url)
+
 
 @app.route("/sitemap.xml")
 @limiter.exempt
 def serve_sitemap():
     return send_file("misc/sitemap.xml")
 
+
 @app.route("/security.txt")
 @limiter.exempt
 def serve_security():
     return send_file("misc/security.txt")
 
+
 @app.route("/humans.txt")
 @limiter.exempt
 def serve_humans():
     return send_file("misc/humans.txt")
+
 
 @app.route("/robots.txt")
 @limiter.exempt
