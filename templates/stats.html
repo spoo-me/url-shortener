@@ -37,7 +37,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=8">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/self-promo.css') }}?v=2">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/customNotification.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/customNotification.css') }}?v=3">
 
     <script src="{{ url_for('static', filename='js/customNotification.js') }}"></script>
 
@@ -130,11 +130,11 @@
 
         {% if error %}
         <script>
-            customTopNotification("Error", "{{ error }}", 10);
+            customTopNotification("Error", "{{ error }}", 10, "error");
         </script>
         {% elif password_error %}
         <script>
-            customTopNotification("PasswordError", "{{ password_error }}", 10);
+            customTopNotification("PasswordError", "{{ password_error }}", 10, "error");
         </script>
         {% endif %}
 

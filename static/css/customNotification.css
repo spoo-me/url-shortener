@@ -7,7 +7,6 @@
     color: white;
     z-index: 9999999999999999999999999999999;
     /* background: rgba(255, 255, 255, 0.105); */
-    background-color: rgb(67, 53, 25);
     border-radius: 6px;
     max-width: 330px;
     min-width: 280px;
@@ -19,6 +18,18 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+.custom-top-notification.warning {
+    background-color: rgb(67, 53, 25);
+}
+
+.custom-top-notification.success {
+    background-color: rgb(56, 60, 26);
+}
+
+.custom-top-notification.error {
+    background-color: rgb(61, 28, 27);
+}
+
 .custom-top-notification .closebtn {
     float: right;
     background: none;
@@ -28,8 +39,16 @@
     cursor: pointer;
 }
 
-.custom-top-notification .closebtn:hover {
+.custom-top-notification.warning .closebtn:hover {
     color: rgb(250, 225, 0);
+}
+
+.custom-top-notification.success .closebtn:hover {
+    color: rgb(106, 203, 93);
+}
+
+.custom-top-notification.error .closebtn:hover {
+    color: rgb(255, 153, 163);
 }
 
 .custom-top-notification p {
@@ -51,11 +70,22 @@
     left: 0;
     height: 5px;
     width: -webkit-fill-available;
-    background: rgb(250, 225, 0);
     border-bottom-left-radius: 1000px;
     border-bottom-right-radius: 1000px;
     margin: 0 0;
     /* animation: progress-bar-animation 5s linear; */
+}
+
+.custom-top-notification.warning .close-progress-bar {
+    background: rgb(250, 225, 0);
+}
+
+.custom-top-notification.success .close-progress-bar {
+    background: rgb(106, 203, 93);
+}
+
+.custom-top-notification.error .close-progress-bar {
+    background: rgb(255, 153, 163);
 }
 
 @keyframes progress-bar-animation {
