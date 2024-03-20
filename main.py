@@ -961,7 +961,13 @@ def report():
             )
 
         try:
-            send_report(URL_REPORT_WEBHOOK, short_code, reason, request.remote_addr, request.host_url)
+            send_report(
+                URL_REPORT_WEBHOOK,
+                short_code,
+                reason,
+                request.remote_addr,
+                request.host_url,
+            )
         except Exception as e:
             print(f"Error sending webhook: {e}")
             return render_template(

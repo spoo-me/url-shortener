@@ -313,7 +313,7 @@ def send_report(webhook_uri, short_code, reason, ip_address, host_uri):
                 "color": 14177041,
                 "url": f"{host_uri}stats/{short_code}",
                 "fields": [
-                    {"name":"Short Code", "value": f"```{short_code}```"},
+                    {"name": "Short Code", "value": f"```{short_code}```"},
                     {"name": "Reason", "value": f"```{reason}```"},
                     {"name": "IP Address", "value": f"```{ip_address}```"},
                 ],
