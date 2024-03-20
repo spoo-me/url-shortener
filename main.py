@@ -914,7 +914,7 @@ def contact():
             )
 
         try:
-            send_webhook(message=f"# `{email}`\n\n {message}", url=CONTACT_WEBHOOK)
+            send_contact_message(CONTACT_WEBHOOK, email, message)
         except Exception as e:
             print(f"Error sending webhook: {e}")
             return render_template(
@@ -961,10 +961,7 @@ def report():
             )
 
         try:
-            send_webhook(
-                message=f"# Short Code: `{short_code}`\nReason: {reason}",
-                url=URL_REPORT_WEBHOOK,
-            )
+            send_report(URL_REPORT_WEBHOOK, short_code, reason, request.remote_addr, request.host_url)
         except Exception as e:
             print(f"Error sending webhook: {e}")
             return render_template(

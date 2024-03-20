@@ -304,9 +304,52 @@ def update_emoji_by_alias(alias, emoji_data):
         pass
 
 
-def send_webhook(url, message):
-    data = {"content": message}
-    requests.post(url, json=data)
+def send_report(webhook_uri, short_code, reason, ip_address, host_uri):
+
+    data = {
+        "embeds": [
+            {
+                "title": f"URL Report for `{short_code}`",
+                "color": 14177041,
+                "url": f"{host_uri}stats/{short_code}",
+                "fields": [
+                    {"name":"Short Code", "value": f"```{short_code}```"},
+                    {"name": "Reason", "value": f"```{reason}```"},
+                    {"name": "IP Address", "value": f"```{ip_address}```"},
+                ],
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "footer": {
+                    "text": "spoo-me",
+                    "icon_url": "https://spoo.me/static/images/favicon.png",
+                },
+            }
+        ]
+    }
+
+    requests.post(webhook_uri, json=data)
+
+
+def send_contact_message(webhook_uri, email, message):
+
+    data = {
+        "embeds": [
+            {
+                "title": "New Contact Message ✉️",
+                "color": 9103397,
+                "fields": [
+                    {"name": "Email", "value": f"```{email}```"},
+                    {"name": "Message", "value": f"```{message}```"},
+                ],
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "footer": {
+                    "text": "spoo-me",
+                    "icon_url": "https://spoo.me/static/images/favicon.png",
+                },
+            }
+        ]
+    }
+
+    requests.post(webhook_uri, json=data)
 
 
 def export_to_excel(data):
