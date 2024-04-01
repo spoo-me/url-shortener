@@ -14,7 +14,7 @@
 - [📌 Endpoints](#-endpoints)
   - [🔐 Accessing Password-Protected URLs](#-accessing-password-protected-urls)
   - [📈 Checking URL Statistics](#-checking-url-statistics)
-- [🛠️ API DOCS](#️-api-docs)
+- [🛠️ API Docs](#️-api-docs)
 - [🚀 Getting Started](#-getting-started)
   - [Method 1 - Docker (Recommended)](#method-1---docker-recommended)
     - [📋 Prerequisites](#-prerequisites)
@@ -50,13 +50,13 @@
 - `API`: A free and open-sourced API for URL shortening and statistics 🛠️
 - `QR Code`: Generate a QR code for your URLs 📱
 - `Export Click Data`: Export click data as a CSV, JSON, XLSX, or XML file 📤
-- `Dark Mode`: A beautiful dark mode for your eyes 🌙
-- `Responsive Design`: Works on all devices 📱💻
-- `No Ads`: No ads, no tracking, no nonsense 🚫
 - `Open Source`: spoo.me is open-sourced and free to use 📖
-- `Free`: No hidden costs, no premium plans, no limitations 💸
-- `No Registration`: No need to register an account to use spoo.me
-- `Self Hosted`: You can host spoo.me on your own server 🏠
+- `No Ads`: No ads, no tracking, no nonsense 🚫
+- `Absolutely Free`: No hidden costs, no premium plans, no limitations 💸
+- `No Registration`: No need to register an account to use spoo.me 📝
+- `Self Hosting`: You can host spoo.me on your own server 🏠
+
+---
 
 # 📌 Endpoints
 
@@ -71,7 +71,7 @@ The basic structure for accessing a shortened URL is: `https://spoo.me/<short_co
 
 To access a password-protected URL, use the same basic structure: `https://spoo.me/<short_code>`. This will redirect you to a password entry page.
 
-- **Pro Tip**: You can bypass the password entry page by appending the password to the URL like this: `https://spoo.me/<short_code>?password=<password>`
+> You can bypass the password entry page by appending the password to the URL like this: `https://spoo.me/<short_code>?password=<password>`
 
 ## 📈 Checking URL Statistics
 
@@ -79,13 +79,16 @@ To view the statistics for a URL, use the following structure: `https://spoo.me/
 
 **Example**: **https://spoo.me/stats/ga**
 
-_**Please note**: You won't be able to view statistics for a password-protected page unless you provide its password._
+> _**Note:** You won't be able to view statistics for a password-protected page unless you provide its password._
 
-# 🛠️ API DOCS
+---
 
-spoo.me has a `free` and `open-sourced` API that allows you to shorten URLs, view URL statistics, and more for your applications, websites, and services.
+# 🛠️ API Docs
 
+Spoo.me offers a free, open-source API for URL shortening and statistics.
 **For detailed API documentation, please visit [https://spoo.me/api](https://spoo.me/api)**
+
+---
 
 # 🚀 Getting Started
 
@@ -111,6 +114,8 @@ mv .env.example .env
 
 ```bash
 MONGO_URI=<your_mongo_uri>
+CONTACT_WEBHOOK=<valid_webhook_URI>
+URL_REPORT_WEBHOOK=<valid_webhook_URI>
 ```
 
 **Note**: With this method, you can either use a cloud service like [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) to store the data remotely or you can use a local MongoDB instance. If you want to use a local MongoDB instance, your MongoDB URI would be `mongodb://localhost:27017/`.
@@ -165,6 +170,8 @@ mv .env.example .env
 
 ```bash
 MONGO_URI=<your_mongo_uri>
+CONTACT_WEBHOOK=<valid_webhook_URI>
+URL_REPORT_WEBHOOK=<valid_webhook_URI>
 ```
 
 **Note**: If you installed MongoDB locally, your MongoDB URI would be `mongodb://localhost:27017/` or if you are using MongoDB Atlas, you can find your MongoDB URI in the **Connect** tab of your cluster.
@@ -180,10 +187,14 @@ python main.py
 
 Open your browser and go to `http://localhost:8000` to access the **spoo.me** URL shortener.
 
+---
+
 # 🤝 Contributing
 
 **Contributions are always welcome!** 🎉
 Please check out the [contributing guidelines](contributing.md) to get started.
+
+---
 
 # 📧 Feedback / Issues / Support
 
@@ -192,6 +203,8 @@ Please check out the [contributing guidelines](contributing.md) to get started.
 **Bugs are logged using the github issue system. To report a bug, simply [open a new issue](https://github.com/spoo-me/url-shortener/issues/new).**
 
 **For URL deletion requests / any other issues feel free to [grill us](mailto:support@spoo.me)**
+
+---
 
 # 👀 Visual Previews
 
