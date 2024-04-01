@@ -56,7 +56,6 @@
 - `No Registration`: No need to register an account to use spoo.me 📝
 - `Self Hosting`: You can host spoo.me on your own server 🏠
 
----
 
 # 📌 Endpoints
 
@@ -81,14 +80,12 @@ To view the statistics for a URL, use the following structure: `https://spoo.me/
 
 > _**Note:** You won't be able to view statistics for a password-protected page unless you provide its password._
 
----
 
 # 🛠️ API Docs
 
 Spoo.me offers a free, open-source API for URL shortening and statistics.
 **For detailed API documentation, please visit [https://spoo.me/api](https://spoo.me/api)**
 
----
 
 # 🚀 Getting Started
 
@@ -118,7 +115,7 @@ CONTACT_WEBHOOK=<valid_webhook_URI>
 URL_REPORT_WEBHOOK=<valid_webhook_URI>
 ```
 
-**Note**: With this method, you can either use a cloud service like [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) to store the data remotely or you can use a local MongoDB instance. If you want to use a local MongoDB instance, your MongoDB URI would be `mongodb://localhost:27017/`.
+> **Note**: With this method, you can either use a cloud service like [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) to store the data remotely or you can use a local MongoDB instance. If you want to use a local MongoDB instance, your MongoDB URI would be `mongodb://localhost:27017/`.
 
 ### 🚀 Starting the server
 
@@ -174,7 +171,7 @@ CONTACT_WEBHOOK=<valid_webhook_URI>
 URL_REPORT_WEBHOOK=<valid_webhook_URI>
 ```
 
-**Note**: If you installed MongoDB locally, your MongoDB URI would be `mongodb://localhost:27017/` or if you are using MongoDB Atlas, you can find your MongoDB URI in the **Connect** tab of your cluster.
+> **Note**: If you installed MongoDB locally, your MongoDB URI would be `mongodb://localhost:27017/` or if you are using MongoDB Atlas, you can find your MongoDB URI in the **Connect** tab of your cluster.
 
 
 ### 🚀 Starting the server
@@ -187,14 +184,11 @@ python main.py
 
 Open your browser and go to `http://localhost:8000` to access the **spoo.me** URL shortener.
 
----
-
 # 🤝 Contributing
 
 **Contributions are always welcome!** 🎉
 Please check out the [contributing guidelines](contributing.md) to get started.
 
----
 
 # 📧 Feedback / Issues / Support
 
@@ -204,7 +198,6 @@ Please check out the [contributing guidelines](contributing.md) to get started.
 
 **For URL deletion requests / any other issues feel free to [grill us](mailto:support@spoo.me)**
 
----
 
 # 👀 Visual Previews
 
