@@ -1,3 +1,4 @@
+from flask import request, render_template, redirect, url_for, jsonify, make_response
 import re
 import string
 import random
@@ -17,6 +18,8 @@ from dicttoxml import dicttoxml
 import json
 import requests
 import validators
+import geoip2.errors
+import geoip2.database
 
 load_dotenv(override=True)
 
@@ -37,6 +40,29 @@ collection = db["urls"]
 blocked_urls_collection = db["blocked-urls"]
 emoji_collection = db["emojis"]
 ip_bypasses = db["ip-exceptions"]
+
+
+def get_country(ip_address):
+    reader = geoip2.database.Reader("misc/GeoLite2-Country.mmdb")
+    try:
+        response = reader.country(ip_address)
+        country = response.country.name
+        return country
+    except geoip2.errors.AddressNotFoundError:
+        return "Unknown"
+    finally:
+        reader.close()
+
+
+def get_client_ip():
+    if "HTTP_X_FORWARDED_FOR" in request.environ:
+        # If the request is proxied, retrieve the IP address from the X-Forwarded-For header
+        ip_list = request.environ["HTTP_X_FORWARDED_FOR"].split(",")
+        # The client's IP address is typically the first entry in the list
+        return ip_list[0].strip()
+    else:
+        # If the request is not proxied, use the remote address
+        return request.environ.get("REMOTE_ADDR", "")
 
 
 def load_url_by_id(id):
