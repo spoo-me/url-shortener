@@ -1,15 +1,24 @@
 <image src="https://spoo.me/static/images/banner-rounded.png">
 
-# **Welcome to spoo.me - Shorten Your Url not Your Possibilities** 🚀
+<h3 align="center">spoo.me</h3>
+<p align="center">Shorten Your Url not Your Possibilities 🚀</p>
 
-**spoo.me** is a free, open-source service for shortening URLs. It offers URL statistics, a free API, and customization options. You can create custom `slugs`, add `password protection`, and manage `link lifespans`. Join **spoo.me** to simplify your URLs.
+<p align="center">
+<a href="https://status.spoo.me"><img src="https://uptime.betterstack.com/status-badges/v1/monitor/qlmf.svg"></a>
+<img src="https://img.shields.io/github/commit-activity/m/spoo-me/url-shortener?logo=github" alt="GitHub commit activity">
+<a href="https://spoo.me/discord"><img src="https://img.shields.io/discord/1192388005206433892?logo=discord" alt="Discord"></a>
+<a href="https://twitter.com/spoo-me"><img src="https://img.shields.io/twitter/follow/spoo-me?logo=twitter&label=%40spoo-me&color=0bf" alt="X (formerly Twitter) Follow"></a>
+</p>
+
+## ☘️ Introduction
+
+**spoo.me** is a free, open-source service for shortening URLs. It offers URL statistics, a free API, and customization options. You can create custom `slugs`, add `password protection`, and manage `link lifespans`.
 
 ---
 
 <details>
 <summary>📖 Table of Contents</summary>
 
-- [**Welcome to spoo.me - Shorten Your Url not Your Possibilities** 🚀](#welcome-to-spoome---shorten-your-url-not-your-possibilities-)
 - [✨ Features](#-features)
 - [📌 Endpoints](#-endpoints)
   - [🔐 Accessing Password-Protected URLs](#-accessing-password-protected-urls)
@@ -55,7 +64,6 @@
 - `Absolutely Free`: No hidden costs, no premium plans, no limitations 💸
 - `No Registration`: No need to register an account to use spoo.me 📝
 - `Self Hosting`: You can host spoo.me on your own server 🏠
-
 
 # 📌 Endpoints
 
