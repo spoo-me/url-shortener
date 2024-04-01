@@ -42,23 +42,23 @@
 
 The basic structure for accessing a shortened URL is: `https://spoo.me/<short_code>`
 
-**Example**: **https://spoo.me/ga**
-
-- This redirects to: `https://google.com`
-- The short code used is: `ga`
+**Example** - **https://spoo.me/ga**
 
 ## 🔐 Accessing Password-Protected URLs
 
-To access a password-protected URL, use the same basic structure: `https://spoo.me/<short_code>`. This will redirect you to a password entry page.
+For password-protected URLs, **use the same basic structure**. This redirects to a **password entry page**.
+
+**Example** - **https://spoo.me/exa** <br/>
+**Password** - <kbd>Example@12</kbd>
 
 > [!TIP]
-> Bypass the password entry page by appending the password to the URL like this: `https://spoo.me/<short_code>?password=<password>`
+> Bypass the password entry page by appending the password to the URL parameters - `https://spoo.me/<short_code>?password=<password>`
 
 ## 📈 Checking URL Statistics
 
 To view the statistics for a URL, use the following structure: `https://spoo.me/stats/<short_code>`
 
-**Example**: **https://spoo.me/stats/ga**
+**Example** - **https://spoo.me/stats/ga**
 
 > [!NOTE]
 > You won't be able to view statistics for a password-protected page unless you provide its password.
@@ -78,7 +78,7 @@ Spoo.me offers a free, open-source API for URL shortening and statistics. Check 
 
 - [Docker](https://docs.docker.com/get-docker/) 🐳
 
-### 📂 Clone the repository
+### 📂 Clone the repository (Docker Method)
 
 ```bash
 git clone https://github.com/spoo-me/url-shortener.git
@@ -171,16 +171,14 @@ Open your browser and go to `http://localhost:8000` to access the **spoo.me** UR
 
 # 🤝 Contributing
 
-**Contributions are always welcome!** 🎉
-Please check out the [contributing guidelines](contributing.md) to get started.
+**Contributions are always welcome!** 🎉 Here's how you can contribute:
 
-# 📧 Feedback / Issues / Support
+- Bugs are logged using the github issue system. To report a bug, simply [open a new issue](https://github.com/spoo-me/url-shortener/issues/new).
+- Follow the [contribution guidelines](contributing.md) to get started.
+- Make a [pull request](https://github.com/spoo-me/url-shortener/pull) for any feature or bug fix.
 
-To give feedback, ask a question or make a feature request, you can either use the [Github Discussions](https://github.com/spoo-me/url-shortener/discussions)
-
-Bugs are logged using the github issue system. To report a bug, simply [open a new issue](https://github.com/spoo-me/url-shortener/issues/new).
-
-For URL deletion requests / any other issues feel free to <kbd>[✉️ grill us](mailto:support@spoo.me)</kbd>
+> [!IMPORTANT]
+> For any type of support or queries, feel free to reach out to us at <kbd>[✉️ support@spoo.me](mailto:support@spoo.me)</kbd>
 
 # 👀 Visual Previews
 
