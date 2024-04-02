@@ -3,9 +3,13 @@ services:
     runtime: python
     name: url-shortener
     repo: https://github.com/spoo-me/url-shortener
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py
     envVars:
       - key: MONGODB_URI
+        sync: false
       - key: CONTACT_WEBHOOK
+        sync: false
       - key: URL_REPORT_WEBHOOK
+        sync: false
