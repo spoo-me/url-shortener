@@ -5,7 +5,7 @@ services:
     repo: https://github.com/spoo-me/url-shortener
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
+    startCommand: gunicorn main:app
     envVars:
       - key: MONGODB_URI
         sync: false
