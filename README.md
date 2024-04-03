@@ -30,7 +30,6 @@
 - `Link Max Clicks` - Set a maximum number of clicks for your URLs 📈
 - `URL Statistics` - View detailed statistics for your URLs 📊
 - `API` - A free and open-sourced API for URL shortening and statistics 🛠️
-- `QR Code` - Generate a QR code for your URLs 📱
 - `Export Click Data` - Export click data as a CSV, JSON, XLSX, or XML file 📤
 - `Open Source` - spoo.me is open-sourced and free to use 📖
 - `No Ads` - No ads, no tracking, no nonsense 🚫
@@ -93,7 +92,7 @@ mv .env.example .env
 ### ➕ Adding environment variables to .env file
 
 ```bash
-MONGO_URI=<your_mongo_uri>
+MONGODB_URI=<your_MONGODB_URI>
 CONTACT_WEBHOOK=<valid_webhook_URI>
 URL_REPORT_WEBHOOK=<valid_webhook_URI>
 ```
@@ -121,7 +120,7 @@ docker-compose up
 ### 📂 Clone the repository
 
 ```bash
-git clone https://github.com/zingzy/spoo.me.git
+git clone https://github.com/spoo-me/url-shortener.git
 ```
 
 ### Creating a virtual environment (Optional)
@@ -151,7 +150,7 @@ mv .env.example .env
 ### ➕ Adding environment variables to .env file
 
 ```bash
-MONGO_URI=<your_mongo_uri>
+MONGODB_URI=<your_MONGODB_URI>
 CONTACT_WEBHOOK=<valid_webhook_URI>
 URL_REPORT_WEBHOOK=<valid_webhook_URI>
 ```
