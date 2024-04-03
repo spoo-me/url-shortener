@@ -1,0 +1,128 @@
+{% extends "docs/base.html" %}
+
+{% block title %}Setting Up MongoDB | spoo.me{% endblock %}
+
+{% block content %}
+<span><img class="emoji"
+        src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Shamrock/Flat/shamrock_flat.svg"></span>
+<h3>Setting Up MongoDB Server</h3>
+
+<br>
+
+<p>
+    MongoDB is a NoSQL database that is used by spoo.me to store data. You can set up a MongoDB server on your server or
+    use a cloud service like MongoDB Atlas.
+</p>
+<p>
+    It is recommended to use a MongoDB Atlas server as it is easy to set up and manage and has a <b>generous free
+        tier</b>.
+</p>
+
+<br>
+
+<h5>Follow these steps to claim you free Mongo Server via MongoDB Atlas: </h5>
+
+<ol>
+    <br>
+    <li>
+        <p>Go to <a href="https://www.mongodb.com/cloud/atlas" target="_blank">MongoDB Atlas</a></p>
+    </li>
+    <li>
+        <p>Sign up for an account</p>
+    </li>
+    <li>
+        <p>Click on the <code>Build a Cluster</code> button</p>
+        <ol>
+            <li>
+                <p>Choose the free <code>M0 tier</code></p>
+            </li>
+            <li>
+                <p>Enter any random cluster name of your choice</p>
+            </li>
+            <li>
+                <p>Choose any of the available provider, recommended <code>AWS</code></p>
+            </li>
+            <li>
+                <p>Choose the region closest to you</p>
+            </li>
+            <li>
+                <p>Click on the <code>Create Deployment</code> button</p>
+            </li>
+            <li>
+                <p>Wait for the cluster to be created</p>
+            </li>
+        </ol>
+    </li>
+    <li>
+        <p>After Your free cluster is created, a new window <code>Connect to Cluster0</code> will popup</p>
+        <ol>
+            <li>
+                <p>Fill out the fields <code>Username</code> and <code>Password</code>. <b>Please set a highly secure
+                        password as it is the key to your whole database</b></p>
+            </li>
+            <li>
+                <p>Click on the <code>Create Database User</code> button</p>
+            </li>
+            <li>
+                <p>After the user is created, click on <code>Choose a connection method</code> button</p>
+            </li>
+            <li>
+                <p>Under the <code>Add your connection string into your application code</code> section <b>copy the
+                        displayed connection string</b></p>
+            </li>
+            <li>
+                <p>Your connection String should be in this format -
+                    <code>mongodb+srv://&lt;your-username&gt;:&lt;password&gt;@&lt;cluster-name&gt;.mongodb.net/?retryWrites=true&w=majority&appName=&lt;cluster-name&gt;</code>
+                </p>
+            </li>
+            <li>
+                <p>Replace the <code>&lt;password&gt;</code> with the password you set in the previous steps</p>
+            </li>
+            <li>
+                <p><b>Save the connection string securely for future use</b></p>
+            </li>
+            <li>
+                <p>Close the Dialog Box</p>
+            </li>
+        </ol>
+    </li>
+    <li>
+        <p>Go to the <code>Network Access</code> page via the sidebar</p>
+        <ol>
+            <li>
+                <p>Click on <code>Add IP Address</code> button</p>
+            </li>
+            <li>
+                <p>Click on <code>ALLOW ACCESS FROM ANYWHERE</code> button and press <code>Confirm</code></p>
+            </li>
+        </ol>
+    </li>
+    <li>
+        <p>Congratulations 🎉 you have successfully setup your free mongoDB server</p>
+    </li>
+    <li>
+        <p>The <b>Connection String</b> created in the previous steps is very crucial for hosting the server, store it
+            securely</p>
+    </li>
+</ol>
+
+<div class="next-dialog-parent">
+    <div class="next-dialog">
+        <div class="head">
+            <h5>Read Next</h5>
+            <h6>Self-Hosting: Creating Webhooks</h6>
+        </div>
+        <div class="go-button">
+            <a href="/docs/self-hosting/creating-webhooks" class="button"><svg fill="#000000" height="25px" width="25px" version="1.1"
+                    id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                    viewBox="0 0 330 330" xml:space="preserve">
+                    <path fill="currentcolor" id="XMLID_222_" d="M250.606,154.389l-150-149.996c-5.857-5.858-15.355-5.858-21.213,0.001
+            c-5.857,5.858-5.857,15.355,0.001,21.213l139.393,139.39L79.393,304.394c-5.857,5.858-5.857,15.355,0.001,21.213
+            C82.322,328.536,86.161,330,90,330s7.678-1.464,10.607-4.394l149.999-150.004c2.814-2.813,4.394-6.628,4.394-10.606
+                C255,161.018,253.42,157.202,250.606,154.389z" />
+                </svg></a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
