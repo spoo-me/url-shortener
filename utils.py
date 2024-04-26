@@ -26,6 +26,7 @@ load_dotenv(override=True)
 MONGO_URI = os.environ["MONGODB_URI"]
 CONTACT_WEBHOOK = os.environ["CONTACT_WEBHOOK"]
 URL_REPORT_WEBHOOK = os.environ["URL_REPORT_WEBHOOK"]
+hcaptcha_secret = os.environ.get("HCAPTCHA_SECRET")
 
 client = MongoClient(MONGO_URI)
 
@@ -146,8 +147,8 @@ def validate_blocked_url(url):
 
     return True
 
+
 def verify_hcaptcha(token):
-    hcaptcha_secret = os.environ["HCAPTCHA_SECRET"]
     hcaptcha_verify_url = "https://hcaptcha.com/siteverify"
 
     response = requests.post(
@@ -163,6 +164,7 @@ def verify_hcaptcha(token):
         return data["success"]
     else:
         return False
+
 
 def is_positive_integer(value):
     try:
