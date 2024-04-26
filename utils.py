@@ -146,6 +146,23 @@ def validate_blocked_url(url):
 
     return True
 
+def verify_hcaptcha(token):
+    hcaptcha_secret = os.environ["HCAPTCHA_SECRET"]
+    hcaptcha_verify_url = "https://hcaptcha.com/siteverify"
+
+    response = requests.post(
+        hcaptcha_verify_url,
+        data={
+            "response": token,
+            "secret": hcaptcha_secret,
+        },
+    )
+
+    if response.status_code == 200:
+        data = response.json()
+        return data["success"]
+    else:
+        return False
 
 def is_positive_integer(value):
     try:

@@ -29,7 +29,7 @@
     <meta name="moz-appearance" content="#662ff4">
     <meta content="#662ff4" name="msapplication-TileColor">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
@@ -37,6 +37,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=8">
 
     <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 
 </head>
 
@@ -137,11 +138,13 @@
             <div id="input-prefix">
                 <span>{{ host_url }}</span>
             </div>
-            <input type="text" id="alias" name="short_code" placeholder="short-code" required>
+            <input type="text" id="alias" name="short_code" placeholder="short-code" value="{{ short_code }}" required>
         </div>
 
-        <textarea id="message" name="reason" placeholder="Reason for Reporting this Short URL" required></textarea>
-        <input type="submit" value="Report">
+        <textarea id="message" name="reason" placeholder="Reason for Reporting this Short URL" required>{{ reason }}</textarea>
+
+        <button class="h-captcha" data-sitekey="ab2b86e1-0532-4971-87ce-26a0b1ea8712" data-callback="onSubmit"><img
+            src="{{ url_for('static', filename='images/hcaptcha.png') }}">Report</button>
 
     </form>
 
@@ -161,6 +164,13 @@
     <script defer src="/_vercel/insights/script.js"></script>
 
     <script>
+
+        function onSubmit(token) {
+            if (!validateMessage()) {
+                return;
+            }
+            document.getElementsByTagName('form')[0].submit();
+        }
 
         function validateMessage() {
             var message = document.getElementById('message').value;

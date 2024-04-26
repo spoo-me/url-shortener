@@ -125,10 +125,10 @@ textarea:focus::placeholder {
     margin-bottom: 0px;
 }
 
-input[type="submit"] {
+button.h-captcha{
     border: none;
-    width: 200px;
-    padding: 14px 30px;
+    width: 180px;
+    padding: 10px 13px;
     border-radius: 4px;
     cursor: pointer;
     margin-top: 40px;
@@ -139,12 +139,21 @@ input[type="submit"] {
     border: 2px solid rgba(255, 255, 255, 0.2);
     font-size: 1.2rem;
     transition: background-color 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    gap: 27px;
 }
 
-input[type="submit"]:hover {
+button.h-captcha:hover {
     background-color: #555;
     background-color: rgba(255, 255, 255, 0.25);
     transition: background-color 0.2s ease-in-out;
+}
+
+button.h-captcha img {
+    width: 30px;
+    height: 30px;
+    justify-self: flex-start;
 }
 
 #url-error {

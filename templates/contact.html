@@ -29,13 +29,14 @@
     <meta name="moz-appearance" content="#662ff4">
     <meta content="#662ff4" name="msapplication-TileColor">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/contact.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contact.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/customNotification.css') }}?v=4">
 
     <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 
 </head>
 
@@ -77,98 +78,106 @@
         </ul>
     </div>
 
-    <h1 style="font-weight: bold;">Contact us</label>
+    <h1 style="font-weight: bold;">Contact us</h1>
 
-        <form action="/contact" method="post" onsubmit="return validateEmail() && validateMessage();">
-            <p id="url-error"></p>
+    <form action="/contact" method="post" onsubmit="return validateEmail() && validateMessage();">
+        <p id="url-error"></p>
 
-            {% if error %}
-            <script>
-                customTopNotification("Error", "{{ error }}", 10, "error");
-            </script>
-            {% endif %}
+        {% if error %}
+        <script>
+            customTopNotification("Error", "{{ error }}", 10, "error");
+        </script>
+        {% endif %}
 
-            {% if success %}
-            <script>
-                customTopNotification("Success", "{{ success }}", 10, "success");
-            </script>
-            {% endif %}
+        {% if success %}
+        <script>
+            customTopNotification("Success", "{{ success }}", 10, "success");
+        </script>
+        {% endif %}
 
-            <input type="text" id="email" name="email" placeholder="Email" required>
-            <textarea id="message" name="message" placeholder="Message" required></textarea>
-            <input type="submit" value="Send">
-        </form>
+        <input type="text" id="email" name="email" placeholder="Email" value="{{ email }}" required>
+        <textarea id="message" name="message" placeholder="Message" required>{{ message }}</textarea>
 
-        <p id="opts">or connect with us via</p>
+        <button class="h-captcha" data-sitekey="ab2b86e1-0532-4971-87ce-26a0b1ea8712" data-callback="onSubmit"><img
+                src="{{ url_for('static', filename='images/hcaptcha.png') }}">Submit</button>
+    </form>
 
-        <div class="button-container-upper" style="display: flex; justify-content: center; align-items: center;">
-            <div class="button-container">
-                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
-                        src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png" alt="Discord Logo"
-                        loading="lazy">
-                </button>
-                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img
-                        src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo"
-                        loading="lazy">
-                </button>
-                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img
-                        src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo"
-                        loading="lazy">
-                </button>
-                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img
-                        src="https://img.icons8.com/pastel-glyph/100/ffffff/new-post--v1.png" alt="Email Icon"
-                        loading="lazy">
-                </button>
-                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img
-                        src="https://img.icons8.com/material-sharp/100/ffffff/github.png" alt="Github Logo"
-                        loading="lazy">
-                </button>
-            </div>
+    <p id="opts">or connect with us via</p>
+
+    <div class="button-container-upper" style="display: flex; justify-content: center; align-items: center;">
+        <div class="button-container">
+            <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
+                    src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png" alt="Discord Logo"
+                    loading="lazy">
+            </button>
+            <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img
+                    src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo"
+                    loading="lazy">
+            </button>
+            <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img
+                    src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo"
+                    loading="lazy">
+            </button>
+            <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img
+                    src="https://img.icons8.com/pastel-glyph/100/ffffff/new-post--v1.png" alt="Email Icon"
+                    loading="lazy">
+            </button>
+            <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img
+                    src="https://img.icons8.com/material-sharp/100/ffffff/github.png" alt="Github Logo" loading="lazy">
+            </button>
         </div>
+    </div>
 
-        <script src="{{ url_for('static', filename='js/stats-script.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/stats-script.js') }}" defer></script>
 
-        <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
+    <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
 
-        <script>
-            window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
-        </script>
-        <script defer src="/_vercel/speed-insights/script.js"></script>
+    <script>
+        window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
 
-        <script>
-            window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-        </script>
-        <script defer src="/_vercel/insights/script.js"></script>
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
 
-        <script>
-            function validateEmail() {
-                email = document.getElementById('email').value;
-                var re = /\S+@\S+\.\S+/;
-                if (re.test(email)) {
-                    return true;
-                }
-                else {
-                    customTopNotification("Error", "Invalid email", 10);
-                    return false;
-                }
+    <script>
+        function onSubmit(token) {
+            if (!validateEmail() || !validateMessage()) {
+                return;
             }
+            document.getElementsByTagName('form')[0].submit();
+        }
 
-            function validateMessage() {
-                var message = document.getElementById('message').value;
-                message = message.trim();
-                if (message.length < 30) {
-                    customTopNotification("Error", "Message should be at least 30 characters long", 10);
-                    return false;
-                }
-                else {
-                    return true;
-                }
+        function validateEmail() {
+            email = document.getElementById('email').value;
+            var re = /\S+@\S+\.\S+/;
+            if (re.test(email)) {
+                return true;
             }
+            else {
+                customTopNotification("Error", "Invalid email", 10);
+                return false;
+            }
+        }
 
-            function openContactLink(link) {
-                window.open(link, '_blank');
+        function validateMessage() {
+            var message = document.getElementById('message').value;
+            message = message.trim();
+            if (message.length < 30) {
+                customTopNotification("Error", "Message should be at least 30 characters long", 10);
+                return false;
             }
-        </script>
+            else {
+                return true;
+            }
+        }
+
+        function openContactLink(link) {
+            window.open(link, '_blank');
+        }
+    </script>
 
 </body>
 

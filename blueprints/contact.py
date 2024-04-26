@@ -13,6 +13,32 @@ def contact_route():
     if request.method == "POST":
         email = request.values.get("email")
         message = request.values.get("message")
+        hcaptcha_token = request.values.get("h-captcha-response")
+
+        if not hcaptcha_token:
+            return (
+                render_template(
+                    "contact.html",
+                    error="Please complete the captcha",
+                    host_url=request.host_url,
+                    email=email,
+                    message=message
+                ),
+                400,
+            )
+
+        if not verify_hcaptcha(hcaptcha_token):
+            return (
+                render_template(
+                    "contact.html",
+                    error="Invalid captcha, please try again",
+                    host_url=request.host_url,
+                    email=email,
+                    message=message
+                ),
+                400,
+            )
+
         if not email or not message:
             return (
                 render_template(
@@ -49,6 +75,32 @@ def report():
     if request.method == "POST":
         short_code = request.values.get("short_code")
         reason = request.values.get("reason")
+        hcaptcha_token = request.values.get("h-captcha-response")
+
+        if not hcaptcha_token:
+            return (
+                render_template(
+                    "report.html",
+                    error="Please complete the captcha",
+                    host_url=request.host_url,
+                    short_code=short_code,
+                    reason=reason
+                ),
+                400,
+            )
+
+        if not verify_hcaptcha(hcaptcha_token):
+            return (
+                render_template(
+                    "report.html",
+                    error="Invalid captcha, please try again",
+                    host_url=request.host_url,
+                    short_code=short_code,
+                    reason=reason
+                ),
+                400,
+            )
+
         if not short_code or not reason:
             return (
                 render_template(
