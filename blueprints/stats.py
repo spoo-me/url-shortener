@@ -123,6 +123,7 @@ def analytics(short_code):
     url_data["short_code"] = short_code
     url_data["last-click-browser"] = url_data.get("last-click-browser", None)
     url_data["last-click-os"] = url_data.get("last-click-os", None)
+    url_data["bots"] = url_data.get("bots", {})
 
     try:
         url_data["unique_referrer"] = {}
@@ -297,6 +298,7 @@ def export(short_code, format):
     url_data["password"] = url_data.get("password")
     url_data["last-click-browser"] = url_data.get("last-click-browser")
     url_data["last-click-os"] = url_data.get("last-click-os")
+    url_data["bots"] = url_data.get("bots", {})
 
     try:
         url_data["unique_referrer"] = {}
