@@ -4,9 +4,11 @@ from .limiter import limiter
 
 from user_agents import parse
 import tldextract
+from crawlerdetect import CrawlerDetect
 
 url_shortener = Blueprint("url_shortener", __name__)
 
+crawler_detect = CrawlerDetect()
 
 @url_shortener.route("/", methods=["GET"])
 @limiter.exempt
@@ -404,6 +406,11 @@ def redirect_url(short_code):
         if bot_re.search(user_agent):
             url_data.setdefault("bots", {})[bot] = url_data.get("bots", {}).get(bot, 0) + 1
             break
+    else:
+        if crawler_detect.isCrawler(user_agent):
+            url_data.setdefault("bots", {})[crawler_detect.getMatches()] = url_data.get("bots", {}).get(
+                crawler_detect.getMatches(), 0
+            ) + 1
 
     # increment the counter for the short code
     today = str(datetime.today()).split()[0]

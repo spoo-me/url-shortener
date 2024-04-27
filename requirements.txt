@@ -15,3 +15,4 @@ openpyxl
 dicttoxml
 validators
 gunicorn==20.0.4
+crawlerdetect
