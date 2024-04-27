@@ -85,8 +85,6 @@ function animate(element) {
         velocityY = Math.min(velocityY + gravity, terminalVelocity);
         velocityX += Math.random() > 0.5 ? Math.random() : -Math.random();
         velocityY += Math.random() > 0.5 ? Math.random() : -Math.random();
-        element._gsTransform.x += velocityX;
-        element._gsTransform.y += velocityY;
     });
     // Increase the scale factor of each particle
     gsap.to(element, {
