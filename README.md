@@ -29,10 +29,10 @@
 - `Password Protection` - Protect your URLs with a password 🔒
 - `Link Max Clicks` - Set a maximum number of clicks for your URLs 📈
 - `URL Statistics` - View detailed statistics for your URLs 📊
+- `BOT Tracking` - Track bot clicks on your URLs 🤖
 - `API` - A free and open-sourced API for URL shortening and statistics 🛠️
 - `Export Click Data` - Export click data as a CSV, JSON, XLSX, or XML file 📤
 - `Open Source` - spoo.me is open-sourced and free to use 📖
-- `No Ads` - No ads, no tracking, no nonsense 🚫
 - `Absolutely Free` - No hidden costs, no premium plans, no limitations 💸
 - `No Registration` - No need to register an account to use spoo.me 📝
 - `Self Hosting` - You can host spoo.me on your own server 🏠

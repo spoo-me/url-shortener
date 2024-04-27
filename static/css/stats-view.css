@@ -40,6 +40,7 @@ p::-webkit-scrollbar-track {
 .referrer-data,
 .country-data,
 .average-data,
+.bots-data,
 .qr-code {
     background-color: rgba(255, 255, 255, 0.1);
     padding: 20px;
@@ -86,7 +87,8 @@ p::-webkit-scrollbar-track {
 .osJsonPre,
 .countryJsonPre,
 .referrerJsonPre,
-.analysisJsonPre {
+.analysisJsonPre,
+.botsJsonPre {
     display: none;
 }
 
@@ -142,7 +144,8 @@ select:hover {
 #browserChart,
 #osChart,
 #counterChart,
-#analysisChart {
+#analysisChart,
+#botsChart {
     height: 281px;
 }
 
@@ -430,6 +433,7 @@ h3 {
     .referrer-data,
     .country-data,
     .average-data,
+    .bots-data,
     .qr-code {
         margin: 0 auto 20px;
         width: 100%;
@@ -446,24 +450,28 @@ h3 {
     }
 
     #countryChart,
-    #referrerChart,
-    #countryJson,
-    #referrerJson {
+    #referrerChart {
         height: 280px;
     }
 
-    #counterChart,
-    #counterJson {
+    #counterChart {
         height: 250px;
     }
 
     #browserChart,
     #osChart,
+    #analysisChart {
+        height: 200px;
+    }
+
+    #countryJson,
+    #referrerJson,
     #browserJson,
     #osJson,
-    #analysisChart,
-    #analysisJson {
-        height: 200px;
+    #counterJson,
+    #analysisJson,
+    #botsJson {
+        height: 250px;
     }
 
     #url_long_input {

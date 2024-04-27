@@ -175,24 +175,19 @@ def analytics(short_code):
         if "creation-ip-address" in url_data:
             del url_data["creation-ip-address"]
 
+    if url_data["counter"] != {}:
+            url_data = add_missing_dates("counter", url_data)
+    try:
+        if url_data["unique_counter"] != {}:
+            url_data = add_missing_dates("unique_counter", url_data)
+    except:
+        pass
+
     if request.method == "POST":
-        if url_data["counter"] != {}:
-            url_data = add_missing_dates("counter", url_data)
-        try:
-            if url_data["unique_counter"] != {}:
-                url_data = add_missing_dates("unique_counter", url_data)
-        except:
-            pass
         return jsonify(url_data)
-
     else:
-        if url_data["counter"] != {}:
-            url_data = add_missing_dates("counter", url_data)
-
         try:
             url_data["hyper_link"] = url_data["url"]
-            if url_data["unique_counter"] != {}:
-                url_data = add_missing_dates("unique_counter", url_data)
             url_data["sorted_country"] = top_four(url_data["country"])
             url_data["sorted_referrer"] = json.dumps(top_four(url_data["referrer"]))
             url_data["sorted_os_name"] = top_four(url_data["os_name"])
@@ -203,6 +198,7 @@ def analytics(short_code):
             url_data["sorted_unique_referrer"] = json.dumps(
                 top_four(url_data["unique_referrer"])
             )
+            url_data["sorted_bots"] = top_four(url_data["bots"])
             url_data["analysis_data"] = {
                 "average_daily_clicks": url_data["average_daily_clicks"],
                 "average_weekly_clicks": url_data["average_weekly_clicks"],

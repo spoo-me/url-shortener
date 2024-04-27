@@ -399,6 +399,12 @@ def redirect_url(short_code):
         url_data["os_name"][os_name]["ips"].append(user_ip)
     url_data["os_name"][os_name]["counts"] += 1
 
+    for bot in BOT_USER_AGENTS:
+        bot_re = re.compile(bot, re.IGNORECASE)
+        if bot_re.search(user_agent):
+            url_data.setdefault("bots", {})[bot] = url_data.get("bots", {}).get(bot, 0) + 1
+            break
+
     # increment the counter for the short code
     today = str(datetime.today()).split()[0]
     if today in url_data["counter"]:

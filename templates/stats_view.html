@@ -33,7 +33,7 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats-view.css') }}?v=9">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats-view.css') }}?v=10">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=8">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/prism-duotone-dark.css') }}">
@@ -150,6 +150,7 @@
                 </select>
             </div>
         </div>
+
         <div class="charts-container">
             <div class="browsers-data">
                 <h2>Browsers</h2>
@@ -180,6 +181,7 @@
                 </select>
             </div>
         </div>
+
         <div class="charts-container">
             <div class="referrer-data">
                 <h2>Referrers</h2>
@@ -208,7 +210,18 @@
                 </select>
             </div>
         </div>
+
         <div class="charts-container">
+            <div class="bots-data">
+                <h2>Clicks by known Bots</h2>
+                <div class="chart-container">
+                    <canvas id="botsChart"></canvas>
+                    <pre class="botsJsonPre"
+                        style="padding: 0.318em;"><code id="botsJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+                </div>
+                <button onclick="toggleView('bots')">Toggle View</button>
+            </div>
+
             <div class="average-data">
                 <h2>Clicks Analysis</h2>
                 <div class="chart-container">
@@ -218,8 +231,10 @@
                 </div>
                 <button onclick="toggleView('analysis')">Toggle View</button>
             </div>
-            <div class="qr-code">
+        </div>
 
+        <div class="charts-container">
+            <div class="qr-code">
                 <h2 style="text-align: left; margin-bottom: 20px;">Export Data</h2>
 
                 <div class="export-data-wrapper">
@@ -243,6 +258,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 
     <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
@@ -268,7 +284,6 @@
         const jsonResponse = {{ json_data| tojson }};
 
         function toggleView(chartType) {
-            const chartContainer = document.getElementById(`${chartType}Container`);
             const chartCanvas = document.getElementById(`${chartType}Chart`);
             const jsonPre = document.querySelector(`.${chartType}JsonPre`);
             const jsonDataElement = document.getElementById(`${chartType}Json`);
@@ -282,7 +297,19 @@
                     chartCanvas.style.display = 'none';
                     jsonDataElement.style.display = 'block';
                     jsonPre.style.display = 'block';
-                    jsonDataElement.textContent = JSON.stringify(jsonResponse['analysis_data'] || jsonResponse.os_name || {}, null, 2);
+                    jsonDataElement.textContent = JSON.stringify(jsonResponse.analysis_data || {}, null, 2);
+                }
+            }
+            else if (chartType === 'bots') {
+                if (chartCanvas.style.display === 'none') {
+                    chartCanvas.style.display = 'block';
+                    jsonPre.style.display = 'none';
+                    jsonDataElement.style.display = 'none';
+                } else {
+                    chartCanvas.style.display = 'none';
+                    jsonPre.style.display = 'block';
+                    jsonDataElement.style.display = 'block';
+                    jsonDataElement.textContent = JSON.stringify(jsonResponse.bots || {}, null, 2);
                 }
             }
             else if (chartType === 'counter') {
@@ -789,7 +816,7 @@
             const analysisChartCanvas = document.getElementById('analysisChart');
 
             if (analysisChartCanvas.chart) {
-                osChartCanvas.chart.destroy();
+                analysisChartCanvas.chart.destroy();
             }
 
             const analysisChart = new Chart(analysisChartCanvas, {
@@ -835,6 +862,62 @@
             analysisChartCanvas.chart = analysisChart;
         }
 
+        function updateBotsChart() {
+            const botsChartCanvas = document.getElementById('botsChart');
+
+            if (botsChartCanvas.style.display === 'none') {
+                toggleView('bots');
+            }
+
+            if (botsChartCanvas.chart) {
+                botsChartCanvas.chart.destroy();
+            }
+
+            const botsChart = new Chart(botsChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(jsonResponse.sorted_bots),
+                    datasets: [
+                        {
+                            label: 'Bots',
+                            data: Object.values(jsonResponse.sorted_bots),
+                            fill: 'start',
+                            backgroundColor: 'rgba(239, 98, 148, 0.25)',
+                            borderColor: 'rgba(239, 98, 148, 1)',
+                            borderWidth: 2,
+                            borderRadius: 20,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'x',
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#fff',
+                            },
+                        },
+                        y: {
+                            ticks: {
+                                color: '#fff',
+                            },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff',
+                            },
+                        },
+                    },
+                },
+            });
+
+            botsChartCanvas.chart = botsChart;
+        }
+
         function exportData(format) {
 
             let url = `{{ host_url }}export/{{ json_data['short_code'] }}/${format}`;
@@ -868,6 +951,7 @@
             updateReferrerChart();
             updateCountryChart();
             updateAnalysisChart();
+            updateBotsChart();
         } catch (error) {
             console.error("An error occurred while updating the charts: ", error);
         }

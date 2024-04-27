@@ -42,6 +42,7 @@ blocked_urls_collection = db["blocked-urls"]
 emoji_collection = db["emojis"]
 ip_bypasses = db["ip-exceptions"]
 
+BOT_USER_AGENTS = ['GoogleBot', 'Amazonbot', 'Qualys', 'BingBot', 'Synthetic Bot', 'Clickagy', 'Google AdsBot', 'GoogleOther', 'Google Image Proxy', 'AhrefsBot', 'GPTBot', 'YandexBot', 'Google Images', 'New Relic', 'Google API', 'Detectify', 'PetalBot', 'UptimeRobot', 'PinterestBot', 'Moz dotbot', 'SendGrid', 'Applebot', 'Google AdSense', 'DataForSEO Bot', 'Google Read Aloud', 'Pingdom', 'SEMrush', 'CriteoBot', 'Barkrowler', 'Sucuri', 'BLEXBot', 'ContentKing', 'Ahrefs Site Audit', 'Botify', 'Seekport', 'Baidu', 'YahooMailProxy', 'Stripe', 'Site24x7', 'Slackbot', 'Cookiebot', 'Siteimprove Crawl', 'Better Uptime', 'Proximic', 'Brandwatch', 'Grapeshot', 'StatusCake', 'SiteAuditBot', 'HetrixTools', 'Bing Ads', 'Sogou', 'FullStory', 'DuckDuckBot', 'Cốc Cốc', 'Rackspace', 'Trendiction Bot', 'ZoomInfo', 'elmah.io Uptime Monitoring', 'Feedly', 'Yeti by Naver', 'ManageWP', 'Cxense', 'BlogVault', 'Yahoo Ad Monitoring', 'Parse.ly', "Let's Encrypt", 'Freshping', 'Exodus', 'Yahoo Slurp', 'Telegram Bot', 'Internet Archive', 'Coveo Bot', 'SiteLock', 'Ghost Inspector', 'LinkedInBot', 'Splunk', 'Skype', 'Google Videos', 'VaultPress', 'Adyen', 'Marginalia Search', 'Outbrain', 'Uptimia', 'Innologica', 'Oh Dear', 'Google Inspection Tool', 'Seznam', 'Nodeping', 'klaviyo', 'GTmetrix', 'MSNMicrosoft', 'Slack Image Proxy', 'Moz rogerbot', 'Mojeek', 'eMoney Advisor', 'DataForSEO', 'Bing Preview', 'Google Schema Markup Testing Tool', 'Alertsite by Smartbear', 'Blockaid', 'Feeder', 'prerender', 'Mars Finder', 'PayPal', 'HostTracker', 'EasyCron', 'Iframely', 'Feedbin', 'rss2tg_bot', 'InternetArchiveBot', 'Audisto Crawler', 'Awario', 'Metorik', 'Google Feed Fetcher', 'Quantcastbot', 'Reelevant', 'Taboola', 'deadlinkchecker', 'webpagetest', 'upday', 'Cludo', 'IAS crawler', 'Drata Autopilot', 'MonitoRSS', 'ImageBot', 'MediaMonitoringBot', 'Accessible Web Bot', 'ProjectShield Url Check', 'NewsBlur', 'Jagged Pixel UptimeBot', 'marketgoo', 'Medialogia Bot', 'Google Trust Services (DCV Check)', 'Qwant', 'PressEngine Bot', 'RSS API', 'Amazon Contxbot', 'Watchful', 'Bluesky Link Preview Service', 'Alexa Site Audit', 'Jetpack', 'FeedWind Crawler', 'Integromat', 'SkroutzBot', 'Shortwave Image Fetcher', 'Automaton', 'Ozon Web Grabber', 'Sentry', 'MgidBot', 'Nooshub', 'Google Scholar', 'WP Umbrella', 'EvoUptimeBot', 'SecurityHeaders', 'Modular DS', 'Swifteq Link Checker', 'videootv Bot', 'Notabot', 'WebSpiderMount', 'Alexa Archive', 'SalesViewerBot', 'HoneybadgerBot', 'eRepublik.tools', 'Spark Shipping', 'RetroListeCOM', 'Snipcart', 'Missinglettr Bot', 'Readable', 'MainWP']
 
 def get_country(ip_address):
     reader = geoip2.database.Reader("misc/GeoLite2-Country.mmdb")
@@ -405,6 +406,8 @@ def export_to_excel(data):
     df_country = pd.DataFrame(data["country"].items(), columns=["Country", "Count"])
     df_os_name = pd.DataFrame(data["os_name"].items(), columns=["OS_Name", "Count"])
     df_referrer = pd.DataFrame(data["referrer"].items(), columns=["Referrer", "Count"])
+    df_bots = pd.DataFrame(data["bots"].items(), columns=["Bot", "Count"])
+
     df_unique_browser = pd.DataFrame(
         data["unique_browser"].items(), columns=["Browser", "Count"]
     )
@@ -454,6 +457,7 @@ def export_to_excel(data):
         df_unique_country.to_excel(writer, sheet_name="Unique_Country", index=False)
         df_unique_os_name.to_excel(writer, sheet_name="Unique_OS_Name", index=False)
         df_unique_referrer.to_excel(writer, sheet_name="Unique_Referrer", index=False)
+        df_bots.to_excel(writer, sheet_name="Bots", index=False)
 
     output.seek(0)
 
@@ -473,6 +477,8 @@ def export_to_csv(data):
     df_country = pd.DataFrame(data["country"].items(), columns=["Country", "Count"])
     df_os_name = pd.DataFrame(data["os_name"].items(), columns=["OS_Name", "Count"])
     df_referrer = pd.DataFrame(data["referrer"].items(), columns=["Referrer", "Count"])
+    df_bots = pd.DataFrame(data["bots"].items(), columns=["Bot", "Count"])
+
     df_unique_browser = pd.DataFrame(
         data["unique_browser"].items(), columns=["Browser", "Count"]
     )
@@ -521,6 +527,7 @@ def export_to_csv(data):
         df_unique_country.to_csv(zipf.open("unique_country.csv", "w"), index=False)
         df_unique_os_name.to_csv(zipf.open("unique_os_name.csv", "w"), index=False)
         df_unique_referrer.to_csv(zipf.open("unique_referrer.csv", "w"), index=False)
+        df_bots.to_csv(zipf.open("bots.csv", "w"), index=False)
 
     output.seek(0)
 
