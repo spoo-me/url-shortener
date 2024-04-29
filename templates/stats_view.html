@@ -33,10 +33,13 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats-view.css') }}?v=10">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats-view.css') }}?v=11">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=8">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/prism-duotone-dark.css') }}">
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/spoo-me/url-shortener/static/css/anychart-ui.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.anychart.com/releases/8.12.1/fonts/css/anychart-font.min.css" />
 
 </head>
 
@@ -199,7 +202,7 @@
             <div class="country-data">
                 <h2>Countries</h2>
                 <div class="chart-container" id="country-container">
-                    <canvas id="countryChart"></canvas>
+                    <div id="countryChart"></div>
                     <pre class="countryJsonPre"
                         style="padding: 0.318em;"><code id="countryJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
                 </div>
@@ -264,6 +267,14 @@
     <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
     <script src="{{ url_for('static', filename='js/stats-view-script.js') }}" defer=""></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-core.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-map.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.15/proj4.js"></script>
+    <script src="https://cdn.anychart.com/releases/8.12.1/geodata/custom/world/world.js"></script>
+    <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-data-adapter.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-exports.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-ui.min.js"></script>
 
     {% if json_data["expired"] %}
         <script>
@@ -364,6 +375,10 @@
                     chartCanvas.style.display = 'block';
                     jsonDataElement.style.display = 'none';
                     jsonPre.style.display = 'none';
+
+                    if (chartType === 'country') {
+                        document.getElementById("country-container").style.padding = "5px";
+                    }
                 }
                 else {
                     chartCanvas.style.display = 'none';
@@ -380,6 +395,10 @@
                             "collectiveData": jsonResponse[chartType] || jsonResponse.os_name || {},
                             "uniqueData": jsonResponse['unique_' + chartType] || jsonResponse.unique_os_name || {}
                         }, null, 2);
+
+                    if (chartType === 'country') {
+                        document.getElementById("country-container").style.padding = "20px";
+                    }
                 }
             }
         }
@@ -756,60 +775,84 @@
 
         function updateCountryChart() {
             const countryChartCanvas = document.getElementById('countryChart');
+            countryChartCanvas.textContent = '';
+
+            document.getElementById('country-container').style.padding = "5px";
 
             if (countryChartCanvas.style.display === 'none') {
                 toggleView('country');
             }
 
-            if (countryChartCanvas.chart) {
-                countryChartCanvas.chart.destroy();
-            }
             const dataOption = document.getElementById('countryDataOption').value;
             const dt = dataOption === "collectiveData" ? jsonResponse.sorted_country : jsonResponse.sorted_unique_country;
+            var map_title = dataOption === "collectiveData" ? "Countries Clicks Heatmap" : "Countries Unique Clicks Heatmap";
 
-            const countryChart = new Chart(countryChartCanvas, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(dt),
-                    datasets: [
-                        {
-                            label: 'Countries',
-                            data: Object.values(dt),
-                            backgroundColor: [
-                                'rgba(217, 210, 138, 0.4)',
-                                'rgba(255, 130, 118, 0.4)',
-                                'rgba(255, 221, 213, 0.4)',
-                                'rgba(148, 108, 214, 0.4)',
-                                'rgba(100, 100, 100, 0.4)'
-                            ],
-                            borderColor: [
-                                'rgba(217, 210, 138, 1)',
-                                'rgba(255, 130, 118, 1)',
-                                'rgba(255, 221, 213, 1)',
-                                'rgba(148, 108, 214, 1)',
-                                'rgba(100, 100, 100, 1)'
-                            ],
-                            borderWidth: 2,
-                            hoverOffset: 4,
-                            borderRadius: 5,
-                            spacing: 5,
-                        },
-                    ],
-                },
-                options: {
-                    responsive: true, // Enable responsiveness
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#fff', // Change the color of the legend labels
-                                boxWidth: 12,
-                            }
-                        }
-                    }
-                },
+            var dataSet = anychart.data.set(dt)
+            var map = anychart.map();
+
+            map.geoData("anychart.maps.world");
+
+            var series = map.choropleth(dataSet);
+
+            series.colorScale(
+                anychart.scales.linearColor("#f5e6f7", "#ba68c8", "#9c27b0", "#6a1b9a")
+            );
+
+            series.stroke('#9c27b0', 1, '5 2', 'round');
+
+            series.hovered().fill(function (d) {
+                return anychart.color.darken(d.sourceColor, 0.1);
             });
-            countryChartCanvas.chart = countryChart;
+
+            series.tooltip().format(function(e){
+                return "Clicks: <b>" + e.getData("value") + "</b>"
+            });
+
+            var title = map.title();
+            title.enabled(true);
+            title.text(map_title);
+            title.fontColor("#ffffff");
+            title.fontSize(12);
+            title.padding(0, 0, 10, 0);
+
+            map.tooltip().useHtml(true);
+
+            map.colorRange().enabled(true);
+            map.colorRange().orientation('bottom');
+            map.colorRange().labels({ 'fontSize': 13, 'fontColor': 'white' });
+            map.colorRange().stroke(''); // remove stroke
+
+            var grids = map.grids();
+            grids.enabled(true);
+            grids.stroke("#ffffff", 0.3, "5 2", "round");
+
+            var marker = map.colorRange().marker();
+            marker.size(7);
+
+            map.interactivity().zoomOnMouseWheel(true);
+            map.interactivity().keyboardZoomAndMove(true);
+            map.interactivity().zoomOnDoubleClick(true);
+
+            var zoomController = anychart.ui.zoom();
+            zoomController.target(map);
+            zoomController.render();
+
+            map.container("countryChart");
+            map.contextMenu(true);
+
+            map.background().fill("rgba(255, 255, 255, 0)");
+
+            map.contextMenu().itemsFormatter(function (items) {
+
+                delete items["full-screen-separator"];
+                delete items["about"];
+                delete items["share-with"];
+                delete items["print-chart"];
+
+                return items;
+            });
+
+            map.draw();
         }
 
         function updateAnalysisChart() {

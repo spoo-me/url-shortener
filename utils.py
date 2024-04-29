@@ -20,6 +20,8 @@ import requests
 import validators
 import geoip2.errors
 import geoip2.database
+import pycountry
+import functools
 
 load_dotenv(override=True)
 
@@ -216,6 +218,21 @@ def convert_to_gmt(expiration_time):
         # Convert to GMT if it's timezone aware
         expiration_time = expiration_time.astimezone(timezone.utc)
     return expiration_time
+
+
+def convert_country_data(data):
+    return [{"id": convert_country_name(k), "value": v} for k, v in data.items()]
+
+@functools.lru_cache(maxsize=None)
+def convert_country_name(country_name):
+    try:
+        return pycountry.countries.lookup(country_name).alpha_2
+    except LookupError:
+        if country_name == "Turkey":
+            return "TR"
+        elif country_name == "Russia":
+            return "RU"
+        return "XX"
 
 
 def generate_short_code():
