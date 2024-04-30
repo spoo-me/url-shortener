@@ -35,6 +35,7 @@ pre[class*="language-"] {
 
 pre > code[class*="language-"] {
 	font-size: 1em;
+	padding: 0;
 }
 
 pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,

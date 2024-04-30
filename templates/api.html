@@ -40,7 +40,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/api.css') }}?v=5">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/prism-duotone-dark.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/prism-duotone-dark.css') }}?v=1">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=9">
 
 </head>
@@ -125,7 +125,8 @@
     <!-- Main Content -->
     <div class="container mt-4">
 
-        <span><img class="emoji" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Hammer%20and%20wrench/Flat/hammer_and_wrench_flat.svg"></span>
+        <span><img class="emoji"
+                src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Hammer%20and%20wrench/Flat/hammer_and_wrench_flat.svg"></span>
 
         <h1 id="title-text" style="font-weight: bolder;">Spoo.me Api Documentation</h1>
 
@@ -232,8 +233,7 @@
             <div class="example-python active-code">
 
                 <pre class="line-numbers">
-<code class="language-python">
-import requests
+<code class="language-python">import requests
 import json
 
 url = "https://spoo.me"
@@ -259,8 +259,7 @@ if response.status_code == 200:
 else:
     # If the request failed, print the error message
     print(f"Error: {response.status_code}")
-    print(response.text)
-        </code></pre>
+    print(response.text)</code></pre>
 
                 <p><strong>Response:</strong></p>
                 <pre style="max-height: 300px;" class="line-numbers">
@@ -269,8 +268,7 @@ else:
 
             <div class="example-node">
                 <pre class="line-numbers">
-<code class="language-javascript" id="shorten-code">
-const axios = require('axios');
+<code class="language-javascript" id="shorten-code">const axios = require('axios');
 const data = {
     url: 'https://example.com',
     alias: 'node-exampl',
@@ -291,8 +289,7 @@ axios.post('https://spoo.me/', data, {
 
 .catch(function (error) {
     console.error(error);
-});
-        </code></pre>
+});</code></pre>
 
                 <p><strong>Response:</strong></p>
                 <pre style="max-height: 300px;" class="line-numbers">
@@ -302,8 +299,7 @@ axios.post('https://spoo.me/', data, {
 
             <div class="example-csharp">
                 <pre class="line-numbers">
-<code class="language-csharp">
-using System.Net.Http;
+<code class="language-csharp">using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Collections.Generic;
 
@@ -333,8 +329,7 @@ try
 catch (HttpRequestException ex)
 {
     Console.WriteLine($"HTTP request error: {ex.Message}");
-}
-        </code></pre>
+}</code></pre>
                 <p><strong>Response:</strong></p>
                 <pre style="max-height: 300px;" class="line-numbers">
 <code class="language-json">{"short_url": "https://spoo.me/cSharpExa"}</code></pre>
@@ -342,8 +337,7 @@ catch (HttpRequestException ex)
 
             <div class="example-javascript">
                 <pre class="line-numbers">
-<code class="language-javascript" id="shorten-code">
-const url = 'https://spoo.me/';
+<code class="language-javascript" id="shorten-code">const url = 'https://spoo.me/';
 const data = new URLSearchParams();
 data.append('url', 'https://example.com');
 data.append('alias', 'jsExample1');
@@ -365,8 +359,7 @@ xhr.onreadystatechange = function () {
     }
 };
 
-xhr.send(data);
-        </code></pre>
+xhr.send(data);</code></pre>
                 <p><strong>Response:</strong></p>
                 <pre style="max-height: 300px;" class="line-numbers">
 <code class="language-json">{"short_url": "https://spoo.me/jsExample1"}</code></pre>
@@ -374,11 +367,12 @@ xhr.send(data);
 
             <div class="example-java">
                 <pre class="line-numbers">
-<code class="language-java" id="shorten-code">
-import java.net.URI;
+<code class="language-java" id="shorten-code">import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 
 public class HttpRequestExample {
 
@@ -386,8 +380,14 @@ public class HttpRequestExample {
         // Define the URL
         String url = "https://spoo.me/";
 
+        // Define the Long URL
+        String longUrl = "https://example.com";
+
+        // Encode the Long URL
+        String encodedLongUrl = URLEncoder.encode(longUrl, StandardCharsets.UTF_8);
+
         // Build the request body
-        String requestBody = "url=https://example.com&alias=JavaIsHard&password=JavaHardNGL@1000&max-clicks=200";
+        String requestBody = "url="+encodedLongUrl+"&alias=JavaIsHard&password=JavaHardNGL@1000&max-clicks=200";
 
         // Create and configure the HttpClient
         HttpClient httpClient = HttpClient.newHttpClient();
@@ -411,8 +411,7 @@ public class HttpRequestExample {
             e.printStackTrace();
         }
     }
-}
-        </code></pre>
+}</code></pre>
                 <p><strong>Response:</strong></p>
                 <pre style="max-height: 300px;" class="line-numbers">
 <code class="language-json">{"short_url": "https://spoo.me/JavaIsHard"}</code></pre>
@@ -420,8 +419,7 @@ public class HttpRequestExample {
 
             <div class="example-go">
                 <pre class="line-numbers">
-<code class="language-go" id="shorten-code">
-package main
+<code class="language-go" id="shorten-code">package main
 
 import (
     "context"
@@ -429,6 +427,7 @@ import (
     "io"
     "net"
     "net/http"
+    "net/url"
     "strings"
     "time"
 )
@@ -442,10 +441,13 @@ func main() {
         },
     }
 
-    url := "https://spoo.me/"
-    payload := strings.NewReader("url=https://example.com&alias=GoExample&max-clicks=200&password=GoIsNew@Yes5")
+    apiUrl := "https://spoo.me/"
 
-    req, err := http.NewRequest("POST", url, payload)
+    longUrl := "https://example.com"
+    encodedLongUrl := url.QueryEscape(longUrl)
+    payload := strings.NewReader("url="+encodedLongUrl+"&alias=GoExample&max-clicks=200&password=GoIsNew@Yes5")
+
+    req, err := http.NewRequest("POST", apiUrl, payload)
     if err != nil {
         fmt.Println("Error creating request:", err)
         return
@@ -469,8 +471,7 @@ func main() {
 
     fmt.Println(res)
     fmt.Println(string(body))
-}
-        </code></pre>
+}</code></pre>
                 <p><strong>Response:</strong></p>
                 <pre style="max-height: 300px;" class="line-numbers">
 <code class="language-json">{"short_url": "https://spoo.me/GoExample"}</code></pre>
@@ -478,8 +479,7 @@ func main() {
 
             <div class="example-ruby">
                 <pre class="line-numbers">
-<code class="language-ruby" id="shorten-code">
-require 'uri'
+<code class="language-ruby" id="shorten-code">require 'uri'
 require 'net/http'
 
 url = URI("https://spoo.me")
@@ -487,14 +487,17 @@ url = URI("https://spoo.me")
 http = Net::HTTP.new(url.host, url.port)
 http.use_ssl = true
 
+longUrl = "https://example.com"
+encodedLongUrl = URI.encode_www_form_component(longUrl)
+
 request = Net::HTTP::Post.new(url)
 request["content-type"] = 'application/x-www-form-urlencoded'
 request["Accept"] = 'application/json'
-request.body = "url=https://google.com&alias=RubyIsRuby&password=FHVygyg@132o&max-clicks=200"
+request.body = "url=#{encodedLongUrl}&alias=RubyIsRuby&password=FHVygyg@132o&max-clicks=200"
 
 response = http.request(request)
-puts response.read_body
-        </code></pre>
+puts response.read_body</code></pre>
+
                 <p><strong>Response:</strong></p>
                 <pre style="max-height: 300px;" class="line-numbers">
 <code class="language-json">{"short_url": "https://spoo.me/RubyIsRuby"}</code></pre>
@@ -655,10 +658,8 @@ puts response.read_body
         <div class="emoji-example-codes">
 
             <div class="emoji-example-python active-code">
-
                 <pre class="line-numbers">
-<code class="language-python">
-import requests
+<code class="language-python">import requests
 
 url = "https://spoo.me/emoji/"
 
@@ -677,8 +678,7 @@ response = requests.post(url, data=payload, headers=headers)
 if response.status_code == 200:
     print(response.json())
 else:
-    print(response.text)
-        </code></pre>
+    print(response.text)</code></pre>
 
                 <p><strong>Response:</strong></p>
                 <pre style="max-height: 300px;" class="line-numbers">
@@ -687,8 +687,7 @@ else:
 
             <div class="emoji-example-node">
                 <pre class="line-numbers">
-<code class="language-javascript" id="shorten-code">
-const axios = require('axios');
+<code class="language-javascript" id="shorten-code">const axios = require('axios');
 const data = {
     url: 'https://example.com/emoji/',
     alias: '🚀🚀',
@@ -709,8 +708,7 @@ axios.post('https://spoo.me/', data, {
 
 .catch(function (error) {
     console.error(error);
-});
-        </code></pre>
+});</code></pre>
 
                 <p><strong>Response:</strong></p>
                 <pre style="max-height: 300px;" class="line-numbers">
@@ -720,8 +718,7 @@ axios.post('https://spoo.me/', data, {
 
             <div class="emoji-example-csharp">
                 <pre class="line-numbers">
-<code class="language-csharp">
-using System.Net.Http;
+<code class="language-csharp">using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Collections.Generic;
 
@@ -751,8 +748,7 @@ try
 catch (HttpRequestException ex)
 {
     Console.WriteLine($"HTTP request error: {ex.Message}");
-}
-        </code></pre>
+}</code></pre>
                 <p><strong>Response:</strong></p>
                 <pre style="max-height: 300px;" class="line-numbers">
 <code class="language-json">{"short_url": "https://spoo.me/🌊#️⃣"}</code></pre>
@@ -760,8 +756,7 @@ catch (HttpRequestException ex)
 
             <div class="emoji-example-javascript">
                 <pre class="line-numbers">
-<code class="language-javascript" id="shorten-code">
-const url = 'https://spoo.me/emoji/';
+<code class="language-javascript" id="shorten-code">const url = 'https://spoo.me/emoji/';
 const data = new URLSearchParams();
 data.append('url', 'https://example.com');
 data.append('alias', '☕📜');
@@ -783,8 +778,7 @@ xhr.onreadystatechange = function () {
     }
 };
 
-xhr.send(data);
-</code></pre>
+xhr.send(data);</code></pre>
                 <p><strong>Response:</strong></p>
                 <pre style="max-height: 300px;" class="line-numbers">
 <code class="language-json">{"short_url": "https://spoo.me/☕📜"}</code></pre>
@@ -792,11 +786,12 @@ xhr.send(data);
 
             <div class="emoji-example-java">
                 <pre class="line-numbers">
-<code class="language-java" id="shorten-code">
-import java.net.URI;
+<code class="language-java" id="shorten-code">import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 
 public class HttpRequestExample {
 
@@ -804,8 +799,14 @@ public class HttpRequestExample {
         // Define the URL
         String url = "https://spoo.me/emoji/";
 
+        // Define the Long URL
+        String longUrl = "https://example.com";
+
+        // Encode the Long URL
+        String encodedLongUrl = URLEncoder.encode(longUrl, StandardCharsets.UTF_8);
+
         // Build the request body
-        String requestBody = "url=https://example.com&alias=☕&password=JavaHardNGL@1000&max-clicks=200";
+        String requestBody = "url="+encodedLongUrl+"&alias=☕&password=JavaHardNGL@1000&max-clicks=200";
 
         // Create and configure the HttpClient
         HttpClient httpClient = HttpClient.newHttpClient();
@@ -829,8 +830,7 @@ public class HttpRequestExample {
             e.printStackTrace();
         }
     }
-}
-        </code></pre>
+}</code></pre>
                 <p><strong>Response:</strong></p>
                 <pre style="max-height: 300px;" class="line-numbers">
 <code class="language-json">{"short_url": "https://spoo.me/☕"}</code></pre>
@@ -838,8 +838,7 @@ public class HttpRequestExample {
 
             <div class="emoji-example-go">
                 <pre class="line-numbers">
-<code class="language-go" id="shorten-code">
-package main
+<code class="language-go" id="shorten-code">package main
 
 import (
     "context"
@@ -847,6 +846,7 @@ import (
     "io"
     "net"
     "net/http"
+    "net/url"
     "strings"
     "time"
 )
@@ -860,10 +860,13 @@ func main() {
         },
     }
 
-    url := "https://spoo.me/emoji/"
-    payload := strings.NewReader("url=https://example.com&alias=💨👋🏻&max-clicks=200&password=GoIsNew@Yes5")
+    apiUrl := "https://spoo.me/emoji/"
 
-    req, err := http.NewRequest("POST", url, payload)
+    longUrl := "https://example.com"
+    encodedLongUrl := url.QueryEscape(longUrl)
+    payload := strings.NewReader("url="+encodedLongUrl+"&alias=💨👋🏻&max-clicks=200&password=GoIsNew@Yes5")
+
+    req, err := http.NewRequest("POST", apiUrl, payload)
     if err != nil {
         fmt.Println("Error creating request:", err)
         return
@@ -887,8 +890,7 @@ func main() {
 
     fmt.Println(res)
     fmt.Println(string(body))
-}
-        </code></pre>
+}</code></pre>
                 <p><strong>Response:</strong></p>
                 <pre style="max-height: 300px;" class="line-numbers">
 <code class="language-json">{"short_url": "https://spoo.me/👋🏻💨"}</code></pre>
@@ -896,8 +898,7 @@ func main() {
 
             <div class="emoji-example-ruby">
                 <pre class="line-numbers">
-<code class="language-ruby" id="shorten-code">
-require 'uri'
+<code class="language-ruby" id="shorten-code">require 'uri'
 require 'net/http'
 
 url = URI("https://spoo.me/emoji/")
@@ -905,14 +906,16 @@ url = URI("https://spoo.me/emoji/")
 http = Net::HTTP.new(url.host, url.port)
 http.use_ssl = true
 
+longUrl = "https://example.com"
+encodedLongUrl = URI.encode_www_form_component(longUrl)
+
 request = Net::HTTP::Post.new(url)
 request["content-type"] = 'application/x-www-form-urlencoded'
 request["Accept"] = 'application/json'
-request.body = "url=https://google.com&alias=💎&password=FHVygyg@132o&max-clicks=200"
+request.body = "url=#{encodedLongUrl}&alias=💎&password=FHVygyg@132o&max-clicks=200"
 
 response = http.request(request)
-puts response.read_body
-        </code></pre>
+puts response.read_body</code></pre>
                 <p><strong>Response:</strong></p>
                 <pre style="max-height: 300px;" class="line-numbers">
 <code class="language-json">{"short_url": "https://spoo.me/💎"}</code></pre>
@@ -1042,8 +1045,7 @@ puts response.read_body
             <div class="stats-example-python active-code">
 
                 <pre class="line-numbers">
-<code class="language-python">
-import requests
+<code class="language-python">import requests
 import json
 
 # Replace these with your actual values
@@ -1068,14 +1070,12 @@ if response.status_code == 200:
 else:
     # If the request failed, print the error message
     print(f"Error: {response.status_code}")
-    print(response.text)
-        </code></pre>
+    print(response.text)</code></pre>
             </div>
 
             <div class="stats-example-node">
                 <pre class="line-numbers">
-<code class="language-javascript" id="shorten-code">
-const axios = require('axios');
+<code class="language-javascript" id="shorten-code">const axios = require('axios');
 
 const short_code = 'exa';
 
@@ -1095,14 +1095,12 @@ axios.post('https://spoo.me/stats/${short_code}', data, {
 
 .catch(function (error) {
     console.error(error);
-});
-        </code></pre>
+});</code></pre>
             </div>
 
             <div class="stats-example-csharp">
                 <pre class="line-numbers">
-<code class="language-csharp">
-using System.Net.Http;
+<code class="language-csharp">using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Collections.Generic;
 
@@ -1132,14 +1130,12 @@ try
 catch (HttpRequestException ex)
 {
     Console.WriteLine($"HTTP request error: {ex.Message}");
-}
-        </code></pre>
+}</code></pre>
             </div>
 
             <div class="stats-example-javascript">
                 <pre class="line-numbers">
-<code class="language-javascript" id="shorten-code">
-// define the short_code & url
+<code class="language-javascript" id="shorten-code">// define the short_code & url
 
 const url = 'https://spoo.me/stats/exa';
 const data = new URLSearchParams();
@@ -1159,14 +1155,12 @@ xhr.onreadystatechange = function () {
     }
 };
 
-xhr.send(data);
-        </code></pre>
+xhr.send(data);</code></pre>
             </div>
 
             <div class="stats-example-java">
                 <pre class="line-numbers">
-<code class="language-java" id="shorten-code">
-import java.net.URI;
+<code class="language-java" id="shorten-code">import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -1206,14 +1200,12 @@ public class HttpRequestExample {
         }
 
     }
-}
-        </code></pre>
+}</code></pre>
             </div>
 
             <div class="stats-example-go">
                 <pre class="line-numbers">
-<code class="language-go" id="shorten-code">
-package main
+<code class="language-go" id="shorten-code">package main
 
 import (
     "context"
@@ -1261,14 +1253,12 @@ func main() {
 
     fmt.Println(res)
     fmt.Println(string(body))
-}
-        </code></pre>
+}</code></pre>
             </div>
 
             <div class="stats-example-ruby">
                 <pre class="line-numbers">
-<code class="language-ruby" id="shorten-code">
-require 'net/http'
+<code class="language-ruby" id="shorten-code">require 'net/http'
 
 short_code = "exa"
 url = URI("https://spoo.me/stats/#{short_code}")
@@ -1281,8 +1271,7 @@ request["content-type"] = 'application/x-www-form-urlencoded'
 request.body = "password=Example@12"   # not required if your short url is not password protected
 
 response = http.request(request)
-puts response.read_body
-        </code></pre>
+puts response.read_body</code></pre>
             </div>
 
         </div>
@@ -1294,6 +1283,9 @@ puts response.read_body
     "average_daily_clicks": 1.0,
     "average_monthly_clicks": 0.03,
     "average_weekly_clicks": 0.14,
+    "bots": {
+        "Googlebot": 1
+    },
     "browser": {
         "Edge": 1
     },
@@ -1371,6 +1363,11 @@ puts response.read_body
                     <td>average_weekly_clicks</td>
                     <td>Float</td>
                     <td>Average Clicks per week since the link was created.</td>
+                </tr>
+                <tr>
+                    <td>bots</td>
+                    <td>Dict</td>
+                    <td>Data about the Bots in which the short link was accessed.</td>
                 </tr>
                 <tr>
                     <td>browser</td>
@@ -1626,8 +1623,7 @@ puts response.read_body
             <div class="export-example-python active-code">
 
                 <pre class="line-numbers">
-<code class="language-python">
-import requests
+<code class="language-python">import requests
 import json
 
 # Replace these with your actual values
@@ -1654,14 +1650,12 @@ if response.status_code == 200:
 else:
     # If the request failed, print the error message
     print(f"Error: {response.status_code}")
-    print(response.text)
-        </code></pre>
+    print(response.text)</code></pre>
             </div>
 
             <div class="export-example-node">
                 <pre class="line-numbers">
-<code class="language-javascript" id="shorten-code">
-const axios = require("axios");
+<code class="language-javascript" id="shorten-code">const axios = require("axios");
 const fs = require("fs");
 const querystring = require("querystring");
 
@@ -1701,14 +1695,12 @@ axios
         // If the request failed, print the error message
         console.error(`Error: ${error.response.status}`);
         console.error(error.response.data.toString());
-    });
-        </code></pre>
+    });</code></pre>
             </div>
 
             <div class="export-example-csharp">
                 <pre class="line-numbers">
-<code class="language-csharp">
-// Import HttpClient module
+<code class="language-csharp">// Import HttpClient module
 using System;
 using System.IO;
 using System.Net.Http;
@@ -1744,14 +1736,12 @@ else
     // If the request failed, print the error message
     Console.WriteLine($"Error: {response.StatusCode}");
     Console.WriteLine(await response.Content.ReadAsStringAsync());
-}
-        </code></pre>
+}</code></pre>
             </div>
 
             <div class="export-example-javascript">
                 <pre class="line-numbers">
-<code class="language-javascript" id="shorten-code">
-// Create a new XMLHttpRequest object
+<code class="language-javascript" id="shorten-code">// Create a new XMLHttpRequest object
 var xhr = new XMLHttpRequest();
 
 // Replace these with your actual values
@@ -1789,14 +1779,12 @@ xhr.onload = function () {
         console.error(`Error: ${xhr.status}`);
         console.error(xhr.responseText);
     }
-};
-        </code></pre>
+};</code></pre>
             </div>
 
             <div class="export-example-java">
                 <pre class="line-numbers">
-<code class="language-java" id="shorten-code">
-// Import java.net.http package
+<code class="language-java" id="shorten-code">// Import java.net.http package
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -1854,14 +1842,12 @@ public class ExportExample {
             e.printStackTrace();
         }
     }
-}
-        </code></pre>
+}</code></pre>
             </div>
 
             <div class="export-example-go">
                 <pre class="line-numbers">
-<code class="language-go" id="shorten-code">
-package main
+<code class="language-go" id="shorten-code">package main
 
 import (
     "context"
@@ -1938,14 +1924,12 @@ func main() {
         }
         fmt.Println(string(body))
     }
-}
-        </code></pre>
+}</code></pre>
             </div>
 
             <div class="export-example-ruby">
                 <pre class="line-numbers">
-<code class="language-ruby" id="shorten-code">
-require 'net/http'
+<code class="language-ruby" id="shorten-code">require 'net/http'
 
 short_code = "exa"
 base_url = "https://spoo.me"
@@ -1967,8 +1951,7 @@ File.open("#{short_code}.#{export_format}", "w") do |file|    # Note if the expo
 
     puts "File saved successfully"
 
-end
-        </code></pre>
+end</code></pre>
             </div>
 
         </div>
@@ -2081,7 +2064,7 @@ print(f"Shortened URL: {short_url}")
         <br>
 
         <p><strong>Complete documentation for the library can be found <a
-                    href="https://pypi.org/project/py-spoo-url/">here</a>.</strong></p>
+                    href="https://pypi.org/project/py-spoo-url/" target="_blank">here</a>.</strong></p>
 
         <br>
         <hr>
