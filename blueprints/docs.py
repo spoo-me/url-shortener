@@ -28,3 +28,9 @@ def serve_docs(file_path):
 @limiter.exempt
 def serve_privacy_policy():
     return render_template("docs/privacy-policy.html", host_url=request.host_url)
+
+@docs.route("/legal/terms-of-service")
+@docs.route("/legal/tos")
+@limiter.exempt
+def serve_terms_of_service():
+    return render_template("docs/terms-of-service.html", host_url=request.host_url)
