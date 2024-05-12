@@ -354,6 +354,7 @@ a:hover {
 .metrics {
     margin-top: 10px;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-around;
     background-color: rgba(255, 255, 255, 0.05);
@@ -374,6 +375,24 @@ a:hover {
     color: rgba(255, 255, 255, 0.8);
     margin: 0;
 }
+
+.metrics a {
+    all: unset;
+}
+
+.metrics a:hover {
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
+#discord-server-link:hover {
+    color: rgb(184, 179, 245);
+}
+
+#github-stars-link:hover {
+    color: #f9e2af;
+}
+
 
 #producthunt {
     position: fixed;
@@ -442,6 +461,9 @@ a:hover {
 
     .metrics {
         padding: 20px 0 25px 0;
+        justify-content: center;
+        row-gap: 30px;
+        column-gap: 50px;
     }
 
     .metrics h2 {

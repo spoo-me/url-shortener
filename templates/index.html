@@ -42,7 +42,7 @@
     <meta name="moz-appearance" content="#adb1ff">
     <meta content="#adb1ff" name="msapplication-TileColor">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=5">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=6">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/self-promo.css') }}?v=2">
@@ -183,8 +183,8 @@
                 <button type="submit">Shorten URL</button>
             </div>
         </form>
+
         {% if recentURLs %}
-        <hr style="margin:10px 30% 20px 30%; border: 1px solid rgba(255, 255, 255, 0.15);">
         <div id="recentURLs"> {% for url in recentURLs %} <div class="url-container">
                 <div class="section-1">
                     <div class="left-section">
@@ -206,14 +206,28 @@
         {% endif %}
     </div>
 
-    <div class="metrics">
-        <div class="links-shortened">
-            <h2 id="total-urls"></h2>
-            <h4>LINKS SHORTENED</h4>
-        </div>
-        <div class="clicks-served">
-            <h2 id="total-clicks"></h2>
-            <h4>CLICKS REDIRECTED</h4>
+    <div class="metrics-section">
+        <div class="metrics">
+            <div class="links-shortened">
+                <h2 id="total-urls"></h2>
+                <h4>LINKS SHORTENED</h4>
+            </div>
+            <div class="clicks-served">
+                <h2 id="total-clicks"></h2>
+                <h4>CLICKS REDIRECTED</h4>
+            </div>
+            <div class="github-stars">
+                <a id="github-stars-link" href="/github" target="_blank">
+                    <h2 id="github-stars"></h2>
+                    <h4>GITHUB STARS</h4>
+                </a>
+            </div>
+            <div class="discord-online">
+                <a id="discord-server-link" href="https://discord.com/invite/cW9ParGe" target="_blank">
+                    <h2 id="discord-online"></h2>
+                    <h4>ONLINE IN DISCORD</h4>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -229,7 +243,7 @@
 
     <script src="{{ url_for('static', filename='js/index-qrcode.js') }}"></script>
     <script src="{{ url_for('static', filename='js/index-validate.js') }}?v=1" defer=""></script>
-    <script src="{{ url_for('static', filename='js/index-script.js') }}?v=2" defer=""></script>
+    <script src="{{ url_for('static', filename='js/index-script.js') }}?v=3" defer=""></script>
     <script src="{{ url_for('static', filename='js/contacts-popup.js') }}?v=1" defer=""></script>
     <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
     <script src="{{ url_for('static', filename='js/self-promo.js') }}" defer=""></script>
