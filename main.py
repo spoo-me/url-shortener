@@ -16,11 +16,13 @@ from blueprints.limiter import limiter
 from blueprints.seo import seo
 from blueprints.stats import stats
 from blueprints.url_shortener import url_shortener
+from blueprints.cache import cache
 from utils import client
 
 app = Flask(__name__)
 CORS(app)
 limiter.init_app(app)
+cache.init_app(app)
 
 app.register_blueprint(url_shortener)
 app.register_blueprint(docs)

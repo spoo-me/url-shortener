@@ -150,6 +150,12 @@ def validate_blocked_url(url):
 
     return True
 
+def humanize_number(num):
+    magnitude = 0
+    while abs(num) >= 1000:
+        magnitude += 1
+        num /= 1000.0
+    return '%d%s+' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
 
 def verify_hcaptcha(token):
     hcaptcha_verify_url = "https://hcaptcha.com/siteverify"

@@ -42,7 +42,7 @@
     <meta name="moz-appearance" content="#adb1ff">
     <meta content="#adb1ff" name="msapplication-TileColor">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=4">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=5">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/self-promo.css') }}?v=2">
@@ -140,81 +140,82 @@
     </div>
 
     <!-- <form action="/" method="POST" id="urlForm"> -->
-    <form action="/" method="POST" onsubmit="return validateURL() && validatePassword();">
-
-        <h1>
-            <label for="long-url" id="tagline"><b>Shorten Your URLs, Not Your Possiblities.</b></label>
-        </h1>
-        <p id="url-error"></p>
-        <input type="text" id="long-url" name="url" required placeholder="https://your-long-url.com" value="{{ url }}">
-
-        {% if error %}
-        <script>
-            customTopNotification("AliasError", "{{ error }}", 10);
-        </script>
-        {% endif %}
-
-        <div class="alias-time-container">
-            <div class="child">
-                <label for="alias">Custom Alias</label>
-
-                <div class="buttonIn">
-                    <div id="input-prefix">
-                        <span>{{ host_url }}</span>
+    <div class="form-section">
+        <form action="/" method="POST" onsubmit="return validateURL() && validatePassword();">
+            <h1>
+                <label for="long-url" id="tagline"><b>Shorten Your URLs, Not Your Possiblities.</b></label>
+            </h1>
+            <p id="url-error"></p>
+            <input type="text" id="long-url" name="url" required placeholder="https://your-long-url.com" value="{{ url }}">
+            {% if error %}
+            <script>
+                customTopNotification("AliasError", "{{ error }}", 10);
+            </script>
+            {% endif %}
+            <div class="alias-time-container">
+                <div class="child">
+                    <label for="alias">Custom Alias</label>
+                    <div class="buttonIn">
+                        <div id="input-prefix">
+                            <span>{{ host_url }}</span>
+                        </div>
+                        <input type="text" id="alias" name="alias" placeholder="your-custom-alias">
                     </div>
-                    <input type="text" id="alias" name="alias" placeholder="your-custom-alias">
+                    <p id="non-imp">leave blank for random url slug</p>
                 </div>
-
-                <p id="non-imp">leave blank for random url slug</p>
+                <!--  Custom Time Expiration is currently Buggy and not ready for Production  -->
+                <!-- <div class="child">
+                    <label for="expiration-time">Expiration Time</label>
+                    <input type="datetime-local" id="expiration-time" name="expiration-time">
+                    <p id="non-imp">leave blank for never expire</p>
+                </div> -->
             </div>
-
-            <!--  Custom Time Expiration is currently Buggy and not ready for Production  -->
-
-            <!-- <div class="child">
-                <label for="expiration-time">Expiration Time</label>
-                <input type="datetime-local" id="expiration-time" name="expiration-time">
-                <p id="non-imp">leave blank for never expire</p>
-            </div> -->
-        </div>
-
-        <p id="password-error"></p>
-
-        <div id="password-div">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="optional" class="invalid">
-        </div>
-
-        <div id="clicks-div">
-            <label for="max-clicks">Max Clicks</label>
-            <input type="number" id="max-clicks" name="max-clicks" placeholder="optional" min="1">
-        </div>
-        <div id="sub">
-            <button type="submit">Shorten URL</button>
-        </div>
-    </form>
-
-
-    {% if recentURLs %}
-    <hr style="margin:10px 30% 20px 30%; border: 1px solid rgba(255, 255, 255, 0.15);">
-    <div id="recentURLs"> {% for url in recentURLs %} <div class="url-container">
-            <div class="section-1">
-                <div class="left-section">
-                    <span class="short-url">
-                        <a href="/{{ url}}" target="_blank">{{ host_url }}{{ url }}</a>
-                    </span>
-                </div>
-                <div class="right-section">
-                    <div class="qr-code" data-url="{{ host_url }}{{ url }}"></div>
-                </div>
+            <p id="password-error"></p>
+            <div id="password-div">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="optional" class="invalid">
             </div>
-            <div class="section-2">
-                <div class="button-container">
-                    <button class="copy-button" data-url="{{ host_url }}{{ url }}">Copy</button>
-                    <button class="stats-button">Stats</button>
-                </div>
+            <div id="clicks-div">
+                <label for="max-clicks">Max Clicks</label>
+                <input type="number" id="max-clicks" name="max-clicks" placeholder="optional" min="1">
             </div>
-        </div> {% endfor %} </div>
-    {% endif %}
+            <div id="sub">
+                <button type="submit">Shorten URL</button>
+            </div>
+        </form>
+        {% if recentURLs %}
+        <hr style="margin:10px 30% 20px 30%; border: 1px solid rgba(255, 255, 255, 0.15);">
+        <div id="recentURLs"> {% for url in recentURLs %} <div class="url-container">
+                <div class="section-1">
+                    <div class="left-section">
+                        <span class="short-url">
+                            <a href="/{{ url}}" target="_blank">{{ host_url }}{{ url }}</a>
+                        </span>
+                    </div>
+                    <div class="right-section">
+                        <div class="qr-code" data-url="{{ host_url }}{{ url }}"></div>
+                    </div>
+                </div>
+                <div class="section-2">
+                    <div class="button-container">
+                        <button class="copy-button" data-url="{{ host_url }}{{ url }}">Copy</button>
+                        <button class="stats-button">Stats</button>
+                    </div>
+                </div>
+            </div> {% endfor %} </div>
+        {% endif %}
+    </div>
+
+    <div class="metrics">
+        <div class="links-shortened">
+            <h2 id="total-urls"></h2>
+            <h4>LINKS SHORTENED</h4>
+        </div>
+        <div class="clicks-served">
+            <h2 id="total-clicks"></h2>
+            <h4>CLICKS REDIRECTED</h4>
+        </div>
+    </div>
 
     <div id="producthunt">
         <a href="https://www.producthunt.com/posts/spoo-me-url-shortener?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-spoo&#0045;me&#0045;url&#0045;shortener"
@@ -228,7 +229,7 @@
 
     <script src="{{ url_for('static', filename='js/index-qrcode.js') }}"></script>
     <script src="{{ url_for('static', filename='js/index-validate.js') }}?v=1" defer=""></script>
-    <script src="{{ url_for('static', filename='js/index-script.js') }}?v=1" defer=""></script>
+    <script src="{{ url_for('static', filename='js/index-script.js') }}?v=2" defer=""></script>
     <script src="{{ url_for('static', filename='js/contacts-popup.js') }}?v=1" defer=""></script>
     <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
     <script src="{{ url_for('static', filename='js/self-promo.js') }}" defer=""></script>

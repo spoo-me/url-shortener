@@ -346,6 +346,35 @@ a:hover {
     margin-left: auto;
 }
 
+.form-section {
+    width: auto;
+    min-height: 90dvh;
+}
+
+.metrics {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+    backdrop-filter: blur(10px) saturate(1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 30px 0 35px 0;
+}
+
+.metrics h2 {
+    font-size: 40px;
+    margin: 0;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.metrics h4 {
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+}
+
 #producthunt {
     position: fixed;
     z-index: 888888;
@@ -409,6 +438,18 @@ a:hover {
     .copy-button,
     .stats-button {
         margin: 5px;
+    }
+
+    .metrics {
+        padding: 20px 0 25px 0;
+    }
+
+    .metrics h2 {
+        font-size: 30px;
+    }
+
+    .metrics h4 {
+        font-size: 15px;
     }
 
     #producthunt {

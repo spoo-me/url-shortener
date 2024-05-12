@@ -1,6 +1,7 @@
 from flask import Blueprint
 from utils import *
 from .limiter import limiter
+from .cache import cache
 
 from user_agents import parse
 import tldextract
@@ -479,3 +480,23 @@ def check_password(short_code):
         ),
         400,
     )
+
+METRIC_PIPELINE = [
+    {
+        "$group": {
+            "_id": None,
+            "total-shortlinks": {"$sum": 1},
+            "total-clicks": {"$sum": "$total-clicks"}
+        }
+    }
+]
+
+@url_shortener.route("/metric")
+@limiter.exempt
+@cache.cached(timeout=60)
+def metric():
+    result = collection.aggregate(METRIC_PIPELINE).next()
+    del result["_id"]
+    result["total-clicks"] = humanize_number(result["total-clicks"])
+    result["total-shortlinks"] = humanize_number(result["total-shortlinks"])
+    return jsonify(result)
