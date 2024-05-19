@@ -14,7 +14,7 @@ pandas
 openpyxl
 dicttoxml
 validators
-gunicorn==20.0.4
+gunicorn==22.0.0
 crawlerdetect
 pycountry
 flask-caching
