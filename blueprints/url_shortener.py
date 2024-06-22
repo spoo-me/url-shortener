@@ -293,11 +293,23 @@ def result(short_code):
 @limiter.exempt
 def redirect_url(short_code):
 
+    projection = {
+        "_id": 1,
+        "url": 1,
+        "password": 1,
+        "max-clicks": 1,
+        "expiration-time": 1,
+        "total-clicks": 1,
+        "ips": 1,
+        "referrer": 1,
+    }
+
     short_code = unquote(short_code)
     if validate_emoji_alias(short_code):
-        url_data = load_emoji_by_alias(short_code)
+        is_emoji = True
+        url_data = db["emojis"].find_one({"_id": short_code}, projection)
     else:
-        url_data = load_url_by_id(short_code)
+        url_data = db["urls"].find_one({"_id": short_code}, projection)
 
     if not url_data:
         return (
@@ -357,91 +369,71 @@ def redirect_url(short_code):
     referrer = request.headers.get("Referer")
     country = get_country(user_ip)
 
+    updates = {"$inc": {}, "$set": {}, "$addToSet": {}}
+
     if "referrer" not in url_data:
         url_data["referrer"] = {}
     if referrer:
         referrer_raw = tldextract.extract(referrer)
         referrer = f"{referrer_raw.domain}.{referrer_raw.suffix}"
-        url_data["referrer"][referrer] = url_data["referrer"].get(
-            referrer, {"ips": [], "counts": 0}
-        )
-        if not user_ip in url_data["referrer"][referrer]["ips"]:
-            url_data["referrer"][referrer]["ips"].append(user_ip)
-        url_data["referrer"][referrer]["counts"] += 1
 
-    if "country" not in url_data:
-        url_data["country"] = {}
-    url_data["country"][country] = url_data["country"].get(
-        country, {"ips": [], "counts": 0}
-    )
+        referrer_data = url_data["referrer"].setdefault(referrer, {"ips": [], "counts": 0})
+        if user_ip not in referrer_data["ips"]:
+            referrer_data["ips"].append(user_ip)
+        referrer_data["counts"] += 1
 
-    if not user_ip in url_data["country"][country]["ips"]:
-        url_data["country"][country]["ips"].append(user_ip)
-    url_data["country"][country]["counts"] += 1
+        updates["$set"]["referrer"] = url_data["referrer"]
+
+        # updates["$inc"][f"referrer.{referrer}.counts"] = 1
+        # updates["$addToSet"][f"referrer.{referrer}.ips"] = user_ip
+
+    updates["$inc"][f"country.{country}.counts"] = 1
+    updates["$addToSet"][f"country.{country}.ips"] = user_ip
 
     if "ips" not in url_data:
         url_data["ips"] = {}
 
-    if "browser" not in url_data:
-        url_data["browser"] = {}
+    updates["$inc"][f"browser.{browser}.counts"] = 1
+    updates["$addToSet"][f"browser.{browser}.ips"] = user_ip
 
-    url_data["browser"][browser] = url_data["browser"].get(
-        browser, {"ips": [], "counts": 0}
-    )
-    if not user_ip in url_data["browser"][browser]["ips"]:
-        url_data["browser"][browser]["ips"].append(user_ip)
-    url_data["browser"][browser]["counts"] += 1
-
-    if "os_name" not in url_data:
-        url_data["os_name"] = {}
-
-    url_data["os_name"][os_name] = url_data["os_name"].get(
-        os_name, {"ips": [], "counts": 0}
-    )
-    if not user_ip in url_data["os_name"][os_name]["ips"]:
-        url_data["os_name"][os_name]["ips"].append(user_ip)
-    url_data["os_name"][os_name]["counts"] += 1
+    updates["$inc"][f"os_name.{os_name}.counts"] = 1
+    updates["$addToSet"][f"os_name.{os_name}.ips"] = user_ip
 
     for bot in BOT_USER_AGENTS:
         bot_re = re.compile(bot, re.IGNORECASE)
         if bot_re.search(user_agent):
-            url_data.setdefault("bots", {})[bot] = url_data.get("bots", {}).get(bot, 0) + 1
+            updates["$inc"][f"bots.{bot}"] = 1
             break
     else:
         if crawler_detect.isCrawler(user_agent):
-            url_data.setdefault("bots", {})[crawler_detect.getMatches()] = url_data.get("bots", {}).get(
-                crawler_detect.getMatches(), 0
-            ) + 1
+            updates["$inc"][f"bots.{crawler_detect.getMatches()}"] = 1
 
     # increment the counter for the short code
     today = str(datetime.today()).split()[0]
-    if today in url_data["counter"]:
-        url_data["counter"][today] += 1
-    else:
-        url_data["counter"][today] = 1
+    updates["$inc"][f"counter.{today}"] = 1
 
-    if not user_ip in url_data["ips"]:
-        if not "unique_counter" in url_data:
-            url_data["unique_counter"] = {}
-        if today in url_data["unique_counter"]:
-            url_data["unique_counter"][today] += 1
-        else:
-            url_data["unique_counter"][today] = 1
+    if "ips" in url_data:
+        if not user_ip in url_data["ips"]:
+            updates["$inc"][f"unique_counter.{today}"] = 1
+    else:
+        updates["$inc"][f"unique_counter.{today}"] = 1
 
     url_data["ips"][user_ip] = url_data["ips"].get(user_ip, 0) + 1
+    updates["$set"]["ips"] = url_data["ips"]
 
-    url_data["total-clicks"] += 1
-    url_data["last-click"] = str(
+    updates["$inc"]["total-clicks"] = 1
+
+    updates["$set"]["last-click"] = str(
         datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     )
-    url_data["last-click-browser"] = browser
-    url_data["last-click-os"] = os_name
-    url_data["last-click-country"] = country
+    updates["$set"]["last-click-browser"] = browser
+    updates["$set"]["last-click-os"] = os_name
+    updates["$set"]["last-click-country"] = country
 
-    if validate_emoji_alias(short_code):
-        update_emoji_by_alias(short_code, url_data)
+    if is_emoji:
+        db["emojis"].update_one({"_id": short_code}, updates)
     else:
-        update_url_by_id(short_code, url_data)
+        db["urls"].update_one({"_id": short_code}, updates)
 
     return redirect(url)
 
@@ -450,11 +442,16 @@ def redirect_url(short_code):
 @limiter.exempt
 def check_password(short_code):
 
+    projection = {
+        "_id": 1,
+        "password": 1,
+    }
+
     short_code = unquote(short_code)
     if validate_emoji_alias(short_code):
-        url_data = load_emoji_by_alias(short_code)
+        url_data = db["emojis"].find_one({"_id": short_code}, projection)
     else:
-        url_data = load_url_by_id(short_code)
+        url_data = db["urls"].find_one({"_id": short_code}, projection)
 
     if url_data:
         # check if the URL is password protected
