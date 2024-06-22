@@ -305,6 +305,9 @@ def redirect_url(short_code):
     }
 
     short_code = unquote(short_code)
+
+    is_emoji = False
+    
     if validate_emoji_alias(short_code):
         is_emoji = True
         url_data = db["emojis"].find_one({"_id": short_code}, projection)
