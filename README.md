@@ -71,6 +71,17 @@ Spoo.me offers a free, open-source API for URL shortening and statistics. Check 
 
 # 🚀 Getting Started
 
+
+To self-host spoo.me on your server, follow the this **detailed** guide:
+
+|[Self-Hosting Guide 🏠](https://spoo.me/docs/self-hosting)|
+|---|
+
+
+<details>
+
+<summary>Expand this for a Quick Start</summary>
+
 ## Method 1 - Docker (Recommended)
 
 ### 📋 Prerequisites
@@ -167,6 +178,8 @@ python main.py
 ### 🌐 Access the server
 
 Open your browser and go to `http://localhost:8000` to access the **spoo.me** URL shortener.
+
+</details>
 
 # 🤝 Contributing
 
