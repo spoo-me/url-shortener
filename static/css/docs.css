@@ -168,6 +168,10 @@ a:hover {
     color: rgb(236 232 115) !important;
 }
 
+.warning-box b {
+    color: white !important;
+}
+
 
 .next-dialog-parent {
     display: flex;
