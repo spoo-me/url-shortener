@@ -5,35 +5,43 @@
 {% block content %}
 
 <span><img class="emoji"
-    src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/House/Flat/house_flat.svg"></span>
+        src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/House/Flat/house_flat.svg"></span>
 
 <h1>How to self-host?</h1>
 
 <div class="info-box" style="margin: 30px 0;">
     <div>
-        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256"><path fill="currentcolor" d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24m0 192a88 88 0 1 1 88-88a88.1 88.1 0 0 1-88 88m16-40a8 8 0 0 1-8 8a16 16 0 0 1-16-16v-40a8 8 0 0 1 0-16a16 16 0 0 1 16 16v40a8 8 0 0 1 8 8m-32-92a12 12 0 1 1 12 12a12 12 0 0 1-12-12"></path></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256">
+            <path fill="currentcolor"
+                d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24m0 192a88 88 0 1 1 88-88a88.1 88.1 0 0 1-88 88m16-40a8 8 0 0 1-8 8a16 16 0 0 1-16-16v-40a8 8 0 0 1 0-16a16 16 0 0 1 16 16v40a8 8 0 0 1 8 8m-32-92a12 12 0 1 1 12 12a12 12 0 0 1-12-12">
+            </path>
+        </svg>
     </div>
     <div>
-        <p>Our support is tailored to individual needs. Should you have any inquiries, we invite you to pose them on our 
+        <p>Our support is tailored to individual needs. Should you have any inquiries, we invite you to pose them on our
             <a href="https://spoo.me/discord">discord server</a>.
         </p>
     </div>
 </div>
 
-<p>We offer various ways in which you can self-host spoo.me based on your technical knowledge and ease. Each of the methods has their own benefits and you must choose them according to your needs. <b>If you dont know what to choose, go with method 1.</b></p>
+<p>We offer various ways in which you can self-host spoo.me based on your technical knowledge and ease. Each of the
+    methods has their own benefits and you must choose them according to your needs. <b>If you dont know what to choose,
+        go with method 1.</b></p>
 
 <br>
 
 <h3>Setting Up MongoDB Server</h3>
 
-<p>Before you start deploying spoo.me, you need to set up a MongoDB server. You can either use a cloud-based MongoDB server or host it on your server. <b>It is recommended to use a cloud-based MongoDB server.</b></p>
+<p>Before you start deploying spoo.me, you need to set up a MongoDB server. You can either use a cloud-based MongoDB
+    server or host it on your server. <b>It is recommended to use a cloud-based MongoDB server.</b></p>
 <p><a href="/docs/self-hosting/setting-up-mongoDB">Click Here for Full Guide</a>.</p>
 
 <br>
 
 <h3>Creating Webhook</h3>
 
-<p>Before you deploy spoo.me, you need to create a webhook for the contact form and the URL report form. <b>It is recommended to use Discord webhooks.</b></p>
+<p>Before you deploy spoo.me, you need to create a webhook for the contact form and the URL report form. <b>It is
+        recommended to use Discord webhooks.</b></p>
 <p><a href="/docs/self-hosting/creating-webhooks">Click Here for Full Guide</a>.</p>
 
 <br>
@@ -43,11 +51,14 @@
 <br>
 
 <p>
-    With this method, you can deploy spoo.me directly on your server. This method is the easiest and fastest way to deploy spoo.me. You can deploy spoo.me on your server with just one click. <b>It is recommended for beginners.</b>
+    With this method, you can deploy spoo.me directly on your server. This method is the easiest and fastest way to
+    deploy spoo.me. You can deploy spoo.me on your server with just one click. <b>It is recommended for beginners.</b>
 </p>
 
 <ol>
-    <li><p>Deploying</p></li>
+    <li>
+        <p><a href="/docs/self-hosting/method-1/direct-deployment">Deploying</a></p>
+    </li>
 </ol>
 
 <br>
@@ -57,12 +68,14 @@
 <br>
 
 <p>
-    With this method, you can deploy spoo.me using Docker. This method is recommended for users who have experience with Docker. <b>It is recommended for advanced users.</b>
+    With this method, you can deploy spoo.me using Docker. This method is recommended for users who have experience with
+    Docker. <b>It is recommended for advanced users.</b>
 </p>
 
 <ol>
-    <li><p>Setting Up Docker Container</p></li>
-    <li><p>Running the Docker Container</p></li>
+    <li>
+        <p><a href="/docs/self-hosting/method-2/setting-up-docker-container">Setting Up Docker Container</a></p>
+    </li>
 </ol>
 
 <br>
@@ -72,7 +85,8 @@
 <br>
 
 <p>
-    With this method, you can deploy spoo.me manually on your server. This method is recommended for users who have experience with python and MongoDB. <b>It is recommended for expert users.</b>
+    With this method, you can deploy spoo.me manually on your server. This method is recommended for users who have
+    experience with python and MongoDB. <b>It is recommended for expert users.</b>
 </p>
 
 <p>
@@ -80,9 +94,15 @@
 </p>
 
 <ol>
-    <li><p>Setting Up Python Environment</p></li>
-    <li><p>Configuring the files</p></li>
-    <li><p>Starting the server</p></li>
+    <li>
+        <p><a href="/docs/self-hosting/method-3/introduction">introduction</a></p>
+    </li>
+    <li>
+        <p><a href="/docs/self-hosting/method-3/setting-up-python-environment">Setting Up Python Environment</a></p>
+    </li>
+    <li>
+        <p><a href="/docs/self-hosting/method-3/starting-the-server">Starting the server</a></p>
+    </li>
 </ol>
 
 <div class="next-dialog-parent">
@@ -92,9 +112,9 @@
             <h6>Setting up MongoDB Server</h6>
         </div>
         <div class="go-button">
-            <a href="/docs/self-hosting/setting-up-mongoDB" class="button"><svg fill="#000000" height="25px" width="25px" version="1.1"
-                    id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                    viewBox="0 0 330 330" xml:space="preserve">
+            <a href="/docs/self-hosting/setting-up-mongoDB" class="button"><svg fill="#000000" height="25px"
+                    width="25px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 330 330" xml:space="preserve">
                     <path fill="currentcolor" id="XMLID_222_" d="M250.606,154.389l-150-149.996c-5.857-5.858-15.355-5.858-21.213,0.001
             c-5.857,5.858-5.857,15.355,0.001,21.213l139.393,139.39L79.393,304.394c-5.857,5.858-5.857,15.355,0.001,21.213
             C82.322,328.536,86.161,330,90,330s7.678-1.464,10.607-4.394l149.999-150.004c2.814-2.813,4.394-6.628,4.394-10.606
