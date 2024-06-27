@@ -376,9 +376,12 @@ def redirect_url(short_code):
 
     if "referrer" not in url_data:
         url_data["referrer"] = {}
+    if "ips" not in url_data:
+        url_data["ips"] = {}
+
     if referrer:
         referrer_raw = tldextract.extract(referrer)
-        referrer = f"{referrer_raw.domain}.{referrer_raw.suffix}"
+        referrer = f"{referrer_raw.domain}.{referrer_raw.suffix}" if referrer_raw.suffix else referrer_raw.domain
 
         referrer_data = url_data["referrer"].setdefault(referrer, {"ips": [], "counts": 0})
         if user_ip not in referrer_data["ips"]:
@@ -392,9 +395,6 @@ def redirect_url(short_code):
 
     updates["$inc"][f"country.{country}.counts"] = 1
     updates["$addToSet"][f"country.{country}.ips"] = user_ip
-
-    if "ips" not in url_data:
-        url_data["ips"] = {}
 
     updates["$inc"][f"browser.{browser}.counts"] = 1
     updates["$addToSet"][f"browser.{browser}.ips"] = user_ip
