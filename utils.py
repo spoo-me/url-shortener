@@ -44,7 +44,12 @@ blocked_urls_collection = db["blocked-urls"]
 emoji_collection = db["emojis"]
 ip_bypasses = db["ip-exceptions"]
 
-BOT_USER_AGENTS = ['GoogleBot', 'Amazonbot', 'Qualys', 'BingBot', 'Synthetic Bot', 'Clickagy', 'Google AdsBot', 'GoogleOther', 'Google Image Proxy', 'AhrefsBot', 'GPTBot', 'YandexBot', 'Google Images', 'New Relic', 'Google API', 'Detectify', 'PetalBot', 'UptimeRobot', 'PinterestBot', 'Moz dotbot', 'SendGrid', 'Applebot', 'Google AdSense', 'DataForSEO Bot', 'Google Read Aloud', 'Pingdom', 'SEMrush', 'CriteoBot', 'Barkrowler', 'Sucuri', 'BLEXBot', 'ContentKing', 'Ahrefs Site Audit', 'Botify', 'Seekport', 'Baidu', 'YahooMailProxy', 'Stripe', 'Site24x7', 'Slackbot', 'Cookiebot', 'Siteimprove Crawl', 'Better Uptime', 'Proximic', 'Brandwatch', 'Grapeshot', 'StatusCake', 'SiteAuditBot', 'HetrixTools', 'Bing Ads', 'Sogou', 'FullStory', 'DuckDuckBot', 'Cốc Cốc', 'Rackspace', 'Trendiction Bot', 'ZoomInfo', 'elmah.io Uptime Monitoring', 'Feedly', 'Yeti by Naver', 'ManageWP', 'Cxense', 'BlogVault', 'Yahoo Ad Monitoring', 'Parse.ly', "Let's Encrypt", 'Freshping', 'Exodus', 'Yahoo Slurp', 'Telegram Bot', 'Internet Archive', 'Coveo Bot', 'SiteLock', 'Ghost Inspector', 'LinkedInBot', 'Splunk', 'Skype', 'Google Videos', 'VaultPress', 'Adyen', 'Marginalia Search', 'Outbrain', 'Uptimia', 'Innologica', 'Oh Dear', 'Google Inspection Tool', 'Seznam', 'Nodeping', 'klaviyo', 'GTmetrix', 'MSNMicrosoft', 'Slack Image Proxy', 'Moz rogerbot', 'Mojeek', 'eMoney Advisor', 'DataForSEO', 'Bing Preview', 'Google Schema Markup Testing Tool', 'Alertsite by Smartbear', 'Blockaid', 'Feeder', 'prerender', 'Mars Finder', 'PayPal', 'HostTracker', 'EasyCron', 'Iframely', 'Feedbin', 'rss2tg_bot', 'InternetArchiveBot', 'Audisto Crawler', 'Awario', 'Metorik', 'Google Feed Fetcher', 'Quantcastbot', 'Reelevant', 'Taboola', 'deadlinkchecker', 'webpagetest', 'upday', 'Cludo', 'IAS crawler', 'Drata Autopilot', 'MonitoRSS', 'ImageBot', 'MediaMonitoringBot', 'Accessible Web Bot', 'ProjectShield Url Check', 'NewsBlur', 'Jagged Pixel UptimeBot', 'marketgoo', 'Medialogia Bot', 'Google Trust Services (DCV Check)', 'Qwant', 'PressEngine Bot', 'RSS API', 'Amazon Contxbot', 'Watchful', 'Bluesky Link Preview Service', 'Alexa Site Audit', 'Jetpack', 'FeedWind Crawler', 'Integromat', 'SkroutzBot', 'Shortwave Image Fetcher', 'Automaton', 'Ozon Web Grabber', 'Sentry', 'MgidBot', 'Nooshub', 'Google Scholar', 'WP Umbrella', 'EvoUptimeBot', 'SecurityHeaders', 'Modular DS', 'Swifteq Link Checker', 'videootv Bot', 'Notabot', 'WebSpiderMount', 'Alexa Archive', 'SalesViewerBot', 'HoneybadgerBot', 'eRepublik.tools', 'Spark Shipping', 'RetroListeCOM', 'Snipcart', 'Missinglettr Bot', 'Readable', 'MainWP']
+with open("bot_user_agents.txt", "r") as file:
+    BOT_USER_AGENTS = file.read()
+    BOT_USER_AGENTS = [
+        i.strip() for i in BOT_USER_AGENTS.split("\n") if i.strip() != ""
+    ]
+
 
 def get_country(ip_address):
     reader = geoip2.database.Reader("misc/GeoLite2-Country.mmdb")
@@ -150,12 +155,14 @@ def validate_blocked_url(url):
 
     return True
 
+
 def humanize_number(num):
     magnitude = 0
     while abs(num) >= 1000:
         magnitude += 1
         num /= 1000.0
-    return '%d%s+' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
+    return "%d%s+" % (num, ["", "K", "M", "G", "T", "P"][magnitude])
+
 
 def verify_hcaptcha(token):
     hcaptcha_verify_url = "https://hcaptcha.com/siteverify"
@@ -228,6 +235,7 @@ def convert_to_gmt(expiration_time):
 
 def convert_country_data(data):
     return [{"id": convert_country_name(k), "value": v} for k, v in data.items()]
+
 
 @functools.lru_cache(maxsize=None)
 def convert_country_name(country_name):
