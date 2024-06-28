@@ -194,21 +194,38 @@ a:hover {
     padding: 10px 20px;
 }
 
-.next-dialog .head {
-    min-width: 300px;
+.next-link, .next-link:hover {
+    all: unset;
+    cursor: pointer;
+}
+
+.next-link:hover, .next-link:hover svg {
+    color: #2DF98D;
+}
+
+.next-link svg {
+    color: rgb(189, 251, 116);
+}
+
+.next-link:hover .next-dialog h6 {
+    color: white;
+}
+
+.next-dialog h5 {
+    font-size: 1rem;
+    margin-bottom: 0;
+}
+
+.next-dialog h6 {
+    opacity: 0.8;
+    font-size: 0.8rem;
 }
 
 .next-dialog .go-button {
     align-self: center;
-    border-left: 1px solid rgb(189, 251, 116);
-    padding: 30px 20px;
+    padding: 20px 15px;
     border-top-right-radius: 10px;
     border-bottom-right-radius: 10px;
-}
-
-.next-dialog .go-button:hover {
-    margin: 0;
-    background: rgba(189, 251, 116, 0.2);
 }
 
 @media screen and (max-width: 768px) {

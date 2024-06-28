@@ -5,7 +5,7 @@
 {% block content %}
 
 <span><img class="emoji"
-    src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Rocket/Flat/rocket_flat.svg"></span>
+        src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Rocket/Flat/rocket_flat.svg"></span>
 
 <h1>Direct Deployment</h1>
 
@@ -15,44 +15,88 @@
 
 <br>
 
-<p>Vercel has a very generous free plan, so you will be able to host this app for free unless you get millions of users.</p>
+<p>Vercel has a very generous free plan, so you will be able to host this app for free unless you get millions of users.
+</p>
 
-<a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fspoo-me%2Furl-shortener&env=MONGODB_URI,CONTACT_WEBHOOK,URL_REPORT_WEBHOOK"><img src="https://vercel.com/button" alt="Deploy with Vercel"/></a>
+<a
+    href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fspoo-me%2Furl-shortener&env=MONGODB_URI,CONTACT_WEBHOOK,URL_REPORT_WEBHOOK"><img
+        src="https://vercel.com/button" alt="Deploy with Vercel" /></a>
 
 <ol>
     <br>
-    <li><p>Create a <a href="https://github.com/signup">Github account</a> if you don't have one already.</p></li>
-    <li><p>Create a free Vercel account at <a href="https://vercel.com/signup">https://vercel.com/signup</a> and connect your github account with it.</p></li>
-    <li><p>Click on the <code>Deploy</code> button above.</p>
+    <li>
+        <p>Create a <a href="https://github.com/signup">Github account</a> if you don't have one already.</p>
+    </li>
+    <li>
+        <p>Create a free Vercel account at <a href="https://vercel.com/signup">https://vercel.com/signup</a> and connect
+            your github account with it.</p>
+    </li>
+    <li>
+        <p>Click on the <code>Deploy</code> button above.</p>
         <ol>
-            <li><p>Vercel will ask you to <code>Create Git Repository</code>, enter any suitable name click on <code>Create</code>.</p></li>
-            <li><p><b>(Optional)</b> You can deselect the <code>Create private Git Repository</code> option if you want your fork to be visible to others.</p></li>
-            <li><p>Now under the <code>Configure Project</code> section enter the following environment variables:</p>
+            <li>
+                <p>Vercel will ask you to <code>Create Git Repository</code>, enter any suitable name click on
+                    <code>Create</code>.</p>
+            </li>
+            <li>
+                <p><b>(Optional)</b> You can deselect the <code>Create private Git Repository</code> option if you want
+                    your fork to be visible to others.</p>
+            </li>
+            <li>
+                <p>Now under the <code>Configure Project</code> section enter the following environment variables:</p>
                 <ol>
-                    <li><p><code>MONGODB_URI</code> - The MongoDB connection string created previously.</p></li>
-                    <li><p><code>CONTACT_WEBHOOK</code> - The Discord webhook URL for the contact form created previously.</p></li>
-                    <li><p><code>URL_REPORT_WEBHOOK</code> - The Discord webhook URL for the URL report form created previously.</p></li>
+                    <li>
+                        <p><code>MONGODB_URI</code> - The MongoDB connection string created previously.</p>
+                    </li>
+                    <li>
+                        <p><code>CONTACT_WEBHOOK</code> - The Discord webhook URL for the contact form created
+                            previously.</p>
+                    </li>
+                    <li>
+                        <p><code>URL_REPORT_WEBHOOK</code> - The Discord webhook URL for the URL report form created
+                            previously.</p>
+                    </li>
                 </ol>
             </li>
-            <li><p>Click on <code>Deploy</code> and wait for the deployment to finish.</p></li>
-            <li><p>Once the deployment is finished, you will get a URL where your app is deployed, it should look something like <code>https://&lt;random-words&gt;.vercel.app</code>.</p></li>
-            <li><p><b>Congratulations 🎉 your app have successfully been deployed</b>. You can also <a href="https://vercel.com/docs/projects/domains/add-a-domain"><b>connect a custom domain</b></a> for free on vercel.</p></li>
+            <li>
+                <p>Click on <code>Deploy</code> and wait for the deployment to finish.</p>
+            </li>
+            <li>
+                <p>Once the deployment is finished, you will get a URL where your app is deployed, it should look
+                    something like <code>https://&lt;random-words&gt;.vercel.app</code>.</p>
+            </li>
+            <li>
+                <p><b>Congratulations 🎉 your app have successfully been deployed</b>. You can also <a
+                        href="https://vercel.com/docs/projects/domains/add-a-domain"><b>connect a custom domain</b></a>
+                    for free on vercel.</p>
+            </li>
         </ol>
     </li>
 </ol>
 
 <div class="warning-box" style="margin: 30px 0;">
     <div>
-        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256"><path fill="currentColor" d="M236.8 188.09L149.35 36.22a24.76 24.76 0 0 0-42.7 0L19.2 188.09a23.51 23.51 0 0 0 0 23.72A24.35 24.35 0 0 0 40.55 224h174.9a24.35 24.35 0 0 0 21.33-12.19a23.51 23.51 0 0 0 .02-23.72m-13.87 15.71a8.5 8.5 0 0 1-7.48 4.2H40.55a8.5 8.5 0 0 1-7.48-4.2a7.59 7.59 0 0 1 0-7.72l87.45-151.87a8.75 8.75 0 0 1 15 0l87.45 151.87a7.59 7.59 0 0 1-.04 7.72M120 144v-40a8 8 0 0 1 16 0v40a8 8 0 0 1-16 0m20 36a12 12 0 1 1-12-12a12 12 0 0 1 12 12"></path></svg>    </div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256">
+            <path fill="currentColor"
+                d="M236.8 188.09L149.35 36.22a24.76 24.76 0 0 0-42.7 0L19.2 188.09a23.51 23.51 0 0 0 0 23.72A24.35 24.35 0 0 0 40.55 224h174.9a24.35 24.35 0 0 0 21.33-12.19a23.51 23.51 0 0 0 .02-23.72m-13.87 15.71a8.5 8.5 0 0 1-7.48 4.2H40.55a8.5 8.5 0 0 1-7.48-4.2a7.59 7.59 0 0 1 0-7.72l87.45-151.87a8.75 8.75 0 0 1 15 0l87.45 151.87a7.59 7.59 0 0 1-.04 7.72M120 144v-40a8 8 0 0 1 16 0v40a8 8 0 0 1-16 0m20 36a12 12 0 1 1-12-12a12 12 0 0 1 12 12">
+            </path>
+        </svg>
+    </div>
     <div>
-        <p>The <code>MONGODB_URI</code>, <code>CONTACT_WEBHOOK</code>, and <code>URL_REPORT_WEBHOOK</code> environment variables are sensitive and <b>should not be shared with anyone</b>. The values of these environment variables were generated in the <a href="/docs/self-hosting/setting-up-mongoDB">previous steps</a>.
+        <p>The <code>MONGODB_URI</code>, <code>CONTACT_WEBHOOK</code>, and <code>URL_REPORT_WEBHOOK</code> environment
+            variables are sensitive and <b>should not be shared with anyone</b>. The values of these environment
+            variables were generated in the <a href="/docs/self-hosting/setting-up-mongoDB">previous steps</a>.
         </p>
     </div>
 </div>
 
 <div class="info-box" style="margin: 30px 0;">
     <div>
-        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256"><path fill="currentcolor" d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24m0 192a88 88 0 1 1 88-88a88.1 88.1 0 0 1-88 88m16-40a8 8 0 0 1-8 8a16 16 0 0 1-16-16v-40a8 8 0 0 1 0-16a16 16 0 0 1 16 16v40a8 8 0 0 1 8 8m-32-92a12 12 0 1 1 12 12a12 12 0 0 1-12-12"></path></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256">
+            <path fill="currentcolor"
+                d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24m0 192a88 88 0 1 1 88-88a88.1 88.1 0 0 1-88 88m16-40a8 8 0 0 1-8 8a16 16 0 0 1-16-16v-40a8 8 0 0 1 0-16a16 16 0 0 1 16 16v40a8 8 0 0 1 8 8m-32-92a12 12 0 1 1 12 12a12 12 0 0 1-12-12">
+            </path>
+        </svg>
     </div>
     <div>
         <p>In case you face any issues during the deployment process, feel free to ask for help on our
@@ -65,7 +109,8 @@
 
 <br>
 
-<p>Railway offers you $5 of credit once you verify your account, which is enough to run the app for around 5-7 months.</p>
+<p>Railway offers you $5 of credit once you verify your account, which is enough to run the app for around 5-7 months.
+</p>
 
 <a href="https://railway.app/template/_6W-dI?referralCode=C97i2L">
     <img src="https://railway.app/button.svg" alt="Deploy on Railway">
@@ -73,25 +118,58 @@
 
 <ol>
     <br>
-    <li><p>Login to your <a href="https://railway.app">Railway</a> account if you have one, otherwise create one <a href="https://railway.app/login">here</a>.</p>
+    <li>
+        <p>Login to your <a href="https://railway.app">Railway</a> account if you have one, otherwise create one <a
+                href="https://railway.app/login">here</a>.</p>
         <ol>
-            <li><p>If you are signing up, then verify your account by clicking the link in the email Railway sends you.</p></li>
-            <li><p>If you created your account with an email, then to verify your account further, go to your account, then plans and verify your account with a GitHub account.</p></li>
+            <li>
+                <p>If you are signing up, then verify your account by clicking the link in the email Railway sends you.
+                </p>
+            </li>
+            <li>
+                <p>If you created your account with an email, then to verify your account further, go to your account,
+                    then plans and verify your account with a GitHub account.</p>
+            </li>
         </ol>
     </li>
-    <li><p>Click on the <code>Deploy on Railway</code> button above.</p></li>
-    <li><p>If a <code>Configure</code> button is displayed, click on it and allow Railway to access your GitHub account.</p></li>
-    <li><p>Now Render will ask you to fill <code>Environment Variables</code>. Enter the following environment variables:</p>
+    <li>
+        <p>Click on the <code>Deploy on Railway</code> button above.</p>
+    </li>
+    <li>
+        <p>If a <code>Configure</code> button is displayed, click on it and allow Railway to access your GitHub account.
+        </p>
+    </li>
+    <li>
+        <p>Now Render will ask you to fill <code>Environment Variables</code>. Enter the following environment
+            variables:</p>
         <ol>
-            <li><p><code>MONGODB_URI</code> - The MongoDB connection string created previously.</p></li>
-            <li><p><code>CONTACT_WEBHOOK</code> - The Discord webhook URL for the contact form created previously.</p></li>
-            <li><p><code>URL_REPORT_WEBHOOK</code> - The Discord webhook URL for the URL report form created previously.</p></li>
+            <li>
+                <p><code>MONGODB_URI</code> - The MongoDB connection string created previously.</p>
+            </li>
+            <li>
+                <p><code>CONTACT_WEBHOOK</code> - The Discord webhook URL for the contact form created previously.</p>
+            </li>
+            <li>
+                <p><code>URL_REPORT_WEBHOOK</code> - The Discord webhook URL for the URL report form created previously.
+                </p>
+            </li>
         </ol>
     </li>
-    <li><p>The <code>Deploy</code> button at the bottom of the template should be active, click on it.</p></li>
-    <li><p>Once the deployment is finished, copy the URL from the <code>Deployments</code> tab, it should look something like <code>https://&lt;random-words&gt;.up.railway.app</code>.</p></li>
-    <li><p>Upon visiting the URL given by Railway, you may encounter a <code>502 Error</code>. This issue typically resolves itself within a few minutes.</p></li>
-    <li><p><b>Congratulations 🎉 your app have successfully been deployed</b>. You can also <b>connect a custom domain</b> for free in the <code>Settings</code> tab.</p></li>
+    <li>
+        <p>The <code>Deploy</code> button at the bottom of the template should be active, click on it.</p>
+    </li>
+    <li>
+        <p>Once the deployment is finished, copy the URL from the <code>Deployments</code> tab, it should look something
+            like <code>https://&lt;random-words&gt;.up.railway.app</code>.</p>
+    </li>
+    <li>
+        <p>Upon visiting the URL given by Railway, you may encounter a <code>502 Error</code>. This issue typically
+            resolves itself within a few minutes.</p>
+    </li>
+    <li>
+        <p><b>Congratulations 🎉 your app have successfully been deployed</b>. You can also <b>connect a custom
+                domain</b> for free in the <code>Settings</code> tab.</p>
+    </li>
 </ol>
 
 <br>
@@ -100,7 +178,8 @@
 
 <br>
 
-<p>Just like vercel, Render also offers a generous free plan, so you will be able to host this app for free unless you get millions of users.</p>
+<p>Just like vercel, Render also offers a generous free plan, so you will be able to host this app for free unless you
+    get millions of users.</p>
 
 <a href="https://render.com/deploy?repo=https://github.com/spoo-me/url-shortener">
     <img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render">
@@ -108,19 +187,41 @@
 
 <ol>
     <br>
-    <li><p>Create a <a href="https://render.com/signup">Render account</a> if you don't have one already.</p></li>
-    <li><p>Click on the <code>Deploy to Render</code> button above.</p></li>
-    <li><p>Render will ask you to enter a <code>Blueprint Name</code>, enter any suitable name.</p></li>
-    <li><p>Now under the <code>Environment Variables</code> section enter the following environment variables:</p>
+    <li>
+        <p>Create a <a href="https://render.com/signup">Render account</a> if you don't have one already.</p>
+    </li>
+    <li>
+        <p>Click on the <code>Deploy to Render</code> button above.</p>
+    </li>
+    <li>
+        <p>Render will ask you to enter a <code>Blueprint Name</code>, enter any suitable name.</p>
+    </li>
+    <li>
+        <p>Now under the <code>Environment Variables</code> section enter the following environment variables:</p>
         <ol>
-            <li><p><code>MONGODB_URI</code> - The MongoDB connection string created previously.</p></li>
-            <li><p><code>CONTACT_WEBHOOK</code> - The Discord webhook URL for the contact form created previously.</p></li>
-            <li><p><code>URL_REPORT_WEBHOOK</code> - The Discord webhook URL for the URL report form created previously.</p></li>
+            <li>
+                <p><code>MONGODB_URI</code> - The MongoDB connection string created previously.</p>
+            </li>
+            <li>
+                <p><code>CONTACT_WEBHOOK</code> - The Discord webhook URL for the contact form created previously.</p>
+            </li>
+            <li>
+                <p><code>URL_REPORT_WEBHOOK</code> - The Discord webhook URL for the URL report form created previously.
+                </p>
+            </li>
         </ol>
     </li>
-    <li><p>Click on <code>Apply</code> and wait for the deployment to finish.</p></li>
-    <li><p>Once the deployment is finished, you will get a URL where your app is deployed, it should look something like <code>https://&lt;random-words&gt;.onrender.com</code>.</p></li>
-    <li><p><b>Congratulations 🎉 your app have successfully been deployed</b>. You can also connect a custom domain for free on Render under the <code>Settings/Custom Domains</code> section of your deployment.</p></li>
+    <li>
+        <p>Click on <code>Apply</code> and wait for the deployment to finish.</p>
+    </li>
+    <li>
+        <p>Once the deployment is finished, you will get a URL where your app is deployed, it should look something like
+            <code>https://&lt;random-words&gt;.onrender.com</code>.</p>
+    </li>
+    <li>
+        <p><b>Congratulations 🎉 your app have successfully been deployed</b>. You can also connect a custom domain for
+            free on Render under the <code>Settings/Custom Domains</code> section of your deployment.</p>
+    </li>
 </ol>
 
 <br>
@@ -129,26 +230,49 @@
 
 <br>
 
-<p>Just like Vercel Koyeb is also a good hosting platform which offers one free deployment. Although you might need to upgrade to a paid plan to connect a custom domain.</p>
+<p>Just like Vercel Koyeb is also a good hosting platform which offers one free deployment. Although you might need to
+    upgrade to a paid plan to connect a custom domain.</p>
 
-<a href="https://app.koyeb.com/deploy?type=git&builder=buildpack&repository=github.com/spoo-me/url-shortener&branch=main&name=url-shortener&run_command=gunicorn%20main:app&env[MONGODB_URI]=your-mongo-uri&env[CONTACT_WEBHOOK]=your-webhook-uri&env[URL_REPORT_WEBHOOK]=you-webhook-uri&ports=8000;http;/">
+<a
+    href="https://app.koyeb.com/deploy?type=git&builder=buildpack&repository=github.com/spoo-me/url-shortener&branch=main&name=url-shortener&run_command=gunicorn%20main:app&env[MONGODB_URI]=your-mongo-uri&env[CONTACT_WEBHOOK]=your-webhook-uri&env[URL_REPORT_WEBHOOK]=you-webhook-uri&ports=8000;http;/">
     <img src="https://www.koyeb.com/static/images/deploy/button.svg" alt="Deploy to Koyeb"></a>
 
 <ol>
     <br>
-    <li><p>Create a <a href="https://app.koyeb.com/signup">Koyeb account</a> if you don't have one already.</p></li>
-    <li><p>Click on the <code>Deploy to Koyeb</code> button above.</p></li>
-    <li><p>Scroll to the <code>Environment Variables</code> section and fill it out carefully as mentioned in the previous approaches.</li>
-    <li><p>Click on <code>Deploy</code> and wait for the deployment to finish.</p></li>
-    <li><p>Once the deployment is finished, you will get a URL where your app is deployed, it should look something like <code>https://&lt;random-words&gt;.koyeb.app</code>.</p></li>
-    <li><p><b>Congratulations 🎉 your app have successfully been deployed</b>. You can also connect a custom domain for your koyeb deployment <a href="https://app.koyeb.com/domains">here</a>.</p></li>
+    <li>
+        <p>Create a <a href="https://app.koyeb.com/signup">Koyeb account</a> if you don't have one already.</p>
+    </li>
+    <li>
+        <p>Click on the <code>Deploy to Koyeb</code> button above.</p>
+    </li>
+    <li>
+        <p>Scroll to the <code>Environment Variables</code> section and fill it out carefully as mentioned in the
+            previous approaches.
+    </li>
+    <li>
+        <p>Click on <code>Deploy</code> and wait for the deployment to finish.</p>
+    </li>
+    <li>
+        <p>Once the deployment is finished, you will get a URL where your app is deployed, it should look something like
+            <code>https://&lt;random-words&gt;.koyeb.app</code>.</p>
+    </li>
+    <li>
+        <p><b>Congratulations 🎉 your app have successfully been deployed</b>. You can also connect a custom domain for
+            your koyeb deployment <a href="https://app.koyeb.com/domains">here</a>.</p>
+    </li>
 </ol>
 
 <div class="warning-box" style="margin: 30px 0;">
     <div>
-        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256"><path fill="currentColor" d="M236.8 188.09L149.35 36.22a24.76 24.76 0 0 0-42.7 0L19.2 188.09a23.51 23.51 0 0 0 0 23.72A24.35 24.35 0 0 0 40.55 224h174.9a24.35 24.35 0 0 0 21.33-12.19a23.51 23.51 0 0 0 .02-23.72m-13.87 15.71a8.5 8.5 0 0 1-7.48 4.2H40.55a8.5 8.5 0 0 1-7.48-4.2a7.59 7.59 0 0 1 0-7.72l87.45-151.87a8.75 8.75 0 0 1 15 0l87.45 151.87a7.59 7.59 0 0 1-.04 7.72M120 144v-40a8 8 0 0 1 16 0v40a8 8 0 0 1-16 0m20 36a12 12 0 1 1-12-12a12 12 0 0 1 12 12"></path></svg></div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256">
+            <path fill="currentColor"
+                d="M236.8 188.09L149.35 36.22a24.76 24.76 0 0 0-42.7 0L19.2 188.09a23.51 23.51 0 0 0 0 23.72A24.35 24.35 0 0 0 40.55 224h174.9a24.35 24.35 0 0 0 21.33-12.19a23.51 23.51 0 0 0 .02-23.72m-13.87 15.71a8.5 8.5 0 0 1-7.48 4.2H40.55a8.5 8.5 0 0 1-7.48-4.2a7.59 7.59 0 0 1 0-7.72l87.45-151.87a8.75 8.75 0 0 1 15 0l87.45 151.87a7.59 7.59 0 0 1-.04 7.72M120 144v-40a8 8 0 0 1 16 0v40a8 8 0 0 1-16 0m20 36a12 12 0 1 1-12-12a12 12 0 0 1 12 12">
+            </path>
+        </svg>
+    </div>
     <div>
-        <p>Koyeb is a great service but it's <b>free plan does not allow you to add a custom domain</b>, so it is recommended that you use any of the other services mentioned above.</p>
+        <p>Koyeb is a great service but it's <b>free plan does not allow you to add a custom domain</b>, so it is
+            recommended that you use any of the other services mentioned above.</p>
         </p>
     </div>
 </div>
@@ -160,28 +284,34 @@
 <br>
 
 <ol>
-    <li><p>It is not possible to edit the application in any possible way.</p></li>
-    <li><p>It is not possible to add custom SEO to your deployment.</p></li>
-    <li><p>It may not provide full control over the server and its configuration.</p></li>
+    <li>
+        <p>It is not possible to edit the application in any possible way.</p>
+    </li>
+    <li>
+        <p>It is not possible to add custom SEO to your deployment.</p>
+    </li>
+    <li>
+        <p>It may not provide full control over the server and its configuration.</p>
+    </li>
 </ol>
 
 <div class="next-dialog-parent">
-    <div class="next-dialog">
-        <div class="head">
-            <h5>Read Next</h5>
-            <h6>Self-Hosting: Method 2 - Setting Up Docker Container</h6>
+    <a href="/docs/self-hosting/method-2/setting-up-docker-container" class="next-link">
+        <div class="next-dialog">
+            <div class="head">
+                <h6>Method 2</h6>
+                <h5>Setting Up Docker Container</h5>
+            </div>
+            <div class="go-button">
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"
+                    role="img" class="icon" data-v-462a437b="" width="25px" height="25px" viewBox="0 0 24 24"
+                    data-v-119a0c46="">
+                    <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                        stroke-width="2" d="m13 7l5 5m0 0l-5 5m5-5H6"></path>
+                </svg>
+            </div>
         </div>
-        <div class="go-button">
-            <a href="/docs/self-hosting/method-2/setting-up-docker-container" class="button"><svg fill="#000000" height="25px" width="25px" version="1.1"
-                    id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                    viewBox="0 0 330 330" xml:space="preserve">
-                    <path fill="currentcolor" id="XMLID_222_" d="M250.606,154.389l-150-149.996c-5.857-5.858-15.355-5.858-21.213,0.001
-            c-5.857,5.858-5.857,15.355,0.001,21.213l139.393,139.39L79.393,304.394c-5.857,5.858-5.857,15.355,0.001,21.213
-            C82.322,328.536,86.161,330,90,330s7.678-1.464,10.607-4.394l149.999-150.004c2.814-2.813,4.394-6.628,4.394-10.606
-                C255,161.018,253.42,157.202,250.606,154.389z" />
-                </svg></a>
-        </div>
-    </div>
+    </a>
 </div>
 
 
