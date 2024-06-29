@@ -15,6 +15,8 @@ def serve_docs_index():
 @limiter.exempt
 def serve_docs(file_path):
     try:
+        if file_path == "":
+            return render_template("docs/index.html", host_url=request.host_url)
         if not os.path.exists(f"templates/docs/{file_path}.html"):
             raise FileNotFoundError
         return render_template(f"docs/{file_path}.html", host_url=request.host_url)
