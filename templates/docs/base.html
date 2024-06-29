@@ -15,7 +15,7 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=8">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/docs.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/docs.css') }}?v=3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
 
@@ -101,25 +101,25 @@
 
         {% block content %}{% endblock %}
 
-        <br>
-        <hr>
+    </div>
 
+    <footer>
+        <p>Made with 💚</p>
         <div class="social-links">
-            <a href="https://twitter.com/spoo_me" target="_blank" rel="noopener">
-                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/twitter.png" alt="Twitter" />
-            </a>
-            <a href="https://www.instagram.com/spoo.me" target="_blank" rel="noopener">
-                <img src="https://img.icons8.com/fluency-systems-filled/30/d4d4d4/instagram-new.png" alt="Facebook" />
-            </a>
             <a href="https://github.com/spoo-me" target="_blank" rel="noopener">
-                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/github.png" alt="GitHub" />
+                <img src="https://img.icons8.com/ios-glyphs/30/e8f7c3/github.png" alt="GitHub" />
             </a>
             <a href="https://spoo.me/discord" target="_blank" rel="noopener">
-                <img src="https://img.icons8.com/ios-glyphs/30/d4d4d4/discord.png" alt="GitHub" />
+                <img src="https://img.icons8.com/ios-glyphs/30/e8f7c3/discord.png" alt="GitHub" />
+            </a>
+            <a href="https://twitter.com/spoo_me" target="_blank" rel="noopener">
+                <img src="https://img.icons8.com/ios-glyphs/30/e8f7c3/twitter.png" alt="Twitter" />
+            </a>
+            <a href="https://www.instagram.com/spoo.me" target="_blank" rel="noopener">
+                <img src="https://img.icons8.com/fluency-systems-filled/30/e8f7c3/instagram-new.png" alt="Facebook" />
             </a>
         </div>
-
-    </div>
+    </footer>
 
     {% block custom_js_scripts %}{% endblock %}
 

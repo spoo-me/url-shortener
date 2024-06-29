@@ -66,34 +66,6 @@ h4 {
     font-weight: bolder;
 }
 
-.social-links {
-    display: flex;
-    justify-content: start;
-    gap: 10px;
-    padding-bottom: 20px;
-    margin-left: 10px;
-}
-
-.social-links a {
-    color: rgb(212, 212, 212);
-    transition: color 0.3s ease;
-}
-
-.social-links a:hover {
-    color: white;
-}
-
-.social-links img {
-    filter: brightness(0.8);
-    transition: filter 0.3s ease;
-    height: 20px;
-    width: 20px;
-}
-
-.social-links img:hover {
-    filter: brightness(1);
-}
-
 code {
     color: white;
     background-color: rgba(189, 251, 116, 0.1);
@@ -226,6 +198,45 @@ a:hover {
     padding: 20px 15px;
     border-top-right-radius: 10px;
     border-bottom-right-radius: 10px;
+}
+
+footer {
+    padding: 15px 25px;
+    border-top: 1px solid #2f2c2a;
+    margin-top: 40px;
+    display: flex;
+    justify-content: space-between;
+}
+
+footer p {
+    font-size: 0.9rem;
+}
+
+.social-links {
+    display: flex;
+    justify-content: start;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.social-links a {
+    color: rgb(212, 212, 212);
+    transition: color 0.3s ease;
+}
+
+.social-links a:hover {
+    color: white;
+}
+
+.social-links img {
+    filter: brightness(0.8);
+    transition: filter 0.3s ease;
+    height: 20px;
+    width: 20px;
+}
+
+.social-links img:hover {
+    filter: brightness(1);
 }
 
 @media screen and (max-width: 768px) {
