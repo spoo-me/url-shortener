@@ -6,6 +6,11 @@ import os
 docs = Blueprint("docs", __name__)
 
 
+@docs.route("/docs")
+@limiter.exempt
+def serve_docs_index():
+    return render_template("docs/index.html", host_url=request.host_url)
+
 @docs.route("/docs/<path:file_path>")
 @limiter.exempt
 def serve_docs(file_path):
