@@ -370,7 +370,7 @@ def redirect_url(short_code):
     browser = ua.browser.family
     user_ip = get_client_ip()
     referrer = request.headers.get("Referer")
-    country = get_country(user_ip)
+    country = get_country(user_ip).replace(".", "-")
 
     updates = {"$inc": {}, "$set": {}, "$addToSet": {}}
 
