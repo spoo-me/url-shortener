@@ -103,11 +103,10 @@ def analytics(short_code):
                     400,
                 )
 
-    url_data["expired"] = False
-
-    if "max-clicks" in url_data:
-        if url_data["total-clicks"] >= int(url_data["max-clicks"]):
-            url_data["expired"] = True
+    if url_data.get("max-clicks") is not None:
+        url_data["expired"] = url_data["total-clicks"] >= int(url_data["max-clicks"])
+    else:
+        url_data["expired"] = None
 
     if "expiration-time" in url_data:
         expiration_time = convert_to_gmt(url_data["expiration-time"])
@@ -124,6 +123,12 @@ def analytics(short_code):
     url_data["last-click-browser"] = url_data.get("last-click-browser", None)
     url_data["last-click-os"] = url_data.get("last-click-os", None)
     url_data["bots"] = url_data.get("bots", {})
+
+    url_data["referrer"] = url_data.get("referrer", {})
+    url_data["country"] = url_data.get("country", {})
+    url_data["browser"] = url_data.get("browser", {})
+    url_data["os_name"] = url_data.get("os_name", {})
+    url_data["ips"] = url_data.get("ips", {})
 
     try:
         url_data["unique_referrer"] = {}
@@ -155,34 +160,18 @@ def analytics(short_code):
             url_data["average_monthly_clicks"],
         ) = calculate_click_averages(url_data)
 
-        if "ips" in url_data:
-            del url_data["ips"]
-        if "creation-ip-address" in url_data:
-            del url_data["creation-ip-address"]
-    except:
-        if "browser" and "os_name" in url_data:
-            url_data["unique_browser"] = {}
-            url_data["unique_os_name"] = {}
+    except Exception as e:
+        pass
 
-            for i in url_data["browser"]:
-                url_data["unique_browser"][i] = len(url_data["browser"][i]["ips"])
-                url_data["browser"][i] = url_data["browser"][i]["counts"]
-            for i in url_data["os_name"]:
-                url_data["unique_os_name"][i] = len(url_data["os_name"][i]["ips"])
-                url_data["os_name"][i] = url_data["os_name"][i]["counts"]
-
-        if "ips" in url_data:
-            del url_data["ips"]
-        if "creation-ip-address" in url_data:
-            del url_data["creation-ip-address"]
+    if "ips" in url_data:
+        del url_data["ips"]
+    if "creation-ip-address" in url_data:
+        del url_data["creation-ip-address"]
 
     if url_data["counter"] != {}:
             url_data = add_missing_dates("counter", url_data)
-    try:
-        if url_data["unique_counter"] != {}:
-            url_data = add_missing_dates("unique_counter", url_data)
-    except:
-        pass
+    if "unique_counter" in url_data and url_data["unique_counter"] != {}:
+        url_data = add_missing_dates("unique_counter", url_data)
 
     if request.method == "POST":
         return jsonify(url_data)
@@ -205,7 +194,7 @@ def analytics(short_code):
                 "average_weekly_clicks": url_data["average_weekly_clicks"],
                 "average_monthly_clicks": url_data["average_monthly_clicks"],
             }
-        except:
+        except Exception as e:
             pass
         return render_template(
             "stats_view.html", json_data=url_data, host_url=request.host_url
@@ -300,6 +289,12 @@ def export(short_code, format):
     url_data["last-click-os"] = url_data.get("last-click-os")
     url_data["bots"] = url_data.get("bots", {})
 
+    url_data["referrer"] = url_data.get("referrer", {})
+    url_data["country"] = url_data.get("country", {})
+    url_data["browser"] = url_data.get("browser", {})
+    url_data["os_name"] = url_data.get("os_name", {})
+    url_data["ips"] = url_data.get("ips", {})
+
     try:
         url_data["unique_referrer"] = {}
         url_data["unique_country"] = {}
@@ -330,17 +325,8 @@ def export(short_code, format):
             url_data["average_monthly_clicks"],
         ) = calculate_click_averages(url_data)
 
-    except:
-        if "browser" and "os_name" in url_data:
-            url_data["unique_browser"] = {}
-            url_data["unique_os_name"] = {}
-
-            for i in url_data["browser"]:
-                url_data["unique_browser"][i] = len(url_data["browser"][i]["ips"])
-                url_data["browser"][i] = url_data["browser"][i]["counts"]
-            for i in url_data["os_name"]:
-                url_data["unique_os_name"][i] = len(url_data["os_name"][i]["ips"])
-                url_data["os_name"][i] = url_data["os_name"][i]["counts"]
+    except Exception as e:
+        pass
 
     if "ips" in url_data:
         del url_data["ips"]
@@ -350,11 +336,8 @@ def export(short_code, format):
     if url_data["counter"] != {}:
         url_data = add_missing_dates("counter", url_data)
 
-    try:
-        if url_data["unique_counter"] != {}:
-            url_data = add_missing_dates("unique_counter", url_data)
-    except:
-        pass
+    if "unique_counter" in url_data and url_data["unique_counter"] != {}:
+        url_data = add_missing_dates("unique_counter", url_data)
 
     if format == "json":
         return export_to_json(url_data)
