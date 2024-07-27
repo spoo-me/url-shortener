@@ -365,7 +365,12 @@ def redirect_url(short_code):
 
     # store the device and browser information
     user_agent = request.headers.get("User-Agent")
-    ua = parse(user_agent)
+
+    try:
+        ua = parse(user_agent)
+    except TypeError as e:
+        return "Invalid User-Agent", 400
+
     os_name = ua.os.family
     browser = ua.browser.family
     user_ip = get_client_ip()
