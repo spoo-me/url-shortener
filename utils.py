@@ -1,4 +1,4 @@
-from flask import request, render_template, redirect, url_for, jsonify, make_response
+from flask import request, render_template, redirect, url_for, jsonify, make_response, send_file
 import re
 import string
 import random
@@ -6,13 +6,13 @@ from datetime import datetime, timedelta, timezone
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
-import sys
 from emojies import EMOJIES
 from urllib.parse import unquote
 import emoji
-import pandas as pd
-from flask import send_file
 import io
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
+import csv
 import zipfile
 from dicttoxml import dicttoxml
 import json
@@ -431,65 +431,75 @@ def send_contact_message(webhook_uri, email, message):
 
 def export_to_excel(data):
     output = io.BytesIO()
+    wb = Workbook()
 
-    df_browser = pd.DataFrame(data["browser"].items(), columns=["Browser", "Count"])
-    df_counter = pd.DataFrame(data["counter"].items(), columns=["Date", "Count"])
-    df_country = pd.DataFrame(data["country"].items(), columns=["Country", "Count"])
-    df_os_name = pd.DataFrame(data["os_name"].items(), columns=["OS_Name", "Count"])
-    df_referrer = pd.DataFrame(data["referrer"].items(), columns=["Referrer", "Count"])
-    df_bots = pd.DataFrame(data["bots"].items(), columns=["Bot", "Count"])
+    # Bold font style
+    bold_font = Font(bold=True)
 
-    df_unique_browser = pd.DataFrame(
-        data["unique_browser"].items(), columns=["Browser", "Count"]
-    )
-    df_unique_counter = pd.DataFrame(
-        data["unique_counter"].items(), columns=["Date", "Count"]
-    )
-    df_unique_country = pd.DataFrame(
-        data["unique_country"].items(), columns=["Country", "Count"]
-    )
-    df_unique_os_name = pd.DataFrame(
-        data["unique_os_name"].items(), columns=["OS_Name", "Count"]
-    )
-    df_unique_referrer = pd.DataFrame(
-        data["unique_referrer"].items(), columns=["Referrer", "Count"]
-    )
+    # General Info Sheet
+    ws_general_info = wb.active
+    ws_general_info.title = "General_Info"
+    general_info = [
+        ["TOTAL CLICKS", data["total-clicks"]],
+        ["TOTAL UNIQUE CLICKS", data["total_unique_clicks"]],
+        ["URL", data["url"]],
+        ["SHORT CODE", data["_id"]],
+        ["MAX CLICKS", data["max-clicks"]],
+        ["EXPIRATION TIME", data["expiration-time"]],
+        ["PASSWORD", data["password"]],
+        ["CREATION DATE", data["creation-date"]],
+        ["EXPIRED", data["expired"]],
+        ["AVERAGE DAILY CLICKS", data["average_daily_clicks"]],
+        ["AVERAGE MONTHLY CLICKS", data["average_monthly_clicks"]],
+        ["AVERAGE WEEKLY CLICKS", data["average_weekly_clicks"]],
+        ["LAST CLICK", data["last-click"]],
+        ["LAST CLICK BROWSER", data["last-click-browser"]],
+        ["LAST CLICK OS", data["last-click-os"]],
+    ]
+    for row in general_info:
+        ws_general_info.append(row)
 
-    df_general_info = pd.DataFrame(
-        {
-            "TOTAL CLICKS": [data["total-clicks"]],
-            "TOTAL UNIQUE CLICKS": [data["total_unique_clicks"]],
-            "URL": [data["url"]],
-            "SHORT CODE": [data["_id"]],
-            "MAX CLICKS": [data["max-clicks"]],
-            "EXPIRATION TIME": [data["expiration-time"]],
-            "PASSWORD": [data["password"]],
-            "CREATION DATE": [data["creation-date"]],
-            "EXPIRED": [data["expired"]],
-            "AVERAGE DAILY CLICKS": [data["average_daily_clicks"]],
-            "AVERAGE MONTHLY CLICKS": [data["average_monthly_clicks"]],
-            "AVERAGE WEEKLY CLICKS": [data["average_weekly_clicks"]],
-            "LAST CLICK": [data["last-click"]],
-            "LAST CLICK BROSWER": [data["last-click-browser"]],
-            "LAST CLICK OS": [data["last-click-os"]],
-        }
-    )
+    # Apply bold font style to the first column (headers)
+    for cell in ws_general_info['A']:
+        cell.font = bold_font
 
-    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df_general_info.to_excel(writer, sheet_name="General_Info", index=False)
+    # Set column widths
+    ws_general_info.column_dimensions['A'].width = 25
+    ws_general_info.column_dimensions['B'].width = 20
 
-        df_browser.to_excel(writer, sheet_name="Browser", index=False)
-        df_counter.to_excel(writer, sheet_name="Counter", index=False)
-        df_country.to_excel(writer, sheet_name="Country", index=False)
-        df_os_name.to_excel(writer, sheet_name="OS_Name", index=False)
-        df_referrer.to_excel(writer, sheet_name="Referrer", index=False)
-        df_unique_browser.to_excel(writer, sheet_name="Unique_Browser", index=False)
-        df_unique_counter.to_excel(writer, sheet_name="Unique_Counter", index=False)
-        df_unique_country.to_excel(writer, sheet_name="Unique_Country", index=False)
-        df_unique_os_name.to_excel(writer, sheet_name="Unique_OS_Name", index=False)
-        df_unique_referrer.to_excel(writer, sheet_name="Unique_Referrer", index=False)
-        df_bots.to_excel(writer, sheet_name="Bots", index=False)
+    # Align the second column to the right
+    for cell in ws_general_info['B']:
+        cell.alignment = Alignment(horizontal='right')
 
+    # Helper function to add data to sheets
+    def add_sheet(wb, title, data, columns):
+        ws = wb.create_sheet(title)
+        ws.append(columns)
+
+        ws.column_dimensions['A'].width = 20
+
+        for key, value in data.items():
+            ws.append([key, value])
+
+        # Apply bold font style to the first row (headers) and center align them
+        for cell in ws[1]:
+            cell.font = bold_font
+            cell.alignment = Alignment(horizontal='center')
+
+    # Adding other sheets
+    add_sheet(wb, "Browser", data["browser"], ["Browser", "Count"])
+    add_sheet(wb, "Counter", data["counter"], ["Date", "Count"])
+    add_sheet(wb, "Country", data["country"], ["Country", "Count"])
+    add_sheet(wb, "OS_Name", data["os_name"], ["OS_Name", "Count"])
+    add_sheet(wb, "Referrer", data["referrer"], ["Referrer", "Count"])
+    add_sheet(wb, "Unique_Browser", data["unique_browser"], ["Browser", "Count"])
+    add_sheet(wb, "Unique_Counter", data["unique_counter"], ["Date", "Count"])
+    add_sheet(wb, "Unique_Country", data["unique_country"], ["Country", "Count"])
+    add_sheet(wb, "Unique_OS_Name", data["unique_os_name"], ["OS_Name", "Count"])
+    add_sheet(wb, "Unique_Referrer", data["unique_referrer"], ["Referrer", "Count"])
+    add_sheet(wb, "Bots", data["bots"], ["Bot", "Count"])
+
+    wb.save(output)
     output.seek(0)
 
     return send_file(
@@ -503,62 +513,65 @@ def export_to_excel(data):
 def export_to_csv(data):
     output = io.BytesIO()
 
-    df_browser = pd.DataFrame(data["browser"].items(), columns=["Browser", "Count"])
-    df_counter = pd.DataFrame(data["counter"].items(), columns=["Date", "Count"])
-    df_country = pd.DataFrame(data["country"].items(), columns=["Country", "Count"])
-    df_os_name = pd.DataFrame(data["os_name"].items(), columns=["OS_Name", "Count"])
-    df_referrer = pd.DataFrame(data["referrer"].items(), columns=["Referrer", "Count"])
-    df_bots = pd.DataFrame(data["bots"].items(), columns=["Bot", "Count"])
+    # Helper function to write a dictionary to a CSV file in the zip
+    def write_dict_to_csv(zipf, filename, dictionary, key_field, value_field):
+        with zipf.open(filename, "w") as file:
+            # Use TextIOWrapper to handle encoding and newline characters properly
+            with io.TextIOWrapper(file, encoding='utf-8', newline='') as text_file:
+                writer = csv.writer(text_file)
+                writer.writerow([key_field, value_field])
+                for key, value in dictionary.items():
+                    if isinstance(value, dict):
+                        # Handle nested dictionaries
+                        value = value.get('counts', 0)
+                    writer.writerow([key, value])
 
-    df_unique_browser = pd.DataFrame(
-        data["unique_browser"].items(), columns=["Browser", "Count"]
-    )
-    df_unique_counter = pd.DataFrame(
-        data["unique_counter"].items(), columns=["Date", "Count"]
-    )
-    df_unique_country = pd.DataFrame(
-        data["unique_country"].items(), columns=["Country", "Count"]
-    )
-    df_unique_os_name = pd.DataFrame(
-        data["unique_os_name"].items(), columns=["OS_Name", "Count"]
-    )
-    df_unique_referrer = pd.DataFrame(
-        data["unique_referrer"].items(), columns=["Referrer", "Count"]
-    )
-
-    df_general_info = pd.DataFrame(
-        {
-            "TOTAL CLICKS": [data["total-clicks"]],
-            "TOTAL UNIQUE CLICKS": [data["total_unique_clicks"]],
-            "": [data["url"]],
-            "SHORT CODE": [data["_id"]],
-            "MAX CLICKS": [data["max-clicks"]],
-            "EXPIRATION TIME": [data["expiration-time"]],
-            "PASSWORD": [data["password"]],
-            "CREATION DATE": [data["creation-date"]],
-            "EXPIRED": [data["expired"]],
-            "AVERAGE DAILY CLICKS": [data["average_daily_clicks"]],
-            "AVERAGE MONTHLY CLICKS": [data["average_monthly_clicks"]],
-            "AVERAGE WEEKLY CLICKS": [data["average_weekly_clicks"]],
-            "LAST CLICK": [data["last-click"]],
-            "LAST CLICK BROSWER": [data["last-click-browser"]],
-            "LAST CLICK OS": [data["last-click-os"]],
+    # Create a zip file in memory
+    with zipfile.ZipFile(output, mode="w", compression=zipfile.ZIP_DEFLATED) as zipf:
+        # Write general info CSV
+        general_info = {
+            "TOTAL CLICKS": data.get("total-clicks", "N/A"),
+            "TOTAL UNIQUE CLICKS": data.get("total_unique_clicks", "N/A"),
+            "URL": data.get("url", "N/A"),
+            "SHORT CODE": data.get("_id", "N/A"),
+            "MAX CLICKS": data.get("max-clicks", "N/A"),
+            "EXPIRATION TIME": data.get("expiration-time", "N/A"),
+            "PASSWORD": data.get("password", "N/A"),
+            "CREATION DATE": data.get("creation-date", "N/A"),
+            "CREATION TIME": data.get("creation-time", "N/A"),
+            "CREATION IP ADDRESS": data.get("creation-ip-address", "N/A"),
+            "EXPIRED": data.get("expired", "N/A"),
+            "AVERAGE DAILY CLICKS": data.get("average_daily_clicks", "N/A"),
+            "AVERAGE MONTHLY CLICKS": data.get("average_monthly_clicks", "N/A"),
+            "AVERAGE WEEKLY CLICKS": data.get("average_weekly_clicks", "N/A"),
+            "LAST CLICK": data.get("last-click", "N/A"),
+            "LAST CLICK BROWSER": data.get("last-click-browser", "N/A"),
+            "LAST CLICK COUNTRY": data.get("last-click-country", "N/A"),
+            "LAST CLICK OS": data.get("last-click-os", "N/A"),
         }
-    )
+        with zipf.open("general_info.csv", "w") as file:
+            with io.TextIOWrapper(file, encoding='utf-8', newline='') as text_file:
+                writer = csv.writer(text_file)
+                for key, value in general_info.items():
+                    writer.writerow([key, value])
 
-    with zipfile.ZipFile(output, mode="w") as zipf:
-        df_general_info.to_csv(zipf.open("general_info.csv", "w"), index=False)
-        df_browser.to_csv(zipf.open("browser.csv", "w"), index=False)
-        df_counter.to_csv(zipf.open("counter.csv", "w"), index=False)
-        df_country.to_csv(zipf.open("country.csv", "w"), index=False)
-        df_os_name.to_csv(zipf.open("os_name.csv", "w"), index=False)
-        df_referrer.to_csv(zipf.open("referrer.csv", "w"), index=False)
-        df_unique_browser.to_csv(zipf.open("unique_browser.csv", "w"), index=False)
-        df_unique_counter.to_csv(zipf.open("unique_counter.csv", "w"), index=False)
-        df_unique_country.to_csv(zipf.open("unique_country.csv", "w"), index=False)
-        df_unique_os_name.to_csv(zipf.open("unique_os_name.csv", "w"), index=False)
-        df_unique_referrer.to_csv(zipf.open("unique_referrer.csv", "w"), index=False)
-        df_bots.to_csv(zipf.open("bots.csv", "w"), index=False)
+        # Write other CSV files dynamically
+        fields = {
+            "counter": ("Date", "Count"),
+            "browser": ("Browser", "Count"),
+            "country": ("Country", "Count"),
+            "os_name": ("OS_Name", "Count"),
+            "referrer": ("Referrer", "Count"),
+            "unique_counter": ("Date", "Count"),
+            "unique_browser": ("Browser", "Count"),
+            "unique_country": ("Country", "Count"),
+            "unique_os_name": ("OS_Name", "Count"),
+            "unique_referrer": ("Referrer", "Count"),
+            "bots": ("Bot", "Count"),
+        }
+
+        for field_name, (key_field, value_field) in fields.items():
+            write_dict_to_csv(zipf, f"{field_name}.csv", data.get(field_name, {}), key_field, value_field)
 
     output.seek(0)
 
@@ -566,7 +579,7 @@ def export_to_csv(data):
         output,
         mimetype="application/zip",
         as_attachment=True,
-        download_name=f"spoo-me-export-csv.zip",
+        download_name="spoo-me-export-csv.zip",
     )
 
 
