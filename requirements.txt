@@ -1,4 +1,3 @@
-cryptography
 Flask
 Flask-Cors
 geoip2
@@ -6,11 +5,9 @@ pymongo
 python-dotenv
 requests
 user-agents
-black
 tldextract
 Flask-Limiter
 emoji
-pandas
 openpyxl
 dicttoxml
 validators
