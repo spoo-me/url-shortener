@@ -31,6 +31,7 @@ def shorten_url():
     max_clicks = request.values.get("max-clicks")
     alias = request.values.get("alias")
     expiration_time = request.values.get("expiration-time")
+    block_bots = request.values.get("block-bots")
 
     if not url:
         if request.headers.get("Accept") == "application/json":
@@ -140,6 +141,9 @@ def shorten_url():
         else:
             data["expiration-time"] = expiration_time
 
+    if block_bots:
+        data["block-bots"] = True
+
     data["creation-date"] = datetime.now().strftime("%Y-%m-%d")
     data["creation-time"] = datetime.now().strftime("%H:%M:%S")
 
@@ -173,6 +177,7 @@ def emoji():
     password = request.values.get("password")
     max_clicks = request.values.get("max-clicks")
     expiration_time = request.values.get("expiration-time")
+    block_bots = request.values.get("block-bots")
 
     if not url:
         return jsonify({"UrlError": "URL is required"}), 400
@@ -243,6 +248,9 @@ def emoji():
         else:
             data["expiration-time"] = expiration_time
 
+    if block_bots:
+        data["block-bots"] = True
+
     data["creation-date"] = datetime.now().strftime("%Y-%m-%d")
     data["creation-time"] = datetime.now().strftime("%H:%M:%S")
 
@@ -302,6 +310,7 @@ def redirect_url(short_code):
         "total-clicks": 1,
         "ips": 1,
         "referrer": 1,
+        "block-bots": 1,
     }
 
     short_code = unquote(short_code)
@@ -413,10 +422,28 @@ def redirect_url(short_code):
     for bot in BOT_USER_AGENTS:
         bot_re = re.compile(bot, re.IGNORECASE)
         if bot_re.search(user_agent):
+            if url_data.get("block-bots", False):
+                return (
+                    jsonify({
+                        "error_code": "403",
+                        "error_message": "Access Denied, Bots not allowed",
+                        "host_url": request.host_url,
+                    }),
+                    403,
+                )
             updates["$inc"][f"bots.{bot}"] = 1
             break
     else:
         if crawler_detect.isCrawler(user_agent):
+            if url_data.get("block-bots", False):
+                return (
+                    jsonify({
+                        "error_code": "403",
+                        "error_message": "Access Denied, Bots not allowed",
+                        "host_url": request.host_url,
+                    }),
+                    403,
+                )
             updates["$inc"][f"bots.{crawler_detect.getMatches()}"] = 1
 
     # increment the counter for the short code

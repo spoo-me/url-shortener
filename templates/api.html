@@ -183,6 +183,12 @@
                     <td>Maximum number of clicks allowed for the shortened URL.</td>
                     <td>No</td>
                 </tr>
+                <tr>
+                    <td>block-bots</td>
+                    <td>Boolean</td>
+                    <td>Whether to block bots from accessing the shortened URL.</td>
+                    <td>No</td>
+                </tr>
             </tbody>
         </table>
 
@@ -609,6 +615,11 @@ puts response.read_body</code></pre>
                     <td>Maximum number of clicks allowed for the shortened URL.</td>
                     <td>No</td>
                 </tr>
+                <tr>
+                    <td>block-bots</td>
+                    <td>Boolean</td>
+                    <td>Whether to block bots from accessing the shortened URL.</td>
+                    <td>No</td>
             </tbody>
         </table>
 
@@ -1283,6 +1294,7 @@ puts response.read_body</code></pre>
     "average_daily_clicks": 1.0,
     "average_monthly_clicks": 0.03,
     "average_weekly_clicks": 0.14,
+    "block-bots": false,
     "bots": {
         "Googlebot": 1
     },
@@ -1363,6 +1375,11 @@ puts response.read_body</code></pre>
                     <td>average_weekly_clicks</td>
                     <td>Float</td>
                     <td>Average Clicks per week since the link was created.</td>
+                </tr>
+                <tr>
+                    <td>block-bots</td>
+                    <td>Bool</td>
+                    <td>Tells whether the Bots are blocked from accessing the Short Link.</td>
                 </tr>
                 <tr>
                     <td>bots</td>
