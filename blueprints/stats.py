@@ -122,6 +122,7 @@ def analytics(short_code):
     url_data["short_code"] = short_code
     url_data["last-click-browser"] = url_data.get("last-click-browser", None)
     url_data["last-click-os"] = url_data.get("last-click-os", None)
+    url_data["block-bots"] = url_data.get("block-bots", False)
     url_data["bots"] = url_data.get("bots", {})
 
     url_data["referrer"] = url_data.get("referrer", {})
@@ -152,16 +153,17 @@ def analytics(short_code):
             if len(url_data["os_name"][i]["ips"]) != 0:
                 url_data["unique_os_name"][i] = len(url_data["os_name"][i]["ips"])
             url_data["os_name"][i] = url_data["os_name"][i]["counts"]
-
-        url_data["total_unique_clicks"] = len(url_data["ips"].keys())
-        (
-            url_data["average_daily_clicks"],
-            url_data["average_weekly_clicks"],
-            url_data["average_monthly_clicks"],
-        ) = calculate_click_averages(url_data)
-
     except Exception as e:
         pass
+
+    if "ips" in url_data:
+        url_data["total_unique_clicks"] = len(url_data["ips"].keys())
+
+    (
+        url_data["average_daily_clicks"],
+        url_data["average_weekly_clicks"],
+        url_data["average_monthly_clicks"],
+    ) = calculate_click_averages(url_data)
 
     if "ips" in url_data:
         del url_data["ips"]
