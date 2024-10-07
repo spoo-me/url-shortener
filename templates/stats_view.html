@@ -129,6 +129,9 @@
                 {% if json_data["expiry"] %}
                 <p>Expired &nbsp; <code id="expire">{{ json_data["expired"] }}</code></p>
                 {% endif %}
+                {% if json_data["block-bots"] %}
+                <p>Block Bots &nbsp; <code>{{ json_data["block-bots"] }}</code></p>
+                {% endif %}
                 <p>Last Click &nbsp; <code>{{ json_data['last-click']}}</code></p>
                 <p>Last Click Browser &nbsp; <code>{{ json_data["last-click-browser"] }}</code></p>
                 <p>Last Click OS &nbsp; <code>{{ json_data["last-click-os"] }}</code></p>

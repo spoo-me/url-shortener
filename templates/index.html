@@ -42,7 +42,7 @@
     <meta name="moz-appearance" content="#adb1ff">
     <meta content="#adb1ff" name="msapplication-TileColor">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=7">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/self-promo.css') }}?v=2">
@@ -139,7 +139,6 @@
         </div>
     </div>
 
-    <!-- <form action="/" method="POST" id="urlForm"> -->
     <div class="form-section">
         <form action="/" method="POST" onsubmit="return validateURL() && validatePassword();">
             <h1>
@@ -178,6 +177,18 @@
             <div id="clicks-div">
                 <label for="max-clicks">Max Clicks</label>
                 <input type="number" id="max-clicks" name="max-clicks" placeholder="optional" min="1">
+            </div>
+            <div class="checkbox-wrapper-4">
+                <input class="inp-cbx" id="block-bots" type="checkbox" name="block-bots" />
+                <label class="cbx" for="block-bots"><span>
+                        <svg width="12px" height="10px">
+                            <use xlink:href="#check-4"></use>
+                        </svg></span><span class="block-bot-label">Block Bots</span></label>
+                <svg class="inline-svg">
+                    <symbol id="check-4" viewbox="0 0 12 10">
+                        <polyline points="1.5 6 4.5 9 10.5 1"></polyline>
+                    </symbol>
+                </svg>
             </div>
             <div id="sub">
                 <button type="submit">Shorten URL</button>
