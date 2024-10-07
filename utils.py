@@ -1,4 +1,12 @@
-from flask import request, render_template, redirect, url_for, jsonify, make_response, send_file
+from flask import (
+    request,
+    render_template,
+    redirect,
+    url_for,
+    jsonify,
+    make_response,
+    send_file,
+)
 import re
 import string
 import random
@@ -141,7 +149,7 @@ def validate_password(password):
 def validate_url(url):
     return (
         validators.url(url, skip_ipv4_addr=True, skip_ipv6_addr=True)
-        and not "spoo.me" in url
+        and "spoo.me" not in url
     )
 
 
@@ -449,6 +457,7 @@ def export_to_excel(data):
         ["PASSWORD", data["password"]],
         ["CREATION DATE", data["creation-date"]],
         ["EXPIRED", data["expired"]],
+        ["BLOCK BOTS", data["block-bots"]],
         ["AVERAGE DAILY CLICKS", data["average_daily_clicks"]],
         ["AVERAGE MONTHLY CLICKS", data["average_monthly_clicks"]],
         ["AVERAGE WEEKLY CLICKS", data["average_weekly_clicks"]],
@@ -460,23 +469,23 @@ def export_to_excel(data):
         ws_general_info.append(row)
 
     # Apply bold font style to the first column (headers)
-    for cell in ws_general_info['A']:
+    for cell in ws_general_info["A"]:
         cell.font = bold_font
 
     # Set column widths
-    ws_general_info.column_dimensions['A'].width = 25
-    ws_general_info.column_dimensions['B'].width = 20
+    ws_general_info.column_dimensions["A"].width = 25
+    ws_general_info.column_dimensions["B"].width = 20
 
     # Align the second column to the right
-    for cell in ws_general_info['B']:
-        cell.alignment = Alignment(horizontal='right')
+    for cell in ws_general_info["B"]:
+        cell.alignment = Alignment(horizontal="right")
 
     # Helper function to add data to sheets
     def add_sheet(wb, title, data, columns):
         ws = wb.create_sheet(title)
         ws.append(columns)
 
-        ws.column_dimensions['A'].width = 20
+        ws.column_dimensions["A"].width = 20
 
         for key, value in data.items():
             ws.append([key, value])
@@ -484,7 +493,7 @@ def export_to_excel(data):
         # Apply bold font style to the first row (headers) and center align them
         for cell in ws[1]:
             cell.font = bold_font
-            cell.alignment = Alignment(horizontal='center')
+            cell.alignment = Alignment(horizontal="center")
 
     # Adding other sheets
     add_sheet(wb, "Browser", data["browser"], ["Browser", "Count"])
@@ -517,13 +526,13 @@ def export_to_csv(data):
     def write_dict_to_csv(zipf, filename, dictionary, key_field, value_field):
         with zipf.open(filename, "w") as file:
             # Use TextIOWrapper to handle encoding and newline characters properly
-            with io.TextIOWrapper(file, encoding='utf-8', newline='') as text_file:
+            with io.TextIOWrapper(file, encoding="utf-8", newline="") as text_file:
                 writer = csv.writer(text_file)
                 writer.writerow([key_field, value_field])
                 for key, value in dictionary.items():
                     if isinstance(value, dict):
                         # Handle nested dictionaries
-                        value = value.get('counts', 0)
+                        value = value.get("counts", 0)
                     writer.writerow([key, value])
 
     # Create a zip file in memory
@@ -541,6 +550,7 @@ def export_to_csv(data):
             "CREATION TIME": data.get("creation-time", "N/A"),
             "CREATION IP ADDRESS": data.get("creation-ip-address", "N/A"),
             "EXPIRED": data.get("expired", "N/A"),
+            "BLOCK BOTS": data.get("block-bots", "N/A"),
             "AVERAGE DAILY CLICKS": data.get("average_daily_clicks", "N/A"),
             "AVERAGE MONTHLY CLICKS": data.get("average_monthly_clicks", "N/A"),
             "AVERAGE WEEKLY CLICKS": data.get("average_weekly_clicks", "N/A"),
@@ -550,7 +560,7 @@ def export_to_csv(data):
             "LAST CLICK OS": data.get("last-click-os", "N/A"),
         }
         with zipf.open("general_info.csv", "w") as file:
-            with io.TextIOWrapper(file, encoding='utf-8', newline='') as text_file:
+            with io.TextIOWrapper(file, encoding="utf-8", newline="") as text_file:
                 writer = csv.writer(text_file)
                 for key, value in general_info.items():
                     writer.writerow([key, value])
@@ -571,7 +581,13 @@ def export_to_csv(data):
         }
 
         for field_name, (key_field, value_field) in fields.items():
-            write_dict_to_csv(zipf, f"{field_name}.csv", data.get(field_name, {}), key_field, value_field)
+            write_dict_to_csv(
+                zipf,
+                f"{field_name}.csv",
+                data.get(field_name, {}),
+                key_field,
+                value_field,
+            )
 
     output.seek(0)
 
