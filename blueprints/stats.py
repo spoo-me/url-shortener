@@ -289,6 +289,7 @@ def export(short_code, format):
     url_data["password"] = url_data.get("password")
     url_data["last-click-browser"] = url_data.get("last-click-browser")
     url_data["last-click-os"] = url_data.get("last-click-os")
+    url_data["block-bots"] = url_data.get("block-bots", False)
     url_data["bots"] = url_data.get("bots", {})
 
     url_data["referrer"] = url_data.get("referrer", {})
