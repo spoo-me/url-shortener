@@ -172,7 +172,7 @@ def analytics(short_code):
         del url_data["creation-ip-address"]
 
     if url_data["counter"] != {}:
-            url_data = add_missing_dates("counter", url_data)
+        url_data = add_missing_dates("counter", url_data)
     if "unique_counter" in url_data and url_data["unique_counter"] != {}:
         url_data = add_missing_dates("unique_counter", url_data)
 
@@ -187,7 +187,9 @@ def analytics(short_code):
             url_data["sorted_browser"] = top_four(url_data["browser"])
             url_data["sorted_unique_browser"] = top_four(url_data["unique_browser"])
             url_data["sorted_unique_os_name"] = top_four(url_data["unique_os_name"])
-            url_data["sorted_unique_country"] = convert_country_data(url_data["unique_country"])
+            url_data["sorted_unique_country"] = convert_country_data(
+                url_data["unique_country"]
+            )
             url_data["sorted_unique_referrer"] = json.dumps(
                 top_four(url_data["unique_referrer"])
             )
@@ -323,7 +325,9 @@ def export(short_code, format):
             url_data["os_name"][i] = url_data["os_name"][i]["counts"]
 
         url_data["total_unique_clicks"] = len(url_data["ips"].keys())
-        url_data["average_redirection_time"] = url_data.get("average_redirection_time", 0)
+        url_data["average_redirection_time"] = url_data.get(
+            "average_redirection_time", 0
+        )
 
         (
             url_data["average_daily_clicks"],

@@ -12,6 +12,7 @@ url_shortener = Blueprint("url_shortener", __name__)
 
 crawler_detect = CrawlerDetect()
 
+
 @url_shortener.route("/", methods=["GET"])
 @limiter.exempt
 def index():
@@ -163,7 +164,9 @@ def shorten_url():
         if len(my_list) > 3:
             del my_list[-1]
         serialized_list = json.dumps(my_list)
-        resp = make_response(redirect(url_for("url_shortener.result", short_code=short_code)))
+        resp = make_response(
+            redirect(url_for("url_shortener.result", short_code=short_code))
+        )
         resp.set_cookie("shortURL", serialized_list)
 
         return resp
@@ -318,7 +321,7 @@ def redirect_url(short_code):
     short_code = unquote(short_code)
 
     is_emoji = False
-    
+
     # Measure redirection time
     start_time = time.perf_counter()
 
@@ -403,9 +406,15 @@ def redirect_url(short_code):
 
     if referrer:
         referrer_raw = tldextract.extract(referrer)
-        referrer = f"{referrer_raw.domain}.{referrer_raw.suffix}" if referrer_raw.suffix else referrer_raw.domain
+        referrer = (
+            f"{referrer_raw.domain}.{referrer_raw.suffix}"
+            if referrer_raw.suffix
+            else referrer_raw.domain
+        )
 
-        referrer_data = url_data["referrer"].setdefault(referrer, {"ips": [], "counts": 0})
+        referrer_data = url_data["referrer"].setdefault(
+            referrer, {"ips": [], "counts": 0}
+        )
         if user_ip not in referrer_data["ips"]:
             referrer_data["ips"].append(user_ip)
         referrer_data["counts"] += 1
@@ -429,11 +438,13 @@ def redirect_url(short_code):
         if bot_re.search(user_agent):
             if url_data.get("block-bots", False):
                 return (
-                    jsonify({
-                        "error_code": "403",
-                        "error_message": "Access Denied, Bots not allowed",
-                        "host_url": request.host_url,
-                    }),
+                    jsonify(
+                        {
+                            "error_code": "403",
+                            "error_message": "Access Denied, Bots not allowed",
+                            "host_url": request.host_url,
+                        }
+                    ),
                     403,
                 )
             updates["$inc"][f"bots.{bot}"] = 1
@@ -442,11 +453,13 @@ def redirect_url(short_code):
         if crawler_detect.isCrawler(user_agent):
             if url_data.get("block-bots", False):
                 return (
-                    jsonify({
-                        "error_code": "403",
-                        "error_message": "Access Denied, Bots not allowed",
-                        "host_url": request.host_url,
-                    }),
+                    jsonify(
+                        {
+                            "error_code": "403",
+                            "error_message": "Access Denied, Bots not allowed",
+                            "host_url": request.host_url,
+                        }
+                    ),
                     403,
                 )
             updates["$inc"][f"bots.{crawler_detect.getMatches()}"] = 1
@@ -534,15 +547,17 @@ def check_password(short_code):
         400,
     )
 
+
 METRIC_PIPELINE = [
     {
         "$group": {
             "_id": None,
             "total-shortlinks": {"$sum": 1},
-            "total-clicks": {"$sum": "$total-clicks"}
+            "total-clicks": {"$sum": "$total-clicks"},
         }
     }
 ]
+
 
 @url_shortener.route("/metric")
 @limiter.exempt

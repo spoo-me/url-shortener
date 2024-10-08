@@ -22,7 +22,7 @@ def contact_route():
                     error="Please complete the captcha",
                     host_url=request.host_url,
                     email=email,
-                    message=message
+                    message=message,
                 ),
                 400,
             )
@@ -34,7 +34,7 @@ def contact_route():
                     error="Invalid captcha, please try again",
                     host_url=request.host_url,
                     email=email,
-                    message=message
+                    message=message,
                 ),
                 400,
             )
@@ -84,7 +84,7 @@ def report():
                     error="Please complete the captcha",
                     host_url=request.host_url,
                     short_code=short_code,
-                    reason=reason
+                    reason=reason,
                 ),
                 400,
             )
@@ -96,7 +96,7 @@ def report():
                     error="Invalid captcha, please try again",
                     host_url=request.host_url,
                     short_code=short_code,
-                    reason=reason
+                    reason=reason,
                 ),
                 400,
             )

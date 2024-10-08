@@ -5,15 +5,10 @@ short_code = "exa"
 password = "Example@12"
 base_url = "http://localhost:8000"
 
-payload = {
-    "password": password
-}
+payload = {"password": password}
 
 # Make the request
-response = requests.post(
-    f"{base_url}/stats/{short_code}",
-    data = payload
-)
+response = requests.post(f"{base_url}/stats/{short_code}", data=payload)
 
 # Check the response
 if response.status_code == 200:

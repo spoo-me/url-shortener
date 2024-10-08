@@ -12,6 +12,7 @@ docs = Blueprint("docs", __name__)
 def serve_docs_index():
     return render_template("docs/index.html", host_url=request.host_url)
 
+
 @docs.route("/docs/<path:file_path>")
 @limiter.exempt
 def serve_docs(file_path):
@@ -30,10 +31,12 @@ def serve_docs(file_path):
             404,
         )
 
+
 @docs.route("/legal/privacy-policy")
 @limiter.exempt
 def serve_privacy_policy():
     return render_template("docs/privacy-policy.html", host_url=request.host_url)
+
 
 @docs.route("/legal/terms-of-service")
 @docs.route("/legal/tos")
