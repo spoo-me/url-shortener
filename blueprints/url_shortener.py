@@ -1,3 +1,4 @@
+import time
 from flask import Blueprint
 from utils import *
 from .limiter import limiter
@@ -311,12 +312,16 @@ def redirect_url(short_code):
         "ips": 1,
         "referrer": 1,
         "block-bots": 1,
+        "average_redirection_time": 1,
     }
 
     short_code = unquote(short_code)
 
     is_emoji = False
     
+    # Measure redirection time
+    start_time = time.perf_counter()
+
     if validate_emoji_alias(short_code):
         is_emoji = True
         url_data = db["emojis"].find_one({"_id": short_code}, projection)
@@ -467,6 +472,19 @@ def redirect_url(short_code):
     updates["$set"]["last-click-browser"] = browser
     updates["$set"]["last-click-os"] = os_name
     updates["$set"]["last-click-country"] = country
+
+    # Calculate redirection time
+    end_time = time.perf_counter()
+    redirection_time = (end_time - start_time) * 1000
+    print(f"Redirection time: {redirection_time} ms")
+
+    curr_avg = url_data.get("average_redirection_time", 0)
+
+    # Update Average Redirection Time
+    alpha = 0.1  # Smoothing factor, adjust as needed
+    updates["$set"]["average_redirection_time"] = round(
+        (1 - alpha) * curr_avg + alpha * redirection_time, 2
+    )
 
     if is_emoji:
         db["emojis"].update_one({"_id": short_code}, updates)

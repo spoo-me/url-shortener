@@ -132,6 +132,9 @@
                 {% if json_data["block-bots"] %}
                 <p>Block Bots &nbsp; <code>{{ json_data["block-bots"] }}</code></p>
                 {% endif %}
+                {% if json_data["average_redirection_time"] > 0 %}
+                <p>Average Redirection Time &nbsp; <code>{{ json_data["average_redirection_time"] }} ms</code></p>
+                {% endif %}
                 <p>Last Click &nbsp; <code>{{ json_data['last-click']}}</code></p>
                 <p>Last Click Browser &nbsp; <code>{{ json_data["last-click-browser"] }}</code></p>
                 <p>Last Click OS &nbsp; <code>{{ json_data["last-click-os"] }}</code></p>
