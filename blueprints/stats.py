@@ -164,6 +164,9 @@ def analytics(short_code):
         url_data["average_weekly_clicks"],
         url_data["average_monthly_clicks"],
     ) = calculate_click_averages(url_data)
+    url_data["average_redirection_time"] = url_data.get("average_redirection_time", 0)
+    if "redirection_count" in url_data:
+        del url_data["redirection_count"]
 
     if "ips" in url_data:
         del url_data["ips"]
@@ -322,6 +325,9 @@ def export(short_code, format):
             url_data["os_name"][i] = url_data["os_name"][i]["counts"]
 
         url_data["total_unique_clicks"] = len(url_data["ips"].keys())
+        url_data["average_redirection_time"] = url_data.get("average_redirection_time", 0)
+        if "redirection_count" in url_data:
+            del url_data["redirection_count"]
         (
             url_data["average_daily_clicks"],
             url_data["average_weekly_clicks"],
