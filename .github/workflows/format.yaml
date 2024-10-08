@@ -24,4 +24,4 @@ jobs:
           pip install black
 
       - name: Check Python File Formatting
-        run: python -m black --check *.py
+        run: python -m black --check .
