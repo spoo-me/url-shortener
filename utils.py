@@ -555,7 +555,9 @@ def export_to_csv(data):
             "AVERAGE DAILY CLICKS": data.get("average_daily_clicks", "N/A"),
             "AVERAGE MONTHLY CLICKS": data.get("average_monthly_clicks", "N/A"),
             "AVERAGE WEEKLY CLICKS": data.get("average_weekly_clicks", "N/A"),
-            "AVERAGE REDIRECTION TIME (in s)": data.get("average_redirection_time", "N/A"),
+            "AVERAGE REDIRECTION TIME (in s)": data.get(
+                "average_redirection_time", "N/A"
+            ),
             "LAST CLICK": data.get("last-click", "N/A"),
             "LAST CLICK BROWSER": data.get("last-click-browser", "N/A"),
             "LAST CLICK COUNTRY": data.get("last-click-country", "N/A"),
