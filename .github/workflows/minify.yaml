@@ -1,0 +1,32 @@
+name: Minify and Deploy to Production Branch
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  minify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: check out the repository
+        uses: actions/checkout@v4
+
+      - name: replace js and css files with minified ones
+        uses: nizarmah/auto-minify@v3
+        with:
+          overwrite: true
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git checkout -b production
+          git add .
+          git commit -m "Minify CSS, and JS files"
+          git push --force --set-upstream origin production
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
