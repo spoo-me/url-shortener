@@ -1,6 +1,7 @@
 User-agent: *
-Disallow: /
+Disallow: /*
 
+Allow: /$
 Allow: /stats
 Allow: /api
 Allow: /report
