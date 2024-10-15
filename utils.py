@@ -169,7 +169,7 @@ def humanize_number(num):
     while abs(num) >= 1000:
         magnitude += 1
         num /= 1000.0
-    return "%d%s+" % (num, ["", "K", "M", "G", "T", "P"][magnitude])
+    return "%d%s+" % (num, ["", "K", "M", "B", "T", "P"][magnitude])
 
 
 def verify_hcaptcha(token):
@@ -196,7 +196,8 @@ def is_positive_integer(value):
         return True
     except ValueError:
         return False
-
+    except TypeError:
+        return False
 
 # custom expiration time is currently really buggy and not ready for production
 
@@ -246,9 +247,9 @@ def convert_country_data(data):
 
 
 @functools.lru_cache(maxsize=None)
-def convert_country_name(country_name):
+def convert_country_name(country_name: str) -> str:
     try:
-        return pycountry.countries.lookup(country_name).alpha_2
+        return pycountry.countries.lookup(country_name.strip()).alpha_2
     except LookupError:
         if country_name == "Turkey":
             return "TR"
@@ -326,15 +327,10 @@ def calculate_click_averages(data):
     total_clicks = data["total-clicks"]
     creation_date = datetime.fromisoformat(data["creation-date"]).date()
     current_date = datetime.now().date()
-    link_age = (
-        1
-        if (current_date - creation_date).days == 0
-        else (current_date - creation_date).days
-    )
+    link_age = (current_date - creation_date).days + 1
 
     # Calculate average weekly clicks
-    weekly_clicks = sum(counter.values())
-    avg_weekly_clicks = round(weekly_clicks / 7, 2)
+    avg_weekly_clicks = round(total_clicks / 7, 2)
 
     # Calculate average daily clicks
     avg_daily_clicks = round(total_clicks / link_age, 2)
@@ -456,6 +452,7 @@ def export_to_excel(data):
         ["EXPIRATION TIME", data["expiration-time"]],
         ["PASSWORD", data["password"]],
         ["CREATION DATE", data["creation-date"]],
+        ["CREATION TIME", data["creation-time"]],
         ["EXPIRED", data["expired"]],
         ["BLOCK BOTS", data["block-bots"]],
         ["AVERAGE DAILY CLICKS", data["average_daily_clicks"]],
@@ -465,6 +462,7 @@ def export_to_excel(data):
         ["LAST CLICK", data["last-click"]],
         ["LAST CLICK BROWSER", data["last-click-browser"]],
         ["LAST CLICK OS", data["last-click-os"]],
+        ["LAST CLICK COUNTRY", data["last-click-country"]],
     ]
     for row in general_info:
         ws_general_info.append(row)
@@ -549,7 +547,6 @@ def export_to_csv(data):
             "PASSWORD": data.get("password", "N/A"),
             "CREATION DATE": data.get("creation-date", "N/A"),
             "CREATION TIME": data.get("creation-time", "N/A"),
-            "CREATION IP ADDRESS": data.get("creation-ip-address", "N/A"),
             "EXPIRED": data.get("expired", "N/A"),
             "BLOCK BOTS": data.get("block-bots", "N/A"),
             "AVERAGE DAILY CLICKS": data.get("average_daily_clicks", "N/A"),
