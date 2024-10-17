@@ -16,14 +16,13 @@ crawler_detect = CrawlerDetect()
 @url_shortener.route("/", methods=["GET"])
 @limiter.exempt
 def index():
-    serialized_list = request.cookies.get("shortURL")
-    my_list = json.loads(serialized_list) if serialized_list else []
-    if my_list:
-        return render_template(
-            "index.html", recentURLs=my_list, host_url=request.host_url
-        )
-    else:
-        return render_template("index.html", host_url=request.host_url)
+    recent_urls = []
+    short_url_cookie = request.cookies.get("shortURL")
+    if short_url_cookie:
+        recent_urls = json.loads(short_url_cookie)
+    return render_template(
+        "index.html", host_url=request.host_url, recentURLs=recent_urls
+    )
 
 
 @url_shortener.route("/", methods=["POST"])
@@ -350,7 +349,7 @@ def redirect_url(short_code):
                 render_template(
                     "error.html",
                     error_code="400",
-                    error_message="SHORT CODE EXPIRED",
+                    error_message="SHORT URL EXPIRED",
                     host_url=request.host_url,
                 ),
                 400,
@@ -376,8 +375,11 @@ def redirect_url(short_code):
     if "password" in url_data:
         password = request.values.get("password")
         if password != url_data["password"]:
-            return render_template(
-                "password.html", short_code=short_code, host_url=request.host_url
+            return (
+                render_template(
+                    "password.html", short_code=short_code, host_url=request.host_url
+                ),
+                401,
             )
 
     # store the device and browser information
@@ -489,7 +491,6 @@ def redirect_url(short_code):
     # Calculate redirection time
     end_time = time.perf_counter()
     redirection_time = (end_time - start_time) * 1000
-    print(f"Redirection time: {redirection_time} ms")
 
     curr_avg = url_data.get("average_redirection_time", 0)
 
