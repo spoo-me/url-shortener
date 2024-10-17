@@ -193,11 +193,14 @@ def verify_hcaptcha(token):
 def is_positive_integer(value):
     try:
         int(value)
+        if int(value) < 0:
+            return False
         return True
     except ValueError:
         return False
     except TypeError:
         return False
+
 
 # custom expiration time is currently really buggy and not ready for production
 

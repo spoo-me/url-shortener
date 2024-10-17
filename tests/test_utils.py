@@ -8,10 +8,17 @@ import emoji
 
 app = Flask(__name__)
 
-def test_get_country():
-    ip_address = "8.8.8.8"  # Example IP address
+@pytest.mark.parametrize("ip_address, expected_country", [
+    ("8.8.8.8", "United States"),  # Google Public DNS
+    ("123.45.6.78", "South Korea"),  # Example IP address for South Korea
+    ("110.33.122.75", "Australia"),  # Example IP address for Australia
+    ("101.96.32.0", "Japan"),      # Example IP address for Japan
+    ("192.206.151.131", "Canada"),       # Example IP address for Canada
+    ("85.214.132.117", "Germany"),   # Example IP address for Germany
+])
+def test_get_country(ip_address, expected_country):
     country = get_country(ip_address)
-    assert country == "United States"
+    assert country == expected_country
 
 def test_get_unknown_country():
     ip_address = "127.0.0.1"  # Localhost IP address
@@ -71,7 +78,7 @@ def test_is_positive_integer_with_zero():
     assert is_positive_integer(0) == True
 
 def test_is_positive_integer_with_negative_integer():
-    assert is_positive_integer(-5) == True
+    assert is_positive_integer(-5) == False
 
 def test_is_positive_integer_with_positive_integer_string():
     assert is_positive_integer("5") == True
@@ -80,7 +87,7 @@ def test_is_positive_integer_with_zero_string():
     assert is_positive_integer("0") == True
 
 def test_is_positive_integer_with_negative_integer_string():
-    assert is_positive_integer("-5") == True
+    assert is_positive_integer("-5") == False
 
 def test_is_positive_integer_with_non_integer_string():
     assert is_positive_integer("abc") == False
