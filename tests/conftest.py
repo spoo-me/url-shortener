@@ -2,6 +2,7 @@ import pytest
 from flask import Flask
 from blueprints.url_shortener import url_shortener
 
+
 @pytest.fixture
 def client():
     app = Flask(__name__, template_folder="../templates")

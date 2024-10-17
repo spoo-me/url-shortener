@@ -4,6 +4,7 @@ import requests_mock
 from utils import send_report, send_contact_message
 from datetime import datetime, timezone
 
+
 def test_send_report_success(mocker):
     webhook_uri = "https://discord.com/api/webhooks/test_webhook"
     short_code = "abc123"
@@ -36,10 +37,11 @@ def test_send_report_success(mocker):
             ]
         }
         actual_data = request.json()
-        actual_data['embeds'][0].pop('timestamp')
+        actual_data["embeds"][0].pop("timestamp")
 
         # Check if the request JSON matches the expected data
         assert actual_data == expected_data
+
 
 def test_send_report_failure(mocker):
     webhook_uri = "https://discord.com/api/webhooks/test_webhook"
@@ -53,6 +55,7 @@ def test_send_report_failure(mocker):
         send_report(webhook_uri, short_code, reason, ip_address, host_uri)
         assert m.called
         assert m.call_count == 1
+
 
 def test_send_contact_message_success(mocker):
     webhook_uri = "https://discord.com/api/webhooks/test_webhook"
@@ -86,6 +89,7 @@ def test_send_contact_message_success(mocker):
 
         # Check if the request JSON matches the expected data
         assert actual_data == expected_data
+
 
 def test_send_contact_message_failure(mocker):
     webhook_uri = "https://discord.com/api/webhooks/test_webhook"

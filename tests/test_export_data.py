@@ -43,6 +43,7 @@ data = {
     "bots": {"Googlebot": 5, "Bingbot": 2},
 }
 
+
 def test_export_to_excel(mocker):
     # Mock send_file
     mock_send_file = mocker.patch("utils.send_file")
@@ -62,9 +63,18 @@ def test_export_to_excel(mocker):
 
     # Check the sheet names
     expected_sheets = [
-        "General_Info", "Browser", "Counter", "Country", "OS_Name", "Referrer",
-        "Unique_Browser", "Unique_Counter", "Unique_Country", "Unique_OS_Name",
-        "Unique_Referrer", "Bots"
+        "General_Info",
+        "Browser",
+        "Counter",
+        "Country",
+        "OS_Name",
+        "Referrer",
+        "Unique_Browser",
+        "Unique_Counter",
+        "Unique_Country",
+        "Unique_OS_Name",
+        "Unique_Referrer",
+        "Bots",
     ]
     assert wb.sheetnames == expected_sheets
 
@@ -114,6 +124,7 @@ def test_export_to_excel(mocker):
     check_sheet_content("Unique_Referrer", data["unique_referrer"])
     check_sheet_content("Bots", data["bots"])
 
+
 def test_export_to_csv(mocker):
     # Mock send_file
     mock_send_file = mocker.patch("utils.send_file")
@@ -129,12 +140,21 @@ def test_export_to_csv(mocker):
     file_obj = mock_send_file.call_args[0][0]
 
     # Load the zip file from the file-like object
-    with zipfile.ZipFile(file_obj, 'r') as zipf:
+    with zipfile.ZipFile(file_obj, "r") as zipf:
         # Check the list of files in the zip
         expected_files = [
-            "general_info.csv", "counter.csv", "browser.csv", "country.csv",
-            "os_name.csv", "referrer.csv", "unique_counter.csv", "unique_browser.csv",
-            "unique_country.csv", "unique_os_name.csv", "unique_referrer.csv", "bots.csv"
+            "general_info.csv",
+            "counter.csv",
+            "browser.csv",
+            "country.csv",
+            "os_name.csv",
+            "referrer.csv",
+            "unique_counter.csv",
+            "unique_browser.csv",
+            "unique_country.csv",
+            "unique_os_name.csv",
+            "unique_referrer.csv",
+            "bots.csv",
         ]
         assert sorted(zipf.namelist()) == sorted(expected_files)
 
@@ -157,7 +177,9 @@ def test_export_to_csv(mocker):
                     "AVERAGE DAILY CLICKS": str(data["average_daily_clicks"]),
                     "AVERAGE MONTHLY CLICKS": str(data["average_monthly_clicks"]),
                     "AVERAGE WEEKLY CLICKS": str(data["average_weekly_clicks"]),
-                    "AVERAGE REDIRECTION TIME (in s)": str(data["average_redirection_time"]),
+                    "AVERAGE REDIRECTION TIME (in s)": str(
+                        data["average_redirection_time"]
+                    ),
                     "LAST CLICK": data["last-click"],
                     "LAST CLICK BROWSER": data["last-click-browser"],
                     "LAST CLICK COUNTRY": data["last-click-country"],
@@ -189,6 +211,7 @@ def test_export_to_csv(mocker):
         check_csv_content("unique_referrer.csv", data["unique_referrer"])
         check_csv_content("bots.csv", data["bots"])
 
+
 def test_export_to_json(mocker):
     # Mock send_file
     mock_send_file = mocker.patch("utils.send_file")
@@ -208,6 +231,7 @@ def test_export_to_json(mocker):
 
     # Check if the JSON data matches the input data
     assert json_data == data
+
 
 def test_export_to_xml(mocker):
     # Mock send_file
