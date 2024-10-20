@@ -1,10 +1,47 @@
 import time
-from flask import Blueprint
-from utils import *
+from flask import (
+    Blueprint,
+    request,
+    jsonify,
+    render_template,
+    redirect,
+    url_for,
+    make_response,
+)
+from utils.url_utils import (
+    BOT_USER_AGENTS,
+    get_country,
+    get_client_ip,
+    validate_password,
+    validate_url,
+    validate_alias,
+    validate_emoji_alias,
+    validate_expiration_time,
+    generate_short_code,
+    generate_emoji_alias,
+    convert_to_gmt,
+)
+from utils.mongo_utils import (
+    load_url,
+    update_url,
+    insert_url,
+    load_emoji_url,
+    update_emoji_url,
+    insert_emoji_url,
+    check_if_slug_exists,
+    check_if_emoji_alias_exists,
+    validate_blocked_url,
+    urls_collection,
+)
+from utils.general import is_positive_integer, humanize_number
 from .limiter import limiter
 from .cache import cache
 
 from user_agents import parse
+import json
+from datetime import datetime, timezone
+from urllib.parse import unquote
+import re
 import tldextract
 from crawlerdetect import CrawlerDetect
 
@@ -16,14 +53,13 @@ crawler_detect = CrawlerDetect()
 @url_shortener.route("/", methods=["GET"])
 @limiter.exempt
 def index():
-    serialized_list = request.cookies.get("shortURL")
-    my_list = json.loads(serialized_list) if serialized_list else []
-    if my_list:
-        return render_template(
-            "index.html", recentURLs=my_list, host_url=request.host_url
-        )
-    else:
-        return render_template("index.html", host_url=request.host_url)
+    recent_urls = []
+    short_url_cookie = request.cookies.get("shortURL")
+    if short_url_cookie:
+        recent_urls = json.loads(short_url_cookie)
+    return render_template(
+        "index.html", host_url=request.host_url, recentURLs=recent_urls
+    )
 
 
 @url_shortener.route("/", methods=["POST"])
@@ -61,7 +97,7 @@ def shorten_url():
     if url and not validate_blocked_url(url):
         return jsonify({"BlockedUrlError": "Blocked URL ⛔"}), 403
 
-    if alias and not validate_string(alias):
+    if alias and not validate_alias(alias):
         if request.headers.get("Accept") == "application/json":
             return jsonify({"AliasError": "Invalid Alias", "alias": f"{alias}"}), 400
         else:
@@ -151,7 +187,7 @@ def shorten_url():
 
     data["creation-ip-address"] = get_client_ip()
 
-    add_url_by_id(short_code, data)
+    insert_url(short_code, data)
 
     response = jsonify({"short_url": f"{request.host_url}{short_code}"})
 
@@ -260,7 +296,7 @@ def emoji():
 
     data["creation-ip-address"] = get_client_ip()
 
-    add_emoji_by_alias(emojies, data)
+    insert_emoji_url(emojies, data)
 
     response = jsonify({"short_url": f"{request.host_url}{emojies}"})
 
@@ -276,9 +312,9 @@ def result(short_code):
 
     short_code = unquote(short_code)
     if validate_emoji_alias(short_code):
-        url_data = load_emoji_by_alias(short_code)
+        url_data = load_emoji_url(short_code)
     else:
-        url_data = load_url_by_id(short_code)
+        url_data = load_url(short_code)
 
     if url_data:
         short_code = url_data["_id"]
@@ -327,9 +363,9 @@ def redirect_url(short_code):
 
     if validate_emoji_alias(short_code):
         is_emoji = True
-        url_data = db["emojis"].find_one({"_id": short_code}, projection)
+        url_data = load_emoji_url(short_code, projection)
     else:
-        url_data = db["urls"].find_one({"_id": short_code}, projection)
+        url_data = load_url(short_code, projection)
 
     if not url_data:
         return (
@@ -350,7 +386,7 @@ def redirect_url(short_code):
                 render_template(
                     "error.html",
                     error_code="400",
-                    error_message="SHORT CODE EXPIRED",
+                    error_message="SHORT URL EXPIRED",
                     host_url=request.host_url,
                 ),
                 400,
@@ -376,8 +412,11 @@ def redirect_url(short_code):
     if "password" in url_data:
         password = request.values.get("password")
         if password != url_data["password"]:
-            return render_template(
-                "password.html", short_code=short_code, host_url=request.host_url
+            return (
+                render_template(
+                    "password.html", short_code=short_code, host_url=request.host_url
+                ),
+                401,
             )
 
     # store the device and browser information
@@ -385,7 +424,7 @@ def redirect_url(short_code):
 
     try:
         ua = parse(user_agent)
-    except TypeError as e:
+    except TypeError:
         return "Invalid User-Agent", 400
 
     os_name = ua.os.family
@@ -469,7 +508,7 @@ def redirect_url(short_code):
     updates["$inc"][f"counter.{today}"] = 1
 
     if "ips" in url_data:
-        if not user_ip in url_data["ips"]:
+        if user_ip not in url_data["ips"]:
             updates["$inc"][f"unique_counter.{today}"] = 1
     else:
         updates["$inc"][f"unique_counter.{today}"] = 1
@@ -489,7 +528,6 @@ def redirect_url(short_code):
     # Calculate redirection time
     end_time = time.perf_counter()
     redirection_time = (end_time - start_time) * 1000
-    print(f"Redirection time: {redirection_time} ms")
 
     curr_avg = url_data.get("average_redirection_time", 0)
 
@@ -500,9 +538,9 @@ def redirect_url(short_code):
     )
 
     if is_emoji:
-        db["emojis"].update_one({"_id": short_code}, updates)
+        update_emoji_url(short_code, updates)
     else:
-        db["urls"].update_one({"_id": short_code}, updates)
+        update_url(short_code, updates)
 
     return redirect(url)
 
@@ -518,9 +556,9 @@ def check_password(short_code):
 
     short_code = unquote(short_code)
     if validate_emoji_alias(short_code):
-        url_data = db["emojis"].find_one({"_id": short_code}, projection)
+        url_data = load_emoji_url(short_code, projection)
     else:
-        url_data = db["urls"].find_one({"_id": short_code}, projection)
+        url_data = load_url(short_code, projection)
 
     if url_data:
         # check if the URL is password protected
@@ -563,7 +601,7 @@ METRIC_PIPELINE = [
 @limiter.exempt
 @cache.cached(timeout=60)
 def metric():
-    result = collection.aggregate(METRIC_PIPELINE).next()
+    result = urls_collection.aggregate(METRIC_PIPELINE).next()
     del result["_id"]
     result["total-clicks"] = humanize_number(result["total-clicks"])
     result["total-shortlinks"] = humanize_number(result["total-shortlinks"])

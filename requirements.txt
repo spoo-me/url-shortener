@@ -15,3 +15,7 @@ gunicorn==22.0.0
 crawlerdetect
 pycountry
 flask-caching
+pytest
+pytest-mock
+requests-mock
+pytest-flask
