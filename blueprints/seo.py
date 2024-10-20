@@ -1,5 +1,4 @@
-from flask import Blueprint
-from utils import *
+from flask import Blueprint, send_file
 from .limiter import limiter
 
 seo = Blueprint("seo", __name__)

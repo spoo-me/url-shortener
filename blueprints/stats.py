@@ -1,6 +1,26 @@
-from flask import Blueprint
-from utils import *
+from flask import Blueprint, jsonify, render_template, request, redirect, url_for
+from utils.mongo_utils import load_url, load_emoji_url
+from utils.url_utils import (
+    validate_emoji_alias,
+    convert_to_gmt,
+)
+from utils.analytics_utils import (
+    calculate_click_averages,
+    add_missing_dates,
+    top_four,
+    convert_country_data,
+)
+from utils.export_utils import (
+    export_to_csv,
+    export_to_json,
+    export_to_excel,
+    export_to_xml,
+)
 from .limiter import limiter
+
+from datetime import datetime, timezone
+from urllib.parse import unquote
+import json
 
 stats = Blueprint("stats", __name__)
 
@@ -10,15 +30,22 @@ stats = Blueprint("stats", __name__)
 def stats_route():
     if request.method == "POST":
         short_code = request.values.get("short_code")
+
+        if not short_code:
+            return (
+                jsonify({"error": "Invalid Short Code, short code does not exist!"}),
+                400,
+            )
+
         short_code = short_code[short_code.rfind("/") + 1 :]
         password = request.values.get("password")
 
         short_code = unquote(short_code)
 
         if validate_emoji_alias(short_code):
-            url_data = load_emoji_by_alias(short_code)
+            url_data = load_emoji_url(short_code)
         else:
-            url_data = load_url_by_id(short_code)
+            url_data = load_url(short_code)
 
         if not url_data:
             return render_template(
@@ -65,9 +92,9 @@ def analytics(short_code):
     short_code = unquote(short_code)
 
     if validate_emoji_alias(short_code):
-        url_data = load_emoji_by_alias(short_code)
+        url_data = load_emoji_url(short_code)
     else:
-        url_data = load_url_by_id(short_code)
+        url_data = load_url(short_code)
 
     if not url_data:
         if request.method == "GET":
@@ -93,15 +120,26 @@ def analytics(short_code):
                     400,
                 )
             else:
-                return (
-                    render_template(
-                        "stats.html",
-                        url=short_code,
-                        password_error=f"{request.host_url}{short_code} is a password protected Url, please enter the password to continue.",
-                        host_url=request.host_url,
-                    ),
-                    400,
-                )
+                if not password:
+                    return (
+                        render_template(
+                            "stats.html",
+                            url=short_code,
+                            password_error=f"{request.host_url}{short_code} is a password protected Url, please enter the password to continue.",
+                            host_url=request.host_url,
+                        ),
+                        400,
+                    )
+                else:
+                    return (
+                        render_template(
+                            "stats.html",
+                            url=short_code,
+                            password_error="Invalid Password! please enter the correct password to continue.",
+                            host_url=request.host_url,
+                        ),
+                        400,
+                    )
 
     if url_data.get("max-clicks") is not None:
         url_data["expired"] = url_data["total-clicks"] >= int(url_data["max-clicks"])
@@ -115,6 +153,7 @@ def analytics(short_code):
         elif expiration_time <= datetime.now(timezone.utc):
             url_data["expired"] = True
 
+    url_data["total-clicks"] = url_data.get("total-clicks", 0)
     url_data["max-clicks"] = url_data.get("max-clicks", None)
     url_data["expiration-time"] = url_data.get("expiration-time", None)
     url_data["password"] = url_data.get("password", None)
@@ -125,6 +164,7 @@ def analytics(short_code):
     url_data["block-bots"] = url_data.get("block-bots", False)
     url_data["bots"] = url_data.get("bots", {})
 
+    url_data["counter"] = url_data.get("counter", {})
     url_data["referrer"] = url_data.get("referrer", {})
     url_data["country"] = url_data.get("country", {})
     url_data["browser"] = url_data.get("browser", {})
@@ -153,7 +193,7 @@ def analytics(short_code):
             if len(url_data["os_name"][i]["ips"]) != 0:
                 url_data["unique_os_name"][i] = len(url_data["os_name"][i]["ips"])
             url_data["os_name"][i] = url_data["os_name"][i]["counts"]
-    except Exception as e:
+    except Exception:
         pass
 
     if "ips" in url_data:
@@ -199,7 +239,7 @@ def analytics(short_code):
                 "average_weekly_clicks": url_data["average_weekly_clicks"],
                 "average_monthly_clicks": url_data["average_monthly_clicks"],
             }
-        except Exception as e:
+        except Exception:
             pass
         return render_template(
             "stats_view.html", json_data=url_data, host_url=request.host_url
@@ -235,9 +275,9 @@ def export(short_code, format):
             )
 
     if validate_emoji_alias(short_code):
-        url_data = load_emoji_by_alias(short_code)
+        url_data = load_emoji_url(short_code)
     else:
-        url_data = load_url_by_id(short_code)
+        url_data = load_url(short_code)
 
     if not url_data:
         if request.method == "GET":
@@ -287,7 +327,9 @@ def export(short_code, format):
         elif expiration_time <= datetime.now(timezone.utc):
             url_data["expired"] = True
 
+    url_data["total-clicks"] = url_data.get("total-clicks")
     url_data["max-clicks"] = url_data.get("max-clicks")
+    url_data["creation-time"] = url_data.get("creation-time")
     url_data["expiration-time"] = url_data.get("expiration-time")
     url_data["password"] = url_data.get("password")
     url_data["last-click-browser"] = url_data.get("last-click-browser")
@@ -295,6 +337,7 @@ def export(short_code, format):
     url_data["block-bots"] = url_data.get("block-bots", False)
     url_data["bots"] = url_data.get("bots", {})
 
+    url_data["counter"] = url_data.get("counter", {})
     url_data["referrer"] = url_data.get("referrer", {})
     url_data["country"] = url_data.get("country", {})
     url_data["browser"] = url_data.get("browser", {})
@@ -335,7 +378,7 @@ def export(short_code, format):
             url_data["average_monthly_clicks"],
         ) = calculate_click_averages(url_data)
 
-    except Exception as e:
+    except Exception:
         pass
 
     if "ips" in url_data:

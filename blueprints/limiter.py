@@ -1,6 +1,6 @@
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from utils import MONGO_URI, ip_bypasses
+from utils.mongo_utils import MONGO_URI, ip_bypasses
 from flask import request
 
 limiter = Limiter(

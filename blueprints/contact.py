@@ -1,5 +1,12 @@
-from flask import Blueprint
-from utils import *
+from flask import Blueprint, render_template, request
+from utils.contact_utils import (
+    send_contact_message,
+    verify_hcaptcha,
+    send_report,
+    CONTACT_WEBHOOK,
+    URL_REPORT_WEBHOOK,
+)
+from utils.mongo_utils import check_if_slug_exists
 from .limiter import limiter
 
 contact = Blueprint("contact", __name__)
