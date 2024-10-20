@@ -118,7 +118,7 @@ def test_shorten_url_invalid_expiration_time(client):
 def test_shorten_url_success(client, mocker):
     mocker.patch("blueprints.url_shortener.check_if_slug_exists", return_value=False)
     mocker.patch("blueprints.url_shortener.generate_short_code", return_value="abc123")
-    mocker.patch("blueprints.url_shortener.add_url_by_id")
+    mocker.patch("blueprints.url_shortener.insert_url")
     mocker.patch("blueprints.url_shortener.get_client_ip", return_value="127.0.0.1")
 
     response = client.post("/", data={"url": "http://example.com"})
@@ -129,7 +129,7 @@ def test_shorten_url_success(client, mocker):
 def test_shorten_url_success_max_clicks(client, mocker):
     mocker.patch("blueprints.url_shortener.check_if_slug_exists", return_value=False)
     mocker.patch("blueprints.url_shortener.generate_short_code", return_value="abc123")
-    mocker.patch("blueprints.url_shortener.add_url_by_id")
+    mocker.patch("blueprints.url_shortener.insert_url")
     mocker.patch("blueprints.url_shortener.get_client_ip", return_value="127.0.0.1")
 
     response = client.post("/", data={"url": "http://example.com", "max-clicks": "10"})
@@ -140,7 +140,7 @@ def test_shorten_url_success_max_clicks(client, mocker):
 def test_shorten_url_success_password(client, mocker):
     mocker.patch("blueprints.url_shortener.check_if_slug_exists", return_value=False)
     mocker.patch("blueprints.url_shortener.generate_short_code", return_value="abc123")
-    mocker.patch("blueprints.url_shortener.add_url_by_id")
+    mocker.patch("blueprints.url_shortener.insert_url")
     mocker.patch("blueprints.url_shortener.get_client_ip", return_value="127.0.0.1")
 
     response = client.post(
@@ -153,7 +153,7 @@ def test_shorten_url_success_password(client, mocker):
 def test_shorten_url_ratelimiting(client, mocker):
     mocker.patch("blueprints.url_shortener.check_if_slug_exists", return_value=False)
     mocker.patch("blueprints.url_shortener.generate_short_code", return_value="abc123")
-    mocker.patch("blueprints.url_shortener.add_url_by_id")
+    mocker.patch("blueprints.url_shortener.insert_url")
     mocker.patch("blueprints.url_shortener.get_client_ip", return_value="127.0.0.1")
 
 
@@ -161,7 +161,7 @@ def test_shorten_url_ratelimiting(client, mocker):
 def test_shorten_url_success_expiration_time(client, mocker):
     mocker.patch("blueprints.url_shortener.check_if_slug_exists", return_value=False)
     mocker.patch("blueprints.url_shortener.generate_short_code", return_value="abc123")
-    mocker.patch("blueprints.url_shortener.add_url_by_id")
+    mocker.patch("blueprints.url_shortener.insert_url")
     mocker.patch("blueprints.url_shortener.get_client_ip", return_value="127.0.0.1")
 
     response = client.post(
@@ -238,7 +238,7 @@ def test_emoji_success(client, mocker):
         "blueprints.url_shortener.check_if_emoji_alias_exists", return_value=False
     )
     mocker.patch("blueprints.url_shortener.generate_emoji_alias", return_value="😀")
-    mocker.patch("blueprints.url_shortener.add_emoji_by_alias")
+    mocker.patch("blueprints.url_shortener.insert_emoji_url")
     mocker.patch("blueprints.url_shortener.get_client_ip", return_value="127.0.0.1")
 
     response = client.post("/emoji", data={"url": "http://example.com"})
@@ -250,9 +250,7 @@ def test_emoji_success(client, mocker):
 
 def test_result_valid_short_code(client, mocker):
     mocker.patch("blueprints.url_shortener.validate_emoji_alias", return_value=False)
-    mocker.patch(
-        "blueprints.url_shortener.load_url_by_id", return_value={"_id": "abc123"}
-    )
+    mocker.patch("blueprints.url_shortener.load_url", return_value={"_id": "abc123"})
 
     response = client.get("/result/abc123")
     assert response.status_code == 200
@@ -262,7 +260,7 @@ def test_result_valid_short_code(client, mocker):
 def test_result_valid_emoji_alias(client, mocker):
     mocker.patch("blueprints.url_shortener.validate_emoji_alias", return_value=True)
     mocker.patch(
-        "blueprints.url_shortener.load_emoji_by_alias",
+        "blueprints.url_shortener.load_emoji_url",
         return_value={"_id": "%F0%9F%98%80"},
     )
 
@@ -273,7 +271,7 @@ def test_result_valid_emoji_alias(client, mocker):
 
 def test_result_invalid_short_code(client, mocker):
     mocker.patch("blueprints.url_shortener.validate_emoji_alias", return_value=False)
-    mocker.patch("blueprints.url_shortener.load_url_by_id", return_value=None)
+    mocker.patch("blueprints.url_shortener.load_url", return_value=None)
 
     response = client.get("/result/invalid")
     assert response.status_code == 404
@@ -282,7 +280,7 @@ def test_result_invalid_short_code(client, mocker):
 
 def test_result_invalid_emoji_alias(client, mocker):
     mocker.patch("blueprints.url_shortener.validate_emoji_alias", return_value=True)
-    mocker.patch("blueprints.url_shortener.load_emoji_by_alias", return_value=None)
+    mocker.patch("blueprints.url_shortener.load_emoji_url", return_value=None)
 
     response = client.get("/result/%F0%9F%98%80")
     assert response.status_code == 404

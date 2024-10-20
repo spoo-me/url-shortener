@@ -1,7 +1,7 @@
 import pytest
 import requests
 import requests_mock
-from utils import send_report, send_contact_message
+from utils.contact_utils import send_contact_message, send_report
 from datetime import datetime, timezone
 
 

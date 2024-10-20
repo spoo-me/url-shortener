@@ -1,56 +1,55 @@
-from tkinter import N
-from urllib import response
 import pytest
-from flask import Flask
-from blueprints.url_shortener import url_shortener
 from unittest.mock import MagicMock
 from datetime import datetime, timezone, timedelta
 
 
-def test_redirect_url_not_found(client, mocker):
-    mock_db = mocker.patch("blueprints.url_shortener.db")
-    mock_db["urls"].find_one.return_value = None
+def test_redirect_url_not_found(client, mocker, mock_db):
+    mocker.patch("utils.mongo_utils.urls_collection", mock_db.urls)
     response = client.get("/nonexistent")
     assert response.status_code == 404
     assert b"URL NOT FOUND" in response.data
 
 
-def test_redirect_url_emoji_not_found(client, mocker):
-    mock_db = mocker.patch("blueprints.url_shortener.db")
-    mock_db["emojis"].find_one.return_value = None
+def test_redirect_url_emoji_not_found(client, mocker, mock_db):
+    mocker.patch("utils.mongo_utils.emoji_urls_collection", mock_db.emojis)
     response = client.get("/%F0%9F%98%80")
     assert response.status_code == 404
     assert b"URL NOT FOUND" in response.data
 
 
-def test_redirect_url_expired(client, mocker):
-    mock_db = mocker.patch("blueprints.url_shortener.db")
-    mock_db["urls"].find_one.return_value = {
+def test_redirect_url_expired(client, mocker, mock_db):
+    mock_url_data = {
         "_id": "expired",
         "url": "http://example.com",
         "max-clicks": 10,
         "total-clicks": 10,
     }
+
+    mock_db.urls.insert_one(mock_url_data)
+    mocker.patch("utils.mongo_utils.urls_collection", mock_db.urls)
+
     response = client.get("/expired")
     assert response.status_code == 400
     assert b"SHORT URL EXPIRED" in response.data
 
 
-def test_redirect_url_password_protected(client, mocker):
-    mock_db = mocker.patch("blueprints.url_shortener.db")
-    mock_db["urls"].find_one.return_value = {
+def test_redirect_url_password_protected(client, mocker, mock_db):
+    mock_url_data = {
         "_id": "protected",
         "url": "http://example.com",
         "password": "secret",
     }
+
+    mock_db.urls.insert_one(mock_url_data)
+    mocker.patch("utils.mongo_utils.urls_collection", mock_db.urls)
+
     response = client.get("/protected")
     assert response.status_code == 401
     assert b"Enter the password" in response.data
 
 
-def test_redirect_url_success(client, mocker):
-    mock_db = mocker.patch("blueprints.url_shortener.db")
-    mock_db["urls"].find_one.return_value = {
+def test_redirect_url_success(client, mocker, mock_db):
+    mock_url_data = {
         "_id": "valid",
         "url": "http://example.com",
         "total-clicks": 0,
@@ -59,6 +58,10 @@ def test_redirect_url_success(client, mocker):
         "block-bots": False,
         "average_redirection_time": 0,
     }
+
+    mock_db.urls.insert_one(mock_url_data)
+    mocker.patch("utils.mongo_utils.urls_collection", mock_db.urls)
+
     mocker.patch("blueprints.url_shortener.get_client_ip", return_value="127.0.0.1")
     mocker.patch(
         "blueprints.url_shortener.parse",
@@ -75,9 +78,8 @@ def test_redirect_url_success(client, mocker):
     assert response.headers["Location"] == "http://example.com"
 
 
-def test_redirect_url_emoji(client, mocker):
-    mock_db = mocker.patch("blueprints.url_shortener.db")
-    mock_db["emojis"].find_one.return_value = {
+def test_redirect_url_emoji(client, mocker, mock_db):
+    mock_url_data = {
         "_id": "😀",
         "url": "http://example.com",
         "total-clicks": 0,
@@ -86,6 +88,10 @@ def test_redirect_url_emoji(client, mocker):
         "block-bots": False,
         "average_redirection_time": 0,
     }
+
+    mock_db.emojis.insert_one(mock_url_data)
+    mocker.patch("utils.mongo_utils.emoji_urls_collection", mock_db.emojis)
+
     mocker.patch("blueprints.url_shortener.get_client_ip", return_value="127.0.0.1")
     mocker.patch(
         "blueprints.url_shortener.parse",
@@ -117,53 +123,63 @@ def test_redirect_url_emoji(client, mocker):
         "ia_archiver (+http://www.alexa.com/site/help/webmasters; crawler@alexa.com)",  # Alexa bot
     ],
 )
-def test_redirect_url_block_bots(client, mocker, user_agent):
-    mock_db = mocker.patch("blueprints.url_shortener.db")
-    mock_db["urls"].find_one.return_value = {
+def test_redirect_url_block_bots(client, mocker, mock_db, user_agent):
+    mock_url_data = {
         "_id": "botblocked",
         "url": "http://example.com",
         "block-bots": True,
         "total-clicks": 0,
     }
 
+    mock_db.urls.insert_one(mock_url_data)
+    mocker.patch("utils.mongo_utils.urls_collection", mock_db.urls)
+
     response = client.get("/botblocked", headers={"User-Agent": user_agent})
     assert response.status_code == 403
     assert b"Bots not allowed" in response.data
 
 
-def test_redirect_url_click_limit_exceeded(client, mocker):
-    mock_db = mocker.patch("blueprints.url_shortener.db")
-    mock_db["urls"].find_one.return_value = {
+def test_redirect_url_click_limit_exceeded(client, mocker, mock_db):
+    mock_url_data = {
         "_id": "limit",
         "url": "http://example.com",
         "max-clicks": 5,
         "total-clicks": 5,
     }
+
+    mock_db.urls.insert_one(mock_url_data)
+    mocker.patch("utils.mongo_utils.urls_collection", mock_db.urls)
+
     response = client.get("/limit")
     assert response.status_code == 400
     assert b"SHORT URL EXPIRED" in response.data
 
 
 @pytest.mark.skip(reason="Feature not yet implemented")
-def test_redirect_url_expired_time(client, mocker):
-    mock_db = mocker.patch("blueprints.url_shortener.db")
-    mock_db["urls"].find_one.return_value = {
+def test_redirect_url_expired_time(client, mocker, mock_db):
+    mock_url_data = {
         "_id": "expiredtime",
         "url": "http://example.com",
         "expiration-time": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),
     }
+
+    mock_db.urls.insert_one(mock_url_data)
+    mocker.patch("utils.mongo_utils.urls_collection", mock_db.urls)
+
     response = client.get("/expiredtime")
     assert response.status_code == 400
     assert b"SHORT CODE EXPIRED" in response.data
 
 
-def test_redirect_url_redirection_time_update(client, mocker):
-    mock_db = mocker.patch("blueprints.url_shortener.db")
-    mock_db["urls"].find_one.return_value = {
-        "_id": "redirectiontime",
-        "url": "http://example.com",
-        "average_redirection_time": 100,
-    }
+def test_redirect_url_redirection_time_update(client, mocker, mock_db):
+    mocker.patch(
+        "blueprints.url_shortener.load_url",
+        return_value={
+            "_id": "redirectiontime",
+            "url": "http://example.com",
+            "average_redirection_time": 100,
+        },
+    )
     mocker.patch("blueprints.url_shortener.get_client_ip", return_value="127.0.0.1")
     mocker.patch(
         "blueprints.url_shortener.parse",
@@ -171,10 +187,11 @@ def test_redirect_url_redirection_time_update(client, mocker):
             os=MagicMock(family="Windows"), browser=MagicMock(family="Chrome")
         ),
     )
+    mock_update_url = mocker.patch("blueprints.url_shortener.update_url")
 
     response = client.get("/redirectiontime")
     assert response.status_code == 302
-    mock_db["urls"].update_one.assert_called()
+    assert mock_update_url.called
 
 
 @pytest.mark.parametrize(
@@ -230,6 +247,7 @@ def test_redirect_url_redirection_time_update(client, mocker):
 def test_redirection_db_update_clicks(
     client,
     mocker,
+    mock_db,
     user_agent,
     ip_address,
     referrer,
@@ -238,17 +256,20 @@ def test_redirection_db_update_clicks(
     expected_country,
     expected_referrer,
 ):
-    mock_db = mocker.patch("blueprints.url_shortener.db")
-    mock_db["urls"].find_one.return_value = {
-        "_id": "clicks",
-        "url": "http://example.com",
-        "total-clicks": 0,
-        "ips": {},
-        "referrer": {},
-        "block-bots": False,
-        "average_redirection_time": 0,
-    }
+    mocker.patch(
+        "blueprints.url_shortener.load_url",
+        return_value={
+            "_id": "clicks",
+            "url": "http://example.com",
+            "total-clicks": 0,
+            "ips": {},
+            "referrer": {},
+            "block-bots": False,
+            "average_redirection_time": 0,
+        },
+    )
     mocker.patch("blueprints.url_shortener.get_client_ip", return_value=ip_address)
+    mock_update_url = mocker.patch("blueprints.url_shortener.update_url")
 
     response = client.get(
         "/clicks", headers={"User-Agent": user_agent, "Referer": referrer}
@@ -257,40 +278,38 @@ def test_redirection_db_update_clicks(
 
     today_str = str(datetime.today()).split()[0]
 
-    mock_db["urls"].update_one.assert_called_with(
-        {"_id": "clicks"},
-        {
-            "$inc": {
-                "total-clicks": 1,
-                f"browser.{expected_browser}.counts": 1,
-                f"os_name.{expected_os}.counts": 1,
-                f"counter.{today_str}": 1,
-                f"country.{expected_country}.counts": 1,
-                f"unique_counter.{today_str}": 1,
+    updates = mock_update_url.call_args[0][1]
+    assert updates == {
+        "$inc": {
+            "total-clicks": 1,
+            f"browser.{expected_browser}.counts": 1,
+            f"os_name.{expected_os}.counts": 1,
+            f"counter.{today_str}": 1,
+            f"country.{expected_country}.counts": 1,
+            f"unique_counter.{today_str}": 1,
+        },
+        "$set": {
+            "last-click": mocker.ANY,
+            "last-click-browser": expected_browser,
+            "last-click-os": expected_os,
+            "last-click-country": expected_country,
+            "ips": {
+                ip_address: 1,
             },
-            "$set": {
-                "last-click": mocker.ANY,
-                "last-click-browser": expected_browser,
-                "last-click-os": expected_os,
-                "last-click-country": expected_country,
-                "ips": {
-                    ip_address: 1,
-                },
-                "average_redirection_time": mocker.ANY,
-                "referrer": {
-                    f"{expected_referrer}": {
-                        "counts": 1,
-                        "ips": [ip_address],
-                    }
-                },
-            },
-            "$addToSet": {
-                f"browser.{expected_browser}.ips": ip_address,
-                f"os_name.{expected_os}.ips": ip_address,
-                f"country.{expected_country}.ips": ip_address,
+            "average_redirection_time": mocker.ANY,
+            "referrer": {
+                f"{expected_referrer}": {
+                    "counts": 1,
+                    "ips": [ip_address],
+                }
             },
         },
-    )
+        "$addToSet": {
+            f"browser.{expected_browser}.ips": ip_address,
+            f"os_name.{expected_os}.ips": ip_address,
+            f"country.{expected_country}.ips": ip_address,
+        },
+    }
 
 
 @pytest.mark.parametrize(
@@ -328,16 +347,18 @@ def test_redirection_db_update_clicks(
     ],
 )
 def test_redirection_db_update_bot(client, mocker, user_agent, bot_name):
-    mock_db = mocker.patch("blueprints.url_shortener.db")
-    mock_db["urls"].find_one.return_value = {
-        "_id": "bot",
-        "url": "http://example.com",
-        "total-clicks": 0,
-        "ips": {},
-        "referrer": {},
-        "block-bots": False,
-        "average_redirection_time": 0,
-    }
+    mocker.patch(
+        "blueprints.url_shortener.load_url",
+        return_value={
+            "_id": "bot",
+            "url": "http://example.com",
+            "total-clicks": 0,
+            "ips": {},
+            "referrer": {},
+            "block-bots": False,
+            "average_redirection_time": 0,
+        },
+    )
     mocker.patch("blueprints.url_shortener.get_client_ip", return_value="127.0.0.1")
     mocker.patch(
         "blueprints.url_shortener.parse",
@@ -345,55 +366,30 @@ def test_redirection_db_update_bot(client, mocker, user_agent, bot_name):
             os=MagicMock(family="Windows"), browser=MagicMock(family="Chrome")
         ),
     )
+    mock_update_url = mocker.patch("blueprints.url_shortener.update_url")
 
     headers = {"User-Agent": user_agent}
     response = client.get("/bot", headers=headers)
     assert response.status_code == 302
 
-    today_str = str(datetime.today()).split()[0]
+    updates = mock_update_url.call_args[0][1]
+    assert f"bots.{bot_name}" in updates["$inc"]
+    assert updates["$inc"][f"bots.{bot_name}"] == 1
 
-    mock_db["urls"].update_one.assert_called_with(
-        {"_id": "bot"},
-        {
-            "$inc": {
-                "total-clicks": 1,
-                f"bots.{bot_name}": 1,
-                f"counter.{today_str}": 1,
-                f"unique_counter.{today_str}": 1,
-                f"browser.Chrome.counts": 1,
-                f"os_name.Windows.counts": 1,
-                f"country.Unknown.counts": 1,
-            },
-            "$set": {
-                "last-click": mocker.ANY,
-                "last-click-browser": "Chrome",
-                "last-click-os": "Windows",
-                "last-click-country": "Unknown",
-                "ips": {
-                    "127.0.0.1": 1,
-                },
-                "average_redirection_time": mocker.ANY,
-            },
-            "$addToSet": {
-                "browser.Chrome.ips": "127.0.0.1",
-                "country.Unknown.ips": "127.0.0.1",
-                "os_name.Windows.ips": "127.0.0.1",
-            },
+
+def test_multiple_clicks_same_ip_db_update(client, mocker, mock_db):
+    mocker.patch(
+        "blueprints.url_shortener.load_url",
+        return_value={
+            "_id": "multiple",
+            "url": "http://example.com",
+            "total-clicks": 0,
+            "ips": {},
+            "referrer": {},
+            "block-bots": False,
+            "average_redirection_time": 0,
         },
     )
-
-
-def test_multiple_clicks_same_ip_db_update(client, mocker):
-    mock_db = mocker.patch("blueprints.url_shortener.db")
-    mock_db["urls"].find_one.return_value = {
-        "_id": "multiple",
-        "url": "http://example.com",
-        "total-clicks": 0,
-        "ips": {},
-        "referrer": {},
-        "block-bots": False,
-        "average_redirection_time": 0,
-    }
 
     # Mock the client IP and user agent for two separate clicks
     mocker.patch(
@@ -405,6 +401,7 @@ def test_multiple_clicks_same_ip_db_update(client, mocker):
             os=MagicMock(family="Windows"), browser=MagicMock(family="Chrome")
         ),
     )
+    mock_update_url = mocker.patch("blueprints.url_shortener.update_url")
 
     # Simulate first click
     response1 = client.get("/multiple", headers={"User-Agent": "Mozilla/5.0"})
@@ -412,39 +409,37 @@ def test_multiple_clicks_same_ip_db_update(client, mocker):
 
     today_str = str(datetime.today()).split()[0]
 
-    # Assert the first update call
-    mock_db["urls"].update_one.assert_any_call(
-        {"_id": "multiple"},
-        {
-            "$inc": {
-                "total-clicks": 1,
-                f"counter.{today_str}": 1,
-                f"unique_counter.{today_str}": 1,  # First click is unique
-                f"browser.Chrome.counts": 1,
-                f"os_name.Windows.counts": 1,
-                f"country.Unknown.counts": 1,
-            },
-            "$set": {
-                "last-click": mocker.ANY,
-                "last-click-browser": "Chrome",
-                "last-click-os": "Windows",
-                "last-click-country": "Unknown",
-                "ips": {
-                    "127.0.0.1": 1,
-                },
-                "average_redirection_time": mocker.ANY,
-            },
-            "$addToSet": {
-                "browser.Chrome.ips": "127.0.0.1",
-                "country.Unknown.ips": "127.0.0.1",
-                "os_name.Windows.ips": "127.0.0.1",
-            },
-        },
-    )
-
     # Simulate second click
     response2 = client.get("/multiple", headers={"User-Agent": "Mozilla/5.0"})
     assert response2.status_code == 302
+
+    updates_first_click = mock_update_url.call_args_list[0][0][1]
+
+    assert updates_first_click == {
+        "$inc": {
+            "total-clicks": 1,
+            f"counter.{today_str}": 1,
+            f"unique_counter.{today_str}": 1,  # First click is unique
+            "browser.Chrome.counts": 1,
+            "os_name.Windows.counts": 1,
+            "country.Unknown.counts": 1,
+        },
+        "$set": {
+            "last-click": mocker.ANY,
+            "last-click-browser": "Chrome",
+            "last-click-os": "Windows",
+            "last-click-country": "Unknown",
+            "ips": {
+                "127.0.0.1": 1,
+            },
+            "average_redirection_time": mocker.ANY,
+        },
+        "$addToSet": {
+            "browser.Chrome.ips": "127.0.0.1",
+            "country.Unknown.ips": "127.0.0.1",
+            "os_name.Windows.ips": "127.0.0.1",
+        },
+    }
 
     # Assert the second update call
     mock_db["urls"].update_one.assert_any_call(
@@ -454,9 +449,9 @@ def test_multiple_clicks_same_ip_db_update(client, mocker):
                 "total-clicks": 1,
                 f"counter.{today_str}": 1,
                 # unique counter is not added because the second click is not unique
-                f"browser.Chrome.counts": 1,
-                f"os_name.Windows.counts": 1,
-                f"country.Unknown.counts": 1,
+                "browser.Chrome.counts": 1,
+                "os_name.Windows.counts": 1,
+                "country.Unknown.counts": 1,
             },
             "$set": {
                 "last-click": mocker.ANY,
@@ -525,9 +520,9 @@ def test_multiple_clicks_different_ip_db_update(client, mocker):
                 "total-clicks": 1,
                 f"counter.{today_str}": 1,
                 f"unique_counter.{today_str}": 1,  # Second click is unique
-                f"browser.Chrome.counts": 1,
-                f"os_name.Windows.counts": 1,
-                f"country.United States.counts": 1,
+                "browser.Chrome.counts": 1,
+                "os_name.Windows.counts": 1,
+                "country.United States.counts": 1,
             },
             "$set": {
                 "last-click": mocker.ANY,
@@ -598,9 +593,9 @@ def test_multiple_clicks_same_referrer_db_update(client, mocker):
                 "total-clicks": 1,
                 f"counter.{today_str}": 1,
                 f"unique_counter.{today_str}": 1,  # Second click is unique
-                f"browser.Chrome.counts": 1,
-                f"os_name.Windows.counts": 1,
-                f"country.United States.counts": 1,
+                "browser.Chrome.counts": 1,
+                "os_name.Windows.counts": 1,
+                "country.United States.counts": 1,
             },
             "$set": {
                 "last-click": mocker.ANY,
@@ -676,9 +671,9 @@ def test_multiple_clicks_different_referrer_db_update(client, mocker):
                 "total-clicks": 1,
                 f"counter.{today_str}": 1,
                 f"unique_counter.{today_str}": 1,  # Second click is unique
-                f"browser.Chrome.counts": 1,
-                f"os_name.Windows.counts": 1,
-                f"country.United States.counts": 1,
+                "browser.Chrome.counts": 1,
+                "os_name.Windows.counts": 1,
+                "country.United States.counts": 1,
             },
             "$set": {
                 "last-click": mocker.ANY,

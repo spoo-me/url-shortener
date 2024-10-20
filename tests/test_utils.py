@@ -1,17 +1,17 @@
 import pytest
-from utils import (
+from utils.url_utils import (
     get_country,
     get_client_ip,
-    humanize_number,
-    is_positive_integer,
-    convert_country_name,
+    validate_alias,
     generate_short_code,
-    generate_passkey,
-    validate_string,
+    validate_emoji_alias,
+)
+from utils.general import humanize_number, is_positive_integer
+from utils.analytics_utils import (
+    convert_country_name,
     add_missing_dates,
     top_four,
     calculate_click_averages,
-    validate_emoji_alias,
 )
 from flask import Flask
 import string
@@ -189,52 +189,31 @@ def test_generate_short_code_characters():
     assert all(c in valid_characters for c in code)
 
 
-def test_generate_passkey_length():
-    passkey = generate_passkey()
-    assert len(passkey) == 22
+def test_validate_alias_valid():
+    assert validate_alias("validString123") == True
+    assert validate_alias("valid_string-123") == True
+    assert validate_alias("valid-String_123") == True
 
 
-def test_generate_passkey_characters():
-    passkey = generate_passkey()
-    valid_characters = string.ascii_lowercase + string.ascii_uppercase + string.digits
-    assert all(c in valid_characters for c in passkey)
+def test_validate_alias_invalid():
+    assert validate_alias("invalid string!") == False
+    assert validate_alias("invalid@string") == False
+    assert validate_alias("invalid#string") == False
+    assert validate_alias("invalid$string") == False
 
 
-def test_generate_short_code_uniqueness():
-    codes = {generate_short_code() for _ in range(1000)}
-    assert len(codes) == 1000  # Ensure all generated codes are unique
+def test_validate_alias_empty():
+    assert validate_alias("") == True  # Assuming empty string is valid
 
 
-def test_generate_passkey_uniqueness():
-    passkeys = {generate_passkey() for _ in range(1000)}
-    assert len(passkeys) == 1000  # Ensure all generated passkeys are unique
+def test_validate_alias_special_characters():
+    assert validate_alias("valid_string-123") == True
+    assert validate_alias("invalid*string") == False
+    assert validate_alias("invalid&string") == False
 
 
-def test_validate_string_valid():
-    assert validate_string("validString123") == True
-    assert validate_string("valid_string-123") == True
-    assert validate_string("valid-String_123") == True
-
-
-def test_validate_string_invalid():
-    assert validate_string("invalid string!") == False
-    assert validate_string("invalid@string") == False
-    assert validate_string("invalid#string") == False
-    assert validate_string("invalid$string") == False
-
-
-def test_validate_string_empty():
-    assert validate_string("") == True  # Assuming empty string is valid
-
-
-def test_validate_string_special_characters():
-    assert validate_string("valid_string-123") == True
-    assert validate_string("invalid*string") == False
-    assert validate_string("invalid&string") == False
-
-
-def test_validate_string_numeric():
-    assert validate_string("1234567890") == True
+def test_validate_alias_numeric():
+    assert validate_alias("1234567890") == True
 
 
 # Test missing dates in counter

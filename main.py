@@ -17,7 +17,7 @@ from blueprints.seo import seo
 from blueprints.stats import stats
 from blueprints.url_shortener import url_shortener
 from blueprints.cache import cache
-from utils import client
+from utils.mongo_utils import client
 
 app = Flask(__name__)
 CORS(app)

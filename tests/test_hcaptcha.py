@@ -1,7 +1,7 @@
 import pytest
 import requests
 import requests_mock
-from utils import verify_hcaptcha, hcaptcha_secret
+from utils.contact_utils import verify_hcaptcha
 
 
 def test_verify_hcaptcha_success():

@@ -1,7 +1,12 @@
 import pytest
 import io
 from openpyxl import load_workbook
-from utils import export_to_excel, export_to_csv, export_to_json, export_to_xml
+from utils.export_utils import (
+    export_to_excel,
+    export_to_csv,
+    export_to_json,
+    export_to_xml,
+)
 from flask import send_file
 import csv
 import json
@@ -46,7 +51,7 @@ data = {
 
 def test_export_to_excel(mocker):
     # Mock send_file
-    mock_send_file = mocker.patch("utils.send_file")
+    mock_send_file = mocker.patch("utils.export_utils.send_file")
 
     # Call the function
     export_to_excel(data)
@@ -127,7 +132,7 @@ def test_export_to_excel(mocker):
 
 def test_export_to_csv(mocker):
     # Mock send_file
-    mock_send_file = mocker.patch("utils.send_file")
+    mock_send_file = mocker.patch("utils.export_utils.send_file")
 
     # Call the function
     export_to_csv(data)
@@ -214,7 +219,7 @@ def test_export_to_csv(mocker):
 
 def test_export_to_json(mocker):
     # Mock send_file
-    mock_send_file = mocker.patch("utils.send_file")
+    mock_send_file = mocker.patch("utils.export_utils.send_file")
 
     # Call the function
     export_to_json(data)
@@ -235,7 +240,7 @@ def test_export_to_json(mocker):
 
 def test_export_to_xml(mocker):
     # Mock send_file
-    mock_send_file = mocker.patch("utils.send_file")
+    mock_send_file = mocker.patch("utils.export_utils.send_file")
 
     # Call the function
     export_to_xml(data)

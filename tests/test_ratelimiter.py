@@ -27,14 +27,10 @@ def client():
 
 
 def test_rate_limiter(client, mocker):
-    mock_db = mocker.patch("blueprints.url_shortener.db")
-    mock_db["urls"].find_one.return_value = None
-    mocker.patch("blueprints.url_shortener.validate_url", return_value=True)
     mocker.patch("blueprints.url_shortener.check_if_slug_exists", return_value=False)
     mocker.patch(
         "blueprints.url_shortener.generate_short_code", return_value="shortcode"
     )
-    mocker.patch("blueprints.url_shortener.add_url_by_id")
 
     for _ in range(2):
         response = client.post(

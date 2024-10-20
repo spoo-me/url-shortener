@@ -1,5 +1,5 @@
 import pytest
-from utils import validate_url
+from utils.url_utils import validate_url
 
 
 def test_valid_url():
