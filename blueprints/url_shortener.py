@@ -441,7 +441,7 @@ def redirect_url(short_code):
     if "referrer" not in url_data:
         url_data["referrer"] = {}
     if "ips" not in url_data:
-        url_data["ips"] = {}
+        url_data["ips"] = []
 
     if referrer:
         referrer_raw = tldextract.extract(referrer)
@@ -513,8 +513,7 @@ def redirect_url(short_code):
     else:
         updates["$inc"][f"unique_counter.{today}"] = 1
 
-    url_data["ips"][user_ip] = url_data["ips"].get(user_ip, 0) + 1
-    updates["$set"]["ips"] = url_data["ips"]
+    updates["$addToSet"]["ips"] = user_ip
 
     updates["$inc"]["total-clicks"] = 1
 

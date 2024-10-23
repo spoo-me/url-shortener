@@ -169,7 +169,7 @@ def analytics(short_code):
     url_data["country"] = url_data.get("country", {})
     url_data["browser"] = url_data.get("browser", {})
     url_data["os_name"] = url_data.get("os_name", {})
-    url_data["ips"] = url_data.get("ips", {})
+    url_data["ips"] = url_data.get("ips", [])
 
     try:
         url_data["unique_referrer"] = {}
@@ -197,7 +197,7 @@ def analytics(short_code):
         pass
 
     if "ips" in url_data:
-        url_data["total_unique_clicks"] = len(url_data["ips"].keys())
+        url_data["total_unique_clicks"] = len(url_data["ips"])
 
     (
         url_data["average_daily_clicks"],
@@ -342,7 +342,7 @@ def export(short_code, format):
     url_data["country"] = url_data.get("country", {})
     url_data["browser"] = url_data.get("browser", {})
     url_data["os_name"] = url_data.get("os_name", {})
-    url_data["ips"] = url_data.get("ips", {})
+    url_data["ips"] = url_data.get("ips", [])
 
     try:
         url_data["unique_referrer"] = {}
@@ -367,7 +367,7 @@ def export(short_code, format):
                 url_data["unique_os_name"][i] = len(url_data["os_name"][i]["ips"])
             url_data["os_name"][i] = url_data["os_name"][i]["counts"]
 
-        url_data["total_unique_clicks"] = len(url_data["ips"].keys())
+        url_data["total_unique_clicks"] = len(url_data["ips"])
         url_data["average_redirection_time"] = url_data.get(
             "average_redirection_time", 0
         )
