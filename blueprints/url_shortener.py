@@ -348,7 +348,6 @@ def redirect_url(short_code):
         "max-clicks": 1,
         "expiration-time": 1,
         "total-clicks": 1,
-        "ips": 1,
         "referrer": 1,
         "block-bots": 1,
         "average_redirection_time": 1,
