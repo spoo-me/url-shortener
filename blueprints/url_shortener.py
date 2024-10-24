@@ -349,6 +349,7 @@ def redirect_url(short_code):
         "expiration-time": 1,
         "total-clicks": 1,
         "referrer": 1,
+        "ips": 1,
         "block-bots": 1,
         "average_redirection_time": 1,
     }
