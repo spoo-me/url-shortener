@@ -510,7 +510,7 @@ def redirect_url(short_code):
             updates["$inc"][f"bots.{crawler_detect.getMatches()}"] = 1
 
     # increment the counter for the short code
-    today = str(datetime.today()).split()[0]
+    today = str(datetime.now()).split()[0]
     updates["$inc"][f"counter.{today}"] = 1
 
     if "ips" in url_data and url_data["ips"] is not None:
