@@ -542,8 +542,6 @@ def redirect_url(short_code):
         (1 - alpha) * curr_avg + alpha * redirection_time, 2
     )
 
-    print(updates)
-
     if is_emoji:
         update_emoji_url(short_code, updates)
     else:
