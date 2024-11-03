@@ -196,7 +196,7 @@ def analytics(short_code):
     except Exception:
         pass
 
-    if "ips" in url_data and url_data["ips"]:
+    if "ips" in url_data:
         url_data["total_unique_clicks"] = len(url_data["ips"])
 
     (
