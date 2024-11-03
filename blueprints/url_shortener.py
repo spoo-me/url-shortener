@@ -150,9 +150,15 @@ def shorten_url():
                 400,
             )
 
-        data = {"url": url, "password": password, "counter": {}, "total-clicks": 0, "ips":[]}
+        data = {
+            "url": url,
+            "password": password,
+            "counter": {},
+            "total-clicks": 0,
+            "ips": [],
+        }
     else:
-        data = {"url": url, "counter": {}, "total-clicks": 0, "ips":[]}
+        data = {"url": url, "counter": {}, "total-clicks": 0, "ips": []}
 
     if max_clicks:
         if not is_positive_integer(max_clicks):
@@ -504,11 +510,11 @@ def redirect_url(short_code):
             updates["$inc"][f"bots.{crawler_detect.getMatches()}"] = 1
 
     # increment the counter for the short code
-    today = str(datetime.today()).split()[0]
+    today = str(datetime.now()).split()[0]
     updates["$inc"][f"counter.{today}"] = 1
 
-    if "ips" in url_data:
-        if url_data["ips"] and user_ip not in url_data["ips"]:
+    if "ips" in url_data and url_data["ips"] is not None:
+        if user_ip not in url_data["ips"]:
             updates["$inc"][f"unique_counter.{today}"] = 1
     else:
         updates["$inc"][f"unique_counter.{today}"] = 1
