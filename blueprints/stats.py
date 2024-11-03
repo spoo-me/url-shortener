@@ -114,9 +114,10 @@ def analytics(short_code):
         if password != url_data["password"]:
             if request.method == "POST":
                 return (
-                    jsonify(
-                        {"PasswordError": "Invalid Password", "entered-pass": password}
-                    ),
+                    jsonify({
+                        "PasswordError": "Invalid Password",
+                        "entered-pass": password,
+                    }),
                     400,
                 )
             else:
@@ -165,6 +166,7 @@ def analytics(short_code):
     url_data["bots"] = url_data.get("bots", {})
 
     url_data["counter"] = url_data.get("counter", {})
+    url_data["unique_counter"] = url_data.get("unique_counter", {})
     url_data["referrer"] = url_data.get("referrer", {})
     url_data["country"] = url_data.get("country", {})
     url_data["browser"] = url_data.get("browser", {})
@@ -216,6 +218,8 @@ def analytics(short_code):
     if "unique_counter" in url_data and url_data["unique_counter"] != {}:
         url_data = add_missing_dates("unique_counter", url_data)
 
+    print(url_data)
+
     if request.method == "POST":
         return jsonify(url_data)
     else:
@@ -266,11 +270,9 @@ def export(short_code, format):
             )
         else:
             return (
-                jsonify(
-                    {
-                        "FormatError": "Invalid format; format must be json, csv, xlsx or xml"
-                    }
-                ),
+                jsonify({
+                    "FormatError": "Invalid format; format must be json, csv, xlsx or xml"
+                }),
                 400,
             )
 
@@ -297,9 +299,10 @@ def export(short_code, format):
         if password != url_data["password"]:
             if request.method == "POST":
                 return (
-                    jsonify(
-                        {"PasswordError": "Invalid Password", "entered-pass": password}
-                    ),
+                    jsonify({
+                        "PasswordError": "Invalid Password",
+                        "entered-pass": password,
+                    }),
                     400,
                 )
             else:

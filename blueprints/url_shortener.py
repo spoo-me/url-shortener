@@ -150,9 +150,15 @@ def shorten_url():
                 400,
             )
 
-        data = {"url": url, "password": password, "counter": {}, "total-clicks": 0, "ips":[]}
+        data = {
+            "url": url,
+            "password": password,
+            "counter": {},
+            "total-clicks": 0,
+            "ips": [],
+        }
     else:
-        data = {"url": url, "counter": {}, "total-clicks": 0, "ips":[]}
+        data = {"url": url, "counter": {}, "total-clicks": 0, "ips": []}
 
     if max_clicks:
         if not is_positive_integer(max_clicks):
@@ -507,8 +513,8 @@ def redirect_url(short_code):
     today = str(datetime.today()).split()[0]
     updates["$inc"][f"counter.{today}"] = 1
 
-    if "ips" in url_data:
-        if url_data["ips"] and user_ip not in url_data["ips"]:
+    if "ips" in url_data and url_data["ips"] is not None:
+        if user_ip not in url_data["ips"]:
             updates["$inc"][f"unique_counter.{today}"] = 1
     else:
         updates["$inc"][f"unique_counter.{today}"] = 1
@@ -535,6 +541,8 @@ def redirect_url(short_code):
     updates["$set"]["average_redirection_time"] = round(
         (1 - alpha) * curr_avg + alpha * redirection_time, 2
     )
+
+    print(updates)
 
     if is_emoji:
         update_emoji_url(short_code, updates)
