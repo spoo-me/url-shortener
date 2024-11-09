@@ -452,7 +452,7 @@ def redirect_url(short_code):
             if referrer_raw.suffix
             else referrer_raw.domain
         )
-        sanitized_referrer = referrer.replace(".", "_")
+        sanitized_referrer = re.sub(r"[.$\x00-\x1F\x7F-\x9F]", "_", referrer)
 
         updates["$inc"][f"referrer.{sanitized_referrer}.counts"] = 1
         updates["$addToSet"][f"referrer.{sanitized_referrer}.ips"] = user_ip
