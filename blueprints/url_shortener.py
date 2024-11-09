@@ -48,6 +48,7 @@ from crawlerdetect import CrawlerDetect
 url_shortener = Blueprint("url_shortener", __name__)
 
 crawler_detect = CrawlerDetect()
+tld_no_cache_extract = tldextract.TLDExtract(cache_dir=None)
 
 
 @url_shortener.route("/", methods=["GET"])
@@ -315,7 +316,6 @@ def emoji():
 @url_shortener.route("/result/<short_code>", methods=["GET"])
 @limiter.exempt
 def result(short_code):
-
     short_code = unquote(short_code)
     if validate_emoji_alias(short_code):
         url_data = load_emoji_url(short_code)
@@ -346,7 +346,6 @@ def result(short_code):
 @url_shortener.route("/<short_code>", methods=["GET"])
 @limiter.exempt
 def redirect_url(short_code):
-
     projection = {
         "_id": 1,
         "url": 1,
@@ -354,7 +353,6 @@ def redirect_url(short_code):
         "max-clicks": 1,
         "expiration-time": 1,
         "total-clicks": 1,
-        "referrer": 1,
         "ips": 1,
         "block-bots": 1,
         "average_redirection_time": 1,
@@ -444,30 +442,20 @@ def redirect_url(short_code):
 
     updates = {"$inc": {}, "$set": {}, "$addToSet": {}}
 
-    if "referrer" not in url_data:
-        url_data["referrer"] = {}
     if "ips" not in url_data:
         url_data["ips"] = []
 
     if referrer:
-        referrer_raw = tldextract.extract(referrer)
+        referrer_raw = tld_no_cache_extract(referrer)
         referrer = (
             f"{referrer_raw.domain}.{referrer_raw.suffix}"
             if referrer_raw.suffix
             else referrer_raw.domain
         )
+        sanitized_referrer = referrer.replace(".", "_")
 
-        referrer_data = url_data["referrer"].setdefault(
-            referrer, {"ips": [], "counts": 0}
-        )
-        if user_ip not in referrer_data["ips"]:
-            referrer_data["ips"].append(user_ip)
-        referrer_data["counts"] += 1
-
-        updates["$set"]["referrer"] = url_data["referrer"]
-
-        # updates["$inc"][f"referrer.{referrer}.counts"] = 1
-        # updates["$addToSet"][f"referrer.{referrer}.ips"] = user_ip
+        updates["$inc"][f"referrer.{sanitized_referrer}.counts"] = 1
+        updates["$addToSet"][f"referrer.{sanitized_referrer}.ips"] = user_ip
 
     updates["$inc"][f"country.{country}.counts"] = 1
     updates["$addToSet"][f"country.{country}.ips"] = user_ip
@@ -553,7 +541,6 @@ def redirect_url(short_code):
 @url_shortener.route("/<short_code>/password", methods=["POST"])
 @limiter.exempt
 def check_password(short_code):
-
     projection = {
         "_id": 1,
         "password": 1,
