@@ -337,10 +337,13 @@ def export(short_code, format):
     url_data["password"] = url_data.get("password")
     url_data["last-click-browser"] = url_data.get("last-click-browser")
     url_data["last-click-os"] = url_data.get("last-click-os")
+    url_data["last-click-country"] = url_data.get("last-click-country")
+    url_data["last-click"] = url_data.get("last-click")
     url_data["block-bots"] = url_data.get("block-bots", False)
     url_data["bots"] = url_data.get("bots", {})
 
     url_data["counter"] = url_data.get("counter", {})
+    url_data["unique_counter"] = url_data.get("unique_counter", {})
     url_data["referrer"] = url_data.get("referrer", {})
     url_data["country"] = url_data.get("country", {})
     url_data["browser"] = url_data.get("browser", {})
