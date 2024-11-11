@@ -1,5 +1,5 @@
 User-agent: *
-Disallow: /*
+Disallow: /
 
 Allow: /$
 Allow: /stats
