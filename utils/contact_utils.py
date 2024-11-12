@@ -29,7 +29,6 @@ def verify_hcaptcha(token):
 
 
 def send_report(webhook_uri, short_code, reason, ip_address, host_uri):
-
     data = {
         "embeds": [
             {
@@ -54,7 +53,6 @@ def send_report(webhook_uri, short_code, reason, ip_address, host_uri):
 
 
 def send_contact_message(webhook_uri, email, message):
-
     data = {
         "embeds": [
             {

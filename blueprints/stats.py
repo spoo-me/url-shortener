@@ -114,10 +114,12 @@ def analytics(short_code):
         if password != url_data["password"]:
             if request.method == "POST":
                 return (
-                    jsonify({
-                        "PasswordError": "Invalid Password",
-                        "entered-pass": password,
-                    }),
+                    jsonify(
+                        {
+                            "PasswordError": "Invalid Password",
+                            "entered-pass": password,
+                        }
+                    ),
                     400,
                 )
             else:
@@ -270,9 +272,11 @@ def export(short_code, format):
             )
         else:
             return (
-                jsonify({
-                    "FormatError": "Invalid format; format must be json, csv, xlsx or xml"
-                }),
+                jsonify(
+                    {
+                        "FormatError": "Invalid format; format must be json, csv, xlsx or xml"
+                    }
+                ),
                 400,
             )
 
@@ -299,10 +303,12 @@ def export(short_code, format):
         if password != url_data["password"]:
             if request.method == "POST":
                 return (
-                    jsonify({
-                        "PasswordError": "Invalid Password",
-                        "entered-pass": password,
-                    }),
+                    jsonify(
+                        {
+                            "PasswordError": "Invalid Password",
+                            "entered-pass": password,
+                        }
+                    ),
                     400,
                 )
             else:
