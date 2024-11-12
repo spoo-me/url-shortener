@@ -87,11 +87,9 @@ def shorten_url():
 
     if url and not validate_url(url):
         return (
-            jsonify(
-                {
-                    "UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"
-                }
-            ),
+            jsonify({
+                "UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"
+            }),
             400,
         )
 
@@ -143,11 +141,9 @@ def shorten_url():
     if password:
         if not validate_password(password):
             return (
-                jsonify(
-                    {
-                        "PasswordError": "Invalid password, password must be atleast 8 characters long, must contain a letter and a number and a special character either '@' or '.' and cannot be consecutive"
-                    }
-                ),
+                jsonify({
+                    "PasswordError": "Invalid password, password must be atleast 8 characters long, must contain a letter and a number and a special character either '@' or '.' and cannot be consecutive"
+                }),
                 400,
             )
 
@@ -176,11 +172,9 @@ def shorten_url():
     if expiration_time:
         if not validate_expiration_time(expiration_time):
             return (
-                jsonify(
-                    {
-                        "ExpirationTimeError": "Invalid expiration-time. It must be in a valid ISO format with timezone information and at least 5 minutes from the current time."
-                    }
-                ),
+                jsonify({
+                    "ExpirationTimeError": "Invalid expiration-time. It must be in a valid ISO format with timezone information and at least 5 minutes from the current time."
+                }),
                 400,
             )
         else:
@@ -245,11 +239,9 @@ def emoji():
 
     if url and not validate_url(url):
         return (
-            jsonify(
-                {
-                    "UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"
-                }
-            ),
+            jsonify({
+                "UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"
+            }),
             400,
         )
 
@@ -261,11 +253,9 @@ def emoji():
     if password:
         if not validate_password(password):
             return (
-                jsonify(
-                    {
-                        "PasswordError": "Invalid password, password must be atleast 8 characters long, must contain a letter and a number and a special character either '@' or '.' and cannot be consecutive"
-                    }
-                ),
+                jsonify({
+                    "PasswordError": "Invalid password, password must be atleast 8 characters long, must contain a letter and a number and a special character either '@' or '.' and cannot be consecutive"
+                }),
                 400,
             )
         data["password"] = password
@@ -285,11 +275,9 @@ def emoji():
     if expiration_time:
         if not validate_expiration_time(expiration_time):
             return (
-                jsonify(
-                    {
-                        "ExpirationTimeError": "Invalid expiration-time. It must be in a valid ISO format with timezone information and at least 5 minutes from the current time."
-                    }
-                ),
+                jsonify({
+                    "ExpirationTimeError": "Invalid expiration-time. It must be in a valid ISO format with timezone information and at least 5 minutes from the current time."
+                }),
                 400,
             )
         else:
@@ -346,6 +334,7 @@ def result(short_code):
 @url_shortener.route("/<short_code>", methods=["GET"])
 @limiter.exempt
 def redirect_url(short_code):
+    user_ip = get_client_ip()
     projection = {
         "_id": 1,
         "url": 1,
@@ -353,7 +342,7 @@ def redirect_url(short_code):
         "max-clicks": 1,
         "expiration-time": 1,
         "total-clicks": 1,
-        "ips": 1,
+        "ips": {"$elemMatch": {"$eq": user_ip}},
         "block-bots": 1,
         "average_redirection_time": 1,
     }
@@ -433,9 +422,9 @@ def redirect_url(short_code):
 
     os_name = ua.os.family
     browser = ua.browser.family
-    user_ip = get_client_ip()
     referrer = request.headers.get("Referer")
     country = get_country(user_ip)
+    is_unique_click = url_data.get("ips", None) is None
 
     if country:
         country = country.replace(".", " ")
@@ -471,13 +460,11 @@ def redirect_url(short_code):
         if bot_re.search(user_agent):
             if url_data.get("block-bots", False):
                 return (
-                    jsonify(
-                        {
-                            "error_code": "403",
-                            "error_message": "Access Denied, Bots not allowed",
-                            "host_url": request.host_url,
-                        }
-                    ),
+                    jsonify({
+                        "error_code": "403",
+                        "error_message": "Access Denied, Bots not allowed",
+                        "host_url": request.host_url,
+                    }),
                     403,
                 )
             updates["$inc"][f"bots.{bot}"] = 1
@@ -486,13 +473,11 @@ def redirect_url(short_code):
         if crawler_detect.isCrawler(user_agent):
             if url_data.get("block-bots", False):
                 return (
-                    jsonify(
-                        {
-                            "error_code": "403",
-                            "error_message": "Access Denied, Bots not allowed",
-                            "host_url": request.host_url,
-                        }
-                    ),
+                    jsonify({
+                        "error_code": "403",
+                        "error_message": "Access Denied, Bots not allowed",
+                        "host_url": request.host_url,
+                    }),
                     403,
                 )
             updates["$inc"][f"bots.{crawler_detect.getMatches()}"] = 1
@@ -501,10 +486,7 @@ def redirect_url(short_code):
     today = str(datetime.now()).split()[0]
     updates["$inc"][f"counter.{today}"] = 1
 
-    if "ips" in url_data and url_data["ips"] is not None:
-        if user_ip not in url_data["ips"]:
-            updates["$inc"][f"unique_counter.{today}"] = 1
-    else:
+    if is_unique_click:
         updates["$inc"][f"unique_counter.{today}"] = 1
 
     updates["$addToSet"]["ips"] = user_ip
