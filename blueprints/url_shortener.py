@@ -87,11 +87,9 @@ def shorten_url():
 
     if url and not validate_url(url):
         return (
-            jsonify(
-                {
-                    "UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"
-                }
-            ),
+            jsonify({
+                "UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"
+            }),
             400,
         )
 
@@ -143,11 +141,9 @@ def shorten_url():
     if password:
         if not validate_password(password):
             return (
-                jsonify(
-                    {
-                        "PasswordError": "Invalid password, password must be atleast 8 characters long, must contain a letter and a number and a special character either '@' or '.' and cannot be consecutive"
-                    }
-                ),
+                jsonify({
+                    "PasswordError": "Invalid password, password must be atleast 8 characters long, must contain a letter and a number and a special character either '@' or '.' and cannot be consecutive"
+                }),
                 400,
             )
 
@@ -176,11 +172,9 @@ def shorten_url():
     if expiration_time:
         if not validate_expiration_time(expiration_time):
             return (
-                jsonify(
-                    {
-                        "ExpirationTimeError": "Invalid expiration-time. It must be in a valid ISO format with timezone information and at least 5 minutes from the current time."
-                    }
-                ),
+                jsonify({
+                    "ExpirationTimeError": "Invalid expiration-time. It must be in a valid ISO format with timezone information and at least 5 minutes from the current time."
+                }),
                 400,
             )
         else:
@@ -245,11 +239,9 @@ def emoji():
 
     if url and not validate_url(url):
         return (
-            jsonify(
-                {
-                    "UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"
-                }
-            ),
+            jsonify({
+                "UrlError": "Invalid URL, URL must have a valid protocol and must follow rfc_1034 & rfc_2728 patterns"
+            }),
             400,
         )
 
@@ -261,11 +253,9 @@ def emoji():
     if password:
         if not validate_password(password):
             return (
-                jsonify(
-                    {
-                        "PasswordError": "Invalid password, password must be atleast 8 characters long, must contain a letter and a number and a special character either '@' or '.' and cannot be consecutive"
-                    }
-                ),
+                jsonify({
+                    "PasswordError": "Invalid password, password must be atleast 8 characters long, must contain a letter and a number and a special character either '@' or '.' and cannot be consecutive"
+                }),
                 400,
             )
         data["password"] = password
@@ -285,11 +275,9 @@ def emoji():
     if expiration_time:
         if not validate_expiration_time(expiration_time):
             return (
-                jsonify(
-                    {
-                        "ExpirationTimeError": "Invalid expiration-time. It must be in a valid ISO format with timezone information and at least 5 minutes from the current time."
-                    }
-                ),
+                jsonify({
+                    "ExpirationTimeError": "Invalid expiration-time. It must be in a valid ISO format with timezone information and at least 5 minutes from the current time."
+                }),
                 400,
             )
         else:
@@ -472,13 +460,11 @@ def redirect_url(short_code):
         if bot_re.search(user_agent):
             if url_data.get("block-bots", False):
                 return (
-                    jsonify(
-                        {
-                            "error_code": "403",
-                            "error_message": "Access Denied, Bots not allowed",
-                            "host_url": request.host_url,
-                        }
-                    ),
+                    jsonify({
+                        "error_code": "403",
+                        "error_message": "Access Denied, Bots not allowed",
+                        "host_url": request.host_url,
+                    }),
                     403,
                 )
             updates["$inc"][f"bots.{bot}"] = 1
@@ -487,13 +473,11 @@ def redirect_url(short_code):
         if crawler_detect.isCrawler(user_agent):
             if url_data.get("block-bots", False):
                 return (
-                    jsonify(
-                        {
-                            "error_code": "403",
-                            "error_message": "Access Denied, Bots not allowed",
-                            "host_url": request.host_url,
-                        }
-                    ),
+                    jsonify({
+                        "error_code": "403",
+                        "error_message": "Access Denied, Bots not allowed",
+                        "host_url": request.host_url,
+                    }),
                     403,
                 )
             updates["$inc"][f"bots.{crawler_detect.getMatches()}"] = 1
