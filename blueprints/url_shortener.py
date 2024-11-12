@@ -346,6 +346,7 @@ def result(short_code):
 @url_shortener.route("/<short_code>", methods=["GET"])
 @limiter.exempt
 def redirect_url(short_code):
+    user_ip = get_client_ip()
     projection = {
         "_id": 1,
         "url": 1,
@@ -353,7 +354,7 @@ def redirect_url(short_code):
         "max-clicks": 1,
         "expiration-time": 1,
         "total-clicks": 1,
-        "ips": 1,
+        "ips": {"$elemMatch": {"$eq": user_ip}},
         "block-bots": 1,
         "average_redirection_time": 1,
     }
@@ -433,9 +434,9 @@ def redirect_url(short_code):
 
     os_name = ua.os.family
     browser = ua.browser.family
-    user_ip = get_client_ip()
     referrer = request.headers.get("Referer")
     country = get_country(user_ip)
+    is_unique_click = url_data.get("ips", None) is None
 
     if country:
         country = country.replace(".", " ")
@@ -501,10 +502,7 @@ def redirect_url(short_code):
     today = str(datetime.now()).split()[0]
     updates["$inc"][f"counter.{today}"] = 1
 
-    if "ips" in url_data and url_data["ips"] is not None:
-        if user_ip not in url_data["ips"]:
-            updates["$inc"][f"unique_counter.{today}"] = 1
-    else:
+    if is_unique_click:
         updates["$inc"][f"unique_counter.{today}"] = 1
 
     updates["$addToSet"]["ips"] = user_ip
