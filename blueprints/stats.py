@@ -1,5 +1,10 @@
-from flask import Blueprint, jsonify, render_template, request, redirect, url_for
-from utils.mongo_utils import load_url, load_emoji_url
+from flask import Blueprint, jsonify, render_template, request, redirect
+from utils.mongo_utils import (
+    aggregate_emoji_url,
+    aggregate_url,
+    load_url,
+    load_emoji_url,
+)
 from utils.url_utils import (
     validate_emoji_alias,
     convert_to_gmt,
@@ -16,6 +21,7 @@ from utils.export_utils import (
     export_to_excel,
     export_to_xml,
 )
+from utils.pipeline_utils import get_stats_pipeline
 from .limiter import limiter
 
 from datetime import datetime, timezone
@@ -26,6 +32,7 @@ stats = Blueprint("stats", __name__)
 
 
 @stats.route("/stats", methods=["GET", "POST"])
+@stats.route("/stats/", methods=["GET", "POST"])
 @limiter.exempt
 def stats_route():
     if request.method == "POST":
@@ -43,9 +50,11 @@ def stats_route():
         short_code = unquote(short_code)
 
         if validate_emoji_alias(short_code):
-            url_data = load_emoji_url(short_code)
+            url_data = load_emoji_url(short_code, projection={"password": 1})
         else:
-            url_data = load_url(short_code)
+            url_data = load_url(short_code, projection={"password": 1})
+
+        url_data["password"] = url_data.get("password", None)
 
         if not url_data:
             return render_template(
@@ -55,7 +64,7 @@ def stats_route():
                 host_url=request.host_url,
             )
 
-        if not password and "password" in url_data:
+        if not password and url_data["password"] is not None:
             return render_template(
                 "stats.html",
                 password_error=f"{request.host_url}{short_code} is a password protected Url, please enter the password to continue.",
@@ -63,7 +72,7 @@ def stats_route():
                 host_url=request.host_url,
             )
 
-        if "password" in url_data and url_data["password"] != password:
+        if url_data["password"] is not None and url_data["password"] != password:
             return render_template(
                 "stats.html",
                 password_error="Invalid Password! please enter the correct password to continue.",
@@ -71,7 +80,7 @@ def stats_route():
                 host_url=request.host_url,
             )
 
-        if "password" in url_data:
+        if url_data["password"] is not None:
             return redirect(f"/stats/{short_code}?password={password}")
         else:
             return redirect(f"/stats/{short_code}")
@@ -79,22 +88,17 @@ def stats_route():
     return render_template("stats.html", host_url=request.host_url)
 
 
-@stats.route("/stats/", methods=["GET", "POST"])
-def stats_redirect():
-    return redirect(url_for("stats.stats_route"))
-
-
 @stats.route("/stats/<short_code>", methods=["GET", "POST"])
 @limiter.exempt
 def analytics(short_code):
     password = request.values.get("password")
-
     short_code = unquote(short_code)
+    pipeline = get_stats_pipeline(short_code)
 
     if validate_emoji_alias(short_code):
-        url_data = load_emoji_url(short_code)
+        url_data = aggregate_emoji_url(pipeline)
     else:
-        url_data = load_url(short_code)
+        url_data = aggregate_url(pipeline)
 
     if not url_data:
         if request.method == "GET":
@@ -110,7 +114,7 @@ def analytics(short_code):
         else:
             return jsonify({"UrlError": "The requested Url never existed"}), 404
 
-    if "password" in url_data:
+    if url_data["password"] is not None:
         if password != url_data["password"]:
             if request.method == "POST":
                 return (
@@ -144,64 +148,19 @@ def analytics(short_code):
                         400,
                     )
 
-    if url_data.get("max-clicks") is not None:
+    if url_data["max-clicks"] is not None:
         url_data["expired"] = url_data["total-clicks"] >= int(url_data["max-clicks"])
     else:
         url_data["expired"] = None
 
-    if "expiration-time" in url_data:
+    if url_data["expiration-time"] is not None:
         expiration_time = convert_to_gmt(url_data["expiration-time"])
         if not expiration_time:
             print("Expiration time is not timezone aware")
         elif expiration_time <= datetime.now(timezone.utc):
             url_data["expired"] = True
 
-    url_data["total-clicks"] = url_data.get("total-clicks", 0)
-    url_data["max-clicks"] = url_data.get("max-clicks", None)
-    url_data["expiration-time"] = url_data.get("expiration-time", None)
-    url_data["password"] = url_data.get("password", None)
-
     url_data["short_code"] = short_code
-    url_data["last-click-browser"] = url_data.get("last-click-browser", None)
-    url_data["last-click-os"] = url_data.get("last-click-os", None)
-    url_data["block-bots"] = url_data.get("block-bots", False)
-    url_data["bots"] = url_data.get("bots", {})
-
-    url_data["counter"] = url_data.get("counter", {})
-    url_data["unique_counter"] = url_data.get("unique_counter", {})
-    url_data["referrer"] = url_data.get("referrer", {})
-    url_data["country"] = url_data.get("country", {})
-    url_data["browser"] = url_data.get("browser", {})
-    url_data["os_name"] = url_data.get("os_name", {})
-    url_data["ips"] = url_data.get("ips", [])
-
-    try:
-        url_data["unique_referrer"] = {}
-        url_data["unique_country"] = {}
-        url_data["unique_browser"] = {}
-        url_data["unique_os_name"] = {}
-
-        for i in url_data["referrer"]:
-            if len(url_data["referrer"][i]["ips"]) != 0:
-                url_data["unique_referrer"][i] = len(url_data["referrer"][i]["ips"])
-            url_data["referrer"][i] = url_data["referrer"][i]["counts"]
-        for i in url_data["country"]:
-            if len(url_data["country"][i]["ips"]) != 0:
-                url_data["unique_country"][i] = len(url_data["country"][i]["ips"])
-            url_data["country"][i] = url_data["country"][i]["counts"]
-        for i in url_data["browser"]:
-            if len(url_data["browser"][i]["ips"]) != 0:
-                url_data["unique_browser"][i] = len(url_data["browser"][i]["ips"])
-            url_data["browser"][i] = url_data["browser"][i]["counts"]
-        for i in url_data["os_name"]:
-            if len(url_data["os_name"][i]["ips"]) != 0:
-                url_data["unique_os_name"][i] = len(url_data["os_name"][i]["ips"])
-            url_data["os_name"][i] = url_data["os_name"][i]["counts"]
-    except Exception:
-        pass
-
-    if "ips" in url_data and url_data["ips"]:
-        url_data["total_unique_clicks"] = len(url_data["ips"])
 
     (
         url_data["average_daily_clicks"],
@@ -210,17 +169,10 @@ def analytics(short_code):
     ) = calculate_click_averages(url_data)
     url_data["average_redirection_time"] = url_data.get("average_redirection_time", 0)
 
-    if "ips" in url_data:
-        del url_data["ips"]
-    if "creation-ip-address" in url_data:
-        del url_data["creation-ip-address"]
-
     if url_data["counter"] != {}:
         url_data = add_missing_dates("counter", url_data)
     if "unique_counter" in url_data and url_data["unique_counter"] != {}:
         url_data = add_missing_dates("unique_counter", url_data)
-
-    print(url_data)
 
     if request.method == "POST":
         return jsonify(url_data)
@@ -258,6 +210,7 @@ def export(short_code, format):
     format = format.lower()
     password = request.values.get("password")
     short_code = unquote(short_code)
+    pipeline = get_stats_pipeline(short_code)
 
     if format not in ["csv", "json", "xlsx", "xml"]:
         if request.method == "GET":
@@ -281,9 +234,9 @@ def export(short_code, format):
             )
 
     if validate_emoji_alias(short_code):
-        url_data = load_emoji_url(short_code)
+        url_data = aggregate_emoji_url(pipeline)
     else:
-        url_data = load_url(short_code)
+        url_data = aggregate_url(pipeline)
 
     if not url_data:
         if request.method == "GET":
@@ -299,7 +252,7 @@ def export(short_code, format):
         else:
             return jsonify({"UrlError": "The requested Url never existed"}), 404
 
-    if "password" in url_data:
+    if url_data["password"] is not None:
         if password != url_data["password"]:
             if request.method == "POST":
                 return (
@@ -324,84 +277,28 @@ def export(short_code, format):
 
     url_data["short_code"] = short_code
 
-    if url_data.get("max-clicks") is not None:
+    if url_data["max-clicks"] is not None:
         url_data["expired"] = url_data["total-clicks"] >= int(url_data["max-clicks"])
     else:
         url_data["expired"] = None
 
-    if url_data.get("expiration-time") is not None:
+    if url_data["expiration-time"] is not None:
         expiration_time = convert_to_gmt(url_data["expiration-time"])
         if not expiration_time:
             print("Expiration time is not timezone aware")
         elif expiration_time <= datetime.now(timezone.utc):
             url_data["expired"] = True
 
-    url_data["total-clicks"] = url_data.get("total-clicks")
-    url_data["max-clicks"] = url_data.get("max-clicks")
-    url_data["creation-time"] = url_data.get("creation-time")
-    url_data["expiration-time"] = url_data.get("expiration-time")
-    url_data["password"] = url_data.get("password")
-    url_data["last-click-browser"] = url_data.get("last-click-browser")
-    url_data["last-click-os"] = url_data.get("last-click-os")
-    url_data["last-click-country"] = url_data.get("last-click-country")
-    url_data["last-click"] = url_data.get("last-click")
-    url_data["block-bots"] = url_data.get("block-bots", False)
-    url_data["bots"] = url_data.get("bots", {})
-
-    url_data["counter"] = url_data.get("counter", {})
-    url_data["unique_counter"] = url_data.get("unique_counter", {})
-    url_data["referrer"] = url_data.get("referrer", {})
-    url_data["country"] = url_data.get("country", {})
-    url_data["browser"] = url_data.get("browser", {})
-    url_data["os_name"] = url_data.get("os_name", {})
-    url_data["ips"] = url_data.get("ips", [])
-
-    try:
-        url_data["unique_referrer"] = {}
-        url_data["unique_country"] = {}
-        url_data["unique_browser"] = {}
-        url_data["unique_os_name"] = {}
-
-        for i in url_data["referrer"]:
-            if len(url_data["referrer"][i]["ips"]) != 0:
-                url_data["unique_referrer"][i] = len(url_data["referrer"][i]["ips"])
-            url_data["referrer"][i] = url_data["referrer"][i]["counts"]
-        for i in url_data["country"]:
-            if len(url_data["country"][i]["ips"]) != 0:
-                url_data["unique_country"][i] = len(url_data["country"][i]["ips"])
-            url_data["country"][i] = url_data["country"][i]["counts"]
-        for i in url_data["browser"]:
-            if len(url_data["browser"][i]["ips"]) != 0:
-                url_data["unique_browser"][i] = len(url_data["browser"][i]["ips"])
-            url_data["browser"][i] = url_data["browser"][i]["counts"]
-        for i in url_data["os_name"]:
-            if len(url_data["os_name"][i]["ips"]) != 0:
-                url_data["unique_os_name"][i] = len(url_data["os_name"][i]["ips"])
-            url_data["os_name"][i] = url_data["os_name"][i]["counts"]
-
-        url_data["total_unique_clicks"] = len(url_data["ips"])
-        url_data["average_redirection_time"] = url_data.get(
-            "average_redirection_time", 0
-        )
-
-        (
-            url_data["average_daily_clicks"],
-            url_data["average_weekly_clicks"],
-            url_data["average_monthly_clicks"],
-        ) = calculate_click_averages(url_data)
-
-    except Exception:
-        pass
-
-    if "ips" in url_data:
-        del url_data["ips"]
-    if "creation-ip-address" in url_data:
-        del url_data["creation-ip-address"]
+    (
+        url_data["average_daily_clicks"],
+        url_data["average_weekly_clicks"],
+        url_data["average_monthly_clicks"],
+    ) = calculate_click_averages(url_data)
 
     if url_data["counter"] != {}:
         url_data = add_missing_dates("counter", url_data)
 
-    if "unique_counter" in url_data and url_data["unique_counter"] != {}:
+    if url_data["unique_counter"] != {}:
         url_data = add_missing_dates("unique_counter", url_data)
 
     if format == "json":

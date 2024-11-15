@@ -31,6 +31,15 @@ def load_url(id, projection=None):
     return url_data
 
 
+def aggregate_url(pipeline):
+    try:
+        url_data = urls_collection.aggregate(pipeline)
+        url_data = list(url_data)[0]
+    except Exception:
+        url_data = None
+    return url_data
+
+
 def insert_url(id, url_data):
     try:
         urls_collection.insert_one({"_id": id, **url_data})
@@ -57,6 +66,15 @@ def check_if_slug_exists(slug):
 def load_emoji_url(alias, projection=None):
     try:
         emoji_data = emoji_urls_collection.find_one({"_id": alias}, projection)
+    except Exception:
+        emoji_data = None
+    return emoji_data
+
+
+def aggregate_emoji_url(pipeline):
+    try:
+        emoji_data = emoji_urls_collection.aggregate(pipeline)
+        emoji_data = list(emoji_data)[0]
     except Exception:
         emoji_data = None
     return emoji_data
