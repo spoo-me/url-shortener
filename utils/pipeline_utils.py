@@ -28,7 +28,7 @@ def get_stats_pipeline(short_code):
     fields = ["browser", "os_name", "country", "referrer"]
     add_fields = {}
     for field in fields:
-        add_fields.update(_create_field_transform(field))
+        add_fields |= _create_field_transform(field)
 
     return [
         {"$match": {"_id": short_code}},
