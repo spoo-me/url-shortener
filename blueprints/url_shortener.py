@@ -481,7 +481,8 @@ def redirect_url(short_code):
                     ),
                     403,
                 )
-            updates["$inc"][f"bots.{bot}"] = 1
+            sanitized_bot = re.sub(r"[.$\x00-\x1F\x7F-\x9F]", "_", bot)
+            updates["$inc"][f"bots.{sanitized_bot}"] = 1
             break
     else:
         if crawler_detect.isCrawler(user_agent):
