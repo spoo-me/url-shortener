@@ -1,4 +1,35 @@
+def _create_field_transform(field_name):
+    return {
+        f"{field_name}": {
+            "$arrayToObject": {
+                "$map": {
+                    "input": {"$objectToArray": f"${field_name}"},
+                    "as": "item",
+                    "in": {"k": "$$item.k", "v": "$$item.v.counts"},
+                }
+            }
+        },
+        f"unique_{field_name}": {
+            "$arrayToObject": {
+                "$map": {
+                    "input": {"$objectToArray": f"${field_name}"},
+                    "as": "item",
+                    "in": {
+                        "k": "$$item.k",
+                        "v": {"$size": {"$setUnion": ["$$item.v.ips"]}},
+                    },
+                }
+            }
+        },
+    }
+
+
 def get_stats_pipeline(short_code):
+    fields = ["browser", "os_name", "country", "referrer"]
+    add_fields = {}
+    for field in fields:
+        add_fields.update(_create_field_transform(field))
+
     return [
         {"$match": {"_id": short_code}},
         {
@@ -29,92 +60,5 @@ def get_stats_pipeline(short_code):
                 "last-click": {"$ifNull": ["$last-click", None]},
             }
         },
-        {
-            "$addFields": {
-                "unique_browser": {
-                    "$arrayToObject": {
-                        "$map": {
-                            "input": {"$objectToArray": "$browser"},
-                            "as": "item",
-                            "in": {
-                                "k": "$$item.k",
-                                "v": {"$size": {"$setUnion": ["$$item.v.ips"]}},
-                            },
-                        }
-                    }
-                },
-                "unique_os_name": {
-                    "$arrayToObject": {
-                        "$map": {
-                            "input": {"$objectToArray": "$os_name"},
-                            "as": "item",
-                            "in": {
-                                "k": "$$item.k",
-                                "v": {"$size": {"$setUnion": ["$$item.v.ips"]}},
-                            },
-                        }
-                    }
-                },
-                "unique_country": {
-                    "$arrayToObject": {
-                        "$map": {
-                            "input": {"$objectToArray": "$country"},
-                            "as": "item",
-                            "in": {
-                                "k": "$$item.k",
-                                "v": {"$size": {"$setUnion": ["$$item.v.ips"]}},
-                            },
-                        }
-                    }
-                },
-                "unique_referrer": {
-                    "$arrayToObject": {
-                        "$map": {
-                            "input": {"$objectToArray": "$referrer"},
-                            "as": "item",
-                            "in": {
-                                "k": "$$item.k",
-                                "v": {"$size": {"$setUnion": ["$$item.v.ips"]}},
-                            },
-                        }
-                    }
-                },
-                "browser": {
-                    "$arrayToObject": {
-                        "$map": {
-                            "input": {"$objectToArray": "$browser"},
-                            "as": "item",
-                            "in": {"k": "$$item.k", "v": "$$item.v.counts"},
-                        }
-                    }
-                },
-                "os_name": {
-                    "$arrayToObject": {
-                        "$map": {
-                            "input": {"$objectToArray": "$os_name"},
-                            "as": "item",
-                            "in": {"k": "$$item.k", "v": "$$item.v.counts"},
-                        }
-                    }
-                },
-                "country": {
-                    "$arrayToObject": {
-                        "$map": {
-                            "input": {"$objectToArray": "$country"},
-                            "as": "item",
-                            "in": {"k": "$$item.k", "v": "$$item.v.counts"},
-                        }
-                    }
-                },
-                "referrer": {
-                    "$arrayToObject": {
-                        "$map": {
-                            "input": {"$objectToArray": "$referrer"},
-                            "as": "item",
-                            "in": {"k": "$$item.k", "v": "$$item.v.counts"},
-                        }
-                    }
-                },
-            }
-        },
+        {"$addFields": add_fields},
     ]
