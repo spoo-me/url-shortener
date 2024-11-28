@@ -1,8 +1,5 @@
-import pytest
-import requests
 import requests_mock
 from utils.contact_utils import send_contact_message, send_report
-from datetime import datetime, timezone
 
 
 def test_send_report_success(mocker):

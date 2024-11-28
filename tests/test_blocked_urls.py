@@ -1,4 +1,3 @@
-import pytest
 from utils.mongo_utils import validate_blocked_url
 
 

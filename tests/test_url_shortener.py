@@ -1,9 +1,5 @@
 import pytest
 import json
-from flask import Flask
-from blueprints.url_shortener import url_shortener
-from unittest.mock import patch, MagicMock
-from datetime import datetime, timezone
 
 
 def test_index_no_cookies(client):

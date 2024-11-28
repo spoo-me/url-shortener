@@ -1,7 +1,6 @@
 import pytest
 from flask import Flask
 from blueprints.url_shortener import url_shortener
-from unittest.mock import MagicMock
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 

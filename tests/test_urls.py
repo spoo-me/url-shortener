@@ -1,4 +1,3 @@
-import pytest
 from utils.url_utils import validate_url
 
 

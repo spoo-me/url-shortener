@@ -1,5 +1,4 @@
 import pytest
-import requests
 import requests_mock
 from utils.contact_utils import verify_hcaptcha
 
@@ -9,7 +8,7 @@ def test_verify_hcaptcha_success():
         m.post(
             "https://hcaptcha.com/siteverify", json={"success": True}, status_code=200
         )
-        assert verify_hcaptcha("valid_token") == True
+        assert verify_hcaptcha("valid_token")
 
 
 def test_verify_hcaptcha_failure():
@@ -17,13 +16,13 @@ def test_verify_hcaptcha_failure():
         m.post(
             "https://hcaptcha.com/siteverify", json={"success": False}, status_code=200
         )
-        assert verify_hcaptcha("invalid_token") == False
+        assert not verify_hcaptcha("invalid_token")
 
 
 def test_verify_hcaptcha_http_error():
     with requests_mock.Mocker() as m:
         m.post("https://hcaptcha.com/siteverify", status_code=500)
-        assert verify_hcaptcha("any_token") == False
+        assert not verify_hcaptcha("any_token")
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ def serve_docs(file_path):
         if not os.path.exists(f"templates/docs/{file_path}.html"):
             raise FileNotFoundError
         return render_template(f"docs/{file_path}.html", host_url=request.host_url)
-    except:
+    except Exception:
         return (
             render_template(
                 "error.html",

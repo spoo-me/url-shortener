@@ -69,7 +69,6 @@ def top_four(dictionary):
 
 
 def calculate_click_averages(data):
-    counter = data["counter"]
     total_clicks = data["total-clicks"]
     creation_date = datetime.fromisoformat(data["creation-date"]).date()
     current_date = datetime.now().date()

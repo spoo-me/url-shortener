@@ -1,4 +1,3 @@
-import pytest
 import io
 from openpyxl import load_workbook
 from utils.export_utils import (
@@ -7,7 +6,6 @@ from utils.export_utils import (
     export_to_json,
     export_to_xml,
 )
-from flask import send_file
 import csv
 import json
 import zipfile
@@ -199,7 +197,6 @@ def test_export_to_csv(mocker):
             with zipf.open(filename) as file:
                 with io.TextIOWrapper(file, encoding="utf-8") as text_file:
                     reader = csv.reader(text_file)
-                    header = next(reader)
                     for row in reader:
                         key, value = row
                         assert expected_data[key] == int(value)

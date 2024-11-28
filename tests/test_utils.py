@@ -17,7 +17,6 @@ from flask import Flask
 import string
 from datetime import datetime, timedelta
 from urllib.parse import unquote
-import emoji
 
 app = Flask(__name__)
 
@@ -104,43 +103,42 @@ def test_humanize_number_zero():
 
 
 def test_is_positive_integer_with_positive_integer():
-    assert is_positive_integer(5) == True
+    assert is_positive_integer(5)
 
 
 def test_is_positive_integer_with_zero():
-    assert is_positive_integer(0) == True
+    assert is_positive_integer(0)
 
 
 def test_is_positive_integer_with_negative_integer():
-    assert is_positive_integer(-5) == False
+    assert not is_positive_integer(-5)
 
 
 def test_is_positive_integer_with_positive_integer_string():
-    assert is_positive_integer("5") == True
+    assert is_positive_integer("5")
 
 
 def test_is_positive_integer_with_zero_string():
-    assert is_positive_integer("0") == True
-
+    assert is_positive_integer("0")
 
 def test_is_positive_integer_with_negative_integer_string():
-    assert is_positive_integer("-5") == False
+    assert not is_positive_integer("-5")
 
 
 def test_is_positive_integer_with_non_integer_string():
-    assert is_positive_integer("abc") == False
+    assert not is_positive_integer("abc")
 
 
 def test_is_positive_integer_with_float_string():
-    assert is_positive_integer("5.5") == False
+    assert not is_positive_integer("5.5")
 
 
 def test_is_positive_integer_with_empty_string():
-    assert is_positive_integer("") == False
+    assert not is_positive_integer("")
 
 
 def test_is_positive_integer_with_none():
-    assert is_positive_integer(None) == False
+    assert not is_positive_integer(None)
 
 
 # Test convert country name
@@ -190,30 +188,30 @@ def test_generate_short_code_characters():
 
 
 def test_validate_alias_valid():
-    assert validate_alias("validString123") == True
-    assert validate_alias("valid_string-123") == True
-    assert validate_alias("valid-String_123") == True
+    assert validate_alias("validString123")
+    assert validate_alias("valid_string-123")
+    assert validate_alias("valid-String_123")
 
 
 def test_validate_alias_invalid():
-    assert validate_alias("invalid string!") == False
-    assert validate_alias("invalid@string") == False
-    assert validate_alias("invalid#string") == False
-    assert validate_alias("invalid$string") == False
+    assert not validate_alias("invalid string!")
+    assert not validate_alias("invalid@string")
+    assert not validate_alias("invalid#string")
+    assert not validate_alias("invalid$string")
 
 
 def test_validate_alias_empty():
-    assert validate_alias("") == True  # Assuming empty string is valid
+    assert validate_alias("")  # Assuming empty string is valid
 
 
 def test_validate_alias_special_characters():
-    assert validate_alias("valid_string-123") == True
-    assert validate_alias("invalid*string") == False
-    assert validate_alias("invalid&string") == False
+    assert validate_alias("valid_string-123")
+    assert not validate_alias("invalid*string")
+    assert not validate_alias("invalid&string")
 
 
 def test_validate_alias_numeric():
-    assert validate_alias("1234567890") == True
+    assert validate_alias("1234567890")
 
 
 # Test missing dates in counter
@@ -484,24 +482,24 @@ def test_calculate_click_averages_empty_counter():
 
 
 def test_validate_emoji_alias_valid_single_emoji():
-    assert validate_emoji_alias("😊") == True
+    assert validate_emoji_alias("😊")
 
 
 def test_validate_emoji_alias_valid_multiple_emojis():
-    assert validate_emoji_alias("😊👍🎉") == True
+    assert validate_emoji_alias("😊👍🎉")
 
 
 def test_validate_emoji_alias_invalid_mixed_characters():
-    assert validate_emoji_alias("😊abc") == False
+    assert not validate_emoji_alias("😊abc")
 
 
 def test_validate_emoji_alias_invalid_too_many_emojis():
-    assert validate_emoji_alias("😊" * 16) == False
+    assert not validate_emoji_alias("😊" * 16)
 
 
 def test_validate_emoji_alias_empty_string():
-    assert validate_emoji_alias("") == True  # Assuming empty string is valid
+    assert validate_emoji_alias("")  # Assuming empty string is valid
 
 
 def test_validate_emoji_alias_url_encoded():
-    assert validate_emoji_alias(unquote("%F0%9F%98%8A")) == True  # URL encoded 😊
+    assert validate_emoji_alias(unquote("%F0%9F%98%8A"))  # URL encoded 😊
