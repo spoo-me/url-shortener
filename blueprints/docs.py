@@ -20,9 +20,10 @@ def serve_docs(file_path):
         # Validate file_path
         if not re.match(r'^[a-zA-Z0-9_-]+$', file_path):
             raise ValueError("Invalid file path")
-        if not os.path.exists(f"templates/docs/{file_path}.html"):
+        file_full_path = os.path.join('templates', 'docs', f'{file_path}.html')
+        if not os.path.exists(file_full_path):
             raise FileNotFoundError
-        return render_template(f"docs/{file_path}.html", host_url=request.host_url)
+        return render_template(os.path.join('docs', f'{file_path}.html'), host_url=request.host_url)
     except Exception:
         return (
             render_template(
