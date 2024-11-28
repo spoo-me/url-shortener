@@ -6,6 +6,11 @@ on:
       - main
     paths:
       - '**.py'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '**.py'
+  workflow_dispatch:
 
 jobs:
   test-api:
@@ -31,9 +36,6 @@ jobs:
 
     - name: Start Flask server
       run: python main.py &
-
-    - name: Wait for server to start
-      run: sleep 3
 
     - name: Run API test
       run: python tests/shorten.py
