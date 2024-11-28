@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request
 from .limiter import limiter
 import os
+import re
 
 docs = Blueprint("docs", __name__)
 
@@ -16,10 +17,13 @@ def serve_docs_index():
 @limiter.exempt
 def serve_docs(file_path):
     try:
+        # Validate file_path
+        if not re.match(r'^[a-zA-Z0-9_-]+$', file_path):
+            raise ValueError("Invalid file path")
         if not os.path.exists(f"templates/docs/{file_path}.html"):
             raise FileNotFoundError
         return render_template(f"docs/{file_path}.html", host_url=request.host_url)
-    except:
+    except Exception:
         return (
             render_template(
                 "error.html",
