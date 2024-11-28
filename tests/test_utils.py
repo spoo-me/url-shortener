@@ -121,6 +121,7 @@ def test_is_positive_integer_with_positive_integer_string():
 def test_is_positive_integer_with_zero_string():
     assert is_positive_integer("0")
 
+
 def test_is_positive_integer_with_negative_integer_string():
     assert not is_positive_integer("-5")
 
