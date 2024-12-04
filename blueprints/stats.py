@@ -54,8 +54,6 @@ def stats_route():
         else:
             url_data = load_url(short_code, projection={"password": 1})
 
-        url_data["password"] = url_data.get("password", None)
-
         if not url_data:
             return render_template(
                 "stats.html",
@@ -63,6 +61,8 @@ def stats_route():
                 url=short_code,
                 host_url=request.host_url,
             )
+
+        url_data["password"] = url_data.get("password", None)
 
         if not password and url_data["password"] is not None:
             return render_template(
