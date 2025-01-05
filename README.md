@@ -13,9 +13,10 @@
 
 <p align="center">
 <a href="https://status.spoo.me"><img src="https://uptime.betterstack.com/status-badges/v1/monitor/qlmf.svg"></a>
-<img src="https://img.shields.io/github/commit-activity/m/spoo-me/url-shortener?logo=github" alt="GitHub commit activity">
+<img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fspoo.me%2Fmetric&query=%24.total-shortlinks&label=Links%20Shortened&color=6a5cf4&cacheSeconds=60" alt="Total URLs Shortened">
+<img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fspoo.me%2Fmetric&query=%24.total-clicks&label=Clicks%20Redirected&color=6a5cf4&cacheSeconds=60" alt="Total Clicks Redirected">
 <a href="https://spoo.me/discord"><img src="https://img.shields.io/discord/1192388005206433892?logo=discord" alt="Discord"></a>
-<a href="https://twitter.com/spoo_me"><img src="https://img.shields.io/twitter/follow/spoo_me?logo=twitter&label=%40spoo_me&color=0bf" alt="X (formerly Twitter) Follow"></a>
+<a href="https://twitter.com/spoo_me"><img src="https://img.shields.io/twitter/follow/spoo_me?logo=x&label=%40spoo_me&color=0bf" alt="X (formerly Twitter) Follow"></a>
 </p>
 
 # ⚡ Introduction
