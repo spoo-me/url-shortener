@@ -72,6 +72,7 @@ textarea:focus::placeholder {
 .buttonIn {
     border-radius: 10px;
     margin: auto;
+    padding: 0 15px;
     display: flex;
     flex-wrap: nowrap;
     justify-content: left;
@@ -99,7 +100,10 @@ textarea:focus::placeholder {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
     backdrop-filter: none;
+    width: 100%;
+    width: -webkit-fill-available;
     margin: 0;
+    margin-bottom: 0;
 }
 
 #alias:focus {
@@ -118,11 +122,6 @@ textarea:focus::placeholder {
     color: white;
     border-top-left-radius: 19px;
     border-bottom-left-radius: 18px;
-    padding-left: 15px;
-}
-
-#alias {
-    margin-bottom: 0px;
 }
 
 button.h-captcha{
