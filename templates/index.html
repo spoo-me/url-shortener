@@ -254,86 +254,10 @@
 
     <script src="{{ url_for('static', filename='js/index-qrcode.js') }}"></script>
     <script src="{{ url_for('static', filename='js/index-validate.js') }}?v=1" defer=""></script>
-    <script src="{{ url_for('static', filename='js/index-script.js') }}?v=3" defer=""></script>
+    <script src="{{ url_for('static', filename='js/index-script.js') }}?v=4" defer=""></script>
     <script src="{{ url_for('static', filename='js/contacts-popup.js') }}?v=1" defer=""></script>
     <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
     <script src="{{ url_for('static', filename='js/self-promo.js') }}" defer=""></script>
-
-    <!--  Custom Time Expiration is currently Buggy and not ready for Production  -->
-
-    <!-- <script>
-        var timeExpiration = document.getElementById('expiration-time');
-        var date = new Date();
-        date.setMinutes(date.getMinutes() + 10);
-
-        // Format date to 'YYYY-MM-DDTHH:mm' which is the format datetime-local expects
-        var dateTimeString = date.toISOString().slice(0, 16);
-
-        timeExpiration.min = dateTimeString;
-    </script>
-
-    <script>
-        document.getElementById('urlForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            // Validate URL, password, and expiration
-            if (!validateURL() || !validatePassword() || !validateExpiration()) {
-                return;
-            }
-
-            // Get timezone offset in minutes
-            var timezoneOffset = new Date().getTimezoneOffset();
-
-            // Convert timezone offset to hours and minutes
-            var timezoneOffsetHours = Math.abs(Math.floor(timezoneOffset / 60));
-            var timezoneOffsetMinutes = Math.abs(timezoneOffset % 60);
-
-            // Format timezone offset as a string
-            var timezoneOffsetString = (timezoneOffset < 0 ? '+' : '-') +
-                String(timezoneOffsetHours).padStart(2, '0') +
-                ':' +
-                String(timezoneOffsetMinutes).padStart(2, '0');
-
-            // Get expiration time input
-            var expirationTimeInput = document.getElementById('expiration-time');
-
-            // Create a new URLSearchParams object
-            var data = new URLSearchParams();
-
-            // Append form fields to the data
-            for (var pair of new FormData(this)) {
-                data.append(pair[0], pair[1]);
-            }
-
-            // if the expiration time is empty, dont add the offset
-            // Append timezone offset to the expiration time and add it to the data
-            if (expirationTimeInput.value){
-                var expirationDateTime = new Date(expirationTimeInput.value);
-                expirationDateTime.setMinutes(expirationDateTime.getMinutes() - timezoneOffset);
-                var formattedDateTime = expirationDateTime.toISOString().slice(0, 19);
-                data.set('expiration-time', formattedDateTime + timezoneOffsetString);
-                console.log(formattedDateTime + timezoneOffsetString);
-            }
-
-            // Create a new request
-            fetch(this.action, {
-                method: 'POST',
-                headers: {
-                    'Content-type': 'application/x-www-form-urlencoded',
-                },
-                body: data,
-                redirect: 'follow'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.url;
-            })
-            .then(url => window.location.href = url)
-            .catch(error => console.error(error));
-        });
-    </script> -->
 
     <script>
         window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };

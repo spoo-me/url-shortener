@@ -35,4 +35,3 @@ function get_metrics() {
 }
 
 document.onload = get_metrics();
-setInterval(get_metrics, 60000);
