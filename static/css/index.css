@@ -47,6 +47,7 @@ label[for=max-clicks] {
 }
 
 .alias-time-container .child {
+    width: 100%; /* FireFox Fallback */
     width: -webkit-fill-available;
 }
 
