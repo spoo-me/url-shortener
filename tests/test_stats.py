@@ -322,7 +322,8 @@ def test_stats_post_after_clicks(client: FlaskClient, mocker, mock_db, db, short
 
     # Mock the database and other dependencies using mocker
     mocker.patch(
-        f"utils.mongo_utils.{db if db=="urls" else db+"_urls"}_collection", mock_db[db]
+        f"utils.mongo_utils.{db if db == 'urls' else db + '_urls'}_collection",
+        mock_db[db],
     )
 
     mocker.patch(
