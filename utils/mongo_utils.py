@@ -107,7 +107,7 @@ def validate_blocked_url(url):
     blocked_urls = [doc["_id"] for doc in blocked_urls]
 
     for blocked_url in blocked_urls:
-        if re.search(blocked_url, url):
+        if re.match(blocked_url, url):
             return False
 
     return True

@@ -30,14 +30,25 @@ def get_country(ip_address):
 
 
 def get_client_ip():
-    if "HTTP_X_FORWARDED_FOR" in request.environ:
-        # If the request is proxied, retrieve the IP address from the X-Forwarded-For header
-        ip_list = request.environ["HTTP_X_FORWARDED_FOR"].split(",")
-        # The client's IP address is typically the first entry in the list
-        return ip_list[0].strip()
-    else:
-        # If the request is not proxied, use the remote address
-        return request.environ.get("REMOTE_ADDR", "")
+    # Check for common proxy headers first
+    headers_to_check = [
+        "HTTP_X_FORWARDED_FOR",
+        "HTTP_X_REAL_IP",
+        "HTTP_X_CLIENT_IP",
+        "HTTP_CF_CONNECTING_IP",  # Cloudflare
+        "HTTP_TRUE_CLIENT_IP",  # Akamai and others
+    ]
+
+    for header in headers_to_check:
+        if header in request.environ:
+            ip_list = request.environ[header].split(",")
+            # Get the leftmost IP (client's original IP)
+            client_ip = ip_list[0].strip()
+            if client_ip:
+                return client_ip
+
+    # Fall back to remote address if no proxy headers found
+    return request.environ.get("REMOTE_ADDR") or request.remote_addr or ""
 
 
 def validate_password(password):
