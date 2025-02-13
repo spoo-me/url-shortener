@@ -59,6 +59,6 @@ ua-parser==0.18.0
 urllib3==2.2.3
 user-agents==2.2.0
 validators==0.34.0
-Werkzeug==3.0.4
+Werkzeug==3.0.6
 wrapt==1.17.0
 yarl==1.15.2
