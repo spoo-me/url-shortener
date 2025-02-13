@@ -31,7 +31,7 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/contact.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/customNotification.css') }}?v=4">
 
@@ -41,6 +41,14 @@
 </head>
 
 <body>
+    {% if self_promo %}
+        <div class="self-promo">
+            <div class="self-promo-inner"><a href="{{ self_promo_uri }}" target="_blank" rel="noopener">🥳
+                    {{ self_promo_text }}</a></div>
+            <button id="close-button" class="self-promo-close"><img width="20" height="20"
+                    src="https://img.icons8.com/metro/30/ffffff/delete-sign.png" alt="delete-sign" /></button>
+        </div>
+    {% endif %}
     <div class="navbar">
         <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image"
             loading="lazy">
