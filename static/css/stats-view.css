@@ -49,6 +49,7 @@ p::-webkit-scrollbar-track {
     border: rgba(255, 255, 255, 0.05) 1px solid;
     flex-basis: 49.5%;
     margin-bottom: 20px;
+    width: -webkit-fill-available;
 }
 
 .charts-container {
@@ -58,15 +59,13 @@ p::-webkit-scrollbar-track {
 }
 
 .chart-container {
-    width: 100%;
-    max-width: 650px;
     height: 320px;
     margin-bottom: 20px;
     background-color: rgba(255, 255, 255, 0.125);
     padding: 20px;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-left: 20px;
+    margin-left: 10px;
     margin-top: 20px;
 }
 
@@ -401,11 +400,11 @@ h3 {
         flex-wrap: wrap;
     }
 
-    .chart-container,
-    .data-container {
+    /* .chart-container, */
+    /* .data-container {
         flex-basis: 49.5%;
         max-width: 90%;
-    }
+    } */
 }
 
 @media screen and (max-width: 1000px) {
@@ -438,7 +437,7 @@ h3 {
         font-size: 14px;
     }
 
-    .main-data,
+    /* .main-data,
     .clicks-data,
     .browsers-data,
     .os-data,
@@ -449,19 +448,19 @@ h3 {
     .qr-code {
         margin: 0 auto 20px;
         width: 100%;
-    }
+    } */
 
-    .charts-container,
+    /* .charts-container,
     .main-data-container {
         flex-direction: column;
         padding: 0 10px;
-    }
+    } */
 
     .json-data {
         height: 150px;
     }
 
-    #countryJson,
+    /* #countryJson,
     #referrerJson,
     #browserJson,
     #osJson,
@@ -469,7 +468,7 @@ h3 {
     #analysisJson,
     #botsJson {
         height: 250px;
-    }
+    } */
 
     #url_long_input {
         max-width: 45%;
