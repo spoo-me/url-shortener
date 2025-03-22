@@ -29,26 +29,25 @@ def get_country(ip_address):
         reader.close()
 
 
-def get_client_ip():
+def get_client_ip() -> str:
     # Check for common proxy headers first
-    headers_to_check = [
-        "HTTP_X_FORWARDED_FOR",
-        "HTTP_X_REAL_IP",
-        "HTTP_X_CLIENT_IP",
-        "HTTP_CF_CONNECTING_IP",  # Cloudflare
-        "HTTP_TRUE_CLIENT_IP",  # Akamai and others
+    headers_to_check: list[str] = [
+        "CF-Connecting-IP",  # Cloudflare
+        "True-Client-IP",  # Akamai & others
+        "X-Forwarded-For",  # Standard proxy header (can contain multiple IPs)
+        "X-Real-IP",  # Nginx or other proxies
+        "X-Client-IP",  # Less common
     ]
 
     for header in headers_to_check:
-        if header in request.environ:
-            ip_list = request.environ[header].split(",")
-            # Get the leftmost IP (client's original IP)
-            client_ip = ip_list[0].strip()
+        ip_value: str | None = request.headers.get(header)
+        if ip_value:
+            client_ip: str = ip_value.split(",")[0].strip()
             if client_ip:
                 return client_ip
 
     # Fall back to remote address if no proxy headers found
-    return request.environ.get("REMOTE_ADDR") or request.remote_addr or ""
+    return request.remote_addr or ""
 
 
 def validate_password(password):
