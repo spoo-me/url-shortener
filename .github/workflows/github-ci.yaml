@@ -8,7 +8,8 @@ on:
       - '**/*.md'
       - '**/*.rst'
   pull_request:
-    branches: [ main ]
+    branches:
+      - '**'
     paths-ignore:
       - '**/*.md'
       - '**/*.rst'
