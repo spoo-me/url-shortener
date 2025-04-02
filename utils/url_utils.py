@@ -10,6 +10,7 @@ import geoip2.errors
 import geoip2.database
 from flask import request
 
+# Load the bot user agents from a file
 with open("bot_user_agents.txt", "r") as file:
     BOT_USER_AGENTS = file.read()
     BOT_USER_AGENTS = [
@@ -18,6 +19,7 @@ with open("bot_user_agents.txt", "r") as file:
 
 
 def get_country(ip_address):
+    """Parses the client's IP address and returns the country name."""
     reader = geoip2.database.Reader("misc/GeoLite2-Country.mmdb")
     try:
         response = reader.country(ip_address)
@@ -30,6 +32,7 @@ def get_country(ip_address):
 
 
 def get_client_ip() -> str:
+    """Gets the client IP address from the request headers."""
     # Check for common proxy headers first
     headers_to_check: list[str] = [
         "CF-Connecting-IP",  # Cloudflare
@@ -50,7 +53,7 @@ def get_client_ip() -> str:
     return request.remote_addr or ""
 
 
-def validate_password(password):
+def validate_password(password) -> bool:
     # Check if the password is at least 8 characters long
     if len(password) < 8:
         return False
@@ -71,10 +74,9 @@ def validate_password(password):
 
 
 def validate_url(url):
-    return (
-        validators.url(url, skip_ipv4_addr=True, skip_ipv6_addr=True)
-        and "spoo.me" not in url
-    )
+    return validators.url(
+        url, skip_ipv4_addr=True, skip_ipv6_addr=True
+    ) and not re.match(r"^https?://(?:www\.)?spoo\.me.*$", url, re.IGNORECASE)
 
 
 # custom expiration time is currently really buggy and not ready for production
@@ -118,25 +120,63 @@ def convert_to_gmt(expiration_time):
     return expiration_time
 
 
-def generate_short_code():
+def generate_short_code() -> str:
+    """Generates a random 6 character alphanumeric string."""
     letters = string.ascii_lowercase + string.ascii_uppercase + string.digits
     return "".join(random.choice(letters) for i in range(6))
 
 
-def validate_alias(string):
+def validate_alias(string) -> bool:
     pattern = r"^[a-zA-Z0-9_-]*$"
     return bool(re.search(pattern, string))
 
 
-def generate_emoji_alias():
+def generate_emoji_alias() -> str:
+    """Generates a random 3 character emoji string."""
     return "".join(random.choice(EMOJIES) for _ in range(3))
 
 
-def validate_emoji_alias(alias):
-    alias = unquote(alias)
+def validate_emoji_alias(alias) -> bool:
+    alias: str = unquote(alias)
     emoji_list = emoji.emoji_list(alias)
-    extracted_emojis = "".join([data["emoji"] for data in emoji_list])
+    extracted_emojis: str = "".join([data["emoji"] for data in emoji_list])
+
     if len(extracted_emojis) != len(alias) or len(emoji_list) > 15:
         return False
     else:
         return True
+
+
+def generate_unique_code(generate_func, exists_check_func):
+    """Generates a unique unique code by checking against the provided function."""
+    short_code = generate_func()
+    while exists_check_func(short_code):
+        short_code = generate_func()
+    return short_code
+
+
+def build_url_data(
+    url,
+    password: str | None = None,
+    max_clicks: int | None = None,
+    block_bots: bool | None = None,
+):
+    """Generates the standard Short URL schema"""
+    data = {
+        "url": url,
+        "counter": {},
+        "total-clicks": 0,
+        "ips": [],
+        "creation-date": datetime.now().strftime("%Y-%m-%d"),
+        "creation-time": datetime.now().strftime("%H:%M:%S"),
+        "creation-ip-address": get_client_ip(),
+    }
+
+    if password:
+        data["password"] = password
+    if max_clicks:
+        data["max-clicks"] = str(abs(int(str(max_clicks))))
+    if block_bots:
+        data["block-bots"] = True
+
+    return data

@@ -54,7 +54,8 @@ def update_url(id, updates):
         pass
 
 
-def check_if_slug_exists(slug):
+def alias_exists(slug) -> bool:
+    """Returns True if the slug exists in the database, False otherwise."""
     projection = {"_id": 1}
     try:
         url_data = urls_collection.find_one({"_id": slug}, projection)
@@ -83,7 +84,8 @@ def aggregate_emoji_url(pipeline):
 def insert_emoji_url(alias, emoji_data):
     try:
         emoji_urls_collection.insert_one({"_id": alias, **emoji_data})
-    except Exception:
+    except Exception as e:
+        print(e)
         pass
 
 
@@ -94,7 +96,8 @@ def update_emoji_url(alias, updates):
         pass
 
 
-def check_if_emoji_alias_exists(emoji_alias):
+def emoji_exists(emoji_alias) -> bool:
+    """Returns True if the emoji alias exists in the database, False otherwise."""
     try:
         emoji_data = emoji_urls_collection.find_one({"_id": emoji_alias})
     except Exception:
@@ -102,7 +105,7 @@ def check_if_emoji_alias_exists(emoji_alias):
     return emoji_data is not None
 
 
-def validate_blocked_url(url):
+def validate_blocked_url(url) -> bool:
     blocked_urls = blocked_urls_collection.find()
     blocked_urls = [doc["_id"] for doc in blocked_urls]
 
