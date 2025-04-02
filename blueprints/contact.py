@@ -6,7 +6,7 @@ from utils.contact_utils import (
     CONTACT_WEBHOOK,
     URL_REPORT_WEBHOOK,
 )
-from utils.mongo_utils import check_if_slug_exists
+from utils.mongo_utils import alias_exists
 from .limiter import limiter
 
 contact = Blueprint("contact", __name__)
@@ -119,7 +119,7 @@ def report():
             )
 
         short_code = short_code.split("/")[-1]
-        if not check_if_slug_exists(short_code):
+        if not alias_exists(short_code):
             return (
                 render_template(
                     "report.html",
