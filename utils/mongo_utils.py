@@ -84,8 +84,7 @@ def aggregate_emoji_url(pipeline):
 def insert_emoji_url(alias, emoji_data):
     try:
         emoji_urls_collection.insert_one({"_id": alias, **emoji_data})
-    except Exception as e:
-        print(e)
+    except Exception:
         pass
 
 

@@ -141,10 +141,7 @@ def validate_emoji_alias(alias) -> bool:
     emoji_list = emoji.emoji_list(alias)
     extracted_emojis: str = "".join([data["emoji"] for data in emoji_list])
 
-    if len(extracted_emojis) != len(alias) or len(emoji_list) > 15:
-        return False
-    else:
-        return True
+    return len(extracted_emojis) == len(alias) and len(emoji_list) <= 15
 
 
 def generate_unique_code(generate_func, exists_check_func):
