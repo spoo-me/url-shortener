@@ -26,7 +26,7 @@ def client():
 
 
 def test_rate_limiter(client, mocker):
-    mocker.patch("blueprints.url_shortener.check_if_slug_exists", return_value=False)
+    mocker.patch("blueprints.url_shortener.alias_exists", return_value=False)
     mocker.patch(
         "blueprints.url_shortener.generate_short_code", return_value="shortcode"
     )
