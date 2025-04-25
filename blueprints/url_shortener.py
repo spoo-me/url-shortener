@@ -64,12 +64,12 @@ def set_url_cookie(short_code: str) -> ResponseReturnValue:
     if len(json_serialized_list) > 3:
         del json_serialized_list[-1]
 
-    serialized_list: str = json.dumps(json_serialized_list)
-    resp = make_response(
+    serialized_list_str: str = json.dumps(json_serialized_list)
+    resp: Response = make_response(
         redirect(url_for("url_shortener.result", short_code=short_code))
     )
 
-    resp.set_cookie("shortURL", serialized_list)
+    resp.set_cookie("shortURL", serialized_list_str)
     return resp
 
 

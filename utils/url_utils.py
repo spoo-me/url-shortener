@@ -137,11 +137,11 @@ def generate_emoji_alias() -> str:
 
 
 def validate_emoji_alias(alias) -> bool:
-    alias: str = unquote(alias)
-    emoji_list = emoji.emoji_list(alias)
+    unqoted_alias: str = unquote(alias)
+    emoji_list = emoji.emoji_list(unqoted_alias)
     extracted_emojis: str = "".join([data["emoji"] for data in emoji_list])
 
-    return len(extracted_emojis) == len(alias) and len(emoji_list) <= 15
+    return len(extracted_emojis) == len(unqoted_alias) and len(emoji_list) <= 15
 
 
 def generate_unique_code(generate_func, exists_check_func):
