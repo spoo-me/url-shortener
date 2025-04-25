@@ -7,6 +7,7 @@ from utils.contact_utils import (
     URL_REPORT_WEBHOOK,
 )
 from utils.mongo_utils import check_if_slug_exists
+from utils.url_utils import get_client_ip
 from .limiter import limiter
 
 contact = Blueprint("contact", __name__)
@@ -134,7 +135,7 @@ def report():
                 URL_REPORT_WEBHOOK,
                 short_code,
                 reason,
-                request.remote_addr,
+                get_client_ip(),
                 request.host_url,
             )
         except Exception as e:
