@@ -25,7 +25,7 @@ gunicorn==23.0.0
 idna==3.10
 iniconfig==2.0.0
 itsdangerous==2.2.0
-Jinja2==3.1.5
+Jinja2==3.1.6
 limits==3.14.1
 markdown-it-py==3.0.0
 MarkupSafe==3.0.1
