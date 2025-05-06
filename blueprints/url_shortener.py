@@ -594,6 +594,8 @@ METRIC_PIPELINE = [
 def metric():
     result = urls_collection.aggregate(METRIC_PIPELINE).next()
     del result["_id"]
+    result["total-clicks-raw"] = result["total-clicks"]
+    result["total-shortlinks-raw"] = result["total-shortlinks"]
     result["total-clicks"] = humanize_number(result["total-clicks"])
     result["total-shortlinks"] = humanize_number(result["total-shortlinks"])
     return jsonify(result)
