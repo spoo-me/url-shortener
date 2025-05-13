@@ -224,7 +224,7 @@ git checkout -b my-new-branch
 
     More information on how to do this can be found in the [Basic Jinja2 Templating Engine introduction](#️-basic-jinja2-templating-engine-introduction) section.
 
-10.  Format you code, more information on how to do this can be found in the [Styleguides](#styleguides) section
+10.  Format your code, more information on how to do this can be found in the [Styleguides](#styleguides) section
 
 11. Commit your changes
 
