@@ -159,45 +159,50 @@ git clone https://github.com/spoo-me/url-shortener.git
 cd url-shortener
 ```
 
-3. Install the project dependencies
+3. Create a new virtual environment
+```bash
+python -m venv venv
+```
+
+4. Install the project dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Create a new branch
+5. Create a new branch
 
 ```bash
 git checkout -b my-new-branch
 ```
 
-5. Creating .env file
+6. Creating .env file
 
     - Copy and Rename the `.env.example` file to `.env`
 
-6. Starting the development server
-
-    - Creating a new virtual environment
-
-        ```bash
-        python -m venv venv
-        ```
+7. Starting the development server
 
     - Activating the virtual environment
+      
+      MacOS/Linux:
 
         ```bash
         source venv/bin/activate
         ```
+       Windows:
+         ```bash
+         venv/bin/activate
+         ```
 
     - Running the development server
 
         ```bash
-        python app.py
+        python main.py
         ```
 
-7. You can access the development server at: http://127.0.0.1:8000/
+8. You can access the development server at: http://127.0.0.1:8000/
 
-8. Make your changes
+9. Make your changes
 
     Note: If you made some changes in the static Files, you need to update the version of the static file in the static file import syntax of the HTML files. For example, if you made some changes in the `style.css` file, you need to update the version of the `style.css` file in the `index.html` file. You can do this by adding a query parameter to the end of the file name.
 
@@ -215,13 +220,13 @@ git checkout -b my-new-branch
 
     More information on how to do this can be found in the [Basic Jinja2 Templating Engine introduction](#️-basic-jinja2-templating-engine-introduction) section.
 
-9.  Format you code, more information on how to do this can be found in the [Styleguides](#styleguides) section
+10.  Format you code, more information on how to do this can be found in the [Styleguides](#styleguides) section
 
-10. Commit your changes
+11. Commit your changes
 
-11. Check if all of the workflow checks are passing
+12. Check if all of the workflow checks are passing
 
-12. Push your branch to your fork
+13. Push your branch to your fork
 
 ## 🎨 Styleguides
 
