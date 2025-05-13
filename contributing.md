@@ -190,8 +190,12 @@ git checkout -b my-new-branch
         source venv/bin/activate
         ```
        Windows:
-         ```bash
-         venv/bin/activate
+         ```cmd
+         # For Command Prompt
+         venv\Scripts\activate
+         
+         # For PowerShell
+         venv\Scripts\Activate.ps1
          ```
 
     - Running the development server
