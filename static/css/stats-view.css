@@ -136,10 +136,13 @@ select:hover {
 }
 
 #url_long_code {
-    max-width: 220px;
+    max-width: 70%;
     display: inline-flex;
-    overflow-x: scroll;
-    height: 28px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 30px;
+    white-space: normal;
+    word-break: break-all;
 }
 
 #url_long_code::-webkit-scrollbar {
@@ -468,6 +471,10 @@ h3 {
     #analysisJson,
     #botsJson {
         height: 250px;
+    } */
+
+    /* #url_long_code {
+        max-width: 50%;
     } */
 
     #url_long_input {
