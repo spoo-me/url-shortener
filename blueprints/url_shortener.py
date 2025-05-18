@@ -118,7 +118,9 @@ def shorten_url():
     if alias and check_if_slug_exists(alias[:12]):
         if request.headers.get("Accept") == "application/json":
             return (
-                jsonify({"AliasError": "Alias already exists", "alias": f"{alias[:12]}"}),
+                jsonify(
+                    {"AliasError": "Alias already exists", "alias": f"{alias[:12]}"}
+                ),
                 400,
             )
         else:
