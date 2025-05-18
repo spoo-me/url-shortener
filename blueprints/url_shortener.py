@@ -113,26 +113,26 @@ def shorten_url():
             )
 
     elif alias:
-        short_code = alias[:11]
+        short_code = alias[:12]
 
-    if alias and check_if_slug_exists(alias[:11]):
+    if alias and check_if_slug_exists(alias[:12]):
         if request.headers.get("Accept") == "application/json":
             return (
-                jsonify({"AliasError": "Alias already exists", "alias": f"{alias}"}),
+                jsonify({"AliasError": "Alias already exists", "alias": f"{alias[:12]}"}),
                 400,
             )
         else:
             return (
                 render_template(
                     "index.html",
-                    error="Alias already exists",
+                    error=f"Alias {alias[:12]} already exists",
                     url=url,
                     host_url=request.host_url,
                 ),
                 400,
             )
     elif alias:
-        short_code = alias[:11]
+        short_code = alias[:12]
     else:
         while True:
             short_code = generate_short_code()
@@ -431,7 +431,7 @@ def redirect_url(short_code):
         ua = parse(user_agent)
     except TypeError:
         return "Invalid User-Agent", 400
-
+    print
     os_name = ua.os.family
     browser = ua.browser.family
     referrer = request.headers.get("Referer")
