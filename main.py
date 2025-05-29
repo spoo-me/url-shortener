@@ -16,6 +16,7 @@ from blueprints.limiter import limiter
 from blueprints.seo import seo
 from blueprints.stats import stats
 from blueprints.url_shortener import url_shortener
+from blueprints.redirector import url_redirector
 from services.cache import cache
 from utils.mongo_utils import client
 
@@ -25,6 +26,7 @@ limiter.init_app(app)
 cache.init_app(app)
 
 app.register_blueprint(url_shortener)
+app.register_blueprint(url_redirector)
 app.register_blueprint(docs)
 app.register_blueprint(seo)
 app.register_blueprint(contact)

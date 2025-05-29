@@ -21,7 +21,7 @@ from utils.mongo_utils import (
 )
 from .limiter import limiter
 
-from user_agents import parse
+from ua_parser import parse
 from datetime import datetime, timezone
 from urllib.parse import unquote
 import re
@@ -117,16 +117,18 @@ def redirect_url(short_code):
 
     # store the device and browser information
     user_agent = request.headers.get("User-Agent")
+    if not user_agent:
+        return jsonify({"error_code": "400", "error_message": "Invalid User-Agent", "host_url": request.host_url}), 400
 
-    try:
-        ua = parse(user_agent)
-    except TypeError:
-        return "Invalid User-Agent", 400
-    print
+    ua = parse(user_agent)
+    if not ua or not ua.user_agent or not ua.os:
+        return jsonify({"error_code": "400", "error_message": "Invalid User-Agent", "host_url": request.host_url}), 400
+
     os_name = ua.os.family
-    browser = ua.browser.family
+    browser = ua.user_agent.family
     referrer = request.headers.get("Referer")
     country = get_country(user_ip)
+
     is_unique_click = url_data.get("ips", None) is None
 
     if country:
