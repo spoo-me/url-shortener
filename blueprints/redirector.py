@@ -150,7 +150,20 @@ def redirect_url(short_code):
             }
         ), 400
 
-    ua = parse(user_agent)
+    try:
+        ua = parse(user_agent)
+        if not ua or not ua.user_agent or not ua.os:
+            return jsonify({
+                "error_code": "400",
+                "error_message": "Invalid User-Agent",
+                "host_url": request.host_url,
+            }), 400
+    except Exception as e:
+        return jsonify({
+            "error_code": "400",
+            "error_message": f"Error parsing User-Agent: {str(e)}",
+            "host_url": request.host_url,
+        }), 400
     if not ua or not ua.user_agent or not ua.os:
         return jsonify(
             {
