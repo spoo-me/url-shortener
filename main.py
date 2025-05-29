@@ -16,7 +16,7 @@ from blueprints.limiter import limiter
 from blueprints.seo import seo
 from blueprints.stats import stats
 from blueprints.url_shortener import url_shortener
-from blueprints.cache import cache
+from services.cache import cache
 from utils.mongo_utils import client
 
 app = Flask(__name__)
@@ -72,4 +72,4 @@ def cleanup():
 
 
 if __name__ == "__main__":
-    app.run(port=8000, use_reloader=False)
+    app.run(port=8000, use_reloader=True)

@@ -1,11 +1,14 @@
-import redis, datetime
+import redis
+import datetime
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 from redis.client import Pipeline
 
+
 @dataclass
 class clickData:
     "Class to hold the data of a URL Click"
+
     country: str
     browser: str
     os: str
@@ -14,8 +17,9 @@ class clickData:
     redirect_time: str
     bot: str
 
+
 class cache_updates:
-    def __init__(self, redis_uri: str, ttl_seconds: int = 60*60) -> None:
+    def __init__(self, redis_uri: str, ttl_seconds: int = 60 * 60) -> None:
         """
         Intialize the cache_updates class
         :param redis_uri:  URI string for the Redis connection
@@ -23,7 +27,7 @@ class cache_updates:
         self.r: redis.Redis = redis.Redis.from_url(redis_uri)
         self.ttl_seconds: int = ttl_seconds
 
-    def add_data(self, slug:str, clickData: clickData) -> None:
+    def add_data(self, slug: str, clickData: clickData) -> None:
         """
         Add the data of a particular click to the cache
         :param slug: Slug of the URL
@@ -50,7 +54,7 @@ class cache_updates:
             pipe.hincrby(f"counts:{slug}", f"bots.{clickData.bot}", 1)
 
         # Meta
-        pipe.hset(f"meta:{slug}", "last-click", now.strftime('%Y-%m-%d %H:%M:%S'))
+        pipe.hset(f"meta:{slug}", "last-click", now.strftime("%Y-%m-%d %H:%M:%S"))
         pipe.hset(f"meta:{slug}", "last-click-browser", clickData.browser)
         pipe.hset(f"meta:{slug}", "last-click-os", clickData.os)
         pipe.hset(f"meta:{slug}", "last-click-country", clickData.country)
