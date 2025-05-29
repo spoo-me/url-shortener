@@ -10,7 +10,7 @@ if REDIS_URI:
         "CACHE_TYPE": "redis",
         "CACHE_REDIS_URL": REDIS_URI,
         "CACHE_DEFAULT_TIMEOUT": 300,  # 5 minutes default
-        "CACHE_KEY_PREFIX": "spoo_cache:",  # Prefix for cache keys
+        "CACHE_KEY_PREFIX": "flask_cache:",  # Prefix for cache keys
         "CACHE_REDIS_DB": 0,  # Redis database number
         # Connection pool settings for better performance
         "CACHE_OPTIONS": {

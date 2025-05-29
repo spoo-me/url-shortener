@@ -29,7 +29,7 @@ from utils.mongo_utils import (
 )
 from utils.general import is_positive_integer, humanize_number
 from .limiter import limiter
-from services.cache import cache
+from services.flask_cache import cache
 
 import json
 from datetime import datetime
