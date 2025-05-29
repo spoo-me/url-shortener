@@ -160,7 +160,7 @@ def redirect_url(short_code):
                     "host_url": request.host_url,
                 }
             ), 400
-    except Exception as e:
+    except Exception:
         return jsonify(
             {
                 "error_code": "400",
