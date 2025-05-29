@@ -164,7 +164,7 @@ def redirect_url(short_code):
         return jsonify(
             {
                 "error_code": "400",
-                "error_message": f"An internal error occurred while processing the User-Agent",
+                "error_message": "An internal error occurred while processing the User-Agent",
                 "host_url": request.host_url,
             }
         ), 400
