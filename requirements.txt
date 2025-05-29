@@ -17,7 +17,7 @@ et-xmlfile==1.1.0
 filelock==3.16.1
 Flask==3.0.3
 Flask-Caching==2.3.0
-Flask-Cors==5.0.0
+Flask-Cors==6.0.0
 Flask-Limiter==3.9.2
 frozenlist==1.4.1
 geoip2==4.8.0
