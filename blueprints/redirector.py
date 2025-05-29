@@ -19,6 +19,8 @@ from utils.mongo_utils import (
     load_emoji_url,
     update_emoji_url,
 )
+import os
+from services.cache_url import cache_query, urlData
 from .limiter import limiter
 
 from ua_parser import parse
@@ -30,6 +32,7 @@ from crawlerdetect import CrawlerDetect
 
 crawler_detect = CrawlerDetect()
 tld_no_cache_extract = tldextract.TLDExtract(cache_dir=None)
+cq = cache_query(os.environ.get("REDIS_URI"))
 
 url_redirector = Blueprint("url_redirector", __name__)
 
@@ -57,11 +60,32 @@ def redirect_url(short_code):
     # Measure redirection time
     start_time = time.perf_counter()
 
-    if validate_emoji_alias(short_code):
-        is_emoji = True
-        url_data = load_emoji_url(short_code, projection)
+    cached_url_data = cq.get_url_data(short_code)
+    if cached_url_data:
+        url_data = {
+            "url": cached_url_data.url,
+            "password": cached_url_data.password,
+            "block-bots": cached_url_data.block_bots,
+        }
     else:
-        url_data = load_url(short_code, projection)
+        if validate_emoji_alias(short_code):
+            is_emoji = True
+            url_data = load_emoji_url(short_code, projection)
+        else:
+            url_data = load_url(short_code, projection)
+
+        if url_data and not url_data.get(
+            "max-clicks", 0
+        ):  # skip caching if max-clicks is set (will break if url has high max-clicks)
+            cq.set_url_data(
+                short_code,
+                urlData(
+                    url=url_data["url"],
+                    short_code=short_code,
+                    password=url_data.get("password"),
+                    block_bots=url_data.get("block-bots", False),
+                ),
+            )
 
     if not url_data:
         return (
