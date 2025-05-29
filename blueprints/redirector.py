@@ -118,11 +118,23 @@ def redirect_url(short_code):
     # store the device and browser information
     user_agent = request.headers.get("User-Agent")
     if not user_agent:
-        return jsonify({"error_code": "400", "error_message": "Invalid User-Agent", "host_url": request.host_url}), 400
+        return jsonify(
+            {
+                "error_code": "400",
+                "error_message": "Invalid User-Agent",
+                "host_url": request.host_url,
+            }
+        ), 400
 
     ua = parse(user_agent)
     if not ua or not ua.user_agent or not ua.os:
-        return jsonify({"error_code": "400", "error_message": "Invalid User-Agent", "host_url": request.host_url}), 400
+        return jsonify(
+            {
+                "error_code": "400",
+                "error_message": "Invalid User-Agent",
+                "host_url": request.host_url,
+            }
+        ), 400
 
     os_name = ua.os.family
     browser = ua.user_agent.family
