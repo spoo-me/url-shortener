@@ -47,7 +47,7 @@ pytest-mock==3.14.1
 python-dotenv==1.1.0
 pytz==2025.2
 redis==6.2.0
-requests==2.32.3
+requests==2.32.4
 requests-file==2.1.0
 requests-mock==1.12.1
 rich==13.9.4
