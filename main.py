@@ -17,13 +17,11 @@ from blueprints.seo import seo
 from blueprints.stats import stats
 from blueprints.url_shortener import url_shortener
 from blueprints.redirector import url_redirector
-from services.flask_cache import cache
 from utils.mongo_utils import client
 
 app = Flask(__name__)
 CORS(app)
 limiter.init_app(app)
-cache.init_app(app)
 
 app.register_blueprint(url_shortener)
 app.register_blueprint(url_redirector)

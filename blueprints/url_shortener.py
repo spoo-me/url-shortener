@@ -29,7 +29,7 @@ from utils.mongo_utils import (
 )
 from utils.general import is_positive_integer, humanize_number
 from .limiter import limiter
-from services.flask_cache import cache
+from cache import dual_cache
 
 import json
 from datetime import datetime
@@ -350,12 +350,14 @@ METRIC_PIPELINE = [
 
 @url_shortener.route("/metric")
 @limiter.exempt
-@cache.cached(timeout=60 * 5)  # 5 minutes
 def metric():
-    result = urls_collection.aggregate(METRIC_PIPELINE).next()
-    del result["_id"]
-    result["total-clicks-raw"] = result["total-clicks"]
-    result["total-shortlinks-raw"] = result["total-shortlinks"]
-    result["total-clicks"] = humanize_number(result["total-clicks"])
-    result["total-shortlinks"] = humanize_number(result["total-shortlinks"])
-    return jsonify(result)
+    def query():
+        result = urls_collection.aggregate(METRIC_PIPELINE).next()
+        del result["_id"]
+        result["total-clicks-raw"] = result["total-clicks"]
+        result["total-shortlinks-raw"] = result["total-shortlinks"]
+        result["total-clicks"] = humanize_number(result["total-clicks"])
+        result["total-shortlinks"] = humanize_number(result["total-shortlinks"])
+        return result
+
+    return jsonify(dual_cache.get_or_set("metrics", query))
