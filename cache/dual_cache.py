@@ -12,10 +12,8 @@ class DualCache(BaseCache):
         self.stale_ttl = stale_ttl
         self.lock_ttl = lock_ttl
 
-
     def _lock(self, key: str) -> bool:
         return self.r and self.r.set(key, "1", nx=True, ex=self.lock_ttl)
-
 
     def _run_in_thread(self, fn: Callable):
         thread = threading.Thread(target=fn, daemon=True)
