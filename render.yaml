@@ -13,3 +13,5 @@ services:
         sync: false
       - key: URL_REPORT_WEBHOOK
         sync: false
+      - key: REDIS_URI
+        sync: false
