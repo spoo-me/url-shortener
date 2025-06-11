@@ -11,7 +11,6 @@ from utils.url_utils import (
     get_country,
     get_client_ip,
     validate_emoji_alias,
-    convert_to_gmt,
 )
 from utils.mongo_utils import (
     load_url,
@@ -19,8 +18,9 @@ from utils.mongo_utils import (
     load_emoji_url,
     update_emoji_url,
 )
-import os
-from services.cache_url import cache_query, urlData
+from cache import cache_query as cq
+from cache.cache_url import UrlData
+
 from .limiter import limiter
 
 from ua_parser import parse
@@ -32,7 +32,6 @@ from crawlerdetect import CrawlerDetect
 
 crawler_detect = CrawlerDetect()
 tld_no_cache_extract = tldextract.TLDExtract(cache_dir=None)
-cq = cache_query(os.environ.get("REDIS_URI"))
 
 url_redirector = Blueprint("url_redirector", __name__)
 
@@ -79,7 +78,7 @@ def redirect_url(short_code):
         ):  # skip caching if max-clicks is set (will break if url has high max-clicks)
             cq.set_url_data(
                 short_code,
-                urlData(
+                UrlData(
                     url=url_data["url"],
                     short_code=short_code,
                     password=url_data.get("password"),
@@ -107,23 +106,6 @@ def redirect_url(short_code):
                     "error.html",
                     error_code="400",
                     error_message="SHORT URL EXPIRED",
-                    host_url=request.host_url,
-                ),
-                400,
-            )
-
-    # custom expiration time is currently really buggy and not ready for production
-
-    if "expiration-time" in url_data:
-        expiration_time = convert_to_gmt(url_data["expiration-time"])
-        if not expiration_time:
-            print("Expiration time is not timezone aware")
-        elif expiration_time <= datetime.now(timezone.utc):
-            return (
-                render_template(
-                    "error.html",
-                    error_code="400",
-                    error_message="SHORT CODE EXPIRED",
                     host_url=request.host_url,
                 ),
                 400,
