@@ -10,5 +10,15 @@
             "src": "/(.*)",
             "dest": "main.py"
         }
+    ],
+    "rewrites": [
+        {
+        "source": "/docs",
+        "destination": "https://docs.spoo.me"
+        },
+        {
+        "source": "/docs/:match*",
+        "destination": "https://docs.spoo.me/:match*"
+        }
     ]
 }
