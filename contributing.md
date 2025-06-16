@@ -2,6 +2,9 @@
 
 First off, thank you for considering contributing to this project! It's people like you that make the open source community such a fantastic place to learn, inspire, and create. Every contribution helps and is greatly appreciated!
 
+> [!NOTE]
+> ## View the updated contribution guidelines at https://docs.spoo.me/contributing
+
 In this document, you will find guidelines and directions for contributing to this project. Please respect these guidelines as they are meant to foster a consistent and respectful approach to collaboration.
 
 ## 📖 Table of Contents
