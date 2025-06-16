@@ -29,3 +29,17 @@ def serve_privacy_policy():
 @limiter.exempt
 def serve_terms_of_service():
     return render_template("legal/terms-of-service.html", host_url=request.host_url)
+
+
+@docs.route("/docs/<path:path>")
+@limiter.exempt
+def redirect_docs_wildcard(path):
+    # Exclude specific paths that are handled by other routes
+    excluded_paths = ["privacy-policy", "terms-of-service", "tos"]
+
+    if path in excluded_paths:
+        # This shouldn't happen since specific routes take precedence,
+        # but handle it gracefully just in case
+        return redirect(f"/docs/{path}"), 301
+
+    return redirect(f"https://docs.spoo.me/{path}"), 301
