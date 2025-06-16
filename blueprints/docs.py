@@ -1,6 +1,5 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, redirect
 from .limiter import limiter
-import os
 
 docs = Blueprint("docs", __name__)
 
@@ -9,36 +8,24 @@ docs = Blueprint("docs", __name__)
 @docs.route("/docs/")
 @limiter.exempt
 def serve_docs_index():
-    return render_template("docs/index.html", host_url=request.host_url)
+    return redirect("https://docs.spoo.me"), 301
 
 
-@docs.route("/docs/<path:file_path>")
-@limiter.exempt
-def serve_docs(file_path):
-    try:
-        if not os.path.exists(f"templates/docs/{file_path}.html"):
-            raise FileNotFoundError
-        return render_template(f"docs/{file_path}.html", host_url=request.host_url)
-    except Exception:
-        return (
-            render_template(
-                "error.html",
-                error_code="404",
-                error_message="URL NOT FOUND",
-                host_url=request.host_url,
-            ),
-            404,
-        )
-
-
+@docs.route("/docs/privacy-policy")
 @docs.route("/legal/privacy-policy")
+@docs.route("/privacy-policy")
+@docs.route("/privacy")
 @limiter.exempt
 def serve_privacy_policy():
-    return render_template("docs/privacy-policy.html", host_url=request.host_url)
+    return render_template("legal/privacy-policy.html", host_url=request.host_url)
 
 
+@docs.route("/docs/terms-of-service")
+@docs.route("/docs/tos")
 @docs.route("/legal/terms-of-service")
 @docs.route("/legal/tos")
+@docs.route("/tos")
+@docs.route("/terms-of-service")
 @limiter.exempt
 def serve_terms_of_service():
-    return render_template("docs/terms-of-service.html", host_url=request.host_url)
+    return render_template("legal/terms-of-service.html", host_url=request.host_url)

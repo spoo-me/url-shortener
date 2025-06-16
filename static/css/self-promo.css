@@ -4,7 +4,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 7px 10px;
-    background-color: #000336;
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 .self-promo-inner {
