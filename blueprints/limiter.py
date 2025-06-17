@@ -8,6 +8,7 @@ limiter = Limiter(
     default_limits=["10 per minute", "500 per day", "100 per hour"],
     storage_uri=MONGO_URI,
     strategy="fixed-window",
+    headers_enabled=True,
 )
 
 
