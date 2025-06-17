@@ -239,8 +239,3 @@ def check_password(short_code):
         ),
         400,
     )
-
-
-@url_redirector.route("/ok", methods=["GET"])
-def simple_redirect():
-    return "Ok", 200
