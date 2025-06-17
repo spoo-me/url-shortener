@@ -82,4 +82,3 @@ async def handle_click_event(data: dict):
         logger.info(f"[✓] Processed analytics for {short_code}")
     except Exception as e:
         logger.error(f"[!] Error updating MongoDB: {e}")
-        pass
