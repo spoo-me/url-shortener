@@ -5,7 +5,7 @@ from flask import request
 
 limiter = Limiter(
     key_func=get_client_ip,  # Use custom function that handles Cloudflare/proxy headers
-    default_limits=["5 per minute", "500 per day", "50 per hour"],
+    default_limits=["10 per minute", "500 per day", "100 per hour"],
     storage_uri=MONGO_URI,
     strategy="fixed-window",
 )
