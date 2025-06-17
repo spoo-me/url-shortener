@@ -1,10 +1,10 @@
 from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from utils.mongo_utils import MONGO_URI, ip_bypasses
+from utils.url_utils import get_client_ip
 from flask import request
 
 limiter = Limiter(
-    key_func=get_remote_address,
+    key_func=get_client_ip,  # Use custom function that handles Cloudflare/proxy headers
     default_limits=["5 per minute", "500 per day", "50 per hour"],
     storage_uri=MONGO_URI,
     strategy="fixed-window",
@@ -19,4 +19,5 @@ def ip_whitelist():
     bypasses = ip_bypasses.find()
     bypasses = [doc["_id"] for doc in bypasses]
 
-    return request.remote_addr in bypasses
+    client_ip = get_client_ip()
+    return client_ip in bypasses
