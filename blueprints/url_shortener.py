@@ -13,7 +13,6 @@ from utils.url_utils import (
     validate_url,
     validate_alias,
     validate_emoji_alias,
-    validate_expiration_time,
     generate_short_code,
     generate_emoji_alias,
 )
@@ -61,7 +60,6 @@ def shorten_url():
     password = request.values.get("password")
     max_clicks = request.values.get("max-clicks")
     alias = request.values.get("alias")
-    expiration_time = request.values.get("expiration-time")
     block_bots = request.values.get("block-bots")
 
     if not url:
@@ -105,13 +103,13 @@ def shorten_url():
             )
 
     elif alias:
-        short_code = alias[:12]
+        short_code = alias[:16]
 
-    if alias and check_if_slug_exists(alias[:12]):
+    if alias and check_if_slug_exists(alias[:16]):
         if request.headers.get("Accept") == "application/json":
             return (
                 jsonify(
-                    {"AliasError": "Alias already exists", "alias": f"{alias[:12]}"}
+                    {"AliasError": "Alias already exists", "alias": f"{alias[:16]}"}
                 ),
                 400,
             )
@@ -119,20 +117,30 @@ def shorten_url():
             return (
                 render_template(
                     "index.html",
-                    error=f"Alias {alias[:12]} already exists",
+                    error=f"Alias {alias[:16]} already exists",
                     url=url,
                     host_url=request.host_url,
                 ),
                 400,
             )
     elif alias:
-        short_code = alias[:12]
+        short_code = alias[:16]
     else:
         while True:
             short_code = generate_short_code()
 
             if not check_if_slug_exists(short_code):
                 break
+
+    data = {
+        "url": url,
+        "counter": {},
+        "total-clicks": 0,
+        "ips": [],
+        "creation-date": datetime.now().strftime("%Y-%m-%d"),
+        "creation-time": datetime.now().strftime("%H:%M:%S"),
+        "creation-ip-address": get_client_ip(),
+    }
 
     if password:
         if not validate_password(password):
@@ -144,16 +152,7 @@ def shorten_url():
                 ),
                 400,
             )
-
-        data = {
-            "url": url,
-            "password": password,
-            "counter": {},
-            "total-clicks": 0,
-            "ips": [],
-        }
-    else:
-        data = {"url": url, "counter": {}, "total-clicks": 0, "ips": []}
+        data["password"] = password
 
     if max_clicks:
         if not is_positive_integer(max_clicks):
@@ -165,32 +164,18 @@ def shorten_url():
             max_clicks = str(abs(int(str(max_clicks))))
         data["max-clicks"] = max_clicks
 
-    # custom expiration time is currently really buggy and not ready for production
-
-    if expiration_time:
-        if not validate_expiration_time(expiration_time):
-            return (
-                jsonify(
-                    {
-                        "ExpirationTimeError": "Invalid expiration-time. It must be in a valid ISO format with timezone information and at least 5 minutes from the current time."
-                    }
-                ),
-                400,
-            )
-        else:
-            data["expiration-time"] = expiration_time
-
     if block_bots:
         data["block-bots"] = True
 
-    data["creation-date"] = datetime.now().strftime("%Y-%m-%d")
-    data["creation-time"] = datetime.now().strftime("%H:%M:%S")
-
-    data["creation-ip-address"] = get_client_ip()
-
     insert_url(short_code, data)
 
-    response = jsonify({"short_url": f"{request.host_url}{short_code}"})
+    response_data = {
+        "short_url": f"{request.host_url}{short_code}",
+        "domain": request.host,
+        "original_url": url,
+    }
+
+    response = jsonify(response_data)
 
     if request.headers.get("Accept") == "application/json":
         return response
@@ -208,8 +193,6 @@ def shorten_url():
 
         return resp
 
-    return response
-
 
 @url_shortener.route("/emoji", methods=["GET", "POST"])
 def emoji():
@@ -217,7 +200,6 @@ def emoji():
     url = request.values.get("url")
     password = request.values.get("password")
     max_clicks = request.values.get("max-clicks")
-    expiration_time = request.values.get("expiration-time")
     block_bots = request.values.get("block-bots")
 
     if not url:
@@ -250,7 +232,15 @@ def emoji():
     if url and not validate_blocked_url(url):
         return jsonify({"UrlError": "Blocked URL ⛔"}), 403
 
-    data = {"url": url, "counter": {}, "total-clicks": 0}
+    data = {
+        "url": url,
+        "counter": {},
+        "total-clicks": 0,
+        "ips": [],
+        "creation-date": datetime.now().strftime("%Y-%m-%d"),
+        "creation-time": datetime.now().strftime("%H:%M:%S"),
+        "creation-ip-address": get_client_ip(),
+    }
 
     if password:
         if not validate_password(password):
@@ -274,32 +264,18 @@ def emoji():
             max_clicks = str(abs(int(str(max_clicks))))
         data["max-clicks"] = max_clicks
 
-    # custom expiration time is currently really buggy and not ready for production
-
-    if expiration_time:
-        if not validate_expiration_time(expiration_time):
-            return (
-                jsonify(
-                    {
-                        "ExpirationTimeError": "Invalid expiration-time. It must be in a valid ISO format with timezone information and at least 5 minutes from the current time."
-                    }
-                ),
-                400,
-            )
-        else:
-            data["expiration-time"] = expiration_time
-
     if block_bots:
         data["block-bots"] = True
 
-    data["creation-date"] = datetime.now().strftime("%Y-%m-%d")
-    data["creation-time"] = datetime.now().strftime("%H:%M:%S")
-
-    data["creation-ip-address"] = get_client_ip()
-
     insert_emoji_url(emojies, data)
 
-    response = jsonify({"short_url": f"{request.host_url}{emojies}"})
+    response_data = {
+        "short_url": f"{request.host_url}{emojies}",
+        "domain": request.host,
+        "original_url": url,
+    }
+
+    response = jsonify(response_data)
 
     if request.headers.get("Accept") == "application/json":
         return response
