@@ -5,12 +5,23 @@ function toggleDropdown() {
 
 const inputBox = document.querySelector('#alias');
 
+// Track if the alias notification has been shown
+let aliasNotificationShown = false;
+
 inputBox.addEventListener('focus', (e) => {
     document.querySelector('.buttonIn').classList.add('focus');
 });
 
 inputBox.addEventListener('blur', (e) => {
     document.querySelector('.buttonIn').classList.remove('focus');
+});
+
+inputBox.addEventListener('click', (e) => {
+    // Show the notification about 16-character limit only once per session
+    if (!aliasNotificationShown) {
+        customTopNotification("AliasUpdate", "✨ <b>New:</b> Custom aliases can now be up to <b>16 characters</b> long!", 10, "success");
+        aliasNotificationShown = true;
+    }
 });
 
 function get_metrics() {
