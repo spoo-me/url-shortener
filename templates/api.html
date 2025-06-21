@@ -556,7 +556,7 @@ puts response.read_body</code></pre>
                     <td>400</td>
                     <td>The User requested Alias is invalid or already taken. The alias must be
                         <code>alphanumeric</code> & must
-                        be <code>under 15 chars</code>, anything beyond 15 chars would be stripped by the API
+                        be <code>under 17 chars (max-length: 16)</code>, anything beyond 16 chars would be stripped by the API
                     </td>
                 </tr>
                 <tr>
