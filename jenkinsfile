@@ -11,6 +11,8 @@ pipeline {
         stage('Install uv') {
             steps {
                 sh '''
+                    pip install --upgrade pip
+                    pip install maturin --only-binary maturin
                     pip install uv
                 '''
             }
@@ -18,8 +20,6 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
-                    pip install --upgrade pip
-                    pip install maturin --only-binary maturin
                     uv sync --group dev
                 '''
             }
