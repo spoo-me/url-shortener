@@ -1,0 +1,40 @@
+pipeline {
+    agent {
+        node {
+            label 'python'
+        }
+    }
+    triggers {
+        pollSCM('H/5 * * * *')
+    }
+    stages {
+        stage('Install uv') {
+            steps {
+                sh '''
+                    pip install uv
+                '''
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                    uv sync --group dev
+                '''
+            }
+        }
+        stage('Lint') {
+            steps {
+                sh '''
+                    uvx ruff check
+                '''
+            }
+        }
+        stage('Format') {
+            steps {
+                sh '''
+                    uvx ruff format
+                '''
+            }
+        }
+    }
+}
