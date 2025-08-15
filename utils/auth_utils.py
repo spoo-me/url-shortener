@@ -90,7 +90,7 @@ def set_refresh_cookie(response, token: str):
 		httponly=True,
 		secure=secure,
 		samesite="Strict",
-		path="/auth/refresh",
+		path="/auth",
 		max_age=refresh_ttl,
 	)
 	return response
@@ -98,6 +98,16 @@ def set_refresh_cookie(response, token: str):
 
 def clear_refresh_cookie(response):
 	secure = os.getenv("COOKIE_SECURE", "true").lower() == "true"
+	response.set_cookie(
+		"refresh_token",
+		value="",
+		expires=0,
+		httponly=True,
+		secure=secure,
+		samesite="Strict",
+		path="/auth",
+	)
+	# Also clear any legacy cookie that was scoped to /auth/refresh
 	response.set_cookie(
 		"refresh_token",
 		value="",

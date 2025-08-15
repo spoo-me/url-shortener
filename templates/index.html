@@ -339,8 +339,14 @@
         async function logout(){
             try{
                 const res = await fetch('/auth/logout', { method:'POST', credentials:'include' });
-                if(res.ok){ window.location.href = '/'; }
-            }catch(e){}
+                if(res.ok){
+                    // Ensure cookies are cleared client-side by navigating and re-evaluating nav state
+                    await updateAuthNav();
+                    window.location.href = '/';
+                } else {
+                    await updateAuthNav();
+                }
+            }catch(e){ await updateAuthNav(); }
         }
         async function updateAuthNav(){
             try{

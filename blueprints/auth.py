@@ -11,6 +11,7 @@ from utils.auth_utils import (
 	set_refresh_cookie,
 	set_access_cookie,
 	clear_refresh_cookie,
+	clear_access_cookie,
 	requires_auth,
 )
 from utils.mongo_utils import (
@@ -109,8 +110,9 @@ def logout():
 	resp = jsonify({"success": True})
 	if refresh_token:
 		token_hash = hashlib.sha256(refresh_token.encode("utf-8")).hexdigest()
-		revoke_refresh_token(token_hash)
+		revoke_refresh_token(token_hash, hard_delete=True)
 	clear_refresh_cookie(resp)
+	clear_access_cookie(resp)
 	return resp, 200
 
 

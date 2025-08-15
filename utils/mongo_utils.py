@@ -173,9 +173,12 @@ def find_refresh_token_by_hash(token_hash):
 	return token_doc
 
 
-def revoke_refresh_token(token_hash):
+def revoke_refresh_token(token_hash, *, hard_delete: bool = False):
 	try:
-		refresh_tokens_collection.update_one({"token_hash": token_hash}, {"$set": {"revoked": True}})
+		if hard_delete:
+			refresh_tokens_collection.delete_one({"token_hash": token_hash})
+		else:
+			refresh_tokens_collection.update_one({"token_hash": token_hash}, {"$set": {"revoked": True}})
 	except Exception:
 		pass
 
