@@ -1,8 +1,8 @@
-<!DOCTYPE html>
-<html lang="en-US">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
+{% block title %}spoo.me URL Shortener{% endblock %}
+
+{% block meta %}
     <script type="text/javascript">
         (function (c, l, a, r, i, t, y) {
             c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
@@ -10,144 +10,35 @@
             y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
         })(window, document, "clarity", "script", "k9zlm89vrc");
     </script>
-
-    <title>spoo.me URL Shortener</title>
-    <link rel="icon" type="image/png" href="https://spoo.me/static/images/favicon.png">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="spoo.me is a free and easy-to-use URL shortener that lets you create short links for any website. You can even choose your own alias, set a password, and limit the number of clicks.">
+    <meta name="description" content="spoo.me is a free and easy-to-use URL shortener that lets you create short links for any website. You can even choose your own alias, set a password, and limit the number of clicks.">
     <link rel="canonical" href="https://spoo.me">
-
-    <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="Shorten Your URLs, Not Your Possiblities | spoo.me">
     <meta property="og:site_name" content="Shorten Your URLs, Not Your Possiblities | spoo.me">
-    <meta property="og:description"
-        content="spoo.me is a free and easy-to-use URL shortener that lets you create short links for any website.">
+    <meta property="og:description" content="spoo.me is a free and easy-to-use URL shortener that lets you create short links for any website.">
     <meta property="og:image:url" content="https://spoo.me/static/images/banner.webp">
     <meta property="og:url" content="https://spoo.me">
     <meta property="og:type" content="website">
-
-    <!-- Twitter Card Meta Tags -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://spoo.me/" />
     <meta property="twitter:title" content="spoo.me URL Shortener" />
-    <meta property="twitter:description"
-        content="spoo.me is a free and easy-to-use URL shortener that lets you create short links for any website. You can even choose your own alias, set a password, and limit the number of clicks." />
+    <meta property="twitter:description" content="spoo.me is a free and easy-to-use URL shortener that lets you create short links for any website. You can even choose your own alias, set a password, and limit the number of clicks." />
     <meta property="twitter:image" content="https://spoo.me/static/images/banner.webp" />
-
     <meta property="twitter:domain" content="https://spoo.me">
-
     <meta content="#adb1ff" name="theme-color">
     <meta name="moz-appearance" content="#adb1ff">
     <meta content="#adb1ff" name="msapplication-TileColor">
+{% endblock %}
 
+{% block head_css %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=8">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=3">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/self-promo.css') }}?v=2">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=8">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/customNotification.css') }}?v=4">
-
     <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Allerta+Stencil&display=swap" rel="preload">
-</head>
+{% endblock %}
 
-<body>
-    {% if self_promo %}
-        <div class="self-promo">
-            <div class="self-promo-inner"><a href="{{ self_promo_uri }}" target="_blank" rel="noopener">🥳
-                    {{ self_promo_text }}</a></div>
-            <button id="close-button" class="self-promo-close"><img width="20" height="20"
-                    src="https://img.icons8.com/metro/30/ffffff/delete-sign.png" alt="delete-sign" /></button>
-        </div>
-    {% endif %}
-
-    <div class="navbar">
-        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image"
-            loading="lazy">
-        <div class="links">
-            <ul>
-                <li><a href="#" class="active">Shorten</a></li>
-                <li><a href="/api">API</a></li>
-                <li><a href="/stats">Stats</a></li>
-                <li><a href="/report">Report URL</a></li>
-                <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
-                </li>
-                <li onclick="showContactModal();"><a href="#">Contact</a></li>
-                <li id="nav-dashboard" style="display:none"><a href="/dashboard">Dashboard</a></li>
-                <li id="nav-auth"><a href="#" onclick="openAuthModal('register');return false;">Login / Register</a></li>
-                <li id="nav-logout" style="display:none"><a href="#" onclick="logout();return false;">Logout</a></li>
-            </ul>
-        </div>
-    </div>
-
-    <div class="mobile-navbar">
-        <div class="mobile-logo">
-            <a href="#"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png"
-                    alt="Spoo.me Banner Image"></a>
-        </div>
-        <button type="button" class="burger" title="Menu">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-        <ul class="mobile-menu">
-            <li><a href="#" class="active">Shorten</a></li>
-            <li><a href="/api">API</a></li>
-            <li><a href="/stats">Stats</a></li>
-            <li><a href="/report">Report URL</a></li>
-            <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
-            </li>
-            <li onclick="showContactModal();">Contact</li>
-            <li id="m-nav-dashboard" style="display:none"><a href="/dashboard">Dashboard</a></li>
-            <li id="m-nav-auth"><a href="#" onclick="openAuthModal('register');return false;">Login / Register</a></li>
-            <li id="m-nav-logout" style="display:none"><a href="#" onclick="logout();return false;">Logout</a></li>
-        </ul>
-    </div>
-
-    <div id="modalPopup" class="modal">
-        <div class="modal-content">
-            <h2 class="modal-header">Contact Us</h2>
-            <div class="button-container">
-                <button class="contact-button" onclick="openContactLink('/contact');"><img
-                        src="https://img.icons8.com/ios-filled/100/ffffff/pencil--v1.png" alt="Contact Form Symbol"
-                        loading="lazy">
-                    <p>Contact Form</p>
-                </button>
-                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
-                        src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png" alt="Discord Logo"
-                        loading="lazy">
-                    <p>Discord</p>
-                </button>
-                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img
-                        src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo"
-                        loading="lazy">
-                    <p>Twitter</p>
-                </button>
-                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img
-                        src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo"
-                        loading="lazy">
-                    <p>Instagram</p>
-                </button>
-                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img
-                        src="https://img.icons8.com/pastel-glyph/100/ffffff/new-post--v1.png" alt="Email Icon"
-                        loading="lazy">
-                    <p>Email</p>
-                </button>
-                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img
-                        src="https://img.icons8.com/material-sharp/100/ffffff/github.png" alt="Github Logo"
-                        loading="lazy">
-                    <p>Github</p>
-                </button>
-            </div>
-        </div>
-    </div>
-
+{% block content %}
     <div class="form-section">
         <form action="/" method="POST" onsubmit="return validateURL() && validatePassword();">
             <h1>
@@ -258,126 +149,11 @@
                 alt="Spoo&#0046;me&#0032;Url&#0032;Shortener - Shorten&#0032;Your&#0032;URLs&#0044;&#0032;Not&#0032;Your&#0032;Possibilities&#0046; | Product Hunt"
                 style="width: 200px; height: 40px;" width="200" height="40" loading="lazy" /></a>
     </div>
+{% endblock %}
 
+{% block scripts %}
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-
     <script src="{{ url_for('static', filename='js/index-qrcode.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/index-validate.js') }}?v=1" defer=""></script>
-    <script src="{{ url_for('static', filename='js/index-script.js') }}?v=5" defer=""></script>
-    <script src="{{ url_for('static', filename='js/contacts-popup.js') }}?v=1" defer=""></script>
-    <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
-    <script src="{{ url_for('static', filename='js/self-promo.js') }}" defer=""></script>
-
-    <style>
-        #authModal .modal-content { max-width: 420px; margin: 10% auto; background:#0f1225; border:1px solid #2a2e52; border-radius:12px; padding:20px; }
-        #authModal h2 { margin-top:0; }
-        #authModal label { display:block; margin-top:10px; margin-bottom:6px; color:#c7c9ff; }
-        #authModal input { width:100%; padding:10px 12px; border:1px solid #2a2e52; border-radius:8px; background:#0b0e20; color:#fff; }
-        #authModal .actions { display:flex; gap:10px; margin-top:14px; align-items:center; }
-        #authModal .primary { padding:10px 14px; background:#4752c4; color:#fff; border:none; border-radius:8px; cursor:pointer; }
-        #authModal .secondary { padding:8px 12px; background:transparent; color:#c7c9ff; border:1px solid #2a2e52; border-radius:8px; cursor:pointer; }
-        #authModal .toggle { margin-top:10px; text-align:center; }
-        #authModal .toggle button { background:none; border:none; color:#8aa0ff; cursor:pointer; }
-        #authError { color:#ff6b6b; min-height:20px; }
-    </style>
-
-    <div id="authModal" class="modal" style="display:none">
-        <div class="modal-content">
-            <h2 id="authTitle">Create your account</h2>
-            <p id="authError"></p>
-            <label>Email</label>
-            <input type="email" id="authEmail" placeholder="you@example.com" />
-            <label>Password</label>
-            <input type="password" id="authPassword" placeholder="At least 8 characters" />
-            <div id="userNameRow">
-                <label>User name (optional)</label>
-                <input type="text" id="authUserName" placeholder="Your display name" />
-            </div>
-            <div class="actions">
-                <button class="primary" onclick="submitAuth()" id="primaryBtn">Register</button>
-                <button class="secondary" onclick="closeAuthModal()">Close</button>
-            </div>
-            <div class="toggle">
-                <span id="toggleText">Already have an account?</span>
-                <button onclick="toggleAuthMode()" id="toggleBtn">Login</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let authMode = 'register';
-        function openAuthModal(mode='register'){
-            setAuthMode(mode);
-            document.getElementById('authError').innerText='';
-            document.getElementById('authModal').style.display='block';
-        }
-        function closeAuthModal(){ document.getElementById('authModal').style.display='none'; }
-        function setAuthMode(mode){
-            authMode = mode;
-            const isRegister = mode === 'register';
-            document.getElementById('authTitle').innerText = isRegister ? 'Create your account' : 'Welcome back';
-            document.getElementById('userNameRow').style.display = isRegister ? 'block' : 'none';
-            document.getElementById('primaryBtn').innerText = isRegister ? 'Register' : 'Login';
-            document.getElementById('toggleText').innerText = isRegister ? 'Already have an account?' : "New here?";
-            document.getElementById('toggleBtn').innerText = isRegister ? 'Login' : 'Register';
-        }
-        function toggleAuthMode(){ setAuthMode(authMode === 'register' ? 'login' : 'register'); }
-        async function submitAuth(){
-            const email = document.getElementById('authEmail').value.trim();
-            const password = document.getElementById('authPassword').value;
-            const user_name = document.getElementById('authUserName').value.trim();
-            const url = authMode === 'register' ? '/auth/register' : '/auth/login';
-            const body = authMode === 'register' ? { email, password, user_name } : { email, password };
-            try{
-                const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(body) });
-                const data = await res.json();
-                if(!res.ok){ document.getElementById('authError').innerText = data.error || 'Something went wrong'; return; }
-                closeAuthModal();
-                window.location.href = '/dashboard';
-            }catch(e){ document.getElementById('authError').innerText = 'Something went wrong'; }
-        }
-        async function logout(){
-            try{
-                const res = await fetch('/auth/logout', { method:'POST', credentials:'include' });
-                if(res.ok){
-                    // Ensure cookies are cleared client-side by navigating and re-evaluating nav state
-                    await updateAuthNav();
-                    window.location.href = '/';
-                } else {
-                    await updateAuthNav();
-                }
-            }catch(e){ await updateAuthNav(); }
-        }
-        async function updateAuthNav(){
-            try{
-                const res = await fetch('/auth/me', { credentials:'include' });
-                const loggedIn = res.ok;
-                document.getElementById('nav-dashboard').style.display = loggedIn ? 'list-item' : 'none';
-                document.getElementById('nav-logout').style.display = loggedIn ? 'list-item' : 'none';
-                document.getElementById('nav-auth').style.display = loggedIn ? 'none' : 'list-item';
-                const mDash = document.getElementById('m-nav-dashboard');
-                const mLogout = document.getElementById('m-nav-logout');
-                const mAuth = document.getElementById('m-nav-auth');
-                if(mDash){ mDash.style.display = loggedIn ? 'list-item' : 'none'; }
-                if(mLogout){ mLogout.style.display = loggedIn ? 'list-item' : 'none'; }
-                if(mAuth){ mAuth.style.display = loggedIn ? 'none' : 'list-item'; }
-            }catch(e){
-                // default to logged out
-            }
-        }
-        document.addEventListener('DOMContentLoaded', updateAuthNav);
-    </script>
-
-    <script>
-        window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/speed-insights/script.js"></script>
-
-    <script>
-        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/insights/script.js"></script>
-
-</body>
-
-</html>
+    <script src="{{ url_for('static', filename='js/index-validate.js') }}?v=1" defer></script>
+    <script src="{{ url_for('static', filename='js/index-script.js') }}?v=5" defer></script>
+{% endblock %}

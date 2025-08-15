@@ -1,67 +1,22 @@
-<!DOCTYPE html>
-<html lang="en-US">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard | spoo.me</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+{% extends "base.html" %}
+
+{% block title %}Dashboard | spoo.me{% endblock %}
+
+{% block head_css %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex">
     <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
+    <meta name="robots" content="noindex">
     <style>
-        .dashboard {
-            max-width: 900px;
-            margin: 40px auto;
-            background: #0f1225;
-            border: 1px solid #2a2e52;
-            border-radius: 12px;
-            padding: 24px;
-        }
+        .dashboard { max-width: 900px; margin: 40px auto; background: #0f1225; border: 1px solid #2a2e52; border-radius: 12px; padding: 24px; }
         .dashboard h1 { margin-top: 0; }
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 16px;
-            margin-top: 16px;
-        }
-        .card {
-            border: 1px solid #2a2e52;
-            border-radius: 10px;
-            padding: 16px;
-            background: #0b0e20;
-        }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
+        .card { border: 1px solid #2a2e52; border-radius: 10px; padding: 16px; background: #0b0e20; }
         .actions { margin-top: 20px; display:flex; gap:12px; }
         .actions button { padding: 8px 14px; cursor:pointer; }
     </style>
-    <script>
-        async function logout() {
-            try {
-                const res = await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
-                if (res.ok) {
-                    window.location.href = '/';
-                } else {
-                    customTopNotification('LogoutError', 'Failed to logout', 6);
-                }
-            } catch (e) {
-                customTopNotification('LogoutError', 'Failed to logout', 6);
-            }
-        }
-    </script>
-</head>
-<body>
-    <div class="navbar">
-        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image" loading="lazy">
-        <div class="links">
-            <ul>
-                <li><a href="/">Shorten</a></li>
-                <li><a href="/api">API</a></li>
-                <li><a href="/stats">Stats</a></li>
-                <li><a href="/report">Report URL</a></li>
-                <li><button onclick="logout()">Logout</button></li>
-            </ul>
-        </div>
-    </div>
+{% endblock %}
+
+{% block content %}
     <div class="dashboard">
         <h1>Welcome, {{ user.user_name or user.email }}</h1>
         <div class="info-grid">
@@ -76,11 +31,11 @@
                 <div class="actions">
                     <button onclick="window.location='/stats'">View Stats</button>
                     <button onclick="window.location='/'">Shorten URL</button>
+                    <button onclick="logout()">Logout</button>
                 </div>
             </div>
         </div>
     </div>
-</body>
-</html>
+{% endblock %}
 
 

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="https://spoo.me/static/images/favicon.png" />
+
+    <title>{% block title %}spoo.me{% endblock %}</title>
+
+    {% block meta %}{% endblock %}
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=9">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/self-promo.css') }}?v=2">
+
+    {% block head_css %}{% endblock %}
+</head>
+<body>
+    {% block setup %}{% endblock %}
+    {% include 'partials/self_promo.html' %}
+    {% include 'partials/navbar.html' %}
+    {% include 'partials/mobile_navbar.html' %}
+    {% include 'partials/contact_modal.html' %}
+    {% include 'partials/auth_modal.html' %}
+
+    {% block pre_body %}{% endblock %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='js/contacts-popup.js') }}?v=1" defer></script>
+    <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer></script>
+    <script src="{{ url_for('static', filename='js/self-promo.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/auth.js') }}?v=1" defer></script>
+
+    <script>
+        window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+
+

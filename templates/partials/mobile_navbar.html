@@ -1,0 +1,27 @@
+<div class="mobile-navbar" style="z-index: 100;">
+    <div class="mobile-logo">
+        <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png" alt="Spoo.me Banner Image" loading="lazy"></a>
+    </div>
+    <button type="button" class="burger" title="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    <ul class="mobile-menu">
+        <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Shorten</a></li>
+        <li><a href="/api" class="{% if request.path.startswith('/api') %}active{% endif %}">API</a></li>
+        <li><a href="/stats" class="{% if request.path.startswith('/stats') %}active{% endif %}">Stats</a></li>
+        <li><a href="/report" class="{% if request.path.startswith('/report') %}active{% endif %}">Report URL</a></li>
+        <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a></li>
+        {% if request.path.startswith('/contact') %}
+        <li><a href="/contact" class="active">Contact</a></li>
+        {% else %}
+        <li onclick="showContactModal();"><a href="#">Contact</a></li>
+        {% endif %}
+        <li id="m-nav-dashboard" style="display:none"><a href="/dashboard">Dashboard</a></li>
+        <li id="m-nav-auth"><a href="#" onclick="openAuthModal('register');return false;">Login / Register</a></li>
+        <li id="m-nav-logout" style="display:none"><a href="#" onclick="logout();return false;">Logout</a></li>
+    </ul>
+</div>
+
+
