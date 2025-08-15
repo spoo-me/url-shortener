@@ -53,7 +53,8 @@ label[for=max-clicks] {
 
 input[type="text"],
 input[type="password"],
-input[type="number"] {
+input[type="number"],
+input[type="email"] {
     width: 100%;
     padding: 15px;
     border-radius: 20px;

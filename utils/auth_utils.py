@@ -2,7 +2,7 @@ import os
 import secrets
 import hashlib
 from datetime import datetime, timedelta, timezone
-from functools import wraps
+from functools import wraps, lru_cache
 
 from flask import request, jsonify, g
 import jwt
@@ -12,10 +12,12 @@ from argon2 import PasswordHasher
 password_hasher = PasswordHasher()
 
 
+@lru_cache(maxsize=1)
 def _use_rs256() -> bool:
     return bool(os.getenv("JWT_PRIVATE_KEY") and os.getenv("JWT_PUBLIC_KEY"))
 
 
+@lru_cache(maxsize=1)
 def _jwt_keys():
     if _use_rs256():
         priv = os.getenv("JWT_PRIVATE_KEY") or ""
@@ -33,6 +35,7 @@ def _jwt_keys():
         return (secret, secret)
 
 
+@lru_cache(maxsize=1)
 def _jwt_settings():
     issuer = os.getenv("JWT_ISSUER", "spoo.me")
     audience = os.getenv("JWT_AUDIENCE", "spoo.me.api")
