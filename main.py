@@ -17,11 +17,14 @@ from blueprints.seo import seo
 from blueprints.stats import stats
 from blueprints.url_shortener import url_shortener
 from blueprints.redirector import url_redirector
-from utils.mongo_utils import client
+from blueprints.auth import auth
+from utils.mongo_utils import client, ensure_indexes
 
 app = Flask(__name__)
-CORS(app)
+# Enable credentials so refresh cookies can be sent cross-origin from frontend
+CORS(app, supports_credentials=True)
 limiter.init_app(app)
+ensure_indexes()
 
 app.register_blueprint(url_shortener)
 app.register_blueprint(url_redirector)
@@ -30,6 +33,7 @@ app.register_blueprint(seo)
 app.register_blueprint(contact)
 app.register_blueprint(api)
 app.register_blueprint(stats)
+app.register_blueprint(auth)
 
 
 @app.errorhandler(404)

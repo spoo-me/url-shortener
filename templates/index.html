@@ -79,6 +79,9 @@
                 <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
                 </li>
                 <li onclick="showContactModal();"><a href="#">Contact</a></li>
+                <li id="nav-dashboard" style="display:none"><a href="/dashboard">Dashboard</a></li>
+                <li id="nav-auth"><a href="#" onclick="openAuthModal('register');return false;">Login / Register</a></li>
+                <li id="nav-logout" style="display:none"><a href="#" onclick="logout();return false;">Logout</a></li>
             </ul>
         </div>
     </div>
@@ -101,6 +104,9 @@
             <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
             </li>
             <li onclick="showContactModal();">Contact</li>
+            <li id="m-nav-dashboard" style="display:none"><a href="/dashboard">Dashboard</a></li>
+            <li id="m-nav-auth"><a href="#" onclick="openAuthModal('register');return false;">Login / Register</a></li>
+            <li id="m-nav-logout" style="display:none"><a href="#" onclick="logout();return false;">Logout</a></li>
         </ul>
     </div>
 
@@ -261,6 +267,100 @@
     <script src="{{ url_for('static', filename='js/contacts-popup.js') }}?v=1" defer=""></script>
     <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
     <script src="{{ url_for('static', filename='js/self-promo.js') }}" defer=""></script>
+
+    <style>
+        #authModal .modal-content { max-width: 420px; margin: 10% auto; background:#0f1225; border:1px solid #2a2e52; border-radius:12px; padding:20px; }
+        #authModal h2 { margin-top:0; }
+        #authModal label { display:block; margin-top:10px; margin-bottom:6px; color:#c7c9ff; }
+        #authModal input { width:100%; padding:10px 12px; border:1px solid #2a2e52; border-radius:8px; background:#0b0e20; color:#fff; }
+        #authModal .actions { display:flex; gap:10px; margin-top:14px; align-items:center; }
+        #authModal .primary { padding:10px 14px; background:#4752c4; color:#fff; border:none; border-radius:8px; cursor:pointer; }
+        #authModal .secondary { padding:8px 12px; background:transparent; color:#c7c9ff; border:1px solid #2a2e52; border-radius:8px; cursor:pointer; }
+        #authModal .toggle { margin-top:10px; text-align:center; }
+        #authModal .toggle button { background:none; border:none; color:#8aa0ff; cursor:pointer; }
+        #authError { color:#ff6b6b; min-height:20px; }
+    </style>
+
+    <div id="authModal" class="modal" style="display:none">
+        <div class="modal-content">
+            <h2 id="authTitle">Create your account</h2>
+            <p id="authError"></p>
+            <label>Email</label>
+            <input type="email" id="authEmail" placeholder="you@example.com" />
+            <label>Password</label>
+            <input type="password" id="authPassword" placeholder="At least 8 characters" />
+            <div id="userNameRow">
+                <label>User name (optional)</label>
+                <input type="text" id="authUserName" placeholder="Your display name" />
+            </div>
+            <div class="actions">
+                <button class="primary" onclick="submitAuth()" id="primaryBtn">Register</button>
+                <button class="secondary" onclick="closeAuthModal()">Close</button>
+            </div>
+            <div class="toggle">
+                <span id="toggleText">Already have an account?</span>
+                <button onclick="toggleAuthMode()" id="toggleBtn">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authMode = 'register';
+        function openAuthModal(mode='register'){
+            setAuthMode(mode);
+            document.getElementById('authError').innerText='';
+            document.getElementById('authModal').style.display='block';
+        }
+        function closeAuthModal(){ document.getElementById('authModal').style.display='none'; }
+        function setAuthMode(mode){
+            authMode = mode;
+            const isRegister = mode === 'register';
+            document.getElementById('authTitle').innerText = isRegister ? 'Create your account' : 'Welcome back';
+            document.getElementById('userNameRow').style.display = isRegister ? 'block' : 'none';
+            document.getElementById('primaryBtn').innerText = isRegister ? 'Register' : 'Login';
+            document.getElementById('toggleText').innerText = isRegister ? 'Already have an account?' : "New here?";
+            document.getElementById('toggleBtn').innerText = isRegister ? 'Login' : 'Register';
+        }
+        function toggleAuthMode(){ setAuthMode(authMode === 'register' ? 'login' : 'register'); }
+        async function submitAuth(){
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            const user_name = document.getElementById('authUserName').value.trim();
+            const url = authMode === 'register' ? '/auth/register' : '/auth/login';
+            const body = authMode === 'register' ? { email, password, user_name } : { email, password };
+            try{
+                const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(body) });
+                const data = await res.json();
+                if(!res.ok){ document.getElementById('authError').innerText = data.error || 'Something went wrong'; return; }
+                closeAuthModal();
+                window.location.href = '/dashboard';
+            }catch(e){ document.getElementById('authError').innerText = 'Something went wrong'; }
+        }
+        async function logout(){
+            try{
+                const res = await fetch('/auth/logout', { method:'POST', credentials:'include' });
+                if(res.ok){ window.location.href = '/'; }
+            }catch(e){}
+        }
+        async function updateAuthNav(){
+            try{
+                const res = await fetch('/auth/me', { credentials:'include' });
+                const loggedIn = res.ok;
+                document.getElementById('nav-dashboard').style.display = loggedIn ? 'list-item' : 'none';
+                document.getElementById('nav-logout').style.display = loggedIn ? 'list-item' : 'none';
+                document.getElementById('nav-auth').style.display = loggedIn ? 'none' : 'list-item';
+                const mDash = document.getElementById('m-nav-dashboard');
+                const mLogout = document.getElementById('m-nav-logout');
+                const mAuth = document.getElementById('m-nav-auth');
+                if(mDash){ mDash.style.display = loggedIn ? 'list-item' : 'none'; }
+                if(mLogout){ mLogout.style.display = loggedIn ? 'list-item' : 'none'; }
+                if(mAuth){ mAuth.style.display = loggedIn ? 'none' : 'list-item'; }
+            }catch(e){
+                // default to logged out
+            }
+        }
+        document.addEventListener('DOMContentLoaded', updateAuthNav);
+    </script>
 
     <script>
         window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };

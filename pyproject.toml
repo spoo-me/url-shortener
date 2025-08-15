@@ -5,6 +5,7 @@ description = "Open-Source URL Shortener Written in Flask"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
+    "argon2-cffi>=25.1.0",
     "crawlerdetect>=0.3.0",
     "dicttoxml>=1.7.16",
     "emoji>=2.14.1",
@@ -16,6 +17,7 @@ dependencies = [
     "gunicorn>=23.0.0",
     "openpyxl>=3.1.5",
     "pycountry>=24.6.1",
+    "pyjwt[crypto]>=2.10.1",
     "pymongo>=4.13.0",
     "python-dotenv>=1.1.0",
     "redis>=6.2.0",
