@@ -41,15 +41,31 @@ async function updateAuthNav(){
     try{
         const res = await authFetch('/auth/me', { credentials:'include' });
         const loggedIn = res.ok;
-        const ids = ['nav-dashboard','nav-logout','nav-auth'];
-        const mobileIds = ['m-nav-dashboard','m-nav-logout','m-nav-auth'];
-        const show = (id, visible) => { const el = document.getElementById(id); if(el){ el.style.display = visible ? 'list-item' : 'none'; } };
-        show('nav-dashboard', loggedIn);
-        show('nav-logout', loggedIn);
+        let user = null;
+        if(loggedIn){
+            const data = await res.json().catch(() => ({}));
+            user = data && data.user ? data.user : null;
+        }
+        const show = (id, visible, displayType='list-item') => { const el = document.getElementById(id); if(el){ el.style.display = visible ? displayType : 'none'; } };
+        // Desktop
         show('nav-auth', !loggedIn);
-        show('m-nav-dashboard', loggedIn);
-        show('m-nav-logout', loggedIn);
+        show('nav-profile', loggedIn);
+        // Hide old direct links when logged in (now in dropdown)
+        show('nav-dashboard', false);
+        show('nav-keys', false);
+        // Mobile
         show('m-nav-auth', !loggedIn);
+        show('m-nav-dashboard', loggedIn);
+        show('m-nav-keys', loggedIn);
+        show('m-nav-logout', loggedIn);
+        show('m-nav-profile', loggedIn, 'block');
+
+        if(user){
+            const username = (user.user_name && String(user.user_name).trim()) || (user.email ? String(user.email).split('@')[0] : 'user');
+            const avatarUrl = `https://avatar.iran.liara.run/username?username=${encodeURIComponent(username)}`;
+            const img = document.getElementById('profileAvatar'); if(img){ img.src = avatarUrl; img.alt = username; }
+            const mimg = document.getElementById('mProfileAvatar'); if(mimg){ mimg.src = avatarUrl; mimg.alt = username; }
+        }
     }catch(e){ /* default to logged out */ }
 }
 

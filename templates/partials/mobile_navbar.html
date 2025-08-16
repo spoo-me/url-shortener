@@ -2,6 +2,16 @@
     <div class="mobile-logo">
         <a href="/"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png" alt="Spoo.me Banner Image" loading="lazy"></a>
     </div>
+    <div class="mobile-profile" id="m-nav-profile" style="display:none">
+        <button id="mProfileButton" class="profile-btn" aria-haspopup="true" aria-expanded="false" aria-label="User menu">
+            <img id="mProfileAvatar" src="" alt="Profile" loading="lazy">
+        </button>
+        <div id="mProfileDropdown" class="profile-dropdown" role="menu" style="display:none">
+            <a href="/dashboard" role="menuitem">Dashboard</a>
+            <a href="/dashboard/keys" role="menuitem">API Keys</a>
+            <button type="button" role="menuitem" onclick="logout();return false;">Logout</button>
+        </div>
+    </div>
     <button type="button" class="burger" title="Menu">
         <span></span>
         <span></span>
@@ -19,6 +29,7 @@
         <li onclick="showContactModal();"><a href="#">Contact</a></li>
         {% endif %}
         <li id="m-nav-dashboard" style="display:none"><a href="/dashboard">Dashboard</a></li>
+        <li id="m-nav-keys" style="display:none"><a href="/dashboard/keys">API Keys</a></li>
         <li id="m-nav-auth"><a href="#" onclick="openAuthModal('register');return false;">Login / Register</a></li>
         <li id="m-nav-logout" style="display:none"><a href="#" onclick="logout();return false;">Logout</a></li>
     </ul>

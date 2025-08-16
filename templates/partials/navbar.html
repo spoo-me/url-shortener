@@ -12,10 +12,19 @@
             {% else %}
             <li onclick="showContactModal();"><a href="#">Contact</a></li>
             {% endif %}
+            <li id="nav-auth"><a href="#" onclick="openAuthModal('register');return false;">Sign Up</a></li>
             <li id="nav-dashboard" style="display:none"><a href="/dashboard">Dashboard</a></li>
             <li id="nav-keys" style="display:none"><a href="/dashboard/keys">API Keys</a></li>
-            <li id="nav-auth"><a href="#" onclick="openAuthModal('register');return false;">Sign Up</a></li>
-            <li id="nav-logout" style="display:none"><a href="#" onclick="logout();return false;">Logout</a></li>
+            <li id="nav-profile" class="nav-profile" style="display:none">
+                <button id="profileButton" class="profile-btn" aria-haspopup="true" aria-expanded="false" aria-label="User menu">
+                    <img id="profileAvatar" src="" alt="Profile" loading="lazy">
+                </button>
+                <div id="profileDropdown" class="profile-dropdown" role="menu" style="display:none">
+                    <a href="/dashboard" role="menuitem">Dashboard</a>
+                    <a href="/dashboard/keys" role="menuitem">API Keys</a>
+                    <button type="button" role="menuitem" onclick="logout();return false;">Logout</button>
+                </div>
+            </li>
         </ul>
     </div>
 </div>
