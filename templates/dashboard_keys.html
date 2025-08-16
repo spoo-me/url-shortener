@@ -4,53 +4,50 @@
 
 {% block head_css %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=1">
     <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
     <meta name="robots" content="noindex">
-    <style>
-        .keys { max-width: 900px; margin: 40px auto; background: #0f1225; border: 1px solid #2a2e52; border-radius: 12px; padding: 24px; }
-        .keys h1 { margin-top: 0; }
-        .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
-        .card { border: 1px solid #2a2e52; border-radius: 10px; padding: 16px; background: #0b0e20; }
-        .list-item { display:flex; align-items:center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #2a2e52; }
-        .list-item:last-child { border-bottom: none; }
-        .muted { color: #9aa0c3; font-size: 12px; }
-        .actions { display:flex; gap:8px; }
-        .actions button { padding:6px 10px; cursor:pointer; }
-        label { display:block; margin-top: 8px; }
-        input[type=text], input[type=datetime-local], textarea, select { width:100%; padding:8px; background:#0b0e20; color:#fff; border:1px solid #2a2e52; border-radius:8px; }
-        .scopes { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
-        .scope { display:flex; gap:6px; align-items:center; border:1px solid #2a2e52; border-radius:16px; padding:6px 10px; }
-        .token-box { background:#0b0e20; border:1px solid #2a2e52; padding:12px; border-radius:10px; margin-top:12px; }
-    </style>
 {% endblock %}
 
 {% block content %}
-<div class="keys">
-    <h1>API Keys</h1>
-
-    <div class="card">
-        <h3>Create new key</h3>
-        <label>Name</label>
-        <input id="key-name" type="text" placeholder="My integration" />
-        <label>Description (optional)</label>
-        <textarea id="key-description" rows="2" placeholder="What is this key used for?"></textarea>
-        <label>Scopes</label>
-        <div class="scopes">
-            <label class="scope"><input type="checkbox" class="scope-input" value="shorten:create" checked /> shorten:create</label>
-            <label class="scope"><input type="checkbox" class="scope-input" value="urls:manage" /> urls:manage</label>
-            <label class="scope"><input type="checkbox" class="scope-input" value="stats:read" /> stats:read</label>
+<div class="page-container">
+    <div class="surface gradient-surface">
+        <div class="page-header">
+            <h1 class="page-title">API Keys</h1>
+            <p class="page-subtitle">Create and manage tokens for your integrations.</p>
         </div>
-        <label>Expires At (optional)</label>
-        <input id="key-expires" type="datetime-local" />
-        <div class="actions">
-            <button id="btn-create">Create Key</button>
-        </div>
-        <div id="create-result" class="token-box" style="display:none"></div>
-    </div>
 
-    <div class="card">
-        <h3>Your keys</h3>
-        <div id="keys-list"></div>
+        <div class="grid">
+            <div class="panel">
+                <h3>Create new key</h3>
+                <div class="form-grid">
+                    <label for="key-name">Name</label>
+                    <input id="key-name" type="text" placeholder="My integration" />
+
+                    <label for="key-description">Description (optional)</label>
+                    <textarea id="key-description" rows="2" placeholder="What is this key used for?"></textarea>
+
+                    <label>Scopes</label>
+                    <div class="scopes">
+                        <label class="scope"><input type="checkbox" class="scope-input" value="shorten:create" checked /> shorten:create</label>
+                        <label class="scope"><input type="checkbox" class="scope-input" value="urls:manage" /> urls:manage</label>
+                        <label class="scope"><input type="checkbox" class="scope-input" value="stats:read" /> stats:read</label>
+                    </div>
+
+                    <label for="key-expires">Expires At (optional)</label>
+                    <input id="key-expires" type="datetime-local" />
+                </div>
+                <div class="actions">
+                    <button class="btn btn-primary" id="btn-create">Create Key</button>
+                </div>
+                <div id="create-result" class="token-box" style="display:none"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Your keys</h3>
+                <div id="keys-list" class="list"></div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -77,10 +74,10 @@ async function fetchKeys() {
               <div class="muted">Scopes: ${(k.scopes || []).join(', ') || 'none'}</div>
               <div class="muted">Created: ${k.created_at ? new Date(k.created_at * 1000).toLocaleString() : '-'}</div>
               <div class="muted">Expires: ${k.expires_at ? new Date(k.expires_at * 1000).toLocaleString() : 'never'}</div>
-              <div class="muted">Status: ${status}</div>
+              <div><span class="chip">${status}</span></div>
             </div>
             <div class="actions">
-              <button data-id="${k.id}" class="btn-revoke" ${k.revoked ? 'disabled' : ''}>Revoke</button>
+              <button data-id="${k.id}" class="btn btn-danger btn-revoke" ${k.revoked ? 'disabled' : ''}>Revoke</button>
             </div>
         `;
         list.appendChild(row);

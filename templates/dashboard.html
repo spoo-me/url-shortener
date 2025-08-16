@@ -4,34 +4,35 @@
 
 {% block head_css %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=1">
     <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
     <meta name="robots" content="noindex">
-    <style>
-        .dashboard { max-width: 900px; margin: 40px auto; background: #0f1225; border: 1px solid #2a2e52; border-radius: 12px; padding: 24px; }
-        .dashboard h1 { margin-top: 0; }
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
-        .card { border: 1px solid #2a2e52; border-radius: 10px; padding: 16px; background: #0b0e20; }
-        .actions { margin-top: 20px; display:flex; gap:12px; }
-        .actions button { padding: 8px 14px; cursor:pointer; }
-    </style>
 {% endblock %}
 
 {% block content %}
-    <div class="dashboard">
-        <h1>Welcome, {{ user.user_name or user.email }}</h1>
-        <div class="info-grid">
-            <div class="card">
-                <h3>Account</h3>
-                <p><strong>Email:</strong> {{ user.email }}</p>
-                <p><strong>Plan:</strong> {{ user.plan }}</p>
-                <p><strong>ID:</strong> {{ user.id }}</p>
+    <div class="page-container">
+        <div class="surface gradient-surface">
+            <div class="page-header">
+                <h1 class="page-title">Welcome, {{ user.user_name or user.email }}</h1>
+                <p class="page-subtitle">Here’s a quick overview of your account.</p>
             </div>
-            <div class="card">
-                <h3>Quick actions</h3>
-                <div class="actions">
-                    <button onclick="window.location='/stats'">View Stats</button>
-                    <button onclick="window.location='/'">Shorten URL</button>
-                    <button onclick="logout()">Logout</button>
+
+            <div class="grid grid-2">
+                <div class="panel">
+                    <h3>Account</h3>
+                    <div class="kv">
+                        <div class="key">Email</div><div class="value">{{ user.email }}</div>
+                        <div class="key">Plan</div><div class="value">{{ user.plan }}</div>
+                        <div class="key">ID</div><div class="value">{{ user.id }}</div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h3>Quick actions</h3>
+                    <div class="actions">
+                        <button class="btn btn-primary" onclick="window.location='/stats'">View Stats</button>
+                        <button class="btn" onclick="window.location='/'">Shorten URL</button>
+                        <button class="btn btn-danger" onclick="logout()">Logout</button>
+                    </div>
                 </div>
             </div>
         </div>
