@@ -25,6 +25,7 @@ emoji_urls_collection = db["emojis"]
 ip_bypasses = db["ip-exceptions"]
 users_collection = db["users"]
 refresh_tokens_collection = db["refresh-tokens"]
+api_keys_collection = db["api-keys"]
 
 
 def load_url(id, projection=None):
@@ -209,6 +210,11 @@ def ensure_indexes():
         # v2 urls indexes
         urls_v2_collection.create_index([("alias", ASCENDING)], unique=True)
         urls_v2_collection.create_index([("owner_id", ASCENDING)])
+        # api keys indexes
+        api_keys_collection.create_index([("user_id", ASCENDING)])
+        api_keys_collection.create_index([("token_hash", ASCENDING)], unique=True)
+        # Optional TTL: remove when expires_at passes
+        api_keys_collection.create_index([("expires_at", ASCENDING)], expireAfterSeconds=0)
     except Exception:
         pass
 
@@ -234,5 +240,49 @@ def check_if_v2_alias_exists(alias: str) -> bool:
     try:
         doc = urls_v2_collection.find_one({"alias": alias}, {"_id": 1})
         return doc is not None
+    except Exception:
+        return False
+
+
+# ===== API Keys helpers =====
+
+
+def insert_api_key(doc: dict):
+    try:
+        result = api_keys_collection.insert_one(doc)
+        return result.inserted_id
+    except Exception:
+        return None
+
+
+def find_api_key_by_hash(token_hash: str, projection=None):
+    try:
+        doc = api_keys_collection.find_one({"token_hash": token_hash}, projection)
+        return doc
+    except Exception:
+        return None
+
+
+def list_api_keys_by_user(user_id, projection=None):
+    try:
+        uid = ObjectId(user_id) if not isinstance(user_id, ObjectId) else user_id
+        cur = api_keys_collection.find({"user_id": uid}, projection).sort("created_at", ASCENDING)
+        return list(cur)
+    except Exception:
+        return []
+
+
+def revoke_api_key_by_id(user_id, key_id, *, hard_delete: bool = False) -> bool:
+    try:
+        uid = ObjectId(user_id) if not isinstance(user_id, ObjectId) else user_id
+        kid = ObjectId(key_id) if not isinstance(key_id, ObjectId) else key_id
+        if hard_delete:
+            result = api_keys_collection.delete_one({"_id": kid, "user_id": uid})
+            return result.deleted_count == 1
+        else:
+            result = api_keys_collection.update_one(
+                {"_id": kid, "user_id": uid}, {"$set": {"revoked": True}}
+            )
+            return result.modified_count == 1
     except Exception:
         return False

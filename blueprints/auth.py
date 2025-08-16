@@ -195,3 +195,16 @@ def dashboard():
         host_url=request.host_url,
         user=_minimal_user_profile(user),
     )
+
+
+@auth.route("/dashboard/keys", methods=["GET"])
+@requires_auth
+def dashboard_keys():
+    user = get_user_by_id(g.user_id)
+    if not user:
+        return jsonify({"error": "user not found"}), 404
+    return render_template(
+        "dashboard_keys.html",
+        host_url=request.host_url,
+        user=_minimal_user_profile(user),
+    )

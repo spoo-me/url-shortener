@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}API Keys | spoo.me{% endblock %}
+
+{% block head_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
+    <meta name="robots" content="noindex">
+    <style>
+        .keys { max-width: 900px; margin: 40px auto; background: #0f1225; border: 1px solid #2a2e52; border-radius: 12px; padding: 24px; }
+        .keys h1 { margin-top: 0; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        .card { border: 1px solid #2a2e52; border-radius: 10px; padding: 16px; background: #0b0e20; }
+        .list-item { display:flex; align-items:center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #2a2e52; }
+        .list-item:last-child { border-bottom: none; }
+        .muted { color: #9aa0c3; font-size: 12px; }
+        .actions { display:flex; gap:8px; }
+        .actions button { padding:6px 10px; cursor:pointer; }
+        label { display:block; margin-top: 8px; }
+        input[type=text], input[type=datetime-local], textarea, select { width:100%; padding:8px; background:#0b0e20; color:#fff; border:1px solid #2a2e52; border-radius:8px; }
+        .scopes { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+        .scope { display:flex; gap:6px; align-items:center; border:1px solid #2a2e52; border-radius:16px; padding:6px 10px; }
+        .token-box { background:#0b0e20; border:1px solid #2a2e52; padding:12px; border-radius:10px; margin-top:12px; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="keys">
+    <h1>API Keys</h1>
+
+    <div class="card">
+        <h3>Create new key</h3>
+        <label>Name</label>
+        <input id="key-name" type="text" placeholder="My integration" />
+        <label>Description (optional)</label>
+        <textarea id="key-description" rows="2" placeholder="What is this key used for?"></textarea>
+        <label>Scopes</label>
+        <div class="scopes">
+            <label class="scope"><input type="checkbox" class="scope-input" value="shorten:create" checked /> shorten:create</label>
+            <label class="scope"><input type="checkbox" class="scope-input" value="urls:manage" /> urls:manage</label>
+            <label class="scope"><input type="checkbox" class="scope-input" value="stats:read" /> stats:read</label>
+        </div>
+        <label>Expires At (optional)</label>
+        <input id="key-expires" type="datetime-local" />
+        <div class="actions">
+            <button id="btn-create">Create Key</button>
+        </div>
+        <div id="create-result" class="token-box" style="display:none"></div>
+    </div>
+
+    <div class="card">
+        <h3>Your keys</h3>
+        <div id="keys-list"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function fetchKeys() {
+    const res = await fetch('/api/v1/keys', { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const list = document.getElementById('keys-list');
+    list.innerHTML = '';
+    (data.keys || []).forEach(k => {
+        const row = document.createElement('div');
+        row.className = 'list-item';
+        const prefix = k.token_prefix || '';
+        const name = k.name || '(no name)';
+        const desc = k.description || '';
+        const status = k.revoked ? 'revoked' : (k.expires_at && k.expires_at * 1000 < Date.now() ? 'expired' : 'active');
+        row.innerHTML = `
+            <div>
+              <div><strong>${name}</strong> <span class="muted">spoo_${prefix}…</span></div>
+              ${desc ? `<div class="muted">${desc}</div>` : ''}
+              <div class="muted">Scopes: ${(k.scopes || []).join(', ') || 'none'}</div>
+              <div class="muted">Created: ${k.created_at ? new Date(k.created_at * 1000).toLocaleString() : '-'}</div>
+              <div class="muted">Expires: ${k.expires_at ? new Date(k.expires_at * 1000).toLocaleString() : 'never'}</div>
+              <div class="muted">Status: ${status}</div>
+            </div>
+            <div class="actions">
+              <button data-id="${k.id}" class="btn-revoke" ${k.revoked ? 'disabled' : ''}>Revoke</button>
+            </div>
+        `;
+        list.appendChild(row);
+    });
+
+    document.querySelectorAll('.btn-revoke').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            if (!confirm('Revoke this key?')) return;
+            const id = btn.getAttribute('data-id');
+            const res = await fetch(`/api/v1/keys/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
+            if (res.ok) {
+                customTopNotification('KeyRevoked', 'Key revoked', 6, 'success');
+                fetchKeys();
+            } else {
+                customTopNotification('KeyRevokeError', 'Failed to revoke key', 8, 'error');
+            }
+        });
+    });
+}
+
+document.getElementById('btn-create').addEventListener('click', async () => {
+    const name = document.getElementById('key-name').value.trim();
+    const description = document.getElementById('key-description').value.trim();
+    const expiresAt = document.getElementById('key-expires').value;
+    const scopes = Array.from(document.querySelectorAll('.scope-input:checked')).map(i => i.value);
+    if (!name || scopes.length === 0) {
+        customTopNotification('KeyCreateError', 'Name and at least one scope are required', 8, 'error');
+        return;
+    }
+    const body = { name, description: description || undefined, scopes, expires_at: expiresAt || undefined };
+    const res = await fetch('/api/v1/keys', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+        customTopNotification('KeyCreateError', data.error || 'Failed to create key', 8, 'error');
+        return;
+    }
+    const box = document.getElementById('create-result');
+    box.style.display = 'block';
+    box.innerHTML = `
+      <div><strong>Save your key now. It will not be shown again.</strong></div>
+      <div>Token: <code>${data.token}</code></div>
+      <div class="muted">Prefix: spoo_${data.token_prefix}…</div>
+    `;
+    // Reset form and refresh list
+    document.getElementById('key-name').value = '';
+    document.getElementById('key-description').value = '';
+    document.getElementById('key-expires').value = '';
+    document.querySelectorAll('.scope-input').forEach(i => i.checked = false);
+    fetchKeys();
+});
+
+document.addEventListener('DOMContentLoaded', fetchKeys);
+</script>
+{% endblock %}
+
+
