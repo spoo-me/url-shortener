@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request, jsonify, Response
 from datetime import datetime, timezone
 from bson import ObjectId
 
@@ -59,7 +59,7 @@ def _rate_limit_key() -> str:
 
 @api_v1.route("/shorten", methods=["POST"])
 @limiter.limit(lambda: _choose_rate_limit(), key_func=_rate_limit_key)
-def shorten_v1():
+def shorten_v1() -> tuple[Response, int]:
     payload = request.get_json(silent=True) or {}
 
     long_url = payload.get("long_url") or payload.get("url")
@@ -89,7 +89,7 @@ def shorten_v1():
     if custom_alias:
         if not validate_alias(custom_alias):
             return jsonify({"error": "Invalid alias", "field": "alias"}), 400
-        alias = custom_alias[:64]
+        alias = custom_alias[:16]
         if check_if_v2_alias_exists(alias):
             return jsonify({"error": "Alias already exists", "field": "alias"}), 409
         # TODO: Remove this check after a few months

@@ -5,7 +5,6 @@ from flask import (
     render_template,
     redirect,
     url_for,
-    make_response,
 )
 from utils.url_utils import (
     get_client_ip,
@@ -25,12 +24,12 @@ from utils.mongo_utils import (
     check_if_emoji_alias_exists,
     validate_blocked_url,
     urls_collection,
+    get_url_v2_by_alias,
 )
 from utils.general import is_positive_integer, humanize_number
 from .limiter import limiter
 from cache import dual_cache
 
-import json
 from datetime import datetime
 from urllib.parse import unquote
 import tldextract
@@ -45,12 +44,8 @@ tld_no_cache_extract = tldextract.TLDExtract(cache_dir=None)
 @url_shortener.route("/", methods=["GET"])
 @limiter.exempt
 def index():
-    recent_urls = []
-    short_url_cookie = request.cookies.get("shortURL")
-    if short_url_cookie:
-        recent_urls = json.loads(short_url_cookie)
     return render_template(
-        "index.html", host_url=request.host_url, recentURLs=recent_urls
+        "index.html", host_url=request.host_url
     )
 
 
@@ -180,18 +175,7 @@ def shorten_url():
     if request.headers.get("Accept") == "application/json":
         return response
     else:
-        serialized_list = request.cookies.get("shortURL")
-        my_list = json.loads(serialized_list) if serialized_list else []
-        my_list.insert(0, short_code)
-        if len(my_list) > 3:
-            del my_list[-1]
-        serialized_list = json.dumps(my_list)
-        resp = make_response(
-            redirect(url_for("url_shortener.result", short_code=short_code))
-        )
-        resp.set_cookie("shortURL", serialized_list)
-
-        return resp
+        return redirect(url_for("url_shortener.result", short_code=short_code))
 
 
 @url_shortener.route("/emoji", methods=["GET", "POST"])
@@ -287,13 +271,21 @@ def emoji():
 @limiter.exempt
 def result(short_code):
     short_code = unquote(short_code)
+    v2 = False
     if validate_emoji_alias(short_code):
         url_data = load_emoji_url(short_code)
     else:
-        url_data = load_url(short_code)
+        # Try new V2 schema first (aliases >=7 by default but custom may be shorter)
+        url_data = get_url_v2_by_alias(short_code)
+        v2 = True
+        if not url_data:
+            url_data = load_url(short_code)
 
     if url_data:
-        short_code = url_data["_id"]
+        if v2:
+            short_code = url_data["alias"]
+        else:
+            short_code = url_data["_id"]
         short_url = f"{request.host_url}{short_code}"
         return render_template(
             "result.html",

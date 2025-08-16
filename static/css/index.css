@@ -47,8 +47,8 @@ label[for=max-clicks] {
 }
 
 .alias-time-container .child {
-    width: 100%; /* FireFox Fallback */
-    width: -webkit-fill-available;
+    width: -webkit-fill-available; /* FireFox Fallback */
+    width: 100%;
 }
 
 input[type="text"],
@@ -507,6 +507,7 @@ label.cbx {
     width: 0;
     height: 0;
     pointer-events: none;
+    -webkit-user-select: none;
     user-select: none;
 }
 

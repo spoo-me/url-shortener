@@ -95,26 +95,7 @@
             </div>
         </form>
 
-        {% if recentURLs %}
-        <div id="recentURLs"> {% for url in recentURLs %} <div class="url-container">
-                <div class="section-1">
-                    <div class="left-section">
-                        <span class="short-url">
-                            <a href="/{{ url}}" target="_blank">{{ host_url }}{{ url }}</a>
-                        </span>
-                    </div>
-                    <div class="right-section">
-                        <div class="qr-code" data-url="{{ host_url }}{{ url }}"></div>
-                    </div>
-                </div>
-                <div class="section-2">
-                    <div class="button-container">
-                        <button class="copy-button" data-url="{{ host_url }}{{ url }}">Copy</button>
-                        <button class="stats-button">Stats</button>
-                    </div>
-                </div>
-            </div> {% endfor %} </div>
-        {% endif %}
+        <div id="recentURLs"></div>
     </div>
 
     <div class="metrics-section">
