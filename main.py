@@ -1,4 +1,5 @@
 import atexit
+import os
 
 from flask import (
     Flask,
@@ -22,6 +23,11 @@ from api.v1 import api_v1
 from utils.mongo_utils import client, ensure_indexes
 
 app = Flask(__name__)
+
+flask_secret = os.getenv("FLASK_SECRET_KEY")
+if flask_secret:
+    app.secret_key = flask_secret
+
 # Enable credentials so refresh cookies can be sent cross-origin from frontend
 CORS(app, supports_credentials=True)
 limiter.init_app(app)

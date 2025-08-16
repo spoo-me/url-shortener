@@ -198,6 +198,25 @@ def requires_auth(fn):
             token = request.cookies.get("access_token")
 
         if not token:
+            # Attempt refresh when access token is missing but refresh token exists
+            refresh_token = request.cookies.get("refresh_token")
+            if refresh_token:
+                try:
+                    refresh_claims = verify_refresh_jwt(refresh_token)
+                    user_id = refresh_claims.get("sub")
+                    new_access_token = generate_access_jwt(user_id)
+                    new_refresh_token = generate_refresh_jwt(user_id)
+                    g.user_id = user_id
+                    g.jwt_claims = None
+                    resp = fn(*args, **kwargs)
+                    resp = make_response(resp)
+                    set_refresh_cookie(resp, new_refresh_token)
+                    set_access_cookie(resp, new_access_token)
+                    return resp
+                except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+                    pass
+                except Exception:
+                    pass
             return _handle_auth_failure("missing access token")
 
         try:
@@ -243,15 +262,23 @@ def requires_auth(fn):
 
 
 def _handle_auth_failure(error_msg: str):
-    """Handle authentication failures - redirect HTML requests, return JSON for API requests."""
-    # Check if this is an API request (JSON expected) or HTML page request
-    if request.is_json or request.headers.get("Accept", "").startswith(
-        "application/json"
-    ):
+    """Handle authentication failures: JSON for APIs, 401 HTML page for browser routes."""
+    accept_header = request.headers.get("Accept", "")
+    wants_json = (
+        request.is_json
+        or "application/json" in accept_header
+        or request.path.startswith("/auth/")
+    )
+    if wants_json:
         return jsonify({"error": error_msg}), 401
     else:
-        # For HTML page requests, redirect to home page (where login modal can be shown)
-        from flask import redirect, flash
-
-        flash("Please log in to access this page", "error")
-        return redirect("/")  # Redirect to home page instead of showing JSON error
+        from flask import render_template   
+        return (
+            render_template(
+                "error.html",
+                error_code="401",
+                error_message=error_msg.upper(),
+                host_url=request.host_url,
+            ),
+            401,
+        )

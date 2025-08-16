@@ -118,7 +118,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    margin-top: var(--space-2);
+    margin-top: var(--space-4);
 }
 
 .btn {
@@ -172,18 +172,143 @@
 .list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 16px;
 }
 
 .list-item {
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 12px 14px;
-    border-radius: 12px;
+    border-radius: 16px;
     border: 1px solid var(--panel-border);
     background: rgba(255, 255, 255, 0.03);
+    transition: all 0.2s ease;
+}
+
+.list-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.key-card {
+    padding: 20px;
+}
+
+.key-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.key-title {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.key-title h4 {
+    margin: 0;
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.key-prefix {
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.08);
+    padding: 4px 8px;
+    border-radius: 6px;
+    width: fit-content;
+    margin-top: 10px;
+}
+
+.key-status {
+    display: flex;
+    align-items: center;
+}
+
+.key-description {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 16px;
+    line-height: 1.4;
+}
+
+.key-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.key-scopes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detail-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.scopes-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.scope-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(37, 99, 235, 0.15);
+    border: 1px solid rgba(37, 99, 235, 0.3);
+    color: #93c5fd;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.no-scopes {
+    color: var(--muted);
+    font-size: 12px;
+    font-style: italic;
+}
+
+.key-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.meta-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.meta-value {
+    font-size: 13px;
+    color: var(--text);
+}
+
+.key-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .list-item .muted {
@@ -211,6 +336,26 @@
     border: 1px solid rgba(255, 255, 255, 0.16);
     background: rgba(255, 255, 255, 0.06);
     color: var(--text);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.chip-active {
+    background: rgba(34, 197, 94, 0.15);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: #86efac;
+}
+
+.chip-expired {
+    background: rgba(251, 191, 36, 0.15);
+    border-color: rgba(251, 191, 36, 0.3);
+    color: #fde047;
+}
+
+.chip-revoked {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
 }
 
 .scope input {
@@ -254,9 +399,47 @@ textarea::placeholder {
     color: rgba(255, 255, 255, 0.55);
 }
 
+@media (max-width: 768px) {
+    .key-header {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+    
+    .key-meta {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .key-actions {
+        justify-content: flex-start;
+    }
+    
+    .scopes-list {
+        gap: 4px;
+    }
+    
+    .scope-tag {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+}
+
 @media (max-width: 520px) {
     .kv {
         grid-template-columns: 1fr;
+    }
+    
+    .key-card {
+        padding: 16px;
+    }
+    
+    .key-title h4 {
+        font-size: 14px;
+    }
+    
+    .key-prefix {
+        font-size: 11px;
     }
 }
 

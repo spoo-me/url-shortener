@@ -68,16 +68,40 @@ async function fetchKeys() {
         const desc = k.description || '';
         const status = k.revoked ? 'revoked' : (k.expires_at && k.expires_at * 1000 < Date.now() ? 'expired' : 'active');
         row.innerHTML = `
-            <div>
-              <div><strong>${name}</strong> <span class="muted">spoo_${prefix}…</span></div>
-              ${desc ? `<div class="muted">${desc}</div>` : ''}
-              <div class="muted">Scopes: ${(k.scopes || []).join(', ') || 'none'}</div>
-              <div class="muted">Created: ${k.created_at ? new Date(k.created_at * 1000).toLocaleString() : '-'}</div>
-              <div class="muted">Expires: ${k.expires_at ? new Date(k.expires_at * 1000).toLocaleString() : 'never'}</div>
-              <div><span class="chip">${status}</span></div>
-            </div>
-            <div class="actions">
-              <button data-id="${k.id}" class="btn btn-danger btn-revoke" ${k.revoked ? 'disabled' : ''}>Revoke</button>
+            <div class="key-card">
+              <div class="key-header">
+                <div class="key-title">
+                  <h4>${name}</h4>
+                  <span class="key-prefix">spoo_${prefix}…</span>
+                </div>
+                <div class="key-status">
+                  <span class="chip chip-${status}">${status}</span>
+                </div>
+              </div>
+              ${desc ? `<div class="key-description">${desc}</div>` : ''}
+              <div class="key-details">
+                <div class="key-scopes">
+                  <span class="detail-label">Scopes:</span>
+                  <div class="scopes-list">
+                    ${(k.scopes || []).map(scope => `<span class="scope-tag">${scope}</span>`).join('') || '<span class="no-scopes">none</span>'}
+                  </div>
+                </div>
+                <div class="key-meta">
+                  <div class="meta-item">
+                    <span class="meta-label">Created:</span>
+                    <span class="meta-value">${k.created_at ? new Date(k.created_at * 1000).toLocaleDateString() : '-'}</span>
+                  </div>
+                  <div class="meta-item">
+                    <span class="meta-label">Expires:</span>
+                    <span class="meta-value">${k.expires_at ? new Date(k.expires_at * 1000).toLocaleDateString() : 'never'}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="key-actions">
+                <button data-id="${k.id}" class="btn btn-danger btn-revoke" ${k.revoked ? 'disabled' : ''}>
+                  ${k.revoked ? 'Revoked' : 'Revoke'}
+                </button>
+              </div>
             </div>
         `;
         list.appendChild(row);
