@@ -123,6 +123,11 @@ def generate_short_code():
     return "".join(random.choice(letters) for i in range(6))
 
 
+def generate_short_code_v2(length: int = 7):
+    letters = string.ascii_lowercase + string.ascii_uppercase + string.digits
+    return "".join(random.choice(letters) for _ in range(length))
+
+
 def validate_alias(string):
     pattern = r"^[a-zA-Z0-9_-]*$"
     return bool(re.search(pattern, string))

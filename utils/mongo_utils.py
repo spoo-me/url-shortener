@@ -19,6 +19,7 @@ except Exception as e:
 db = client["url-shortener"]
 
 urls_collection = db["urls"]
+urls_v2_collection = db["urlsV2"]
 blocked_urls_collection = db["blocked-urls"]
 emoji_urls_collection = db["emojis"]
 ip_bypasses = db["ip-exceptions"]
@@ -205,5 +206,33 @@ def ensure_indexes():
         refresh_tokens_collection.create_index(
             [("expires_at", ASCENDING)], expireAfterSeconds=0
         )
+        # v2 urls indexes
+        urls_v2_collection.create_index([("alias", ASCENDING)], unique=True)
+        urls_v2_collection.create_index([("owner_id", ASCENDING)])
     except Exception:
         pass
+
+
+# ===== v2 URL helpers =====
+
+
+def insert_url_v2(doc: dict):
+    try:
+        urls_v2_collection.insert_one(doc)
+    except Exception:
+        pass
+
+
+def get_url_v2_by_alias(alias: str, projection=None):
+    try:
+        return urls_v2_collection.find_one({"alias": alias}, projection)
+    except Exception:
+        return None
+
+
+def check_if_v2_alias_exists(alias: str) -> bool:
+    try:
+        doc = urls_v2_collection.find_one({"alias": alias}, {"_id": 1})
+        return doc is not None
+    except Exception:
+        return False

@@ -18,6 +18,7 @@ from blueprints.stats import stats
 from blueprints.url_shortener import url_shortener
 from blueprints.redirector import url_redirector
 from blueprints.auth import auth
+from api.v1 import api_v1
 from utils.mongo_utils import client, ensure_indexes
 
 app = Flask(__name__)
@@ -34,6 +35,7 @@ app.register_blueprint(contact)
 app.register_blueprint(api)
 app.register_blueprint(stats)
 app.register_blueprint(auth)
+app.register_blueprint(api_v1)
 
 
 @app.errorhandler(404)
