@@ -7,6 +7,30 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=1">
     <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
     <meta name="robots" content="noindex">
+    <style>
+        /* Scoped styles for key creation modal */
+        .key-modal { align-items: center; justify-content: center; }
+        .key-modal .modal-content { max-width: 580px; margin: 0; align-self: center; animation: none; }
+        .key-modal h2 { margin: 0 0 30px 0; font-size: 26px; }
+        .key-modal .token-input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.25);
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            height: 40px;
+            box-sizing: border-box;
+        }
+        .key-modal .token-row { display: grid; grid-template-columns: 1fr auto; column-gap: 10px; align-items: center; margin-top: 10px; }
+        .key-modal .token-row .btn { white-space: nowrap; height: 40px; }
+        .key-modal .btn { padding: 8px 12px; font-size: 13px; border-radius: 8px; }
+        .key-modal .warnings { margin-top: 14px; font-size: 13px; line-height: 1.5; color: #e3e3e3; }
+        .key-modal .warnings li { margin: 6px 0; }
+        .key-modal .muted { opacity: .8; font-size: 12px; margin-top: 8px; }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -48,6 +72,23 @@
                 <div id="keys-list" class="list"></div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Key reveal modal -->
+<div id="keyModal" class="modal key-modal" aria-hidden="true" style="display:none">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="keyModalTitle">
+        <h2 id="keyModalTitle">Your new API key</h2>
+        <p class="muted"><strong>Save your key now.</strong> It will <strong>not</strong> be shown again.</p>
+        <div class="token-row">
+            <input id="fullTokenInput" class="token-input" type="text" readonly value="" aria-label="API key" />
+        </div>
+        <div id="tokenPrefixNote" class="muted"></div>
+        <ul class="warnings">
+            <li><strong>Never expose this key in the frontend</strong> or client-side code.</li>
+            <li>Store it securely (environment variables or a secrets manager).</li>
+            <li>Treat it like a password; rotate if you suspect exposure.</li>
+        </ul>
     </div>
 </div>
 {% endblock %}
@@ -138,13 +179,7 @@ document.getElementById('btn-create').addEventListener('click', async () => {
         customTopNotification('KeyCreateError', data.error || 'Failed to create key', 8, 'error');
         return;
     }
-    const box = document.getElementById('create-result');
-    box.style.display = 'block';
-    box.innerHTML = `
-      <div><strong>Save your key now. It will not be shown again.</strong></div>
-      <div>Token: <code>${data.token}</code></div>
-      <div class="muted">Prefix: spoo_${data.token_prefix}…</div>
-    `;
+    openKeyModal(data.token, data.token_prefix);
     // Reset form and refresh list
     document.getElementById('key-name').value = '';
     document.getElementById('key-description').value = '';
@@ -154,6 +189,43 @@ document.getElementById('btn-create').addEventListener('click', async () => {
 });
 
 document.addEventListener('DOMContentLoaded', fetchKeys);
+
+// Modal helpers
+const keyModal = document.getElementById('keyModal');
+const tokenInput = document.getElementById('fullTokenInput');
+const tokenPrefixNote = document.getElementById('tokenPrefixNote');
+
+function openKeyModal(fullToken, tokenPrefix) {
+    if (!fullToken) return;
+    tokenInput.value = fullToken;
+    tokenPrefixNote.textContent = tokenPrefix ? `Prefix: spoo_${tokenPrefix}…` : '';
+    keyModal.style.display = 'flex';
+    tokenInput.focus();
+    tokenInput.select();
+}
+
+function closeKeyModal() {
+    keyModal.querySelector('.modal-content').classList.add('closing');
+    setTimeout(() => {
+        keyModal.style.display = 'none';
+        keyModal.querySelector('.modal-content').classList.remove('closing');
+    }, 200);
+}
+
+async function copyTokenToClipboard() {
+    try {
+        tokenInput.select();
+        tokenInput.setSelectionRange(0, 99999);
+        await navigator.clipboard.writeText(tokenInput.value);
+        customTopNotification('KeyCopied', 'API key copied to clipboard', 5, 'success');
+    } catch (e) {
+        customTopNotification('KeyCopyError', 'Failed to copy key', 8, 'error');
+    }
+}
+
+tokenInput.addEventListener('click', copyTokenToClipboard);
+keyModal.addEventListener('click', (e) => { if (e.target === keyModal) closeKeyModal(); });
+keyModal.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeKeyModal(); });
 </script>
 {% endblock %}
 

@@ -272,7 +272,8 @@ def _handle_auth_failure(error_msg: str):
     if wants_json:
         return jsonify({"error": error_msg}), 401
     else:
-        from flask import render_template   
+        from flask import render_template
+
         return (
             render_template(
                 "error.html",
