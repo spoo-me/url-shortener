@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Shortening...'; }
 
         try {
-            const res = await fetch('/api/v1/shorten', {
+            const res = await authFetch('/api/v1/shorten', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify(payload)

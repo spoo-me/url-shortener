@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request, g, render_template
 
@@ -7,7 +7,8 @@ from utils.auth_utils import (
     verify_password,
     hash_password,
     generate_access_jwt,
-    create_refresh_token,
+    generate_refresh_jwt,
+    verify_refresh_jwt,
     set_refresh_cookie,
     set_access_cookie,
     clear_refresh_cookie,
@@ -17,13 +18,10 @@ from utils.auth_utils import (
 from utils.mongo_utils import (
     get_user_by_email,
     get_user_by_id,
-    insert_refresh_token,
-    find_refresh_token_by_hash,
-    revoke_refresh_token,
+    users_collection,
 )
 from utils.url_utils import get_client_ip
-import hashlib
-from utils.mongo_utils import users_collection
+import jwt
 
 
 auth = Blueprint("auth", __name__)
@@ -57,14 +55,7 @@ def login():
         return jsonify({"error": "invalid credentials"}), 401
 
     access_token = generate_access_jwt(str(user["_id"]))
-    refresh_token, token_hash, refresh_ttl = create_refresh_token()
-    insert_refresh_token(
-        user_id=user["_id"],
-        token_hash=token_hash,
-        expires_at=datetime.now(timezone.utc) + timedelta(seconds=refresh_ttl),
-        created_ip=get_client_ip(),
-        user_agent=request.headers.get("User-Agent"),
-    )
+    refresh_token = generate_refresh_jwt(str(user["_id"]))
     resp = jsonify({"access_token": access_token, "user": _minimal_user_profile(user)})
     set_refresh_cookie(resp, refresh_token)
     set_access_cookie(resp, access_token)
@@ -78,41 +69,30 @@ def refresh():
     if not refresh_token:
         return jsonify({"error": "missing refresh token"}), 401
 
-    # Verify token exists in DB and not revoked/expired
-    token_hash = hashlib.sha256(refresh_token.encode("utf-8")).hexdigest()
-    token_doc = find_refresh_token_by_hash(token_hash)
-    if not token_doc or token_doc.get("revoked"):
-        return jsonify({"error": "invalid refresh token"}), 401
-    if token_doc.get("expires_at") and token_doc["expires_at"] < datetime.now(
-        timezone.utc
-    ):
-        return jsonify({"error": "refresh token expired"}), 401
+    try:
+        # Verify refresh token (stateless)
+        refresh_claims = verify_refresh_jwt(refresh_token)
+        user_id = refresh_claims.get("sub")
 
-    # Rotate token: revoke old, create new
-    revoke_refresh_token(token_hash)
-    new_refresh, new_hash, refresh_ttl = create_refresh_token()
-    insert_refresh_token(
-        user_id=token_doc["user_id"],
-        token_hash=new_hash,
-        expires_at=datetime.now(timezone.utc) + timedelta(seconds=refresh_ttl),
-        created_ip=get_client_ip(),
-        user_agent=request.headers.get("User-Agent"),
-    )
-    access_token = generate_access_jwt(str(token_doc["user_id"]))
-    resp = jsonify({"access_token": access_token})
-    set_refresh_cookie(resp, new_refresh)
-    set_access_cookie(resp, access_token)
-    return resp, 200
+        # Generate new tokens (token rotation for security)
+        new_access_token = generate_access_jwt(user_id)
+        new_refresh_token = generate_refresh_jwt(user_id)
+
+        resp = jsonify({"access_token": new_access_token})
+        set_refresh_cookie(resp, new_refresh_token)
+        set_access_cookie(resp, new_access_token)
+        return resp, 200
+
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+        return jsonify({"error": "invalid or expired refresh token"}), 401
+    except Exception:
+        return jsonify({"error": "refresh token verification failed"}), 401
 
 
 @auth.route("/auth/logout", methods=["POST"])
 @limiter.limit("60/hour")
 def logout():
-    refresh_token = request.cookies.get("refresh_token")
     resp = jsonify({"success": True})
-    if refresh_token:
-        token_hash = hashlib.sha256(refresh_token.encode("utf-8")).hexdigest()
-        revoke_refresh_token(token_hash, hard_delete=True)
     clear_refresh_cookie(resp)
     clear_access_cookie(resp)
     return resp, 200
@@ -164,14 +144,7 @@ def register():
 
     # Issue tokens just like login
     access_token = generate_access_jwt(str(user_id))
-    refresh_token, token_hash, refresh_ttl = create_refresh_token()
-    insert_refresh_token(
-        user_id=user_id,
-        token_hash=token_hash,
-        expires_at=datetime.now(timezone.utc) + timedelta(seconds=refresh_ttl),
-        created_ip=get_client_ip(),
-        user_agent=request.headers.get("User-Agent"),
-    )
+    refresh_token = generate_refresh_jwt(str(user_id))
     resp = jsonify(
         {
             "access_token": access_token,
@@ -187,7 +160,6 @@ def register():
 @requires_auth
 def dashboard():
     user = get_user_by_id(g.user_id)
-    print(user)
     if not user:
         return jsonify({"error": "user not found"}), 404
     return render_template(

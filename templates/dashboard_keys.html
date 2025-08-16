@@ -55,7 +55,7 @@
 {% block scripts %}
 <script>
 async function fetchKeys() {
-    const res = await fetch('/api/v1/keys', { headers: { 'Accept': 'application/json' } });
+    const res = await authFetch('/api/v1/keys', { headers: { 'Accept': 'application/json' } });
     if (!res.ok) return;
     const data = await res.json();
     const list = document.getElementById('keys-list');
@@ -87,7 +87,7 @@ async function fetchKeys() {
         btn.addEventListener('click', async () => {
             if (!confirm('Revoke this key?')) return;
             const id = btn.getAttribute('data-id');
-            const res = await fetch(`/api/v1/keys/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
+            const res = await authFetch(`/api/v1/keys/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
             if (res.ok) {
                 customTopNotification('KeyRevoked', 'Key revoked', 6, 'success');
                 fetchKeys();
@@ -108,7 +108,7 @@ document.getElementById('btn-create').addEventListener('click', async () => {
         return;
     }
     const body = { name, description: description || undefined, scopes, expires_at: expiresAt || undefined };
-    const res = await fetch('/api/v1/keys', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(body) });
+    const res = await authFetch('/api/v1/keys', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(body) });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
         customTopNotification('KeyCreateError', data.error || 'Failed to create key', 8, 'error');

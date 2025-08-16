@@ -24,7 +24,6 @@ blocked_urls_collection = db["blocked-urls"]
 emoji_urls_collection = db["emojis"]
 ip_bypasses = db["ip-exceptions"]
 users_collection = db["users"]
-refresh_tokens_collection = db["refresh-tokens"]
 api_keys_collection = db["api-keys"]
 
 
@@ -149,76 +148,6 @@ def update_user(user_id, updates):
         pass
 
 
-def insert_refresh_token(
-    user_id, token_hash, expires_at, created_ip=None, user_agent=None
-):
-    doc = {
-        "user_id": user_id,
-        "token_hash": token_hash,
-        "expires_at": expires_at,
-        "created_at": None,
-        "revoked": False,
-        "created_ip": created_ip,
-        "user_agent": user_agent,
-    }
-    try:
-        from datetime import datetime, timezone
-
-        doc["created_at"] = datetime.now(timezone.utc)
-        refresh_tokens_collection.insert_one(doc)
-    except Exception:
-        pass
-
-
-def find_refresh_token_by_hash(token_hash):
-    try:
-        token_doc = refresh_tokens_collection.find_one({"token_hash": token_hash})
-    except Exception:
-        token_doc = None
-    return token_doc
-
-
-def revoke_refresh_token(token_hash, *, hard_delete: bool = False):
-    try:
-        if hard_delete:
-            refresh_tokens_collection.delete_one({"token_hash": token_hash})
-        else:
-            refresh_tokens_collection.update_one(
-                {"token_hash": token_hash}, {"$set": {"revoked": True}}
-            )
-    except Exception:
-        pass
-
-
-def revoke_all_user_tokens(user_id):
-    try:
-        refresh_tokens_collection.update_many(
-            {"user_id": user_id, "revoked": False}, {"$set": {"revoked": True}}
-        )
-    except Exception:
-        pass
-
-
-def ensure_indexes():
-    try:
-        users_collection.create_index([("email", ASCENDING)], unique=True)
-        refresh_tokens_collection.create_index([("user_id", ASCENDING)])
-        # TTL index: when expires_at passes, document will be removed
-        refresh_tokens_collection.create_index(
-            [("expires_at", ASCENDING)], expireAfterSeconds=0
-        )
-        # v2 urls indexes
-        urls_v2_collection.create_index([("alias", ASCENDING)], unique=True)
-        urls_v2_collection.create_index([("owner_id", ASCENDING)])
-        # api keys indexes
-        api_keys_collection.create_index([("user_id", ASCENDING)])
-        api_keys_collection.create_index([("token_hash", ASCENDING)], unique=True)
-        # Optional TTL: remove when expires_at passes
-        api_keys_collection.create_index([("expires_at", ASCENDING)], expireAfterSeconds=0)
-    except Exception:
-        pass
-
-
 # ===== v2 URL helpers =====
 
 
@@ -266,7 +195,9 @@ def find_api_key_by_hash(token_hash: str, projection=None):
 def list_api_keys_by_user(user_id, projection=None):
     try:
         uid = ObjectId(user_id) if not isinstance(user_id, ObjectId) else user_id
-        cur = api_keys_collection.find({"user_id": uid}, projection).sort("created_at", ASCENDING)
+        cur = api_keys_collection.find({"user_id": uid}, projection).sort(
+            "created_at", ASCENDING
+        )
         return list(cur)
     except Exception:
         return []
@@ -286,3 +217,20 @@ def revoke_api_key_by_id(user_id, key_id, *, hard_delete: bool = False) -> bool:
             return result.modified_count == 1
     except Exception:
         return False
+
+
+def ensure_indexes():
+    try:
+        users_collection.create_index([("email", ASCENDING)], unique=True)
+        # v2 urls indexes
+        urls_v2_collection.create_index([("alias", ASCENDING)], unique=True)
+        urls_v2_collection.create_index([("owner_id", ASCENDING)])
+        # api keys indexes
+        api_keys_collection.create_index([("user_id", ASCENDING)])
+        api_keys_collection.create_index([("token_hash", ASCENDING)], unique=True)
+        # Optional TTL: remove when expires_at passes
+        api_keys_collection.create_index(
+            [("expires_at", ASCENDING)], expireAfterSeconds=0
+        )
+    except Exception:
+        pass

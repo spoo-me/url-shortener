@@ -111,8 +111,12 @@ def list_api_keys():
                 "name": k.get("name"),
                 "description": k.get("description"),
                 "scopes": k.get("scopes", []),
-                "created_at": int(k.get("created_at").timestamp()) if k.get("created_at") else None,
-                "expires_at": int(k.get("expires_at").timestamp()) if k.get("expires_at") else None,
+                "created_at": int(k.get("created_at").timestamp())
+                if k.get("created_at")
+                else None,
+                "expires_at": int(k.get("expires_at").timestamp())
+                if k.get("expires_at")
+                else None,
                 "revoked": bool(k.get("revoked", False)),
                 "token_prefix": k.get("token_prefix"),
             }
@@ -128,5 +132,3 @@ def delete_api_key(key_id):
     if not ok:
         return jsonify({"error": "not found"}), 404
     return jsonify({"success": True})
-
-

@@ -48,7 +48,11 @@ def _resolve_owner_id_from_request() -> Optional[ObjectId]:
                 request.api_key = key_doc  # type: ignore[attr-defined]
                 user_id = key_doc.get("user_id")
                 try:
-                    return ObjectId(user_id) if not isinstance(user_id, ObjectId) else user_id
+                    return (
+                        ObjectId(user_id)
+                        if not isinstance(user_id, ObjectId)
+                        else user_id
+                    )
                 except Exception:
                     return None
     if not token:
@@ -171,14 +175,18 @@ def shorten_v1() -> tuple[Response, int]:
     if api_key_doc is not None:
         scopes = set(api_key_doc.get("scopes", []))
         if "admin:all" not in scopes and "shorten:create" not in scopes:
-            return jsonify({"error": "api key lacks required scope: shorten:create"}), 403
+            return jsonify(
+                {"error": "api key lacks required scope: shorten:create"}
+            ), 403
     now = datetime.now(timezone.utc)
 
     # Ensure owner_id is stored as ObjectId for v2 docs
     owner_oid = None
     if owner_id is not None:
         try:
-            owner_oid = ObjectId(owner_id) if not isinstance(owner_id, ObjectId) else owner_id
+            owner_oid = (
+                ObjectId(owner_id) if not isinstance(owner_id, ObjectId) else owner_id
+            )
         except Exception:
             owner_oid = None
 

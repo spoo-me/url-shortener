@@ -44,9 +44,7 @@ tld_no_cache_extract = tldextract.TLDExtract(cache_dir=None)
 @url_shortener.route("/", methods=["GET"])
 @limiter.exempt
 def index():
-    return render_template(
-        "index.html", host_url=request.host_url
-    )
+    return render_template("index.html", host_url=request.host_url)
 
 
 @url_shortener.route("/", methods=["POST"])

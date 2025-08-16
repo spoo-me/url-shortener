@@ -1,3 +1,18 @@
+async function authFetch(input, init){
+    const opts = init || {};
+    if(!opts.credentials){ opts.credentials = 'include'; }
+    let res = await fetch(input, opts);
+    if(res.status !== 401){ return res; }
+    try{
+        const refreshRes = await fetch('/auth/refresh', { method:'POST', credentials:'include' });
+        if(!refreshRes.ok){ return res; }
+        res = await fetch(input, opts);
+        return res;
+    }catch(e){
+        return res;
+    }
+}
+
 async function submitAuth(){
     const email = document.getElementById('authEmail').value.trim();
     const password = document.getElementById('authPassword').value;
@@ -24,7 +39,7 @@ async function logout(){
 
 async function updateAuthNav(){
     try{
-        const res = await fetch('/auth/me', { credentials:'include' });
+        const res = await authFetch('/auth/me', { credentials:'include' });
         const loggedIn = res.ok;
         const ids = ['nav-dashboard','nav-logout','nav-auth'];
         const mobileIds = ['m-nav-dashboard','m-nav-logout','m-nav-auth'];
