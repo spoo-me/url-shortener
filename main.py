@@ -78,7 +78,7 @@ def ratelimit_handler(e):
 def cleanup():
     try:
         client.close()
-        print("MongoDB connection closed successfully")
+        print("[MongoDB] connection closed successfully")
     except Exception as e:
         print(f"Error closing MongoDB connection: {e}")
 

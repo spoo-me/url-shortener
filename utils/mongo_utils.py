@@ -12,9 +12,9 @@ client = MongoClient(MONGO_URI)
 
 try:
     client.admin.command("ping")
-    print("Pinged your deployment. You successfully connected to MongoDB!")
+    print("[MongoDB] Connected successfully")
 except Exception as e:
-    print(e)
+    print(f"[MongoDB] Connection failed: {e}")
 
 db = client["url-shortener"]
 

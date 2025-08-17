@@ -15,7 +15,7 @@ def get_redis() -> redis.Redis:
         try:
             _redis_instance = redis.Redis.from_url(redis_uri)
             _redis_instance.ping()
-            print("[RedisClient] Connected to Redis.")
+            print("[RedisClient] Connected successfully.")
         except RedisError as e:
             print(f"[RedisClient] Redis connection failed: {e}")
             raise e
