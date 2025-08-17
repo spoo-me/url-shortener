@@ -2,6 +2,7 @@ from flask_limiter import Limiter
 from utils.mongo_utils import MONGO_URI, ip_bypasses
 from utils.url_utils import get_client_ip
 from flask import request
+from utils.auth_utils import resolve_owner_id_from_request
 
 limiter = Limiter(
     key_func=get_client_ip,  # Use custom function that handles Cloudflare/proxy headers
@@ -22,3 +23,32 @@ def ip_whitelist():
 
     client_ip = get_client_ip()
     return client_ip in bypasses
+
+
+def dynamic_limit_for_request(
+    *,
+    authenticated: str = "60 per minute; 5000 per day",
+    anonymous: str = "20 per minute; 1000 per day",
+) -> str:
+    """Higher limits for authenticated/API-key users, lower for anonymous.
+
+    You can override the defaults per-endpoint by calling this with custom values:
+    dynamic_limit_for_request(authenticated="120 per minute", anonymous="30 per minute")
+    """
+    owner_id = resolve_owner_id_from_request()
+    if owner_id is not None:
+        return authenticated
+    return anonymous
+
+
+def rate_limit_key_for_request() -> str:
+    """Bucket by user id when authenticated, else by API key prefix if provided, else IP."""
+    owner_id = resolve_owner_id_from_request()
+    if owner_id is not None:
+        return f"user:{str(owner_id)}"
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.lower().startswith("bearer "):
+        token = auth_header.split(" ", 1)[1].strip()
+        if token.startswith("spoo_"):
+            return f"apikey:{token[:20]}"
+    return get_client_ip()

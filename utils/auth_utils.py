@@ -1,10 +1,13 @@
 import os
+import hashlib
 from datetime import datetime, timedelta, timezone
 from functools import wraps, lru_cache
 
 from flask import request, jsonify, g, make_response
 import jwt
 from argon2 import PasswordHasher
+from bson import ObjectId
+from utils.mongo_utils import find_api_key_by_hash
 
 
 password_hasher = PasswordHasher()
@@ -283,3 +286,58 @@ def _handle_auth_failure(error_msg: str):
             ),
             401,
         )
+
+
+def resolve_owner_id_from_request():
+    """Resolve the authenticated user id from either API key or JWT.
+
+    - API key: Authorization: Bearer spoo_<raw>
+      - Validates revocation/expiry and sets g.api_key and request.api_key
+      - Returns ObjectId of user
+    - JWT: Authorization: Bearer <jwt> or access_token cookie
+      - Returns ObjectId of user
+    - Otherwise returns None
+    """
+    auth_header = request.headers.get("Authorization", "")
+    token = None
+    if auth_header.lower().startswith("bearer "):
+        token = auth_header.split(" ", 1)[1].strip()
+        # API key path: Authorization: Bearer spoo_<key>
+        if token.startswith("spoo_"):
+            raw = token[len("spoo_") :]
+            token_hash = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+            key_doc = find_api_key_by_hash(token_hash)
+            now = datetime.now(timezone.utc)
+            if (
+                key_doc
+                and not key_doc.get("revoked", False)
+                and (not key_doc.get("expires_at") or key_doc["expires_at"] > now)
+            ):
+                # Attach scopes for downstream checks
+                try:
+                    g.api_key = key_doc  # type: ignore[attr-defined]
+                except Exception:
+                    pass
+                try:
+                    request.api_key = key_doc  # type: ignore[attr-defined]
+                except Exception:
+                    pass
+                user_id = key_doc.get("user_id")
+                try:
+                    return (
+                        ObjectId(user_id)
+                        if not isinstance(user_id, ObjectId)
+                        else user_id
+                    )
+                except Exception:
+                    return None
+    if not token:
+        token = request.cookies.get("access_token")
+    if token:
+        try:
+            claims = verify_access_jwt(token)
+            user_id = claims.get("sub")
+            return ObjectId(user_id)
+        except Exception:
+            pass
+    return None
