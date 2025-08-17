@@ -182,7 +182,70 @@ body {
 .field {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
+	gap: 8px;
+}
+
+/* Segmented control */
+.seg {
+	position: relative;
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: 1fr;
+	gap: 8px;
+	padding: 6px;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.04);
+}
+
+.seg.seg--3 {
+	grid-template-columns: repeat(3, 1fr);
+}
+
+.seg.seg--2 {
+	grid-template-columns: repeat(2, 1fr);
+}
+
+.seg button {
+	position: relative;
+	z-index: 1;
+	border: 0;
+	background: transparent;
+	color: var(--text);
+	padding: 8px 10px;
+	border-radius: 999px;
+	cursor: pointer;
+	font-weight: 600;
+	letter-spacing: .3px;
+}
+
+.seg .seg-indicator {
+	position: absolute;
+	z-index: 0;
+	top: 6px;
+	bottom: 6px;
+	left: 6px;
+	width: var(--seg-w, calc((100% - 16px) / 3));
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.08);
+	border: 1px solid var(--border-2);
+	transition: transform .2s ease;
+}
+
+.seg.seg--2 .seg-indicator {
+	width: calc((100% - 14px) / 2);
+}
+
+.seg[data-active="0"] .seg-indicator {
+	transform: translateX(0%);
+}
+
+.seg[data-active="1"] .seg-indicator {
+	transform: translateX(100%);
+}
+
+.seg[data-active="2"] .seg-indicator {
+	transform: translateX(200%);
 }
 
 .field label {
@@ -277,8 +340,9 @@ body {
 
 .options-grid {
 	display: grid;
-	grid-template-columns: repeat(3, minmax(180px, 1fr));
-	gap: 12px;
+	grid-template-columns: repeat(3, minmax(220px, 1fr));
+	gap: 16px 18px;
+	align-items: end;
 }
 
 .options-actions {

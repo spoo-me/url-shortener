@@ -184,6 +184,14 @@
 		}
 		if (els.sortBy) els.sortBy.value = 'created_at';
 		if (els.order) els.order.value = 'descending';
+		// reset segmented visual state
+		document.querySelectorAll('.seg').forEach(seg => {
+			const targetId = seg.getAttribute('data-target');
+			const hidden = document.getElementById(targetId);
+			const defaultValue = (targetId === 'f-order') ? 'descending' : '';
+			if(hidden) hidden.value = defaultValue;
+			seg.setAttribute('data-active', (targetId === 'f-order') ? '0' : '2');
+		});
 		if (els.pageSize) els.pageSize.value = '20';
 		applyFilters();
 	}
@@ -205,6 +213,26 @@
 		if (e.target === els.optionsBtn || els.optionsBtn.contains(e.target)) { return; }
 		if (!els.optionsDropdown.contains(e.target)) { els.optionsDropdown.style.display = 'none'; }
 	});
+
+	// segmented controls behavior
+	function initSegments(){
+		const segs = document.querySelectorAll('.seg');
+		segs.forEach(seg => {
+			const targetId = seg.getAttribute('data-target');
+			const hidden = document.getElementById(targetId);
+			const buttons = Array.from(seg.querySelectorAll('button[data-value]'));
+			const indexByValue = new Map(buttons.map((b,i)=>[b.getAttribute('data-value'), i]));
+			function apply(value){
+				if(hidden){ hidden.value = value; }
+				const idx = indexByValue.has(value) ? indexByValue.get(value) : 0;
+				seg.setAttribute('data-active', String(idx));
+			}
+			apply(hidden ? hidden.value : '');
+			buttons.forEach(btn => btn.addEventListener('click', ()=> apply(btn.getAttribute('data-value') || '')));
+		});
+	}
+
+	initSegments();
 
 	// initial load
 	fetchData();

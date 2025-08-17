@@ -40,7 +40,7 @@
     <section class="content">
         <header class="content-header">
             <h1>All Links</h1>
-            <p>Manage and explore your links. Filter, sort, and paginate results from your account.</p>
+            <p>View, filter, and organize all your shortened links below.</p>
         </header>
 
         <div class="toolbar surface">
@@ -64,19 +64,23 @@
                             </div>
                             <div class="field">
                                 <label>Password</label>
-                                <select id="f-password">
-                                    <option value="">All</option>
-                                    <option value="true">With password</option>
-                                    <option value="false">Without password</option>
-                                </select>
+                                <div class="seg seg--3" data-target="f-password">
+                                    <button type="button" data-value="true">Set</button>
+                                    <button type="button" data-value="false">Unset</button>
+                                    <button type="button" data-value="">All</button>
+                                    <span class="seg-indicator"></span>
+                                </div>
+                                <input type="hidden" id="f-password" value="">
                             </div>
                             <div class="field">
                                 <label>Max clicks</label>
-                                <select id="f-maxclicks">
-                                    <option value="">All</option>
-                                    <option value="true">Set</option>
-                                    <option value="false">Not set</option>
-                                </select>
+                                <div class="seg seg--3" data-target="f-maxclicks">
+                                    <button type="button" data-value="true">Set</button>
+                                    <button type="button" data-value="false">Unset</button>
+                                    <button type="button" data-value="">All</button>
+                                    <span class="seg-indicator"></span>
+                                </div>
+                                <input type="hidden" id="f-maxclicks" value="">
                             </div>
                             <div class="field">
                                 <label>Created after</label>
@@ -96,10 +100,12 @@
                             </div>
                             <div class="field">
                                 <label>Order</label>
-                                <select id="f-order">
-                                    <option value="descending">Descending</option>
-                                    <option value="ascending">Ascending</option>
-                                </select>
+                                <div class="seg seg--2" data-target="f-order">
+                                    <button type="button" data-value="descending">Descending</button>
+                                    <button type="button" data-value="ascending">Ascending</button>
+                                    <span class="seg-indicator"></span>
+                                </div>
+                                <input type="hidden" id="f-order" value="descending">
                             </div>
                             <div class="field">
                                 <label>Page size</label>
