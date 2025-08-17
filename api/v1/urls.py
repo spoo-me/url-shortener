@@ -43,7 +43,6 @@ class UrlListQueryBuilder:
             "last_click": 1,
         }
 
-    
     def _parse_datetime(self, value: Any) -> Optional[datetime]:
         if value is None:
             return None
@@ -56,7 +55,6 @@ class UrlListQueryBuilder:
             return dt.astimezone(timezone.utc)
         except Exception:
             return None
-
 
     def _parse_bool(self, value: Any) -> Optional[bool]:
         if value is None:
@@ -107,7 +105,9 @@ class UrlListQueryBuilder:
         sort_by = (self.args.get("sortBy") or "created_at").strip()
         sort_order_raw = (self.args.get("sortOrder") or "descending").strip().lower()
         self.sort_order = -1 if sort_order_raw in ("desc", "descending", "-1") else 1
-        self.sort_field = sort_by if sort_by in self.allowed_sort_fields else "created_at"
+        self.sort_field = (
+            sort_by if sort_by in self.allowed_sort_fields else "created_at"
+        )
         return self
 
     def parse_filters(self) -> "UrlListQueryBuilder":
@@ -207,11 +207,17 @@ class UrlListQueryBuilder:
         items = []
         for d in docs:
             created_at_iso = (
-                d["created_at"].astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
-                if d.get("created_at") else None
+                d["created_at"]
+                .astimezone(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z")
+                if d.get("created_at")
+                else None
             )
             expire_after_ts = (
-                int(d["expire_after"]) if isinstance(d.get("expire_after"), (int, float)) else None
+                int(d["expire_after"])
+                if isinstance(d.get("expire_after"), (int, float))
+                else None
             )
             password_present = d.get("password") is not None
             items.append(
@@ -226,7 +232,9 @@ class UrlListQueryBuilder:
                     "password_set": password_present,
                     # Placeholders until implemented/populated
                     "total_clicks": d.get("total_clicks"),
-                    "last_click": int(d["last_click"].timestamp()) if d.get("last_click") else None,
+                    "last_click": int(d["last_click"].timestamp())
+                    if d.get("last_click")
+                    else None,
                 }
             )
 
