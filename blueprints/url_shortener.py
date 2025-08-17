@@ -47,6 +47,8 @@ def index():
     return render_template("index.html", host_url=request.host_url)
 
 
+# legacy route URL Shortening route for backwards compatibility, uses the old schema
+# TODO: deprecate this route in the future
 @url_shortener.route("/", methods=["POST"])
 def shorten_url():
     url = request.values.get("url")
