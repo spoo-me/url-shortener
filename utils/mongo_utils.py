@@ -1,4 +1,4 @@
-from pymongo import MongoClient, ASCENDING
+from pymongo import MongoClient, ASCENDING, DESCENDING
 from dotenv import load_dotenv
 import os
 import re
@@ -225,6 +225,9 @@ def ensure_indexes():
         # v2 urls indexes
         urls_v2_collection.create_index([("alias", ASCENDING)], unique=True)
         urls_v2_collection.create_index([("owner_id", ASCENDING)])
+        urls_v2_collection.create_index(
+            [("owner_id", ASCENDING), ("created_at", DESCENDING)]
+        )
         # api keys indexes
         api_keys_collection.create_index([("user_id", ASCENDING)])
         api_keys_collection.create_index([("token_hash", ASCENDING)], unique=True)

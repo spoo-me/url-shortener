@@ -18,6 +18,7 @@ from . import api_v1
 ALLOWED_SCOPES = {
     "shorten:create",
     "urls:manage",
+    "urls:read",
     "stats:read",
     "admin:all",
 }
