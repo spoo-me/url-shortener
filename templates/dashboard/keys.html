@@ -1,0 +1,173 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}API Keys | Dashboard | spoo.me{% endblock %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/keys.css') }}?v=1">
+<meta name="robots" content="noindex">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">API Keys</h1>
+    <p class="page-subtitle">Create and manage tokens for your integrations.</p>
+</div>
+
+<div class="keys-container surface">
+    <div class="keys-toolbar">
+        <div class="toolbar-left">
+            <h3>Your API Keys</h3>
+        </div>
+        <div class="toolbar-right">
+            <button class="btn btn-primary" id="btn-new-key">
+                <i class="ti ti-plus"></i>
+                <span>New Key</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="keys-container" class="keys-list-container">
+        <div id="keys-loading" class="loading">Loading…</div>
+        <div id="keys-empty" class="empty" style="display:none">No API keys yet. Create your first key to get started.</div>
+        
+        <div class="keys-table" id="keys-table" style="display:none">
+            <div class="table-header">
+                <div class="header-cell col-name">Name</div>
+                <div class="header-cell col-key">Key</div>
+                <div class="header-cell col-scopes">Permissions</div>
+                <div class="header-cell col-created">Created</div>
+                <div class="header-cell col-expires">Expires</div>
+                <div class="header-cell col-status">Status</div>
+                <div class="header-cell col-actions">Actions</div>
+            </div>
+            <div id="keys-list" class="table-body"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Key creation modal -->
+<div id="createKeyModal" class="modal create-key-modal" aria-hidden="true" style="display:none">
+    <div class="modal-overlay"></div>
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createKeyModalTitle">
+        <div class="modal-header">
+            <h2 id="createKeyModalTitle">Create New API Key</h2>
+            <button class="modal-close" onclick="closeCreateKeyModal()">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="form-grid">
+                <div class="field">
+                    <label for="key-name">Name</label>
+                    <input id="key-name" type="text" placeholder="My integration" />
+                </div>
+
+                <div class="field">
+                    <label for="key-description">Description (optional)</label>
+                    <textarea id="key-description" rows="2" placeholder="What is this key used for?"></textarea>
+                </div>
+
+                <div class="field">
+                    <label>Permissions</label>
+                    <div class="scopes">
+                        <label class="scope"><input type="checkbox" class="scope-input" value="shorten:create" checked /> shorten:create</label>
+                        <label class="scope"><input type="checkbox" class="scope-input" value="urls:read" /> urls:read</label>
+                        <label class="scope"><input type="checkbox" class="scope-input" value="urls:manage" /> urls:manage</label>
+                        <label class="scope"><input type="checkbox" class="scope-input" value="stats:read" /> stats:read</label>
+                        <label class="scope"><input type="checkbox" class="scope-input" value="admin:all" /> admin:all</label>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="key-expires">Expires At (optional)</label>
+                    <input id="key-expires" type="datetime-local" />
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeCreateKeyModal()">Cancel</button>
+            <button class="btn btn-primary" id="btn-create">Create Key</button>
+        </div>
+    </div>
+</div>
+
+<!-- Key success modal -->
+<div id="keySuccessModal" class="modal key-success-modal" aria-hidden="true" style="display:none">
+    <div class="modal-overlay"></div>
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="keySuccessModalTitle">
+        <div class="modal-header">
+            <h2 id="keySuccessModalTitle">API Key Created</h2>
+        </div>
+        
+        <div class="modal-body">
+            <div class="success-message">
+                <div class="success-icon">
+                    <i class="ti ti-check"></i>
+                </div>
+                <p><strong>Save your key now.</strong> It will <strong>not</strong> be shown again.</p>
+            </div>
+            
+            <div class="token-display">
+                <input id="fullTokenInput" class="token-input" type="text" readonly value="" aria-label="API key" />
+                <button class="copy-btn" onclick="copyTokenToClipboard()">
+                    <i class="ti ti-copy"></i>
+                </button>
+            </div>
+            
+            <div class="security-warnings">
+                <div class="warning-item">
+                    <i class="ti ti-alert-triangle"></i>
+                    <span>Never expose this key in frontend or client-side code</span>
+                </div>
+                <div class="warning-item">
+                    <i class="ti ti-shield"></i>
+                    <span>Store it securely using environment variables</span>
+                </div>
+                <div class="warning-item">
+                    <i class="ti ti-refresh"></i>
+                    <span>Rotate if you suspect exposure</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeKeySuccessModal()">Done</button>
+        </div>
+    </div>
+</div>
+
+<template id="tpl-key-item">
+    <div class="table-row fade-in">
+        <div class="table-cell col-name">
+            <div class="key-name-info">
+                <span class="key-name"></span>
+                <span class="key-description"></span>
+            </div>
+        </div>
+        <div class="table-cell col-key">
+            <span class="key-prefix"></span>
+        </div>
+        <div class="table-cell col-scopes">
+            <div class="scopes-list"></div>
+        </div>
+        <div class="table-cell col-created">
+            <span class="created-date"></span>
+        </div>
+        <div class="table-cell col-expires">
+            <span class="expires-date"></span>
+        </div>
+        <div class="table-cell col-status">
+            <span class="status-badge"></span>
+        </div>
+        <div class="table-cell col-actions">
+            <button class="btn btn-danger btn-sm btn-revoke">Revoke</button>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard/keys.js') }}?v=1"></script>
+{% endblock %}

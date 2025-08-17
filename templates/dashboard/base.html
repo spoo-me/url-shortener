@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard | spoo.me{% endblock %}</title>
+    
+        <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nata+Sans:wght@100..900&display=swap" rel="stylesheet">
+    
+    <!-- Base styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/dashboard-base.css') }}?v=1">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+    
+    {% block head_css %}{% endblock %}
+</head>
+<body class="dashboard-layout">
+    <div class="dashboard-wrapper">
+        {% include 'dashboard/partials/sidebar.html' %}
+        
+        <main class="dashboard-main">
+            <div class="dashboard-content">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    
+    <!-- Base scripts -->
+    <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
+    <script src="{{ url_for('static', filename='js/dashboard/dashboard-base.js') }}?v=1"></script>
+    
+    <!-- Auth utilities -->
+    <script>
+        async function authFetch(url, options = {}) {
+            const defaultOptions = {
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            };
+            const response = await fetch(url, { ...defaultOptions, ...options });
+            if (response.status === 401) {
+                window.location.href = '/';
+            }
+            return response;
+        }
+        
+        async function logout() {
+            const res = await authFetch('/auth/logout', { method: 'POST' });
+            if (res.ok) {
+                window.location.href = '/';
+            }
+        }
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

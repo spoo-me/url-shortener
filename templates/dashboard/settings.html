@@ -1,0 +1,193 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Settings | Dashboard | spoo.me{% endblock %}
+
+{% block head_css %}
+<style>
+    .settings-grid {
+        display: grid;
+        gap: 24px;
+    }
+    
+    .settings-section {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 24px;
+    }
+    
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-sm);
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(37, 99, 235, 0.1));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent-primary);
+    }
+    
+    .section-icon i {
+        font-size: 22px;
+    }
+    
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .section-description {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+    }
+    
+    .settings-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .settings-item:last-child {
+        border-bottom: none;
+    }
+    
+    .setting-label {
+        font-size: 14px;
+        color: var(--text-primary);
+    }
+    
+    .setting-value {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+    
+    .placeholder-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        background: rgba(124, 58, 237, 0.1);
+        color: var(--accent-primary);
+        border-radius: var(--radius-sm);
+        font-size: 12px;
+        font-weight: 500;
+    }
+</style>
+<meta name="robots" content="noindex">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Settings</h1>
+    <p class="page-subtitle">Manage your account preferences and configurations.</p>
+</div>
+
+<div class="settings-grid">
+    <div class="settings-section surface">
+        <div class="section-header">
+            <div class="section-icon">
+                <i class="ti ti-user"></i>
+            </div>
+            <div>
+                <div class="section-title">Profile Settings</div>
+                <div class="section-description">Manage your personal information</div>
+            </div>
+        </div>
+        <div class="settings-item">
+            <span class="setting-label">Display Name</span>
+            <span class="setting-value">{{ user.user_name or 'Not set' }}</span>
+        </div>
+        <div class="settings-item">
+            <span class="setting-label">Email</span>
+            <span class="setting-value">{{ user.email }}</span>
+        </div>
+        <div class="settings-item">
+            <span class="setting-label">Account Type</span>
+            <span class="placeholder-badge">{{ user.plan|capitalize }}</span>
+        </div>
+    </div>
+    
+    <div class="settings-section surface">
+        <div class="section-header">
+            <div class="section-icon">
+                <i class="ti ti-shield"></i>
+            </div>
+            <div>
+                <div class="section-title">Security & Privacy</div>
+                <div class="section-description">Keep your account secure</div>
+            </div>
+        </div>
+        <div class="settings-item">
+            <span class="setting-label">Two-Factor Authentication</span>
+            <span class="placeholder-badge">Coming Soon</span>
+        </div>
+        <div class="settings-item">
+            <span class="setting-label">Session Management</span>
+            <span class="placeholder-badge">Coming Soon</span>
+        </div>
+        <div class="settings-item">
+            <span class="setting-label">Privacy Mode</span>
+            <span class="placeholder-badge">Coming Soon</span>
+        </div>
+    </div>
+    
+    <div class="settings-section surface">
+        <div class="section-header">
+            <div class="section-icon">
+                <i class="ti ti-bell"></i>
+            </div>
+            <div>
+                <div class="section-title">Notifications</div>
+                <div class="section-description">Control how you receive updates</div>
+            </div>
+        </div>
+        <div class="settings-item">
+            <span class="setting-label">Email Notifications</span>
+            <span class="placeholder-badge">Coming Soon</span>
+        </div>
+        <div class="settings-item">
+            <span class="setting-label">Weekly Reports</span>
+            <span class="placeholder-badge">Coming Soon</span>
+        </div>
+        <div class="settings-item">
+            <span class="setting-label">Link Alerts</span>
+            <span class="placeholder-badge">Coming Soon</span>
+        </div>
+    </div>
+    
+    <div class="settings-section surface">
+        <div class="section-header">
+            <div class="section-icon">
+                <i class="ti ti-adjustments-horizontal"></i>
+            </div>
+            <div>
+                <div class="section-title">Preferences</div>
+                <div class="section-description">Customize your experience</div>
+            </div>
+        </div>
+        <div class="settings-item">
+            <span class="setting-label">Default Link Expiry</span>
+            <span class="placeholder-badge">Coming Soon</span>
+        </div>
+        <div class="settings-item">
+            <span class="setting-label">Custom Domain</span>
+            <span class="placeholder-badge">Coming Soon</span>
+        </div>
+        <div class="settings-item">
+            <span class="setting-label">Export Data</span>
+            <span class="placeholder-badge">Coming Soon</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

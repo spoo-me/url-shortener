@@ -1,0 +1,125 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Statistics | Dashboard | spoo.me{% endblock %}
+
+{% block head_css %}
+<style>
+    .placeholder-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+        text-align: center;
+    }
+    
+    .placeholder-icon {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 24px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(37, 99, 235, 0.1));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent-primary);
+    }
+    
+    .placeholder-icon i {
+        font-size: 48px;
+    }
+    
+    .placeholder-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+    }
+    
+    .placeholder-text {
+        font-size: 16px;
+        color: var(--text-secondary);
+        max-width: 500px;
+        line-height: 1.6;
+    }
+    
+    .stats-preview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 32px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        text-align: left;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+    
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    
+    .stat-change {
+        font-size: 14px;
+        color: #22c55e;
+        margin-top: 4px;
+    }
+</style>
+<meta name="robots" content="noindex">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Statistics</h1>
+    <p class="page-subtitle">Comprehensive analytics and insights for your shortened links.</p>
+</div>
+
+<div class="surface">
+    <div class="placeholder-container">
+        <div class="placeholder-icon">
+            <i class="ti ti-chart-bar"></i>
+        </div>
+        <h2 class="placeholder-title">Statistics Dashboard Coming Soon</h2>
+        <p class="placeholder-text">
+            We're working on bringing you detailed analytics including click patterns, geographic distribution, 
+            device types, referrers, and more. Stay tuned for powerful insights into your link performance.
+        </p>
+        
+        <div class="stats-preview">
+            <div class="stat-card">
+                <div class="stat-label">Total Clicks</div>
+                <div class="stat-value">--</div>
+                <div class="stat-change">↑ --%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Active Links</div>
+                <div class="stat-value">--</div>
+                <div class="stat-change">↑ --%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg. CTR</div>
+                <div class="stat-value">--%</div>
+                <div class="stat-change">↑ --%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Top Country</div>
+                <div class="stat-value">--</div>
+                <div class="stat-change">-- clicks</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

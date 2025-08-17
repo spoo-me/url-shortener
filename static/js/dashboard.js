@@ -1,8 +1,6 @@
 (function () {
-	const root = document.getElementById('dashboard-root');
-	if (!root) { return; }
-
-	const rawHost = (root.getAttribute('data-host') || '');
+	// Get host URL from window config or fallback to root element
+	const rawHost = window.dashboardConfig?.hostUrl || document.querySelector('[data-host]')?.getAttribute('data-host') || '';
 	const host = rawHost.replace(/\/+$/, '');
 	const displayHost = host ? (host + '/') : '/';
 
@@ -93,28 +91,47 @@
 		const node = els.tpl.content.firstElementChild.cloneNode(true);
 		const shortA = node.querySelector('.link-short');
 		const long = node.querySelector('.link-long');
-		const statusChip = node.querySelector('.chip.status');
-		const pw = node.querySelector('.chip.password');
-		const mc = node.querySelector('.chip.max-clicks');
-		const priv = node.querySelector('.chip.private-stats');
-		const created = node.querySelector('.value.created');
-		const last = node.querySelector('.value.last-click');
-		const total = node.querySelector('.value.total-clicks');
+		const statusBadge = node.querySelector('.badge-status');
+		const pwBadge = node.querySelector('.badge-password');
+		const mcBadge = node.querySelector('.badge-max-clicks');
+		const privBadge = node.querySelector('.badge-private');
+		const created = node.querySelector('.created-date');
+		const last = node.querySelector('.last-click-date');
+		const total = node.querySelector('.total-clicks-count');
 
+		// Short URL
 		shortA.textContent = trimProtocol(displayHost) + (it.alias ? it.alias : '');
 		shortA.href = '/' + (it.alias || '');
+		
+		// Long URL
 		long.textContent = it.long_url || '';
 		long.title = it.long_url || '';
 
-		statusChip.textContent = it.status || '—';
-		statusChip.classList.add(String(it.status || '').toUpperCase());
-		if (it.password_set) { pw.style.display = 'inline-flex'; }
-		if (typeof it.max_clicks === 'number') { mc.style.display = 'inline-flex'; mc.textContent = `Max ${it.max_clicks}`; }
-		if (it.private_stats) { priv.style.display = 'inline-flex'; }
-
+		// Dates and clicks
 		created.textContent = formatDate(it.created_at);
 		last.textContent = formatTs(it.last_click);
-		total.textContent = (it.total_clicks ?? '—');
+		total.textContent = (it.total_clicks ?? '0');
+
+		// Status badge - show if active
+		if (it.status === 'ACTIVE') {
+			statusBadge.style.display = 'inline-flex';
+		}
+		
+		// Password badge
+		if (it.password_set) { 
+			pwBadge.style.display = 'inline-flex'; 
+		}
+		
+		// Max clicks badge
+		if (typeof it.max_clicks === 'number') { 
+			mcBadge.style.display = 'inline-flex';
+			mcBadge.setAttribute('data-tooltip', `Max clicks: ${it.max_clicks}`);
+		}
+		
+		// Private stats badge
+		if (it.private_stats) { 
+			privBadge.style.display = 'inline-flex'; 
+		}
 
 		return node;
 	}
@@ -135,19 +152,22 @@
 			state.sortBy = data.sortBy;
 			state.sortOrder = data.sortOrder;
 
-			clearList();
-			if (!data.items || data.items.length === 0) {
-				els.empty.style.display = 'block';
-				els.pagination.style.display = 'none';
-				return;
-			}
-			const frag = document.createDocumentFragment();
-			for (const it of data.items) { frag.appendChild(createItem(it)); }
-			els.list.appendChild(frag);
-			renderPagination();
+					clearList();
+		if (!data.items || data.items.length === 0) {
+			els.empty.style.display = 'block';
+			document.getElementById('links-table').style.display = 'none';
+			els.pagination.style.display = 'none';
+			return;
+		}
+		document.getElementById('links-table').style.display = 'block';
+		const frag = document.createDocumentFragment();
+		for (const it of data.items) { frag.appendChild(createItem(it)); }
+		els.list.appendChild(frag);
+		renderPagination();
 		} catch (err) {
 			clearList();
 			els.empty.style.display = 'block';
+			document.getElementById('links-table').style.display = 'none';
 		} finally {
 			setLoading(false);
 		}
@@ -160,17 +180,21 @@
 		const start = (state.page - 1) * state.pageSize + 1;
 		const end = Math.min(state.total, state.page * state.pageSize);
 		els.pagination.innerHTML = '';
+		const info = document.createElement('div'); 
+		info.className = 'pagination-info'; 
+		info.textContent = `Showing ${start} to ${end} of ${state.total}`;
+		
 		const container = document.createElement('div');
-		container.className = 'pager';
+		container.className = 'pagination-controls';
 		const prev = document.createElement('button'); prev.className = 'btn'; prev.textContent = 'Prev'; prev.disabled = state.page <= 1;
 		const next = document.createElement('button'); next.className = 'btn'; next.textContent = 'Next'; next.disabled = !state.hasNext;
 		prev.addEventListener('click', () => { if (state.page > 1) { state.page -= 1; fetchData(); } });
 		next.addEventListener('click', () => { if (state.hasNext) { state.page += 1; fetchData(); } });
 		container.appendChild(prev);
 		container.appendChild(next);
-		const info = document.createElement('div'); info.className = 'page-info'; info.textContent = `Showing ${start}-${end} of ${state.total}`;
-		els.pagination.appendChild(container);
+		
 		els.pagination.appendChild(info);
+		els.pagination.appendChild(container);
 	}
 
 	function applyFilters() {

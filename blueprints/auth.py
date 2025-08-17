@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from flask import Blueprint, jsonify, request, g, render_template
+from flask import Blueprint, jsonify, request, g, render_template, redirect
 
 from .limiter import limiter
 from utils.auth_utils import (
@@ -159,11 +159,18 @@ def register():
 @auth.route("/dashboard", methods=["GET"])
 @requires_auth
 def dashboard():
+    # Redirect to links page as the default dashboard view
+    return redirect("/dashboard/links")
+
+
+@auth.route("/dashboard/links", methods=["GET"])
+@requires_auth
+def dashboard_links():
     user = get_user_by_id(g.user_id)
     if not user:
         return jsonify({"error": "user not found"}), 404
     return render_template(
-        "dashboard.html",
+        "dashboard/links.html",
         host_url=request.host_url,
         user=_minimal_user_profile(user),
     )
@@ -176,7 +183,33 @@ def dashboard_keys():
     if not user:
         return jsonify({"error": "user not found"}), 404
     return render_template(
-        "dashboard_keys.html",
+        "dashboard/keys.html",
+        host_url=request.host_url,
+        user=_minimal_user_profile(user),
+    )
+
+
+@auth.route("/dashboard/statistics", methods=["GET"])
+@requires_auth
+def dashboard_statistics():
+    user = get_user_by_id(g.user_id)
+    if not user:
+        return jsonify({"error": "user not found"}), 404
+    return render_template(
+        "dashboard/statistics.html",
+        host_url=request.host_url,
+        user=_minimal_user_profile(user),
+    )
+
+
+@auth.route("/dashboard/settings", methods=["GET"])
+@requires_auth
+def dashboard_settings():
+    user = get_user_by_id(g.user_id)
+    if not user:
+        return jsonify({"error": "user not found"}), 404
+    return render_template(
+        "dashboard/settings.html",
         host_url=request.host_url,
         user=_minimal_user_profile(user),
     )
