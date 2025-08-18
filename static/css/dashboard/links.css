@@ -159,22 +159,74 @@
     letter-spacing: 0.5px;
 }
 
+/* Select and DateTime Wrappers */
+.select-wrapper,
+.datetime-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.select-wrapper select,
+.datetime-wrapper input,
 .field select,
 .field input[type="datetime-local"] {
     padding: 8px 12px;
+    padding-right: 36px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
     font-size: 14px;
     transition: all 0.2s;
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
 }
 
+.select-wrapper select:focus,
+.datetime-wrapper input:focus,
 .field select:focus,
 .field input[type="datetime-local"]:focus {
     outline: none;
     border-color: var(--accent-primary);
     background: rgba(255, 255, 255, 0.08);
+}
+
+.select-icon {
+    position: absolute;
+    right: 12px;
+    color: var(--text-secondary);
+    font-size: 16px;
+    pointer-events: none;
+    transition: color 0.2s;
+}
+
+.datetime-icon {
+    position: absolute;
+    right: 12px;
+    color: var(--text-secondary);
+    font-size: 16px;
+    pointer-events: auto;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.select-wrapper:hover .select-icon,
+.datetime-wrapper:hover .datetime-icon,
+.select-wrapper select:focus + .select-icon,
+.datetime-wrapper input:focus + .datetime-icon {
+    color: var(--accent-primary);
+}
+
+/* Hide default datetime-local calendar icon */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    display: none;
+}
+
+input[type="datetime-local"]::-webkit-inner-spin-button {
+    display: none;
 }
 
 /* Segmented Control */

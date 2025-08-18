@@ -30,10 +30,13 @@
                     <div class="options-grid">
                         <div class="field">
                             <label>Status</label>
-                            <select id="f-status">
-                                <option value="">All</option>
-                                <option value="ACTIVE">ACTIVE</option>
-                            </select>
+                            <div class="select-wrapper">
+                                <select id="f-status">
+                                    <option value="">All</option>
+                                    <option value="ACTIVE">ACTIVE</option>
+                                </select>
+                                <i class="ti ti-chevron-down select-icon"></i>
+                            </div>
                         </div>
                         <div class="field">
                             <label>Password</label>
@@ -57,19 +60,28 @@
                         </div>
                         <div class="field">
                             <label>Created after</label>
-                            <input id="f-created-after" type="datetime-local">
+                            <div class="datetime-wrapper">
+                                <input id="f-created-after" type="datetime-local">
+                                <i class="ti ti-calendar datetime-icon"></i>
+                            </div>
                         </div>
                         <div class="field">
                             <label>Created before</label>
-                            <input id="f-created-before" type="datetime-local">
+                            <div class="datetime-wrapper">
+                                <input id="f-created-before" type="datetime-local">
+                                <i class="ti ti-calendar datetime-icon"></i>
+                            </div>
                         </div>
                         <div class="field">
                             <label>Sort by</label>
-                            <select id="f-sortby">
-                                <option value="created_at">Created</option>
-                                <option value="last_click">Last click</option>
-                                <option value="total_clicks">Total clicks</option>
-                            </select>
+                            <div class="select-wrapper">
+                                <select id="f-sortby">
+                                    <option value="created_at">Created</option>
+                                    <option value="last_click">Last click</option>
+                                    <option value="total_clicks">Total clicks</option>
+                                </select>
+                                <i class="ti ti-chevron-down select-icon"></i>
+                            </div>
                         </div>
                         <div class="field">
                             <label>Order</label>
@@ -82,12 +94,15 @@
                         </div>
                         <div class="field">
                             <label>Page size</label>
-                            <select id="f-pagesize">
-                                <option value="10">10</option>
-                                <option value="20" selected>20</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                            </select>
+                            <div class="select-wrapper">
+                                <select id="f-pagesize">
+                                    <option value="10">10</option>
+                                    <option value="20" selected>20</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <i class="ti ti-chevron-down select-icon"></i>
+                            </div>
                         </div>
                     </div>
                     <div class="options-actions">
@@ -204,6 +219,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     initSegments();
+    
+    // Initialize datetime icon clicks
+    initDateTimeIcons();
 });
+
+function initDateTimeIcons() {
+    const datetimeIcons = document.querySelectorAll('.datetime-icon');
+    
+    datetimeIcons.forEach(icon => {
+        icon.addEventListener('click', function() {
+            const input = this.previousElementSibling;
+            if (input && input.type === 'datetime-local') {
+                input.focus();
+                input.showPicker?.();
+            }
+        });
+    });
+}
 </script>
 {% endblock %}
