@@ -206,15 +206,14 @@
 
 .seg button.active {
     color: var(--text-primary);
-    font-weight: 600;
 }
 
 .seg-indicator {
     position: absolute;
     top: 2px;
-    bottom: 2px;
-    left: 2px;
-    width: calc(33.33% - 4px);
+    bottom: 2.5px;
+    left: 2.5px;
+    width: calc(33.33% - 2.67px);
     background: rgba(124, 58, 237, 0.3);
     border-radius: calc(var(--radius-sm) - 2px);
     transition: transform 0.3s ease;
@@ -222,11 +221,11 @@
 }
 
 .seg--2 .seg-indicator {
-    width: calc(50% - 4px);
+    width: calc(50% - 2.31px);
 }
 
 .seg--3 .seg-indicator {
-    width: calc(33.33% - 4px);
+    width: calc(33.33% - 2.11px);
 }
 
 /* Segmented control state management */
@@ -235,11 +234,11 @@
 }
 
 .seg[data-active="1"] .seg-indicator {
-    transform: translateX(100%);
+    transform: translateX(calc(100% + 0.67px));
 }
 
 .seg[data-active="2"] .seg-indicator {
-    transform: translateX(200%);
+    transform: translateX(calc(200% + 1.33px));
 }
 
 .seg--2[data-active="0"] .seg-indicator {

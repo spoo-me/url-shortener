@@ -102,15 +102,8 @@ body.dashboard-layout {
     transition: opacity var(--transition-speed), width var(--transition-speed);
 }
 
-.collapsed .brand-logo,
-.collapsed .brand-text {
-    opacity: 0;
-    width: 0;
-    overflow: hidden;
-}
-
 .collapsed .sidebar-brand {
-    pointer-events: none;
+    display: none;
 }
 
 .sidebar-toggle {
@@ -378,6 +371,11 @@ body.dashboard-layout {
 .menu-item:hover {
     background: var(--hover-bg);
     color: var(--text-primary);
+}
+
+.menu-item[onclick*="logout"]:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
 }
 
 .menu-item i {
