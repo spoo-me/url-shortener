@@ -32,7 +32,11 @@ async function fetchKeys() {
 
 function setKeysLoading(loading) {
     keyElements.loading.style.display = loading ? 'flex' : 'none';
-    keyElements.table.style.display = loading ? 'none' : 'block';
+    // Don't automatically show table when loading is false - let renderKeys handle it
+    if (loading) {
+        keyElements.table.style.display = 'none';
+        keyElements.empty.style.display = 'none';
+    }
 }
 
 function showEmptyState() {
