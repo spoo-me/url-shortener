@@ -3,7 +3,7 @@ name: Check Code Formatting
 on:
   push:
     branches:
-      - main
+      - '*'
     paths-ignore:
       - '**/*.md'
       - '**/*.rst'
