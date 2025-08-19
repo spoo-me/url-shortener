@@ -91,7 +91,8 @@
 		const node = els.tpl.content.firstElementChild.cloneNode(true);
 		const shortA = node.querySelector('.link-short');
 		const long = node.querySelector('.link-long');
-		const statusBadge = node.querySelector('.badge-status');
+		const activeBadge = node.querySelector('.badge-active');
+		const inactiveBadge = node.querySelector('.badge-inactive');
 		const pwBadge = node.querySelector('.badge-password');
 		const mcBadge = node.querySelector('.badge-max-clicks');
 		const privBadge = node.querySelector('.badge-private');
@@ -102,7 +103,7 @@
 		// Short URL
 		shortA.textContent = trimProtocol(displayHost) + (it.alias ? it.alias : '');
 		shortA.href = '/' + (it.alias || '');
-		
+
 		// Long URL
 		long.textContent = it.long_url || '';
 		long.title = it.long_url || '';
@@ -112,26 +113,38 @@
 		last.textContent = formatTs(it.last_click);
 		total.textContent = (it.total_clicks ?? '0');
 
-		// Status badge - show if active
+		// Status badges - show appropriate badge based on status
 		if (it.status === 'ACTIVE') {
-			statusBadge.style.display = 'inline-flex';
+			activeBadge.style.display = 'inline-flex';
+			inactiveBadge.style.display = 'none';
+		} else if (it.status === 'INACTIVE') {
+			activeBadge.style.display = 'none';
+			inactiveBadge.style.display = 'inline-flex';
+		} else {
+			activeBadge.style.display = 'none';
+			inactiveBadge.style.display = 'none';
 		}
-		
+
 		// Password badge
-		if (it.password_set) { 
-			pwBadge.style.display = 'inline-flex'; 
+		if (it.password_set) {
+			pwBadge.style.display = 'inline-flex';
 		}
-		
+
 		// Max clicks badge
-		if (typeof it.max_clicks === 'number') { 
+		if (typeof it.max_clicks === 'number') {
 			mcBadge.style.display = 'inline-flex';
 			mcBadge.setAttribute('data-tooltip', `Max clicks: ${it.max_clicks}`);
 		}
-		
+
 		// Private stats badge
-		if (it.private_stats) { 
-			privBadge.style.display = 'inline-flex'; 
+		if (it.private_stats) {
+			privBadge.style.display = 'inline-flex';
 		}
+
+		// Store full URL data on the row for the modal
+		node.setAttribute('data-url-data', JSON.stringify(it));
+		node.style.cursor = 'pointer';
+		node.classList.add('clickable-row');
 
 		return node;
 	}
@@ -152,18 +165,18 @@
 			state.sortBy = data.sortBy;
 			state.sortOrder = data.sortOrder;
 
-					clearList();
-		if (!data.items || data.items.length === 0) {
-			els.empty.style.display = 'block';
-			document.getElementById('links-table').style.display = 'none';
-			els.pagination.style.display = 'none';
-			return;
-		}
-		document.getElementById('links-table').style.display = 'block';
-		const frag = document.createDocumentFragment();
-		for (const it of data.items) { frag.appendChild(createItem(it)); }
-		els.list.appendChild(frag);
-		renderPagination();
+			clearList();
+			if (!data.items || data.items.length === 0) {
+				els.empty.style.display = 'block';
+				document.getElementById('links-table').style.display = 'none';
+				els.pagination.style.display = 'none';
+				return;
+			}
+			document.getElementById('links-table').style.display = 'block';
+			const frag = document.createDocumentFragment();
+			for (const it of data.items) { frag.appendChild(createItem(it)); }
+			els.list.appendChild(frag);
+			renderPagination();
 		} catch (err) {
 			clearList();
 			els.empty.style.display = 'block';
@@ -180,10 +193,10 @@
 		const start = (state.page - 1) * state.pageSize + 1;
 		const end = Math.min(state.total, state.page * state.pageSize);
 		els.pagination.innerHTML = '';
-		const info = document.createElement('div'); 
-		info.className = 'pagination-info'; 
+		const info = document.createElement('div');
+		info.className = 'pagination-info';
 		info.textContent = `Showing ${start} to ${end} of ${state.total}`;
-		
+
 		const container = document.createElement('div');
 		container.className = 'pagination-controls';
 		const prev = document.createElement('button'); prev.className = 'btn'; prev.textContent = 'Prev'; prev.disabled = state.page <= 1;
@@ -192,7 +205,7 @@
 		next.addEventListener('click', () => { if (state.hasNext) { state.page += 1; fetchData(); } });
 		container.appendChild(prev);
 		container.appendChild(next);
-		
+
 		els.pagination.appendChild(info);
 		els.pagination.appendChild(container);
 	}
@@ -213,7 +226,7 @@
 			const targetId = seg.getAttribute('data-target');
 			const hidden = document.getElementById(targetId);
 			const defaultValue = (targetId === 'f-order') ? 'descending' : '';
-			if(hidden) hidden.value = defaultValue;
+			if (hidden) hidden.value = defaultValue;
 			seg.setAttribute('data-active', (targetId === 'f-order') ? '0' : '2');
 		});
 		if (els.pageSize) els.pageSize.value = '20';
@@ -239,20 +252,20 @@
 	});
 
 	// segmented controls behavior
-	function initSegments(){
+	function initSegments() {
 		const segs = document.querySelectorAll('.seg');
 		segs.forEach(seg => {
 			const targetId = seg.getAttribute('data-target');
 			const hidden = document.getElementById(targetId);
 			const buttons = Array.from(seg.querySelectorAll('button[data-value]'));
-			const indexByValue = new Map(buttons.map((b,i)=>[b.getAttribute('data-value'), i]));
-			function apply(value){
-				if(hidden){ hidden.value = value; }
+			const indexByValue = new Map(buttons.map((b, i) => [b.getAttribute('data-value'), i]));
+			function apply(value) {
+				if (hidden) { hidden.value = value; }
 				const idx = indexByValue.has(value) ? indexByValue.get(value) : 0;
 				seg.setAttribute('data-active', String(idx));
 			}
 			apply(hidden ? hidden.value : '');
-			buttons.forEach(btn => btn.addEventListener('click', ()=> apply(btn.getAttribute('data-value') || '')));
+			buttons.forEach(btn => btn.addEventListener('click', () => apply(btn.getAttribute('data-value') || '')));
 		});
 	}
 

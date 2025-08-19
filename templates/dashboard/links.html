@@ -4,6 +4,7 @@
 
 {% block head_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/links.css') }}?v=1">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/url-modal.css') }}?v=1">
 <meta name="robots" content="noindex">
 {% endblock %}
 
@@ -25,7 +26,8 @@
         </div>
         <div class="toolbar-actions">
             <div class="options">
-                <button id="btn-options" class="btn"><span class="label">Options</span><i class="ti ti-adjustments"></i></button>
+                <button id="btn-options" class="btn"><span class="label">Options</span><i
+                        class="ti ti-adjustments"></i></button>
                 <div id="options-dropdown" class="options-dropdown" style="display:none">
                     <div class="options-grid">
                         <div class="field">
@@ -34,6 +36,9 @@
                                 <select id="f-status">
                                     <option value="">All</option>
                                     <option value="ACTIVE">ACTIVE</option>
+                                    <option value="INACTIVE">INACTIVE</option>
+                                    <option value="EXPIRED">EXPIRED</option>
+                                    <option value="BLOCKED">BLOCKED</option>
                                 </select>
                                 <i class="ti ti-chevron-down select-icon"></i>
                             </div>
@@ -122,10 +127,11 @@
                     <i class="ti ti-link-off"></i>
                 </div>
                 <h3 class="empty-title">Oops! Nothing here yet</h3>
-                <p class="empty-message">Looks like you haven't created any links yet, or your search didn't match anything.</p>
+                <p class="empty-message">Looks like you haven't created any links yet, or your search didn't match
+                    anything.</p>
             </div>
         </div>
-        
+
         <div class="links-table" id="links-table" style="display:none">
             <div class="table-header">
                 <div class="header-cell col-short-url">Short URL</div>
@@ -161,10 +167,16 @@
         </div>
         <div class="table-cell col-attributes">
             <div class="attribute-badges">
-                <span class="badge badge-status tooltip-trigger" data-tooltip="Active" style="display:none">
+                <span class="badge badge-status badge-active tooltip-trigger" data-tooltip="Active"
+                    style="display:none">
                     <i class="ti ti-circle-check"></i>
                 </span>
-                <span class="badge badge-password tooltip-trigger" data-tooltip="Password protected" style="display:none">
+                <span class="badge badge-status badge-inactive tooltip-trigger" data-tooltip="Inactive"
+                    style="display:none">
+                    <i class="ti ti-circle-x"></i>
+                </span>
+                <span class="badge badge-password tooltip-trigger" data-tooltip="Password protected"
+                    style="display:none">
                     <i class="ti ti-lock"></i>
                 </span>
                 <span class="badge badge-max-clicks tooltip-trigger" data-tooltip="Max clicks set" style="display:none">
@@ -178,6 +190,204 @@
     </div>
 </template>
 
+<!-- URL Management Modal -->
+<div id="url-management-modal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-container">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-section">
+                    <h2 class="modal-title">Manage URL</h2>
+                    <p class="modal-subtitle">Edit your shortened URL settings and configuration</p>
+                </div>
+                <button class="modal-close" type="button" aria-label="Close modal">
+                    <i class="ti ti-x"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="url-edit-form">
+                    <div class="tabs" data-active="0">
+                        <button type="button" class="tab active" data-tab="basic">
+                            <i class="ti ti-link"></i>
+                            <span>Basic</span>
+                        </button>
+                        <button type="button" class="tab" data-tab="security">
+                            <i class="ti ti-shield-lock"></i>
+                            <span>Security</span>
+                        </button>
+                        <button type="button" class="tab" data-tab="advanced">
+                            <i class="ti ti-settings"></i>
+                            <span>Advanced</span>
+                        </button>
+                    </div>
+
+                    <div class="tab-content-container">
+                        <!-- Basic Tab -->
+                        <div class="tab-content active" data-tab="basic">
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label for="edit-alias">Short URL Alias</label>
+                                    <div class="input-group">
+                                        <span class="input-prefix">{{ host_url }}</span>
+                                        <input type="text" id="edit-alias" name="alias" placeholder="custom-alias"
+                                            autocomplete="off">
+                                    </div>
+                                    <small class="field-hint">Choose a custom alias for your short URL</small>
+                                </div>
+
+                                <div class="field">
+                                    <label for="edit-long-url">Destination URL</label>
+                                    <input type="url" id="edit-long-url" name="long_url"
+                                        placeholder="https://example.com" autocomplete="off">
+                                    <small class="field-hint">The URL users will be redirected to</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Tab -->
+                        <div class="tab-content" data-tab="security">
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label for="edit-password">Password Protection</label>
+                                    <div class="password-field-group">
+                                        <input type="password" id="edit-password" name="password"
+                                            placeholder="Enter new password" autocomplete="new-password">
+                                        <small class="password-status" id="password-status"></small>
+                                        <div class="checkbox-field">
+                                            <input type="checkbox" id="remove-password-checkbox">
+                                            <label for="remove-password-checkbox" class="checkbox-label">
+                                                <span class="checkbox-indicator"></span>
+                                                <div class="checkbox-content">
+                                                    <span class="checkbox-title">Remove password protection</span>
+                                                    <small class="checkbox-desc">Disable password requirement for this
+                                                        URL</small>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <small class="field-hint">Check "Remove password protection" to disable, or enter a
+                                        new password to change it</small>
+                                </div>
+
+                                <div class="field">
+                                    <div class="checkbox-field">
+                                        <input type="checkbox" id="edit-private-stats" name="private_stats">
+                                        <label for="edit-private-stats" class="checkbox-label">
+                                            <span class="checkbox-indicator"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Private Statistics</span>
+                                                <small class="checkbox-desc">Hide click statistics from public
+                                                    view</small>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Tab -->
+                        <div class="tab-content" data-tab="advanced">
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label for="edit-max-clicks">Maximum Clicks</label>
+                                    <input type="number" id="edit-max-clicks" name="max_clicks"
+                                        placeholder="Leave empty for unlimited" min="1">
+                                    <small class="field-hint">URL will be disabled after reaching this limit</small>
+                                </div>
+
+                                <div class="field">
+                                    <label for="edit-expire-after">Expiration Date</label>
+                                    <input type="datetime-local" id="edit-expire-after" name="expire_after">
+                                    <small class="field-hint">URL will be disabled after this date</small>
+                                </div>
+
+                                <div class="field">
+                                    <div class="checkbox-field">
+                                        <input type="checkbox" id="edit-block-bots" name="block_bots">
+                                        <label for="edit-block-bots" class="checkbox-label">
+                                            <span class="checkbox-indicator"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Block Bots</span>
+                                                <small class="checkbox-desc">Prevent automated bot traffic from
+                                                    accessing this URL</small>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- Close tab-content-container -->
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <div class="footer-actions">
+                    <div class="footer-actions-left">
+                        <button type="button" class="btn btn-danger" id="btn-delete-url">
+                            <i class="ti ti-trash"></i>
+                            <span>Delete</span>
+                        </button>
+                        <button type="button" class="btn btn-warning" id="btn-deactivate">
+                            <i class="ti ti-player-pause"></i>
+                            <span>Deactivate</span>
+                        </button>
+                    </div>
+                    <div class="footer-actions-right">
+                        <button type="submit" class="btn btn-primary" id="btn-save">
+                            <span>Save Changes</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-confirmation-modal" class="modal modal-danger">
+    <div class="modal-backdrop"></div>
+    <div class="modal-container modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-section">
+                    <div class="modal-icon">
+                        <i class="ti ti-alert-triangle"></i>
+                    </div>
+                    <div>
+                        <h2 class="modal-title">Delete URL</h2>
+                        <p class="modal-subtitle">This action cannot be undone</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div class="warning-content">
+                    <p>You are about to permanently delete this short URL:</p>
+                    <div class="url-preview">
+                        <strong id="delete-url-preview"></strong>
+                    </div>
+                    <p>To confirm deletion, please type the short URL alias below:</p>
+                    <div class="field">
+                        <input type="text" id="delete-confirmation-input" placeholder="Enter alias to confirm"
+                            autocomplete="off">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btn-cancel-delete">
+                    <span>Cancel</span>
+                </button>
+                <button type="button" class="btn btn-danger" id="btn-confirm-delete" disabled>
+                    <i class="ti ti-trash"></i>
+                    <span>Delete Permanently</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     // Pass host URL to the dashboard script
     window.dashboardConfig = {
@@ -188,54 +398,55 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/dashboard.js') }}?v=1" defer></script>
+<script src="{{ url_for('static', filename='js/url-manager.js') }}?v=1" defer></script>
 <script>
-// Initialize segmented controls for the options dropdown
-document.addEventListener('DOMContentLoaded', function() {
-    function initSegments(){
-        const segs = document.querySelectorAll('.seg');
-        segs.forEach(seg => {
-            const targetId = seg.getAttribute('data-target');
-            const hidden = document.getElementById(targetId);
-            const buttons = Array.from(seg.querySelectorAll('button[data-value]'));
-            const indexByValue = new Map(buttons.map((b,i)=>[b.getAttribute('data-value'), i]));
-            
-            function apply(value){
-                if(hidden){ hidden.value = value; }
-                const idx = indexByValue.has(value) ? indexByValue.get(value) : 0;
-                seg.setAttribute('data-active', String(idx));
-                
-                // Update button states
-                buttons.forEach((btn, i) => {
-                    btn.classList.toggle('active', i === idx);
-                });
-            }
-            
-            apply(hidden ? hidden.value : '');
-            buttons.forEach(btn => btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                apply(btn.getAttribute('data-value') || '');
-            }));
+    // Initialize segmented controls for the options dropdown
+    document.addEventListener('DOMContentLoaded', function () {
+        function initSegments() {
+            const segs = document.querySelectorAll('.seg');
+            segs.forEach(seg => {
+                const targetId = seg.getAttribute('data-target');
+                const hidden = document.getElementById(targetId);
+                const buttons = Array.from(seg.querySelectorAll('button[data-value]'));
+                const indexByValue = new Map(buttons.map((b, i) => [b.getAttribute('data-value'), i]));
+
+                function apply(value) {
+                    if (hidden) { hidden.value = value; }
+                    const idx = indexByValue.has(value) ? indexByValue.get(value) : 0;
+                    seg.setAttribute('data-active', String(idx));
+
+                    // Update button states
+                    buttons.forEach((btn, i) => {
+                        btn.classList.toggle('active', i === idx);
+                    });
+                }
+
+                apply(hidden ? hidden.value : '');
+                buttons.forEach(btn => btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    apply(btn.getAttribute('data-value') || '');
+                }));
+            });
+        }
+
+        initSegments();
+
+        // Initialize datetime icon clicks
+        initDateTimeIcons();
+    });
+
+    function initDateTimeIcons() {
+        const datetimeIcons = document.querySelectorAll('.datetime-icon');
+
+        datetimeIcons.forEach(icon => {
+            icon.addEventListener('click', function () {
+                const input = this.previousElementSibling;
+                if (input && input.type === 'datetime-local') {
+                    input.focus();
+                    input.showPicker?.();
+                }
+            });
         });
     }
-    
-    initSegments();
-    
-    // Initialize datetime icon clicks
-    initDateTimeIcons();
-});
-
-function initDateTimeIcons() {
-    const datetimeIcons = document.querySelectorAll('.datetime-icon');
-    
-    datetimeIcons.forEach(icon => {
-        icon.addEventListener('click', function() {
-            const input = this.previousElementSibling;
-            if (input && input.type === 'datetime-local') {
-                input.focus();
-                input.showPicker?.();
-            }
-        });
-    });
-}
 </script>
 {% endblock %}
