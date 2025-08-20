@@ -80,12 +80,92 @@
 
                 <div class="field">
                     <label>Permissions</label>
-                    <div class="scopes">
-                        <label class="scope"><input type="checkbox" class="scope-input" value="shorten:create" checked /> shorten:create</label>
-                        <label class="scope"><input type="checkbox" class="scope-input" value="urls:read" /> urls:read</label>
-                        <label class="scope"><input type="checkbox" class="scope-input" value="urls:manage" /> urls:manage</label>
-                        <label class="scope"><input type="checkbox" class="scope-input" value="stats:read" /> stats:read</label>
-                        <label class="scope"><input type="checkbox" class="scope-input" value="admin:all" /> admin:all</label>
+                    <div class="permissions-container">
+                        <!-- Access Level Selection -->
+                        <div class="access-level-selector">
+                            <div class="access-option" data-level="full">
+                                <input type="radio" name="access-level" id="full-access" value="full" checked />
+                                <label for="full-access" class="access-label">
+                                    <div class="access-icon">
+                                        <i class="ti ti-bolt"></i>
+                                    </div>
+                                    <div class="access-text">
+                                        <div class="access-title">Full Access</div>
+                                        <div class="access-subtitle">All permissions included</div>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <div class="access-option" data-level="custom">
+                                <input type="radio" name="access-level" id="custom-access" value="custom" />
+                                <label for="custom-access" class="access-label">
+                                    <div class="access-icon">
+                                        <i class="ti ti-settings"></i>
+                                    </div>
+                                    <div class="access-text">
+                                        <div class="access-title">Custom Access</div>
+                                        <div class="access-subtitle">Choose specific permissions</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Detailed Permissions (shown when Custom Access is selected) -->
+                        <div class="detailed-permissions" id="detailed-permissions">
+                            <div class="permissions-list">
+                                <label class="permission-item">
+                                    <input type="checkbox" class="scope-input" value="shorten:create" checked />
+                                    <div class="permission-content">
+                                        <div class="permission-icon">
+                                            <i class="ti ti-link"></i>
+                                        </div>
+                                        <div class="permission-details">
+                                            <div class="permission-title">Create URLs</div>
+                                            <div class="permission-description">Allow creating new shortened URLs</div>
+                                        </div>
+                                    </div>
+                                </label>
+                                
+                                <label class="permission-item">
+                                    <input type="checkbox" class="scope-input" value="urls:read" />
+                                    <div class="permission-content">
+                                        <div class="permission-icon">
+                                            <i class="ti ti-eye"></i>
+                                        </div>
+                                        <div class="permission-details">
+                                            <div class="permission-title">Read URLs</div>
+                                            <div class="permission-description">View existing shortened URLs</div>
+                                        </div>
+                                    </div>
+                                </label>
+                                
+                                <label class="permission-item">
+                                    <input type="checkbox" class="scope-input" value="urls:manage" />
+                                    <div class="permission-content">
+                                        <div class="permission-icon">
+                                            <i class="ti ti-edit"></i>
+                                        </div>
+                                        <div class="permission-details">
+                                            <div class="permission-title">Manage URLs</div>
+                                            <div class="permission-description">Edit and delete shortened URLs</div>
+                                        </div>
+                                    </div>
+                                </label>
+                                
+                                <label class="permission-item">
+                                    <input type="checkbox" class="scope-input" value="stats:read" />
+                                    <div class="permission-content">
+                                        <div class="permission-icon">
+                                            <i class="ti ti-chart-bar"></i>
+                                        </div>
+                                        <div class="permission-details">
+                                            <div class="permission-title">View Stats</div>
+                                            <div class="permission-description">Access click analytics and statistics</div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
