@@ -206,32 +206,29 @@ body.dashboard-layout {
     border-radius: 0 3px 3px 0;
 }
 
-/* Collapsed sidebar tooltips */
+/* Collapsed sidebar tooltips - handled by Tippy.js */
 .collapsed .nav-item {
     position: relative;
 }
 
-.collapsed .nav-item::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    left: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    margin-left: 8px;
-    padding: 6px 12px;
-    background: rgba(0, 0, 0, 0.9);
-    color: white;
+/* Custom Tippy.js theme for dashboard tooltips */
+.tippy-box[data-theme~='dark'] {
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-sm);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     font-size: 14px;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-    z-index: 1000;
+    backdrop-filter: blur(10px);
 }
 
-.collapsed .nav-item:hover::after {
-    opacity: 1;
+.tippy-box[data-theme~='dark'] .tippy-arrow {
+    color: rgba(0, 0, 0, 0.8);
+}
+
+.tippy-box[data-theme~='dark'] .tippy-content {
+    padding: 8px 12px;
+    color: white;
+    font-weight: 500;
 }
 
 /* Sidebar Footer */

@@ -138,6 +138,50 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }, 250);
     });
+
+    // Initialize Tippy.js tooltips for collapsed sidebar
+    let tippyInstances = [];
+
+    function initializeTooltips() {
+        // Destroy existing instances
+        tippyInstances.forEach(instance => instance.destroy());
+        tippyInstances = [];
+
+        // Only create tooltips if sidebar is collapsed
+        if (sidebar.classList.contains('collapsed')) {
+            const navItems = document.querySelectorAll('.nav-item[data-tooltip]');
+            
+            navItems.forEach(item => {
+                const instance = tippy(item, {
+                    content: item.getAttribute('data-tooltip'),
+                    placement: 'right',
+                    offset: [0, 12],
+                    theme: 'dark',
+                    animation: 'fade',
+                    duration: [200, 150],
+                    delay: [300, 0],
+                    arrow: true,
+                    hideOnClick: false,
+                    trigger: 'mouseenter focus',
+                    zIndex: 10000,
+                    appendTo: 'parent'
+                });
+                tippyInstances.push(instance);
+            });
+        }
+    }
+
+    // Initialize tooltips on load if collapsed
+    initializeTooltips();
+
+    // Reinitialize tooltips when sidebar is toggled
+    const originalToggleHandler = sidebarToggle?.onclick;
+    sidebarToggle?.addEventListener('click', function() {
+        // Wait for the transition to complete
+        setTimeout(() => {
+            initializeTooltips();
+        }, 350); // Slightly longer than CSS transition
+    });
 });
 
 // Add styles for mobile overlay

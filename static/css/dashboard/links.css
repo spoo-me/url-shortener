@@ -790,7 +790,6 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
     border-radius: 6px;
     font-size: 12px;
     transition: all 0.2s;
-    cursor: help;
 }
 
 .badge i {
@@ -829,59 +828,6 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
 .badge:hover {
     transform: scale(1.1);
-}
-
-/* Tooltip Styles */
-.tooltip-trigger {
-    position: relative;
-}
-
-.tooltip-trigger::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-bottom: 8px;
-    padding: 8px 12px;
-    background: rgba(0, 0, 0, 0.9);
-    color: white;
-    font-size: 12px;
-    font-weight: 500;
-    white-space: nowrap;
-    border-radius: 8px;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
-    transform: translateX(-50%) translateY(-4px);
-    pointer-events: none;
-    z-index: 10000;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
-
-.tooltip-trigger::before {
-    content: '';
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-bottom: 2px;
-    border: 4px solid transparent;
-    border-top-color: rgba(0, 0, 0, 0.9);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-    z-index: 10000;
-}
-
-.tooltip-trigger:hover::after,
-.tooltip-trigger:hover::before {
-    opacity: 1;
-    visibility: visible;
-}
-
-.tooltip-trigger:hover::after {
-    transform: translateX(-50%) translateY(0);
 }
 
 /* Empty State */

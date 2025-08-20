@@ -177,6 +177,9 @@
 			for (const it of data.items) { frag.appendChild(createItem(it)); }
 			els.list.appendChild(frag);
 			renderPagination();
+			
+			// Initialize tooltips for the newly created items
+			initializeTooltips();
 		} catch (err) {
 			clearList();
 			els.empty.style.display = 'block';
@@ -184,6 +187,37 @@
 		} finally {
 			setLoading(false);
 		}
+	}
+
+	// Initialize Tippy.js tooltips for attribute badges
+	function initializeTooltips() {
+		// Destroy existing tooltips first
+		if (window.attributeTooltips) {
+			window.attributeTooltips.forEach(instance => instance.destroy());
+		}
+		window.attributeTooltips = [];
+
+		// Find all tooltip triggers and initialize Tippy.js
+		const tooltipTriggers = document.querySelectorAll('.tooltip-trigger[data-tooltip]');
+		
+		tooltipTriggers.forEach(element => {
+			// Remove the title attribute to prevent native tooltips
+			element.removeAttribute('title');
+			
+			const instance = tippy(element, {
+				content: element.getAttribute('data-tooltip'),
+				placement: 'top',
+				theme: 'dark',
+				animation: 'fade',
+				duration: [200, 150],
+				delay: [200, 0],
+				arrow: true,
+				hideOnClick: false,
+				trigger: 'mouseenter focus',
+				zIndex: 9999
+			});
+			window.attributeTooltips.push(instance);
+		});
 	}
 
 	function renderPagination() {
