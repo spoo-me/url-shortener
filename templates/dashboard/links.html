@@ -351,11 +351,19 @@
                             <label>Your shortened link:</label>
                             <div class="link-result">
                                 <input id="created-link-input" class="link-input" type="text" readonly value="" aria-label="Created short link">
-                                <button class="copy-btn" onclick="copyCreatedLinkToClipboard()">
+                                <button class="copy-btn" id="btn-copy-created-link" type="button">
                                     <i class="ti ti-copy"></i>
                                 </button>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="qr-block">
+                        <img id="created-link-qr" class="qr-image" src="" alt="QR code for the short link" loading="lazy">
+                        <button class="btn btn-ghost btn-sm" id="btn-download-qr" type="button">
+                            <i class="ti ti-download"></i>
+                            <span>Download QR</span>
+                        </button>
                     </div>
                     
                     <div class="link-actions">
@@ -363,7 +371,7 @@
                             <i class="ti ti-external-link"></i>
                             <span>Visit Link</span>
                         </a>
-                        <button class="btn btn-ghost" onclick="createAnotherLink()">
+                        <button class="btn btn-ghost" onclick="createAnotherLink()" type="button">
                             <i class="ti ti-plus"></i>
                             <span>Create Another</span>
                         </button>
@@ -687,10 +695,15 @@
         const modal = document.getElementById('link-success-modal');
         const input = document.getElementById('created-link-input');
         const visitLink = document.getElementById('created-link-visit');
+        const qrImg = document.getElementById('created-link-qr');
         
         if (modal && input && visitLink) {
             input.value = shortUrl;
             visitLink.href = shortUrl;
+            if (qrImg) {
+                const enc = encodeURIComponent(shortUrl);
+                qrImg.src = `https://qr.spoo.me/gradient?text=${enc}&width=280&height=280&gradient1=1d1919&gradient2=322c29`;
+            }
             
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -702,18 +715,31 @@
         if (modal) {
             modal.classList.remove('active');
             document.body.style.overflow = '';
+            // Refresh list using current filters
+            if (typeof window.fetchData === 'function') {
+                window.fetchData();
+            }
         }
     }
 
     function copyCreatedLinkToClipboard() {
-        const input = document.getElementById('created-link-input');
-        input.select();
-        document.execCommand('copy');
-        
-        // Show notification
-        if (typeof showNotification === 'function') {
-            showNotification('Link copied to clipboard!', 'success');
-        }
+        try {
+            const input = document.getElementById('created-link-input');
+            const btn = document.getElementById('btn-copy-created-link');
+            navigator.clipboard.writeText(input.value).then(() => {
+                btn?.classList.add('copied');
+                if (typeof showNotification === 'function') {
+                    showNotification('Link copied to clipboard!', 'success');
+                }
+                setTimeout(() => btn?.classList.remove('copied'), 1200);
+            }).catch(() => {
+                input.select();
+                document.execCommand('copy');
+                if (typeof showNotification === 'function') {
+                    showNotification('Link copied to clipboard!', 'success');
+                }
+            });
+        } catch (_) {}
     }
 
     function createAnotherLink() {
@@ -1051,6 +1077,32 @@
                     closeCreateLinkModal();
                 }
             }
+        });
+
+        // Success modal actions: copy and download QR
+        const copyBtn = document.getElementById('btn-copy-created-link');
+        copyBtn?.addEventListener('click', copyCreatedLinkToClipboard);
+        const downloadBtn = document.getElementById('btn-download-qr');
+        downloadBtn?.addEventListener('click', function() {
+            const img = document.getElementById('created-link-qr');
+            if (!img?.src) return;
+            fetch(img.src)
+                .then(r => r.blob())
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'qrcode.png';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                })
+                .catch(() => {
+                    if (typeof showNotification === 'function') {
+                        showNotification('Failed to download QR code', 'error');
+                    }
+                });
         });
     });
 </script>
