@@ -1272,10 +1272,16 @@
 
         // Tab switching for create modal
         const createTabs = document.querySelectorAll('#create-link-modal .tab');
-        createTabs.forEach(tab => {
+        createTabs.forEach((tab, index) => {
             tab.addEventListener('click', function () {
                 const targetTab = this.dataset.tab;
                 const modal = document.getElementById('create-link-modal');
+                const tabsContainer = modal.querySelector('.tabs');
+
+                // Update tab indicator position
+                if (tabsContainer) {
+                    tabsContainer.setAttribute('data-active', index.toString());
+                }
 
                 // Update tab states
                 modal.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));

@@ -85,9 +85,11 @@ class UrlManager {
     }
 
     initTabs() {
-        const tabs = document.querySelectorAll('.tab');
-        const tabContents = document.querySelectorAll('.tab-content');
-        const tabsContainer = document.querySelector('.tabs');
+        if (!this.modal) return;
+
+        const tabs = this.modal.querySelectorAll('.tab');
+        const tabContents = this.modal.querySelectorAll('.tab-content');
+        const tabsContainer = this.modal.querySelector('.tabs');
 
         tabs.forEach((tab, index) => {
             tab.addEventListener('click', () => {
@@ -377,6 +379,11 @@ class UrlManager {
 
                 // Also refresh the full list in the background
                 this.refreshUrlList();
+
+                // Close the modal after successful save
+                setTimeout(() => {
+                    this.closeModal();
+                }, 200); // Small delay to allow user to see the success notification
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to update URL');

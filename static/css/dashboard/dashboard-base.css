@@ -25,8 +25,8 @@ body.dashboard-layout {
     font-optical-sizing: auto;
     font-weight: 400;
     background: radial-gradient(1000px 600px at -10% -10%, rgba(124, 58, 237, 0.18), transparent 60%),
-                radial-gradient(900px 600px at 110% 0%, rgba(37, 99, 235, 0.16), transparent 60%),
-                linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+        radial-gradient(900px 600px at 110% 0%, rgba(37, 99, 235, 0.16), transparent 60%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
     background-color: var(--dashboard-bg);
     min-height: 100vh;
     overflow-x: hidden;
@@ -127,10 +127,6 @@ body.dashboard-layout {
 
 .sidebar-toggle i {
     transition: transform 0.3s;
-}
-
-.collapsed .sidebar-toggle i {
-    transform: rotate(180deg);
 }
 
 /* When collapsed, center the toggle button */
@@ -405,7 +401,7 @@ body.dashboard-layout {
     flex-direction: column;
 }
 
-.collapsed ~ .dashboard-main {
+.collapsed~.dashboard-main {
     margin-left: var(--sidebar-collapsed-width);
 }
 
@@ -450,19 +446,19 @@ body.dashboard-layout {
     .dashboard-sidebar {
         transform: translateX(-100%);
     }
-    
+
     .dashboard-sidebar.mobile-open {
         transform: translateX(0);
     }
-    
+
     .dashboard-main {
         margin-left: 0;
     }
-    
-    .collapsed ~ .dashboard-main {
+
+    .collapsed~.dashboard-main {
         margin-left: 0;
     }
-    
+
     .dashboard-content {
         padding: 20px;
     }
@@ -490,5 +486,7 @@ body.dashboard-layout {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
