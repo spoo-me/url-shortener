@@ -10,8 +10,18 @@
 
 {% block content %}
 <div class="page-header">
-    <h1 class="page-title">All Links</h1>
-    <p class="page-subtitle">View, filter, and organize all your shortened links below.</p>
+    <div class="page-header-content">
+        <div class="page-header-text">
+            <h1 class="page-title">All Links</h1>
+            <p class="page-subtitle">View, filter, and organize all your shortened links below.</p>
+        </div>
+        <div class="page-header-actions">
+            <button class="btn btn-primary" id="btn-create-link">
+                <i class="ti ti-plus"></i>
+                <span>Create Link</span>
+            </button>
+        </div>
+    </div>
 </div>
 
 <div class="links-container surface">
@@ -189,6 +199,186 @@
         </div>
     </div>
 </template>
+
+<!-- Create Link Modal -->
+<div id="create-link-modal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-container">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-section">
+                    <h2 class="modal-title">Create New Link</h2>
+                    <p class="modal-subtitle">Create a new shortened URL with custom settings</p>
+                </div>
+                <button class="modal-close" type="button" aria-label="Close modal">
+                    <i class="ti ti-x"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="create-link-form">
+                    <div class="tabs" data-active="0">
+                        <button type="button" class="tab active" data-tab="basic">
+                            <i class="ti ti-link"></i>
+                            <span>Basic</span>
+                        </button>
+                        <button type="button" class="tab" data-tab="security">
+                            <i class="ti ti-shield-lock"></i>
+                            <span>Security</span>
+                        </button>
+                        <button type="button" class="tab" data-tab="advanced">
+                            <i class="ti ti-settings"></i>
+                            <span>Advanced</span>
+                        </button>
+                    </div>
+
+                    <div class="tab-content-container">
+                        <!-- Basic Tab -->
+                        <div class="tab-content active" data-tab="basic">
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label for="create-long-url">Destination URL</label>
+                                    <input type="url" id="create-long-url" name="long_url"
+                                        placeholder="https://example.com" autocomplete="off" required>
+                                    <small class="field-hint">The URL users will be redirected to</small>
+                                </div>
+
+                                <div class="field">
+                                    <label for="create-alias">Custom Alias (optional)</label>
+                                    <div class="input-group">
+                                        <span class="input-prefix">{{ host_url }}</span>
+                                        <input type="text" id="create-alias" name="alias" placeholder="my-link"
+                                            autocomplete="off">
+                                    </div>
+                                    <small class="field-hint">Leave empty for auto-generated alias</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Tab -->
+                        <div class="tab-content" data-tab="security">
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label for="create-password">Password Protection (optional)</label>
+                                    <input type="password" id="create-password" name="password"
+                                        placeholder="Enter password" autocomplete="new-password">
+                                    <small class="field-hint">Require users to enter a password to access the link</small>
+                                </div>
+
+                                <div class="field">
+                                    <div class="checkbox-field">
+                                        <input type="checkbox" id="create-private-stats" name="private_stats" checked>
+                                        <label for="create-private-stats" class="checkbox-label">
+                                            <span class="checkbox-indicator"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Private Statistics</span>
+                                                <small class="checkbox-desc">Hide click statistics from public view</small>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Tab -->
+                        <div class="tab-content" data-tab="advanced">
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label for="create-max-clicks">Maximum Clicks (optional)</label>
+                                    <input type="number" id="create-max-clicks" name="max_clicks"
+                                        placeholder="Leave empty for unlimited" min="1">
+                                    <small class="field-hint">Link will be disabled after reaching this limit</small>
+                                </div>
+
+                                <div class="field">
+                                    <label for="create-expire-after">Expiration Date (optional)</label>
+                                    <input type="datetime-local" id="create-expire-after" name="expire_after">
+                                    <small class="field-hint">Link will be disabled after this date</small>
+                                </div>
+
+                                <div class="field">
+                                    <div class="checkbox-field">
+                                        <input type="checkbox" id="create-block-bots" name="block_bots">
+                                        <label for="create-block-bots" class="checkbox-label">
+                                            <span class="checkbox-indicator"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Block Bots</span>
+                                                <small class="checkbox-desc">Prevent automated bot traffic from accessing this link</small>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btn-cancel-create">
+                    <span>Cancel</span>
+                </button>
+                <button type="submit" class="btn btn-primary" id="btn-create-submit" form="create-link-form">
+                    <i class="ti ti-plus"></i>
+                    <span>Create Link</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Link Creation Success Modal -->
+<div id="link-success-modal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-container modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-section">
+                    <div class="modal-icon success-icon">
+                        <i class="ti ti-check"></i>
+                    </div>
+                    <div>
+                        <h2 class="modal-title">Link Created!</h2>
+                        <p class="modal-subtitle">Your shortened link is ready to use</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div class="success-content">
+                    <div class="link-display">
+                        <div class="field">
+                            <label>Your shortened link:</label>
+                            <div class="link-result">
+                                <input id="created-link-input" class="link-input" type="text" readonly value="" aria-label="Created short link">
+                                <button class="copy-btn" onclick="copyCreatedLinkToClipboard()">
+                                    <i class="ti ti-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="link-actions">
+                        <a id="created-link-visit" href="" target="_blank" rel="noopener" class="btn btn-ghost">
+                            <i class="ti ti-external-link"></i>
+                            <span>Visit Link</span>
+                        </a>
+                        <button class="btn btn-ghost" onclick="createAnotherLink()">
+                            <i class="ti ti-plus"></i>
+                            <span>Create Another</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="closeLinkSuccessModal()">
+                    <span>Done</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- URL Management Modal -->
 <div id="url-management-modal" class="modal">
@@ -448,5 +638,420 @@
             });
         });
     }
+
+    // Create Link Modal Functions
+    function openCreateLinkModal() {
+        const modal = document.getElementById('create-link-modal');
+        
+        if (modal) {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Focus on the first input
+            setTimeout(() => {
+                const firstInput = modal.querySelector('#create-long-url');
+                if (firstInput) firstInput.focus();
+            }, 100);
+        }
+    }
+
+    function closeCreateLinkModal() {
+        const modal = document.getElementById('create-link-modal');
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            
+            // Reset form
+            const form = document.getElementById('create-link-form');
+            if (form) form.reset();
+            
+            // Clear any error states
+            const errorFields = modal.querySelectorAll('.error');
+            errorFields.forEach(field => field.classList.remove('error'));
+            const errorMessages = modal.querySelectorAll('.field-error');
+            errorMessages.forEach(msg => msg.remove());
+            
+            // Reset to first tab
+            const tabs = modal.querySelectorAll('.tab');
+            const contents = modal.querySelectorAll('.tab-content');
+            tabs.forEach((tab, i) => {
+                tab.classList.toggle('active', i === 0);
+            });
+            contents.forEach((content, i) => {
+                content.classList.toggle('active', i === 0);
+            });
+        }
+    }
+
+    function openLinkSuccessModal(shortUrl, linkData) {
+        const modal = document.getElementById('link-success-modal');
+        const input = document.getElementById('created-link-input');
+        const visitLink = document.getElementById('created-link-visit');
+        
+        if (modal && input && visitLink) {
+            input.value = shortUrl;
+            visitLink.href = shortUrl;
+            
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeLinkSuccessModal() {
+        const modal = document.getElementById('link-success-modal');
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    function copyCreatedLinkToClipboard() {
+        const input = document.getElementById('created-link-input');
+        input.select();
+        document.execCommand('copy');
+        
+        // Show notification
+        if (typeof showNotification === 'function') {
+            showNotification('Link copied to clipboard!', 'success');
+        }
+    }
+
+    function createAnotherLink() {
+        closeLinkSuccessModal();
+        openCreateLinkModal();
+    }
+
+    // Form Validation Functions
+    function validateUrl(url) {
+        if (!url) return { valid: false, message: 'URL is required' };
+        
+        // Basic URL pattern check
+        const urlPattern = /^https?:\/\/.+/i;
+        if (!urlPattern.test(url)) {
+            return { valid: false, message: 'URL must start with http:// or https://' };
+        }
+        
+        // Check if URL contains spoo.me (not allowed)
+        if (url.toLowerCase().includes('spoo.me')) {
+            return { valid: false, message: 'Cannot shorten spoo.me URLs' };
+        }
+        
+        return { valid: true, message: '' };
+    }
+
+    function validateAlias(alias) {
+        if (!alias) return { valid: true, message: '' }; // Optional field
+        
+        // Check pattern: alphanumeric, underscore, hyphen only
+        const aliasPattern = /^[a-zA-Z0-9_-]+$/;
+        if (!aliasPattern.test(alias)) {
+            return { valid: false, message: 'Alias can only contain letters, numbers, underscores, and hyphens' };
+        }
+        
+        if (alias.length > 16) {
+            return { valid: false, message: 'Alias cannot be longer than 16 characters' };
+        }
+        
+        return { valid: true, message: '' };
+    }
+
+    function validatePassword(password) {
+        if (!password) return { valid: true, message: '' }; // Optional field
+        
+        if (password.length < 8) {
+            return { valid: false, message: 'Password must be at least 8 characters long' };
+        }
+        
+        if (!/[a-zA-Z]/.test(password)) {
+            return { valid: false, message: 'Password must contain at least one letter' };
+        }
+        
+        if (!/\d/.test(password)) {
+            return { valid: false, message: 'Password must contain at least one number' };
+        }
+        
+        if (!/[@.]/.test(password)) {
+            return { valid: false, message: 'Password must contain @ or .' };
+        }
+        
+        if (/[@.]{2}/.test(password)) {
+            return { valid: false, message: 'Password cannot have consecutive @ or . characters' };
+        }
+        
+        return { valid: true, message: '' };
+    }
+
+    function validateMaxClicks(maxClicks) {
+        if (!maxClicks) return { valid: true, message: '' }; // Optional field
+        
+        const clicks = parseInt(maxClicks);
+        if (isNaN(clicks) || clicks <= 0) {
+            return { valid: false, message: 'Max clicks must be a positive number' };
+        }
+        
+        return { valid: true, message: '' };
+    }
+
+    function validateExpireAfter(expireAfter) {
+        if (!expireAfter) return { valid: true, message: '' }; // Optional field
+        
+        const expireDate = new Date(expireAfter);
+        const now = new Date();
+        
+        if (expireDate <= now) {
+            return { valid: false, message: 'Expiration date must be in the future' };
+        }
+        
+        return { valid: true, message: '' };
+    }
+
+    function showFieldError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        
+        // Remove existing error
+        const existingError = field.parentNode.querySelector('.field-error');
+        if (existingError) existingError.remove();
+        
+        if (message) {
+            // Add error styling
+            field.classList.add('error');
+            
+            // Add error message
+            const errorEl = document.createElement('small');
+            errorEl.className = 'field-error';
+            errorEl.textContent = message;
+            field.parentNode.appendChild(errorEl);
+        } else {
+            // Remove error styling
+            field.classList.remove('error');
+        }
+    }
+
+    function validateForm() {
+        let isValid = true;
+        
+        // Get form values
+        const longUrl = document.getElementById('create-long-url').value.trim();
+        const alias = document.getElementById('create-alias').value.trim();
+        const password = document.getElementById('create-password').value;
+        const maxClicks = document.getElementById('create-max-clicks').value;
+        const expireAfter = document.getElementById('create-expire-after').value;
+        
+        // Validate each field
+        const urlValidation = validateUrl(longUrl);
+        const aliasValidation = validateAlias(alias);
+        const passwordValidation = validatePassword(password);
+        const maxClicksValidation = validateMaxClicks(maxClicks);
+        const expireAfterValidation = validateExpireAfter(expireAfter);
+        
+        // Show errors
+        showFieldError('create-long-url', urlValidation.valid ? '' : urlValidation.message);
+        showFieldError('create-alias', aliasValidation.valid ? '' : aliasValidation.message);
+        showFieldError('create-password', passwordValidation.valid ? '' : passwordValidation.message);
+        showFieldError('create-max-clicks', maxClicksValidation.valid ? '' : maxClicksValidation.message);
+        showFieldError('create-expire-after', expireAfterValidation.valid ? '' : expireAfterValidation.message);
+        
+        return urlValidation.valid && aliasValidation.valid && passwordValidation.valid && 
+               maxClicksValidation.valid && expireAfterValidation.valid;
+    }
+
+    // Form Submission
+    async function submitCreateForm(event) {
+        event.preventDefault();
+        
+        if (!validateForm()) {
+            return;
+        }
+        
+        const submitBtn = document.getElementById('btn-create-submit');
+        const originalText = submitBtn.innerHTML;
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="ti ti-loader-2 spinning"></i><span>Creating...</span>';
+        
+        try {
+            // Prepare form data
+            const formData = {
+                long_url: document.getElementById('create-long-url').value.trim(),
+                alias: document.getElementById('create-alias').value.trim() || undefined,
+                password: document.getElementById('create-password').value || undefined,
+                max_clicks: document.getElementById('create-max-clicks').value ? 
+                    parseInt(document.getElementById('create-max-clicks').value) : undefined,
+                expire_after: document.getElementById('create-expire-after').value || undefined,
+                block_bots: document.getElementById('create-block-bots').checked,
+                private_stats: document.getElementById('create-private-stats').checked
+            };
+            
+            // Remove undefined values
+            Object.keys(formData).forEach(key => {
+                if (formData[key] === undefined) {
+                    delete formData[key];
+                }
+            });
+            
+            // Submit to API
+            const response = await authFetch('/api/v1/shorten', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                // Success - close create modal and show success modal
+                closeCreateLinkModal();
+                openLinkSuccessModal(result.short_url, result);
+                
+                // Refresh the links list if it exists
+                if (typeof refreshLinksList === 'function') {
+                    refreshLinksList();
+                }
+                
+                // Show success notification
+                if (typeof showNotification === 'function') {
+                    showNotification('Link created successfully!', 'success');
+                }
+            } else {
+                // Handle API errors
+                handleApiError(result);
+            }
+            
+        } catch (error) {
+            console.error('Error creating link:', error);
+            if (typeof showNotification === 'function') {
+                showNotification('Failed to create link. Please try again.', 'error');
+            }
+        } finally {
+            // Reset button state
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    }
+
+    function handleApiError(result) {
+        // Handle field-specific errors
+        if (result.field) {
+            const fieldMap = {
+                'long_url': 'create-long-url',
+                'url': 'create-long-url',
+                'alias': 'create-alias',
+                'password': 'create-password',
+                'max_clicks': 'create-max-clicks',
+                'expire_after': 'create-expire-after'
+            };
+            
+            const fieldId = fieldMap[result.field];
+            if (fieldId) {
+                showFieldError(fieldId, result.error);
+                return;
+            }
+        }
+        
+        // Handle general errors
+        let errorMessage = result.error || 'An error occurred while creating the link';
+        
+        // Customize common error messages
+        if (errorMessage.includes('Alias already exists')) {
+            showFieldError('create-alias', 'This alias is already taken. Please choose another.');
+        } else if (errorMessage.includes('Blocked URL')) {
+            showFieldError('create-long-url', 'This URL is not allowed to be shortened.');
+        } else if (errorMessage.includes('api key lacks required scope')) {
+            errorMessage = 'You do not have permission to create links. Please check your account settings.';
+        } else if (errorMessage.includes('ratelimit exceeded')) {
+            errorMessage = 'You are creating links too quickly. Please wait a moment and try again.';
+        }
+        
+        // Show general notification
+        if (typeof showNotification === 'function') {
+            showNotification(errorMessage, 'error');
+        }
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // Create Link button
+        const createBtn = document.getElementById('btn-create-link');
+        if (createBtn) {
+            createBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                openCreateLinkModal();
+            });
+        }
+
+        // Modal close buttons
+        const cancelBtn = document.getElementById('btn-cancel-create');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', closeCreateLinkModal);
+        }
+
+        // Form submission
+        const createForm = document.getElementById('create-link-form');
+        if (createForm) {
+            createForm.addEventListener('submit', submitCreateForm);
+        }
+
+        // Real-time validation on input
+        const inputs = ['create-long-url', 'create-alias', 'create-password', 'create-max-clicks', 'create-expire-after'];
+        inputs.forEach(inputId => {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.addEventListener('blur', function() {
+                    // Clear previous errors when user starts typing
+                    showFieldError(inputId, '');
+                });
+            }
+        });
+
+        // Close modal on backdrop click
+        const modal = document.getElementById('create-link-modal');
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal || e.target.classList.contains('modal-backdrop')) {
+                    closeCreateLinkModal();
+                }
+            });
+        }
+
+        // Close modal on X button
+        const closeBtn = modal?.querySelector('.modal-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeCreateLinkModal);
+        }
+
+        // Tab switching for create modal
+        const createTabs = document.querySelectorAll('#create-link-modal .tab');
+        createTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const targetTab = this.dataset.tab;
+                const modal = document.getElementById('create-link-modal');
+                
+                // Update tab states
+                modal.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                modal.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                this.classList.add('active');
+                modal.querySelector(`[data-tab="${targetTab}"].tab-content`).classList.add('active');
+            });
+        });
+
+        // ESC key to close modals
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const createModal = document.getElementById('create-link-modal');
+                const successModal = document.getElementById('link-success-modal');
+                
+                if (successModal?.classList.contains('active')) {
+                    closeLinkSuccessModal();
+                } else if (createModal?.classList.contains('active')) {
+                    closeCreateLinkModal();
+                }
+            }
+        });
+    });
 </script>
 {% endblock %}

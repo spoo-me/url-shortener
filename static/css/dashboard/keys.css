@@ -1,5 +1,45 @@
 /* API Keys Page Specific Styles */
 
+/* Page Header */
+.page-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.page-header-text {
+    flex: 1;
+}
+
+.page-header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.page-header-actions .btn {
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+}
+
+.page-header-actions .btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+    text-decoration: none;
+}
+
 /* Keys Container */
 .keys-container {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
@@ -211,7 +251,7 @@
     background: rgba(124, 58, 237, 0.1);
     color: var(--accent-primary);
     border-radius: 4px;
-    font-size: 10px;
+    font-size: 12px;
     font-family: 'Monaco', 'Courier New', monospace;
     border: 1px solid rgba(124, 58, 237, 0.2);
 }
@@ -603,6 +643,16 @@
 }
 
 @media (max-width: 768px) {
+    .page-header-content {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .page-header-actions {
+        justify-content: center;
+        width: 100%;
+    }
+    
     .keys-toolbar {
         flex-direction: column;
         gap: 16px;
