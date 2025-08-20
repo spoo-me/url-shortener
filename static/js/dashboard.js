@@ -271,6 +271,9 @@
 
 	initSegments();
 
+	// Expose fetchData globally for other components to refresh the list
+	window.fetchData = fetchData;
+
 	// initial load
 	fetchData();
 })();

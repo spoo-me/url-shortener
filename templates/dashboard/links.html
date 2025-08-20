@@ -5,6 +5,7 @@
 {% block head_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/links.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/url-modal.css') }}?v=1">
+<script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <meta name="robots" content="noindex">
 {% endblock %}
 
@@ -262,7 +263,8 @@
                                     <label for="create-password">Password Protection (optional)</label>
                                     <input type="password" id="create-password" name="password"
                                         placeholder="Enter password" autocomplete="new-password">
-                                    <small class="field-hint">Require users to enter a password to access the link</small>
+                                    <small class="field-hint">Require users to enter a password to access the
+                                        link</small>
                                 </div>
 
                                 <div class="field">
@@ -272,7 +274,8 @@
                                             <span class="checkbox-indicator"></span>
                                             <div class="checkbox-content">
                                                 <span class="checkbox-title">Private Statistics</span>
-                                                <small class="checkbox-desc">Hide click statistics from public view</small>
+                                                <small class="checkbox-desc">Hide click statistics from public
+                                                    view</small>
                                             </div>
                                         </label>
                                     </div>
@@ -303,7 +306,8 @@
                                             <span class="checkbox-indicator"></span>
                                             <div class="checkbox-content">
                                                 <span class="checkbox-title">Block Bots</span>
-                                                <small class="checkbox-desc">Prevent automated bot traffic from accessing this link</small>
+                                                <small class="checkbox-desc">Prevent automated bot traffic from
+                                                    accessing this link</small>
                                             </div>
                                         </label>
                                     </div>
@@ -342,15 +346,19 @@
                         <p class="modal-subtitle">Your shortened link is ready to use</p>
                     </div>
                 </div>
+                <button class="modal-close" type="button" aria-label="Close modal" onclick="closeLinkSuccessModal()">
+                    <i class="ti ti-x"></i>
+                </button>
             </div>
 
             <div class="modal-body">
                 <div class="success-content">
                     <div class="link-display">
                         <div class="field">
-                            <label>Your shortened link:</label>
+                            <label>Your shortened link</label>
                             <div class="link-result">
-                                <input id="created-link-input" class="link-input" type="text" readonly value="" aria-label="Created short link">
+                                <input id="created-link-input" class="link-input" type="text" readonly value=""
+                                    aria-label="Created short link">
                                 <button class="copy-btn" id="btn-copy-created-link" type="button">
                                     <i class="ti ti-copy"></i>
                                 </button>
@@ -359,13 +367,16 @@
                     </div>
 
                     <div class="qr-block">
-                        <img id="created-link-qr" class="qr-image" src="" alt="QR code for the short link" loading="lazy">
-                        <button class="btn btn-ghost btn-sm" id="btn-download-qr" type="button">
-                            <i class="ti ti-download"></i>
-                            <span>Download QR</span>
-                        </button>
+                        <div class="qr-container" id="qr-container">
+                            <img id="created-link-qr" class="qr-image" src="" alt="QR code for the short link"
+                                loading="lazy">
+                            <div id="qr-overlay" class="qr-overlay">
+                                <i class="ti ti-download"></i>
+                                <span>Download</span>
+                            </div>
+                        </div>
                     </div>
-                    
+
                     <div class="link-actions">
                         <a id="created-link-visit" href="" target="_blank" rel="noopener" class="btn btn-ghost">
                             <i class="ti ti-external-link"></i>
@@ -377,12 +388,6 @@
                         </button>
                     </div>
                 </div>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="closeLinkSuccessModal()">
-                    <span>Done</span>
-                </button>
             </div>
         </div>
     </div>
@@ -647,14 +652,18 @@
         });
     }
 
+    // Global confetti management
+    window.confettiAnimationId = null;
+    window.confettiActive = false;
+
     // Create Link Modal Functions
     function openCreateLinkModal() {
         const modal = document.getElementById('create-link-modal');
-        
+
         if (modal) {
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
-            
+
             // Focus on the first input
             setTimeout(() => {
                 const firstInput = modal.querySelector('#create-long-url');
@@ -668,17 +677,17 @@
         if (modal) {
             modal.classList.remove('active');
             document.body.style.overflow = '';
-            
+
             // Reset form
             const form = document.getElementById('create-link-form');
             if (form) form.reset();
-            
+
             // Clear any error states
             const errorFields = modal.querySelectorAll('.error');
             errorFields.forEach(field => field.classList.remove('error'));
             const errorMessages = modal.querySelectorAll('.field-error');
             errorMessages.forEach(msg => msg.remove());
-            
+
             // Reset to first tab
             const tabs = modal.querySelectorAll('.tab');
             const contents = modal.querySelectorAll('.tab-content');
@@ -696,17 +705,136 @@
         const input = document.getElementById('created-link-input');
         const visitLink = document.getElementById('created-link-visit');
         const qrImg = document.getElementById('created-link-qr');
-        
+
         if (modal && input && visitLink) {
             input.value = shortUrl;
             visitLink.href = shortUrl;
+
+            // Show loading state for QR code
             if (qrImg) {
-                const enc = encodeURIComponent(shortUrl);
-                qrImg.src = `https://qr.spoo.me/gradient?text=${enc}&width=280&height=280&gradient1=1d1919&gradient2=322c29`;
+                qrImg.src = "";
+                qrImg.style.animation = "qr-loading 1.5s infinite";
+
+                // Load QR code with delay to show loading animation
+                setTimeout(() => {
+                    const enc = encodeURIComponent(shortUrl);
+                    qrImg.src = `https://qr.spoo.me/gradient?text=${enc}&width=280&height=280&gradient1=1d1919&gradient2=322c29`;
+
+                    // Set up QR code interactions when loaded
+                    qrImg.onload = function () {
+                        qrImg.style.animation = "none";
+                        setupQRCodeInteractions();
+                    };
+                }, 800);
             }
-            
+
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
+
+            // Auto-copy the URL to clipboard
+            setTimeout(() => {
+                try {
+                    navigator.clipboard.writeText(shortUrl).then(() => {
+                        if (typeof showNotification === 'function') {
+                            showNotification('Link automatically copied to clipboard!', 'success');
+                        }
+                        // Update the copy button to show copied state
+                        const copyBtn = document.getElementById('btn-copy-created-link');
+                        const icon = copyBtn?.querySelector('i');
+                        if (copyBtn) {
+                            copyBtn.classList.add('copied');
+                            if (icon) {
+                                icon.className = 'ti ti-check';
+                            }
+                            setTimeout(() => {
+                                copyBtn.classList.remove('copied');
+                                if (icon) {
+                                    icon.className = 'ti ti-copy';
+                                }
+                            }, 2000);
+                        }
+                    }).catch(() => {
+                        // Fallback for older browsers
+                        input.select();
+                        input.setSelectionRange(0, 99999);
+                        document.execCommand('copy');
+                        if (typeof showNotification === 'function') {
+                            showNotification('Link automatically copied to clipboard!', 'success');
+                        }
+                        // Update the copy button to show copied state
+                        const copyBtn = document.getElementById('btn-copy-created-link');
+                        const icon = copyBtn?.querySelector('i');
+                        if (copyBtn) {
+                            copyBtn.classList.add('copied');
+                            if (icon) {
+                                icon.className = 'ti ti-check';
+                            }
+                            setTimeout(() => {
+                                copyBtn.classList.remove('copied');
+                                if (icon) {
+                                    icon.className = 'ti ti-copy';
+                                }
+                            }, 2000);
+                        }
+                    });
+                } catch (err) {
+                    console.log('Auto-copy failed:', err);
+                }
+            }, 500);
+
+            // Trigger confetti effect
+            setTimeout(() => {
+                if (window.confetti && !window.confettiActive) {
+                    // Check for reduced motion preference
+                    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+                    if (!prefersReducedMotion) {
+                        window.confettiActive = true;
+
+                        // Launch confetti from multiple directions with higher z-index
+                        const duration = 3000;
+                        const end = Date.now() + duration;
+
+                        // Initial big burst
+                        confetti({
+                            particleCount: 100,
+                            spread: 70,
+                            origin: { y: 0.6 },
+                            colors: ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'],
+                            zIndex: 10000
+                        });
+
+                        // Continuous smaller bursts
+                        (function frame() {
+                            if (!window.confettiActive) return; // Stop if confetti was disabled
+
+                            confetti({
+                                particleCount: 3,
+                                angle: 60,
+                                spread: 55,
+                                origin: { x: 0, y: 0.7 },
+                                colors: ['#6366f1', '#8b5cf6', '#06b6d4'],
+                                zIndex: 10000
+                            });
+                            confetti({
+                                particleCount: 3,
+                                angle: 120,
+                                spread: 55,
+                                origin: { x: 1, y: 0.7 },
+                                colors: ['#6366f1', '#8b5cf6', '#06b6d4'],
+                                zIndex: 10000
+                            });
+
+                            if (Date.now() < end && window.confettiActive) {
+                                window.confettiAnimationId = requestAnimationFrame(frame);
+                            } else {
+                                window.confettiAnimationId = null;
+                                window.confettiActive = false;
+                            }
+                        }());
+                    }
+                }
+            }, 100);
         }
     }
 
@@ -715,9 +843,18 @@
         if (modal) {
             modal.classList.remove('active');
             document.body.style.overflow = '';
-            // Refresh list using current filters
-            if (typeof window.fetchData === 'function') {
-                window.fetchData();
+
+            // Stop confetti animation immediately
+            window.confettiActive = false;
+
+            if (window.confettiAnimationId) {
+                cancelAnimationFrame(window.confettiAnimationId);
+                window.confettiAnimationId = null;
+            }
+
+            // Clear all existing confetti
+            if (window.confetti && window.confetti.reset) {
+                confetti.reset();
             }
         }
     }
@@ -726,20 +863,43 @@
         try {
             const input = document.getElementById('created-link-input');
             const btn = document.getElementById('btn-copy-created-link');
+            const icon = btn?.querySelector('i');
+
             navigator.clipboard.writeText(input.value).then(() => {
                 btn?.classList.add('copied');
-                if (typeof showNotification === 'function') {
-                    showNotification('Link copied to clipboard!', 'success');
+                if (icon) {
+                    icon.className = 'ti ti-check';
                 }
-                setTimeout(() => btn?.classList.remove('copied'), 1200);
+                if (typeof showNotification === 'function') {
+                    showNotification('Link copied to clipboard again!', 'success');
+                }
+                setTimeout(() => {
+                    btn?.classList.remove('copied');
+                    if (icon) {
+                        icon.className = 'ti ti-copy';
+                    }
+                }, 1200);
             }).catch(() => {
                 input.select();
+                input.setSelectionRange(0, 99999);
                 document.execCommand('copy');
-                if (typeof showNotification === 'function') {
-                    showNotification('Link copied to clipboard!', 'success');
+                btn?.classList.add('copied');
+                if (icon) {
+                    icon.className = 'ti ti-check';
                 }
+                if (typeof showNotification === 'function') {
+                    showNotification('Link copied to clipboard again!', 'success');
+                }
+                setTimeout(() => {
+                    btn?.classList.remove('copied');
+                    if (icon) {
+                        icon.className = 'ti ti-copy';
+                    }
+                }, 1200);
             });
-        } catch (_) {}
+        } catch (_) {
+            console.log('Copy failed');
+        }
     }
 
     function createAnotherLink() {
@@ -747,102 +907,161 @@
         openCreateLinkModal();
     }
 
+    // QR Code interaction setup (similar to result.html)
+    function setupQRCodeInteractions() {
+        const qrContainer = document.getElementById('qr-container');
+        const qrOverlay = document.getElementById('qr-overlay');
+
+        if (qrContainer && qrOverlay) {
+            qrContainer.style.cursor = "pointer";
+
+            qrContainer.addEventListener("mouseenter", function () {
+                qrOverlay.style.opacity = "1";
+                qrOverlay.style.visibility = "visible";
+            });
+
+            qrContainer.addEventListener("mouseleave", function () {
+                qrOverlay.style.opacity = "0";
+                qrOverlay.style.visibility = "hidden";
+            });
+
+            qrContainer.addEventListener("click", function () {
+                downloadQRCodeFromModal();
+            });
+        }
+    }
+
+    // QR Code download function (similar to result.html)
+    function downloadQRCodeFromModal() {
+        const qrImg = document.getElementById("created-link-qr");
+        if (!qrImg || !qrImg.src) return;
+
+        const qrCodeSrc = qrImg.src;
+        const link = document.createElement("a");
+
+        const xhr = new XMLHttpRequest();
+        xhr.responseType = "blob";
+        xhr.onload = function () {
+            const reader = new FileReader();
+            reader.onloadend = function () {
+                link.href = reader.result;
+                link.download = "qrcode.png";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // Show success notification
+                if (typeof showNotification === 'function') {
+                    showNotification('QR code downloaded successfully!', 'success');
+                }
+            };
+            reader.readAsDataURL(xhr.response);
+        };
+        xhr.onerror = function () {
+            if (typeof showNotification === 'function') {
+                showNotification('Failed to download QR code', 'error');
+            }
+        };
+        xhr.open("GET", qrCodeSrc);
+        xhr.send();
+    }
+
     // Form Validation Functions
     function validateUrl(url) {
         if (!url) return { valid: false, message: 'URL is required' };
-        
+
         // Basic URL pattern check
         const urlPattern = /^https?:\/\/.+/i;
         if (!urlPattern.test(url)) {
             return { valid: false, message: 'URL must start with http:// or https://' };
         }
-        
+
         // Check if URL contains spoo.me (not allowed)
         if (url.toLowerCase().includes('spoo.me')) {
             return { valid: false, message: 'Cannot shorten spoo.me URLs' };
         }
-        
+
         return { valid: true, message: '' };
     }
 
     function validateAlias(alias) {
         if (!alias) return { valid: true, message: '' }; // Optional field
-        
+
         // Check pattern: alphanumeric, underscore, hyphen only
         const aliasPattern = /^[a-zA-Z0-9_-]+$/;
         if (!aliasPattern.test(alias)) {
             return { valid: false, message: 'Alias can only contain letters, numbers, underscores, and hyphens' };
         }
-        
+
         if (alias.length > 16) {
             return { valid: false, message: 'Alias cannot be longer than 16 characters' };
         }
-        
+
         return { valid: true, message: '' };
     }
 
     function validatePassword(password) {
         if (!password) return { valid: true, message: '' }; // Optional field
-        
+
         if (password.length < 8) {
             return { valid: false, message: 'Password must be at least 8 characters long' };
         }
-        
+
         if (!/[a-zA-Z]/.test(password)) {
             return { valid: false, message: 'Password must contain at least one letter' };
         }
-        
+
         if (!/\d/.test(password)) {
             return { valid: false, message: 'Password must contain at least one number' };
         }
-        
+
         if (!/[@.]/.test(password)) {
             return { valid: false, message: 'Password must contain @ or .' };
         }
-        
+
         if (/[@.]{2}/.test(password)) {
             return { valid: false, message: 'Password cannot have consecutive @ or . characters' };
         }
-        
+
         return { valid: true, message: '' };
     }
 
     function validateMaxClicks(maxClicks) {
         if (!maxClicks) return { valid: true, message: '' }; // Optional field
-        
+
         const clicks = parseInt(maxClicks);
         if (isNaN(clicks) || clicks <= 0) {
             return { valid: false, message: 'Max clicks must be a positive number' };
         }
-        
+
         return { valid: true, message: '' };
     }
 
     function validateExpireAfter(expireAfter) {
         if (!expireAfter) return { valid: true, message: '' }; // Optional field
-        
+
         const expireDate = new Date(expireAfter);
         const now = new Date();
-        
+
         if (expireDate <= now) {
             return { valid: false, message: 'Expiration date must be in the future' };
         }
-        
+
         return { valid: true, message: '' };
     }
 
     function showFieldError(fieldId, message) {
         const field = document.getElementById(fieldId);
         if (!field) return;
-        
+
         // Remove existing error
         const existingError = field.parentNode.querySelector('.field-error');
         if (existingError) existingError.remove();
-        
+
         if (message) {
             // Add error styling
             field.classList.add('error');
-            
+
             // Add error message
             const errorEl = document.createElement('small');
             errorEl.className = 'field-error';
@@ -856,67 +1075,67 @@
 
     function validateForm() {
         let isValid = true;
-        
+
         // Get form values
         const longUrl = document.getElementById('create-long-url').value.trim();
         const alias = document.getElementById('create-alias').value.trim();
         const password = document.getElementById('create-password').value;
         const maxClicks = document.getElementById('create-max-clicks').value;
         const expireAfter = document.getElementById('create-expire-after').value;
-        
+
         // Validate each field
         const urlValidation = validateUrl(longUrl);
         const aliasValidation = validateAlias(alias);
         const passwordValidation = validatePassword(password);
         const maxClicksValidation = validateMaxClicks(maxClicks);
         const expireAfterValidation = validateExpireAfter(expireAfter);
-        
+
         // Show errors
         showFieldError('create-long-url', urlValidation.valid ? '' : urlValidation.message);
         showFieldError('create-alias', aliasValidation.valid ? '' : aliasValidation.message);
         showFieldError('create-password', passwordValidation.valid ? '' : passwordValidation.message);
         showFieldError('create-max-clicks', maxClicksValidation.valid ? '' : maxClicksValidation.message);
         showFieldError('create-expire-after', expireAfterValidation.valid ? '' : expireAfterValidation.message);
-        
-        return urlValidation.valid && aliasValidation.valid && passwordValidation.valid && 
-               maxClicksValidation.valid && expireAfterValidation.valid;
+
+        return urlValidation.valid && aliasValidation.valid && passwordValidation.valid &&
+            maxClicksValidation.valid && expireAfterValidation.valid;
     }
 
     // Form Submission
     async function submitCreateForm(event) {
         event.preventDefault();
-        
+
         if (!validateForm()) {
             return;
         }
-        
+
         const submitBtn = document.getElementById('btn-create-submit');
         const originalText = submitBtn.innerHTML;
-        
+
         // Show loading state
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="ti ti-loader-2 spinning"></i><span>Creating...</span>';
-        
+
         try {
             // Prepare form data
             const formData = {
                 long_url: document.getElementById('create-long-url').value.trim(),
                 alias: document.getElementById('create-alias').value.trim() || undefined,
                 password: document.getElementById('create-password').value || undefined,
-                max_clicks: document.getElementById('create-max-clicks').value ? 
+                max_clicks: document.getElementById('create-max-clicks').value ?
                     parseInt(document.getElementById('create-max-clicks').value) : undefined,
                 expire_after: document.getElementById('create-expire-after').value || undefined,
                 block_bots: document.getElementById('create-block-bots').checked,
                 private_stats: document.getElementById('create-private-stats').checked
             };
-            
+
             // Remove undefined values
             Object.keys(formData).forEach(key => {
                 if (formData[key] === undefined) {
                     delete formData[key];
                 }
             });
-            
+
             // Submit to API
             const response = await authFetch('/api/v1/shorten', {
                 method: 'POST',
@@ -925,19 +1144,21 @@
                 },
                 body: JSON.stringify(formData)
             });
-            
+
             const result = await response.json();
-            
+
             if (response.ok) {
                 // Success - close create modal and show success modal
                 closeCreateLinkModal();
                 openLinkSuccessModal(result.short_url, result);
-                
-                // Refresh the links list if it exists
-                if (typeof refreshLinksList === 'function') {
-                    refreshLinksList();
+
+                // Refresh the links list to show the new URL
+                if (typeof window.fetchData === 'function') {
+                    setTimeout(() => {
+                        window.fetchData();
+                    }, 500); // Small delay to ensure any confetti animation doesn't interfere
                 }
-                
+
                 // Show success notification
                 if (typeof showNotification === 'function') {
                     showNotification('Link created successfully!', 'success');
@@ -946,7 +1167,7 @@
                 // Handle API errors
                 handleApiError(result);
             }
-            
+
         } catch (error) {
             console.error('Error creating link:', error);
             if (typeof showNotification === 'function') {
@@ -970,17 +1191,17 @@
                 'max_clicks': 'create-max-clicks',
                 'expire_after': 'create-expire-after'
             };
-            
+
             const fieldId = fieldMap[result.field];
             if (fieldId) {
                 showFieldError(fieldId, result.error);
                 return;
             }
         }
-        
+
         // Handle general errors
         let errorMessage = result.error || 'An error occurred while creating the link';
-        
+
         // Customize common error messages
         if (errorMessage.includes('Alias already exists')) {
             showFieldError('create-alias', 'This alias is already taken. Please choose another.');
@@ -991,7 +1212,7 @@
         } else if (errorMessage.includes('ratelimit exceeded')) {
             errorMessage = 'You are creating links too quickly. Please wait a moment and try again.';
         }
-        
+
         // Show general notification
         if (typeof showNotification === 'function') {
             showNotification(errorMessage, 'error');
@@ -999,11 +1220,11 @@
     }
 
     // Event Listeners
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Create Link button
         const createBtn = document.getElementById('btn-create-link');
         if (createBtn) {
-            createBtn.addEventListener('click', function(e) {
+            createBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 openCreateLinkModal();
             });
@@ -1026,7 +1247,7 @@
         inputs.forEach(inputId => {
             const input = document.getElementById(inputId);
             if (input) {
-                input.addEventListener('blur', function() {
+                input.addEventListener('blur', function () {
                     // Clear previous errors when user starts typing
                     showFieldError(inputId, '');
                 });
@@ -1036,7 +1257,7 @@
         // Close modal on backdrop click
         const modal = document.getElementById('create-link-modal');
         if (modal) {
-            modal.addEventListener('click', function(e) {
+            modal.addEventListener('click', function (e) {
                 if (e.target === modal || e.target.classList.contains('modal-backdrop')) {
                     closeCreateLinkModal();
                 }
@@ -1052,25 +1273,25 @@
         // Tab switching for create modal
         const createTabs = document.querySelectorAll('#create-link-modal .tab');
         createTabs.forEach(tab => {
-            tab.addEventListener('click', function() {
+            tab.addEventListener('click', function () {
                 const targetTab = this.dataset.tab;
                 const modal = document.getElementById('create-link-modal');
-                
+
                 // Update tab states
                 modal.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 modal.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                
+
                 this.classList.add('active');
                 modal.querySelector(`[data-tab="${targetTab}"].tab-content`).classList.add('active');
             });
         });
 
         // ESC key to close modals
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 const createModal = document.getElementById('create-link-modal');
                 const successModal = document.getElementById('link-success-modal');
-                
+
                 if (successModal?.classList.contains('active')) {
                     closeLinkSuccessModal();
                 } else if (createModal?.classList.contains('active')) {
@@ -1079,31 +1300,19 @@
             }
         });
 
-        // Success modal actions: copy and download QR
+        // Close modal on backdrop click for success modal
+        const successModal = document.getElementById('link-success-modal');
+        if (successModal) {
+            successModal.addEventListener('click', function (e) {
+                if (e.target === successModal || e.target.classList.contains('modal-backdrop')) {
+                    closeLinkSuccessModal();
+                }
+            });
+        }
+
+        // Success modal actions: copy (download now handled by QR hover overlay)
         const copyBtn = document.getElementById('btn-copy-created-link');
         copyBtn?.addEventListener('click', copyCreatedLinkToClipboard);
-        const downloadBtn = document.getElementById('btn-download-qr');
-        downloadBtn?.addEventListener('click', function() {
-            const img = document.getElementById('created-link-qr');
-            if (!img?.src) return;
-            fetch(img.src)
-                .then(r => r.blob())
-                .then(blob => {
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'qrcode.png';
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    URL.revokeObjectURL(url);
-                })
-                .catch(() => {
-                    if (typeof showNotification === 'function') {
-                        showNotification('Failed to download QR code', 'error');
-                    }
-                });
-        });
     });
 </script>
 {% endblock %}

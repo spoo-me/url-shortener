@@ -40,20 +40,61 @@
     text-decoration: none;
 }
 
+/* Success Modal Close Button */
+#link-success-modal .modal-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+#link-success-modal .modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    transform: scale(1.1);
+}
+
 /* Success Modal Styles */
 .success-content {
     text-align: center;
+    padding: 8px 0;
+}
+
+/* Specific spacing for success modal body */
+#link-success-modal .modal-body {
+    padding: 28px 32px 32px;
 }
 
 .link-display {
-    margin-bottom: 16px;
+    margin-bottom: 28px;
+}
+
+.link-display .field {
+    margin-bottom: 8px;
+}
+
+.link-display label {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
 }
 
 .link-result {
     display: flex;
     align-items: stretch;
     gap: 0;
-    margin-top: 8px;
+    margin-top: 12px;
 }
 
 .link-input {
@@ -79,26 +120,140 @@
 .link-actions {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    margin-bottom: 20px;
+    gap: 16px;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Action buttons styling */
+.link-actions .btn {
+    min-width: 120px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.link-actions .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.link-actions .btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.link-actions .btn i {
+    font-size: 16px;
+    transition: transform 0.2s ease;
+}
+
+.link-actions .btn:hover i {
+    transform: scale(1.1);
 }
 
 /* QR block inside success modal */
 .qr-block {
-    margin: 12px auto 16px;
+    margin: 20px auto 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 16px;
+}
+
+.qr-container {
+    position: relative;
+    display: inline-block;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.qr-container:hover {
+    transform: scale(1.02);
 }
 
 .qr-image {
-    width: 140px;
-    height: 140px;
-    border-radius: 10px;
+    width: 150px;
+    height: 150px;
+    border-radius: 12px;
     background: rgba(255,255,255,0.04);
     border: 1px solid var(--border-color);
     padding: 8px;
+    display: block;
+    transition: opacity 0.2s ease;
+}
+
+/* QR loading animation */
+.qr-image:not([src*="qr.spoo.me"]) {
+    animation: qr-loading 1.5s infinite;
+}
+
+@keyframes qr-loading {
+    0% {
+        background: rgba(255, 255, 255, 0.04);
+    }
+    50% {
+        background: rgba(255, 255, 255, 0.08);
+    }
+    100% {
+        background: rgba(255, 255, 255, 0.04);
+    }
+}
+
+/* QR overlay */
+.qr-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    border-radius: 12px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.qr-overlay i {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.qr-container:hover .qr-overlay {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Remove old download button styles */
+.qr-block .btn {
+    display: none;
 }
 
 .link-result .copy-btn {
@@ -136,6 +291,8 @@
     background: rgba(34, 197, 94, 0.12);
     border-color: rgba(34, 197, 94, 0.35);
     color: #22c55e;
+    transform: scale(1.05);
+    transition: all 0.2s ease;
 }
 
 .modal-icon {
@@ -858,12 +1015,12 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
         flex-direction: column;
         gap: 16px;
     }
-    
+
     .page-header-actions {
         justify-content: center;
         width: 100%;
     }
-    
+
     .toolbar {
         flex-direction: column;
         align-items: stretch;
