@@ -209,11 +209,13 @@ def redirect_url(short_code):
     )
 
     if not success:
-        return jsonify({
-            "error_code": "500",
-            "error_message": "Internal server error",
-            "host_url": request.host_url,
-        }), 500
+        return jsonify(
+            {
+                "error_code": "500",
+                "error_message": "Internal server error",
+                "host_url": request.host_url,
+            }
+        ), 500
 
     return redirect(url)
 

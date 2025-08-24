@@ -3,6 +3,7 @@ from bson import ObjectId
 from typing import Optional
 
 from utils.mongo_utils import urls_v2_collection
+from cache import cache_query as cq
 
 from .base import BaseUrlRequestBuilder
 
@@ -153,6 +154,9 @@ class UpdateUrlRequestBuilder(BaseUrlRequestBuilder):
 
             if result.matched_count == 0:
                 return jsonify({"error": "URL not found"}), 404
+
+            # invalidate the cache for the URL; for consistent cache state
+            cq.invalidate_url_cache(short_code=self.existing_doc.get("alias"))
 
         except Exception:
             return jsonify({"error": "Database error"}), 500

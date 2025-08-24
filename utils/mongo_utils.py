@@ -312,10 +312,12 @@ def ensure_indexes():
         # v2 urls indexes
         urls_v2_collection.create_index([("alias", ASCENDING)], unique=True)
         urls_v2_collection.create_index([("owner_id", ASCENDING)])
-        urls_v2_collection.create_index([
-            ("owner_id", ASCENDING),
-            ("created_at", DESCENDING),
-        ])
+        urls_v2_collection.create_index(
+            [
+                ("owner_id", ASCENDING),
+                ("created_at", DESCENDING),
+            ]
+        )
         urls_v2_collection.create_index([("total_clicks", DESCENDING)])
         urls_v2_collection.create_index([("last_click", DESCENDING)])
 
@@ -334,10 +336,12 @@ def ensure_indexes():
             pass
 
         # clicks collection indexes (time-series)
-        clicks_collection.create_index([
-            ("meta.url_id", ASCENDING),
-            ("clicked_at", DESCENDING),
-        ])
+        clicks_collection.create_index(
+            [
+                ("meta.url_id", ASCENDING),
+                ("clicked_at", DESCENDING),
+            ]
+        )
         clicks_collection.create_index([("clicked_at", DESCENDING)])
 
         # api keys indexes

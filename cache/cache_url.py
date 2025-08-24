@@ -22,6 +22,7 @@ class UrlData:
 @dataclass
 class UrlCacheData:
     """New cache schema for both old and new URL schemas"""
+
     _id: str  # MongoDB ObjectId as string
     alias: str
     long_url: str
