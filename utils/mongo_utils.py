@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 import re
 from bson import ObjectId
+from utils.url_utils import validate_emoji_alias
 
 load_dotenv(override=True)
 
@@ -20,6 +21,7 @@ db = client["url-shortener"]
 
 urls_collection = db["urls"]
 urls_v2_collection = db["urlsV2"]
+clicks_collection = db["clicks"]
 blocked_urls_collection = db["blocked-urls"]
 emoji_urls_collection = db["emojis"]
 ip_bypasses = db["ip-exceptions"]
@@ -173,6 +175,91 @@ def check_if_v2_alias_exists(alias: str) -> bool:
         return False
 
 
+def update_url_v2_clicks(url_id, last_click_time=None, increment_clicks=1):
+    """Atomically update total_clicks and last_click for a URL V2 document"""
+    try:
+        from datetime import datetime, timezone
+
+        result = urls_v2_collection.update_one(
+            {"_id": url_id},
+            {
+                "$inc": {"total_clicks": increment_clicks},
+                "$set": {"last_click": last_click_time or datetime.now(timezone.utc)},
+            },
+        )
+        return result
+    except Exception:
+        return None
+
+
+def expire_url_if_max_clicks_reached(url_id, max_clicks):
+    """Conditionally expire URL if max_clicks is reached"""
+    try:
+        result = urls_v2_collection.update_one(
+            {"_id": ObjectId(url_id), "total_clicks": {"$gte": max_clicks}},
+            {"$set": {"status": "EXPIRED"}},
+        )
+        return result
+    except Exception:
+        return None
+
+
+def insert_click_data(click_data):
+    """Insert click data into the time-series clicks collection"""
+    try:
+        # Ensure proper time-series schema with meta field
+        if "meta" not in click_data:
+            print("[MongoDB] Warning: click_data missing 'meta' field")
+            return False
+
+        if "clicked_at" not in click_data:
+            print("[MongoDB] Warning: click_data missing 'clicked_at' field")
+            return False
+
+        clicks_collection.insert_one(click_data)
+        return True
+    except Exception as e:
+        print(f"[MongoDB] Error inserting click data: {e}")
+        return False
+
+
+def get_url_by_length_and_type(short_code):
+    """Determine URL schema based on length and fetch from appropriate collection"""
+    # First check if it's an emoji
+    if validate_emoji_alias(short_code):
+        return load_emoji_url(short_code), "emoji"
+
+    # Check length: 7 chars typically URLsV2, 6 chars typically old URLs
+    if len(short_code) == 7:
+        # Try URLsV2 first
+        url_data = get_url_v2_by_alias(short_code)
+        if url_data:
+            return url_data, "v2"
+        # Fallback to old schema
+        url_data = load_url(short_code)
+        if url_data:
+            return url_data, "v1"
+    elif len(short_code) == 6:
+        # Try old schema first
+        url_data = load_url(short_code)
+        if url_data:
+            return url_data, "v1"
+        # Fallback to URLsV2 (custom aliases)
+        url_data = get_url_v2_by_alias(short_code)
+        if url_data:
+            return url_data, "v2"
+    else:
+        # For other lengths, try both (custom aliases)
+        url_data = get_url_v2_by_alias(short_code)
+        if url_data:
+            return url_data, "v2"
+        url_data = load_url(short_code)
+        if url_data:
+            return url_data, "v1"
+
+    return None, None
+
+
 # ===== API Keys helpers =====
 
 
@@ -225,9 +312,34 @@ def ensure_indexes():
         # v2 urls indexes
         urls_v2_collection.create_index([("alias", ASCENDING)], unique=True)
         urls_v2_collection.create_index([("owner_id", ASCENDING)])
-        urls_v2_collection.create_index(
-            [("owner_id", ASCENDING), ("created_at", DESCENDING)]
-        )
+        urls_v2_collection.create_index([
+            ("owner_id", ASCENDING),
+            ("created_at", DESCENDING),
+        ])
+        urls_v2_collection.create_index([("total_clicks", DESCENDING)])
+        urls_v2_collection.create_index([("last_click", DESCENDING)])
+
+        # Create time-series collection for clicks if it doesn't exist
+        try:
+            db.create_collection(
+                "clicks",
+                timeseries={
+                    "timeField": "clicked_at",
+                    "metaField": "meta",
+                    "granularity": "seconds",
+                },
+            )
+        except Exception:
+            # Collection may already exist, that's fine
+            pass
+
+        # clicks collection indexes (time-series)
+        clicks_collection.create_index([
+            ("meta.url_id", ASCENDING),
+            ("clicked_at", DESCENDING),
+        ])
+        clicks_collection.create_index([("clicked_at", DESCENDING)])
+
         # api keys indexes
         api_keys_collection.create_index([("user_id", ASCENDING)])
         api_keys_collection.create_index([("token_hash", ASCENDING)], unique=True)

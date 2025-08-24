@@ -47,6 +47,8 @@ class ShortenRequestBuilder(BaseUrlRequestBuilder):
             "expire_after": self.expire_ts,
             "status": "ACTIVE",
             "private_stats": self.private_stats,
+            "total_clicks": 0,
+            "last_click": None,
         }
 
         try:

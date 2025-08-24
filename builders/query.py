@@ -31,7 +31,6 @@ class UrlListQueryBuilder:
             "max_clicks": 1,
             "private_stats": 1,
             "password": 1,
-            # Future fields (if present)
             "total_clicks": 1,
             "last_click": 1,
         }
