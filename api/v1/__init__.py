@@ -9,3 +9,4 @@ from . import shorten  # noqa: E402,F401
 from . import keys  # noqa: E402,F401
 from . import urls  # noqa: E402,F401
 from . import management  # noqa: E402,F401
+from . import stats  # noqa: E402,F401

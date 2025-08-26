@@ -260,6 +260,64 @@ def get_url_by_length_and_type(short_code):
     return None, None
 
 
+def get_url_v2_by_id(url_id, projection=None):
+    """Get a URL V2 document by its MongoDB ObjectId"""
+    try:
+        from bson import ObjectId
+
+        if isinstance(url_id, str):
+            url_id = ObjectId(url_id)
+        return urls_v2_collection.find_one({"_id": url_id}, projection)
+    except Exception:
+        return None
+
+
+def validate_url_ownership(url_id, owner_id):
+    """Validate that a URL belongs to the specified owner"""
+    try:
+        from bson import ObjectId
+
+        if isinstance(url_id, str):
+            url_id = ObjectId(url_id)
+        if isinstance(owner_id, str):
+            owner_id = ObjectId(owner_id)
+
+        url_doc = urls_v2_collection.find_one(
+            {"_id": url_id, "owner_id": owner_id}, {"_id": 1}
+        )
+        return url_doc is not None
+    except Exception:
+        return False
+
+
+def check_url_stats_privacy(short_code):
+    """Check if a URL's statistics are private or public
+
+    Returns:
+        dict: {"private": bool, "owner_id": str|None, "exists": bool}
+    """
+    try:
+        # First try V2 URLs (new schema)
+        url_doc = get_url_v2_by_alias(short_code, {"private_stats": 1, "owner_id": 1})
+        if url_doc:
+            private_stats = url_doc.get(
+                "private_stats", True
+            )  # Default to private if not set
+            owner_id = str(url_doc.get("owner_id")) if url_doc.get("owner_id") else None
+            return {"private": private_stats, "owner_id": owner_id, "exists": True}
+
+        # Fallback to V1 URLs (old schema) - these don't have private_stats field
+        # so they are considered public by default for backward compatibility
+        url_doc = load_url(short_code)
+        if url_doc:
+            return {"private": False, "owner_id": None, "exists": True}
+
+        # URL doesn't exist
+        return {"private": False, "owner_id": None, "exists": False}
+    except Exception:
+        return {"private": True, "owner_id": None, "exists": False}  # Fail safe
+
+
 # ===== API Keys helpers =====
 
 

@@ -9,10 +9,12 @@ from .base import BaseUrlRequestBuilder
 from .create import ShortenRequestBuilder
 from .update import UpdateUrlRequestBuilder
 from .query import UrlListQueryBuilder
+from .stats import StatsQueryBuilder
 
 __all__ = [
     "BaseUrlRequestBuilder",
     "ShortenRequestBuilder",
     "UpdateUrlRequestBuilder",
     "UrlListQueryBuilder",
+    "StatsQueryBuilder",
 ]
