@@ -567,8 +567,6 @@ class StatisticsDashboard {
         const countryChartContainer = document.getElementById('countryChart');
         countryChartContainer.innerHTML = ''; // Clear previous map
 
-        document.getElementById('country-container').style.padding = "5px";
-
         // Extract country data from metrics
         const clicksByCountry = data.metrics?.clicks_by_country || [];
         const uniqueClicksByCountry = data.metrics?.unique_clicks_by_country || [];
@@ -616,7 +614,7 @@ class StatisticsDashboard {
 
         var grids = map.grids();
         grids.enabled(true);
-        grids.stroke("#ffffff", 0.3, "5 2", "round");
+        grids.stroke("rgba(255, 255, 255, 0.1)", 0.5, "10 2", "round");
 
         var marker = map.colorRange().marker();
         marker.size(7);
