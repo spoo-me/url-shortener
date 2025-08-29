@@ -1,125 +1,209 @@
 {% extends "dashboard/base.html" %}
 
-{% block title %}Statistics | Dashboard | spoo.me{% endblock %}
+{% block title %}Statistics Dashboard{% endblock %}
 
 {% block head_css %}
-<style>
-    .placeholder-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 400px;
-        text-align: center;
-    }
-    
-    .placeholder-icon {
-        width: 120px;
-        height: 120px;
-        margin-bottom: 24px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(37, 99, 235, 0.1));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--accent-primary);
-    }
-    
-    .placeholder-icon i {
-        font-size: 48px;
-    }
-    
-    .placeholder-title {
-        font-size: 24px;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 12px;
-    }
-    
-    .placeholder-text {
-        font-size: 16px;
-        color: var(--text-secondary);
-        max-width: 500px;
-        line-height: 1.6;
-    }
-    
-    .stats-preview {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-        margin-top: 32px;
-    }
-    
-    .stat-card {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        padding: 20px;
-        text-align: left;
-    }
-    
-    .stat-label {
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-secondary);
-        margin-bottom: 8px;
-    }
-    
-    .stat-value {
-        font-size: 28px;
-        font-weight: 700;
-        color: var(--text-primary);
-    }
-    
-    .stat-change {
-        font-size: 14px;
-        color: #22c55e;
-        margin-top: 4px;
-    }
-</style>
-<meta name="robots" content="noindex">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/statistics.css') }}">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/spoo-me/url-shortener/static/css/anychart-ui.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.anychart.com/releases/8.12.1/fonts/css/anychart-font.min.css" />
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1 class="page-title">Statistics</h1>
-    <p class="page-subtitle">Comprehensive analytics and insights for your shortened links.</p>
-</div>
-
-<div class="surface">
-    <div class="placeholder-container">
-        <div class="placeholder-icon">
-            <i class="ti ti-chart-bar"></i>
-        </div>
-        <h2 class="placeholder-title">Statistics Dashboard Coming Soon</h2>
-        <p class="placeholder-text">
-            We're working on bringing you detailed analytics including click patterns, geographic distribution, 
-            device types, referrers, and more. Stay tuned for powerful insights into your link performance.
-        </p>
-        
-        <div class="stats-preview">
-            <div class="stat-card">
-                <div class="stat-label">Total Clicks</div>
-                <div class="stat-value">--</div>
-                <div class="stat-change">↑ --%</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Active Links</div>
-                <div class="stat-value">--</div>
-                <div class="stat-change">↑ --%</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Avg. CTR</div>
-                <div class="stat-value">--%</div>
-                <div class="stat-change">↑ --%</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Top Country</div>
-                <div class="stat-value">--</div>
-                <div class="stat-change">-- clicks</div>
+<div class="statistics-dashboard">
+    
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1 class="page-title">Analytics Overview</h1>
+            <div class="header-actions">
+                <select id="timeRange" class="time-selector">
+                    <option value="7d" selected>Last 7 Days</option>
+                    <option value="30d">Last 30 Days</option>
+                    <option value="90d">Last 90 Days</option>
+                    <option value="1y">Last Year</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+                <button id="refreshBtn" class="refresh-btn" title="Refresh Data">
+                    <i class="ti ti-refresh"></i>
+                </button>
             </div>
         </div>
     </div>
+
+    <!-- Main Stats Row -->
+    <div class="main-stats-container">
+        <div class="clicks-counter-section">
+            <h2>Clicks Over Time</h2>
+            <div class="chart-container">
+                <canvas id="timeSeriesChart"></canvas>
+                <pre class="counterJsonPre" style="padding: 0.318em;"><code id="counterJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+            </div>
+            <div class="chart-controls">
+                <select id="counterDataOption" onchange="updateTimeSeriesChart()" title="Counter Data Option">
+                    <option value="total">Total Clicks</option>
+                    <option value="unique">Unique Clicks</option>
+                    <option value="compare" selected>Compare Both</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="summary-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalClicks">0</div>
+                <div class="stat-label">Total Clicks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="uniqueClicks">0</div>
+                <div class="stat-label">Unique Visitors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="clickRate">0%</div>
+                <div class="stat-label">Unique Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="activeUrls">0</div>
+                <div class="stat-label">Active URLs</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Container - Row 1: Short URLs and Devices -->
+    <div class="charts-container">
+        <div class="chart-section key-data">
+            <h2>Short URLs</h2>
+            <div class="chart-container">
+                <canvas id="keyChart"></canvas>
+                <pre class="keyJsonPre" style="padding: 0.318em; display: none;"><code id="keyJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+            </div>
+            <div class="chart-controls">
+                <select id="keyDataOption" onchange="updateKeyChart()" title="Key Data Option">
+                    <option value="total" selected>Total Clicks</option>
+                    <option value="unique">Unique Clicks</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="chart-section device-data">
+            <h2>Devices</h2>
+            <div class="chart-container">
+                <canvas id="deviceChart"></canvas>
+                <pre class="deviceJsonPre" style="padding: 0.318em; display: none;"><code id="deviceJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+            </div>
+            <div class="chart-controls">
+                <select id="deviceDataOption" onchange="updateDeviceChart()" title="Device Data Option">
+                    <option value="total">Total Clicks</option>
+                    <option value="unique">Unique Clicks</option>
+                    <option value="compare" selected>Total vs Unique</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Container - Row 2: Browsers and Platforms -->
+    <div class="charts-container">
+        <div class="chart-section browsers-data">
+            <h2>Browsers</h2>
+            <div class="chart-container">
+                <canvas id="browserChart"></canvas>
+                <pre class="browserJsonPre" style="padding: 0.318em; display: none;"><code id="browserJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+            </div>
+            <div class="chart-controls">
+                <select id="browserDataOption" onchange="updateBrowserChart()" title="Browser Data Option">
+                    <option value="total">Total Clicks</option>
+                    <option value="unique">Unique Clicks</option>
+                    <option value="compare" selected>Total vs Unique</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="chart-section os-data">
+            <h2>Platforms</h2>
+            <div class="chart-container">
+                <canvas id="osChart"></canvas>
+                <pre class="osJsonPre" style="padding: 0.318em; display: none;"><code id="osJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+            </div>
+            <div class="chart-controls">
+                <select id="osDataOption" onchange="updateOsChart()" title="OS Data Option">
+                    <option value="total">Total Clicks</option>
+                    <option value="unique">Unique Clicks</option>
+                    <option value="compare" selected>Total vs Unique</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Container - Row 3: Referrers and Countries -->
+    <div class="charts-container">
+        <div class="chart-section referrer-data">
+            <h2>Referrers</h2>
+            <div class="chart-container">
+                <canvas id="referrerChart"></canvas>
+                <pre class="referrerJsonPre" style="padding: 0.318em; display: none;"><code id="referrerJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+            </div>
+            <div class="chart-controls">
+                <select id="referrerDataOption" onchange="updateReferrerChart()" title="Referrer Data Option">
+                    <option value="total">Total Clicks</option>
+                    <option value="unique">Unique Clicks</option>
+                    <option value="compare" selected>Total vs Unique</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="chart-section country-data">
+            <h2>Countries</h2>
+            <div class="chart-container" id="country-container">
+                <div id="countryChart"></div>
+                <pre class="countryJsonPre" style="padding: 0.318em; display: none;"><code id="countryJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
+            </div>
+            <div class="chart-controls">
+                <select id="countryDataOption" onchange="updateCountryChart()" title="Country Data Option">
+                    <option value="total" selected>Total Clicks</option>
+                    <option value="unique">Unique Clicks</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Date Range Modal -->
+    <div id="dateRangeModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Custom Date Range</h3>
+                <button class="modal-close" id="closeModal">
+                    <i class="ti ti-x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="date-inputs">
+                    <div class="input-group">
+                        <label for="startDate">Start Date</label>
+                        <input type="date" id="startDate" class="date-input">
+                    </div>
+                    <div class="input-group">
+                        <label for="endDate">End Date</label>
+                        <input type="date" id="endDate" class="date-input">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" id="cancelRange">Cancel</button>
+                    <button class="btn-primary" id="applyRange">Apply Range</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
+{% endblock %}
+
+
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-core.min.js"></script>
+<script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-map.min.js"></script>
+<script src="https://cdn.anychart.com/releases/8.12.1/geodata/custom/world/world.js"></script>
+<script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-data-adapter.min.js"></script>
+<script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-exports.min.js"></script>
+<script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-ui.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard/statistics.js') }}?v=2"></script>
 {% endblock %}
