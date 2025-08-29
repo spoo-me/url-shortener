@@ -2,76 +2,133 @@
 class StatisticsDashboard {
     constructor() {
         this.charts = new Map();
-        this.currentTimeRange = '7d';
+        this.currentTimeRange = null;
         this.startDate = null;
         this.endDate = null;
         this.refreshInterval = null;
         this.apiData = null;
+        this.dateRangePicker = null;
 
         this.init();
     }
 
     init() {
+        this.setupDateRangePicker();
         this.setupEventListeners();
         this.loadDashboardData();
         this.setupAutoRefresh();
     }
 
-    setupEventListeners() {
-        // Time range selector
-        document.getElementById('timeRange').addEventListener('change', (e) => {
-            this.currentTimeRange = e.target.value;
-            if (e.target.value === 'custom') {
-                this.showDateRangeModal();
-            } else {
-                this.startDate = null;
-                this.endDate = null;
-                this.loadDashboardData();
-            }
+    setupDateRangePicker() {
+        this.dateRangePicker = new DateRangePicker({
+            container: 'dateRangeContainer',
+            onRangeChange: (dateRange) => {
+                this.handleDateRangeChange(dateRange);
+            },
+            defaultRange: 'last-7-days'
         });
+    }
 
+    handleDateRangeChange(dateRange) {
+        console.log('Date range changed:', dateRange);
+
+        // Convert the date range to API parameters
+        this.startDate = dateRange.start;
+        this.endDate = dateRange.end;
+        this.currentTimeRange = dateRange.range;
+
+        // Reload dashboard data with new range
+        this.loadDashboardData();
+    }
+
+    setupEventListeners() {
         // Refresh button
         document.getElementById('refreshBtn').addEventListener('click', () => {
             this.loadDashboardData();
         });
 
-        // Modal events
-        document.getElementById('closeModal').addEventListener('click', () => {
-            this.hideDateRangeModal();
+        // Cascade button controls
+        this.setupCascadeControls();
+    }
+
+    setupCascadeControls() {
+        // Handle cascade button clicks
+        document.querySelectorAll('.cascade-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const dropdown = btn.nextElementSibling;
+                
+                // Close other dropdowns
+                document.querySelectorAll('.cascade-dropdown').forEach(dd => {
+                    if (dd !== dropdown) dd.classList.remove('show');
+                });
+                
+                // Toggle current dropdown
+                dropdown.classList.toggle('show');
+            });
         });
 
-        document.getElementById('cancelRange').addEventListener('click', () => {
-            this.hideDateRangeModal();
-            document.getElementById('timeRange').value = '7d';
-            this.currentTimeRange = '7d';
+        // Handle cascade option selection
+        document.querySelectorAll('.cascade-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                const value = option.dataset.value;
+                const cascadeSelect = option.closest('.cascade-select');
+                const chartType = cascadeSelect.dataset.chart;
+                
+                // Update active states
+                cascadeSelect.querySelectorAll('.cascade-option').forEach(opt => {
+                    opt.classList.remove('active');
+                });
+                option.classList.add('active');
+                
+                // Update main button
+                const mainBtn = cascadeSelect.querySelector('.cascade-btn');
+                mainBtn.dataset.value = value;
+                mainBtn.querySelector('i').className = option.querySelector('i').className;
+                mainBtn.title = option.querySelector('span').textContent;
+                
+                // Close dropdown
+                cascadeSelect.querySelector('.cascade-dropdown').classList.remove('show');
+                
+                // Update chart
+                this.updateChartByType(chartType, value);
+            });
         });
 
-        document.getElementById('applyRange').addEventListener('click', () => {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-
-            if (startDate && endDate) {
-                this.startDate = startDate;
-                this.endDate = endDate;
-                this.hideDateRangeModal();
-                this.loadDashboardData();
-            }
-        });
-
-        // Close modal on backdrop click
-        document.getElementById('dateRangeModal').addEventListener('click', (e) => {
-            if (e.target.id === 'dateRangeModal') {
-                this.hideDateRangeModal();
-            }
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.cascade-dropdown').forEach(dropdown => {
+                dropdown.classList.remove('show');
+            });
         });
     }
 
-    showDateRangeModal() {
-        document.getElementById('dateRangeModal').style.display = 'flex';
-    }
-
-    hideDateRangeModal() {
-        document.getElementById('dateRangeModal').style.display = 'none';
+    updateChartByType(chartType, value) {
+        if (!this.apiData) return;
+        
+        switch(chartType) {
+            case 'timeSeriesChart':
+                this.updateTimeSeriesChart(this.apiData, value);
+                break;
+            case 'keyChart':
+                this.updateKeyChart(this.apiData, value);
+                break;
+            case 'deviceChart':
+                this.updateDeviceChart(this.apiData, value);
+                break;
+            case 'browserChart':
+                this.updateBrowserChart(this.apiData, value);
+                break;
+            case 'osChart':
+                this.updateOsChart(this.apiData, value);
+                break;
+            case 'referrerChart':
+                this.updateReferrerChart(this.apiData, value);
+                break;
+            case 'countryChart':
+                this.updateCountryChart(this.apiData, value);
+                break;
+        }
     }
 
     async loadDashboardData() {
@@ -82,19 +139,19 @@ class StatisticsDashboard {
                 metrics: 'clicks,unique_clicks'
             });
 
-            // Add time range parameters based on selection
+            // Add time range parameters from date range picker
             if (this.startDate && this.endDate) {
-                params.append('start_date', this.startDate);
-                params.append('end_date', this.endDate);
+                // Convert ISO strings to date format for API (YYYY-MM-DD)
+                const startDate = new Date(this.startDate).toISOString().split('T')[0];
+                const endDate = new Date(this.endDate).toISOString().split('T')[0];
+                params.append('start_date', startDate);
+                params.append('end_date', endDate);
+            } else if (this.currentTimeRange) {
+                // Use the range string directly from the date picker
+                params.append('range', this.currentTimeRange);
             } else {
-                // Convert dashboard time range to API format
-                const rangeMap = {
-                    '7d': '7d',
-                    '30d': '30d',
-                    '90d': '90d',
-                    '1y': '365d'
-                };
-                params.append('range', rangeMap[this.currentTimeRange] || '7d');
+                // Default fallback
+                params.append('range', '7d');
             }
 
             const response = await fetch(`/api/v1/stats?${params.toString()}`, {
@@ -157,7 +214,7 @@ class StatisticsDashboard {
         this.updateCountryChart(data);
     }
 
-    updateTimeSeriesChart(data) {
+    updateTimeSeriesChart(data, option = null) {
         const canvas = document.getElementById('timeSeriesChart');
         const ctx = canvas.getContext('2d');
 
@@ -176,7 +233,7 @@ class StatisticsDashboard {
         const uniqueClicksData = uniqueClicksByTime.map(item => item.unique_clicks || item.value);
 
         const datasets = [];
-        const dataOption = document.getElementById('counterDataOption')?.value || 'compare';
+        const dataOption = option || document.querySelector('[data-chart="timeSeriesChart"] .cascade-btn')?.dataset.value || 'compare';
 
         if (dataOption === 'total' || dataOption === 'compare') {
             datasets.push({
@@ -224,7 +281,9 @@ class StatisticsDashboard {
                 },
                 plugins: {
                     legend: {
-                        labels: { color: '#fff' },
+                        labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 },
+                        position: "bottom",
+                        align: "start",
                     },
                     tooltip: {
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -297,11 +356,15 @@ class StatisticsDashboard {
                     },
                     y: {
                         ticks: { color: '#fff' },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        grid: { display: false }
                     },
                 },
                 plugins: {
-                    legend: { labels: { color: '#fff' } },
+                    legend: {
+                        labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 },
+                        position: "bottom",
+                        align: "start",
+                    },
                     tooltip: {
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         titleColor: '#ffffff',
@@ -373,11 +436,15 @@ class StatisticsDashboard {
                     },
                     y: {
                         ticks: { color: '#fff' },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        grid: { display: false }
                     },
                 },
                 plugins: {
-                    legend: { labels: { color: '#fff' } },
+                    legend: {
+                        labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 },
+                        position: "bottom",
+                        align: "start",
+                    },
                     tooltip: {
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         titleColor: '#ffffff',
@@ -449,11 +516,15 @@ class StatisticsDashboard {
                     },
                     y: {
                         ticks: { color: '#fff' },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        grid: { display: false }
                     },
                 },
                 plugins: {
-                    legend: { labels: { color: '#fff' } },
+                    legend: {
+                        labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 },
+                        position: "bottom",
+                        align: "start",
+                    },
                     tooltip: {
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         titleColor: '#ffffff',
@@ -505,7 +576,7 @@ class StatisticsDashboard {
             return anychart.color.darken(d.sourceColor, 0.1);
         });
 
-        series.tooltip().format(function(e){
+        series.tooltip().format(function (e) {
             return "Clicks: <b>" + e.getData("value") + "</b>";
         });
 
@@ -616,11 +687,15 @@ class StatisticsDashboard {
                     },
                     y: {
                         ticks: { color: '#fff' },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        grid: { display: false }
                     },
                 },
                 plugins: {
-                    legend: { labels: { color: '#fff' } },
+                    legend: {
+                        labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 },
+                        position: "bottom",
+                        align: "start",
+                    },
                     tooltip: {
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         titleColor: '#ffffff',
@@ -674,30 +749,27 @@ class StatisticsDashboard {
                     x: {
                         ticks: { color: '#fff' },
                         grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                        title: {
-                            display: true,
-                            text: 'Clicks',
-                            color: '#fff'
-                        }
                     },
                     y: {
                         ticks: {
                             color: '#fff',
                             maxTicksLimit: 10
                         },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        grid: { display: false }
                     },
                 },
                 plugins: {
                     legend: {
-                        labels: { color: '#fff' }
+                        labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 },
+                        position: "bottom",
+                        align: "start",
                     },
                     tooltip: {
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         titleColor: '#ffffff',
                         bodyColor: '#ffffff',
                         callbacks: {
-                            afterBody: function(context) {
+                            afterBody: function (context) {
                                 const index = context[0].dataIndex;
                                 const item = topKeys[index];
                                 if (item.clicks_percentage) {

@@ -4,6 +4,7 @@
 
 {% block head_css %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/statistics.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/dateRangePicker.css') }}">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/spoo-me/url-shortener/static/css/anychart-ui.min.css" />
     <link rel="stylesheet" type="text/css" href="https://cdn.anychart.com/releases/8.12.1/fonts/css/anychart-font.min.css" />
 {% endblock %}
@@ -14,15 +15,9 @@
     <!-- Page Header -->
     <div class="page-header">
         <div class="header-content">
-            <h1 class="page-title">Analytics Overview</h1>
+            <h1 class="page-title">Analytics</h1>
             <div class="header-actions">
-                <select id="timeRange" class="time-selector">
-                    <option value="7d" selected>Last 7 Days</option>
-                    <option value="30d">Last 30 Days</option>
-                    <option value="90d">Last 90 Days</option>
-                    <option value="1y">Last Year</option>
-                    <option value="custom">Custom Range</option>
-                </select>
+                <div id="dateRangeContainer"></div>
                 <button id="refreshBtn" class="refresh-btn" title="Refresh Data">
                     <i class="ti ti-refresh"></i>
                 </button>
@@ -33,17 +28,32 @@
     <!-- Main Stats Row -->
     <div class="main-stats-container">
         <div class="clicks-counter-section">
-            <h2>Clicks Over Time</h2>
+            <div class="chart-header">
+                <h2>Clicks Over Time</h2>
+                <div class="chart-actions">
+                    <div class="cascade-select" data-chart="timeSeriesChart">
+                        <button class="cascade-btn active" data-value="compare" title="Compare Both">
+                            <i class="ti ti-switch-3"></i>
+                        </button>
+                        <div class="cascade-dropdown">
+                            <button class="cascade-option" data-value="total">
+                                <i class="ti ti-chart-line"></i>
+                                <span>Total Clicks</span>
+                            </button>
+                            <button class="cascade-option" data-value="unique">
+                                <i class="ti ti-users"></i>
+                                <span>Unique Clicks</span>
+                            </button>
+                            <button class="cascade-option active" data-value="compare">
+                                <i class="ti ti-switch-3"></i>
+                                <span>Compare Both</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="chart-container">
                 <canvas id="timeSeriesChart"></canvas>
-                <pre class="counterJsonPre" style="padding: 0.318em;"><code id="counterJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
-            </div>
-            <div class="chart-controls">
-                <select id="counterDataOption" onchange="updateTimeSeriesChart()" title="Counter Data Option">
-                    <option value="total">Total Clicks</option>
-                    <option value="unique">Unique Clicks</option>
-                    <option value="compare" selected>Compare Both</option>
-                </select>
             </div>
         </div>
         
@@ -70,31 +80,58 @@
     <!-- Charts Container - Row 1: Short URLs and Devices -->
     <div class="charts-container">
         <div class="chart-section key-data">
-            <h2>Short URLs</h2>
+            <div class="chart-header">
+                <h2>Short URLs</h2>
+                <div class="chart-actions">
+                    <div class="cascade-select" data-chart="keyChart">
+                        <button class="cascade-btn active" data-value="total" title="Total Clicks">
+                            <i class="ti ti-chart-bar"></i>
+                        </button>
+                        <div class="cascade-dropdown">
+                            <button class="cascade-option active" data-value="total">
+                                <i class="ti ti-chart-bar"></i>
+                                <span>Total Clicks</span>
+                            </button>
+                            <button class="cascade-option" data-value="unique">
+                                <i class="ti ti-users"></i>
+                                <span>Unique Clicks</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="chart-container">
                 <canvas id="keyChart"></canvas>
-                <pre class="keyJsonPre" style="padding: 0.318em; display: none;"><code id="keyJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
-            </div>
-            <div class="chart-controls">
-                <select id="keyDataOption" onchange="updateKeyChart()" title="Key Data Option">
-                    <option value="total" selected>Total Clicks</option>
-                    <option value="unique">Unique Clicks</option>
-                </select>
             </div>
         </div>
 
         <div class="chart-section device-data">
-            <h2>Devices</h2>
+            <div class="chart-header">
+                <h2>Devices</h2>
+                <div class="chart-actions">
+                    <div class="cascade-select" data-chart="deviceChart">
+                        <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
+                            <i class="ti ti-switch-3"></i>
+                        </button>
+                        <div class="cascade-dropdown">
+                            <button class="cascade-option" data-value="total">
+                                <i class="ti ti-chart-bar"></i>
+                                <span>Total Clicks</span>
+                            </button>
+                            <button class="cascade-option" data-value="unique">
+                                <i class="ti ti-users"></i>
+                                <span>Unique Clicks</span>
+                            </button>
+                            <button class="cascade-option active" data-value="compare">
+                                <i class="ti ti-switch-3"></i>
+                                <span>Total vs Unique</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="chart-container">
                 <canvas id="deviceChart"></canvas>
-                <pre class="deviceJsonPre" style="padding: 0.318em; display: none;"><code id="deviceJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
-            </div>
-            <div class="chart-controls">
-                <select id="deviceDataOption" onchange="updateDeviceChart()" title="Device Data Option">
-                    <option value="total">Total Clicks</option>
-                    <option value="unique">Unique Clicks</option>
-                    <option value="compare" selected>Total vs Unique</option>
-                </select>
             </div>
         </div>
     </div>
@@ -102,32 +139,62 @@
     <!-- Charts Container - Row 2: Browsers and Platforms -->
     <div class="charts-container">
         <div class="chart-section browsers-data">
-            <h2>Browsers</h2>
+            <div class="chart-header">
+                <h2>Browsers</h2>
+                <div class="chart-actions">
+                    <div class="cascade-select" data-chart="browserChart">
+                        <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
+                            <i class="ti ti-switch-3"></i>
+                        </button>
+                        <div class="cascade-dropdown">
+                            <button class="cascade-option" data-value="total">
+                                <i class="ti ti-chart-bar"></i>
+                                <span>Total Clicks</span>
+                            </button>
+                            <button class="cascade-option" data-value="unique">
+                                <i class="ti ti-users"></i>
+                                <span>Unique Clicks</span>
+                            </button>
+                            <button class="cascade-option active" data-value="compare">
+                                <i class="ti ti-switch-3"></i>
+                                <span>Total vs Unique</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="chart-container">
                 <canvas id="browserChart"></canvas>
-                <pre class="browserJsonPre" style="padding: 0.318em; display: none;"><code id="browserJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
-            </div>
-            <div class="chart-controls">
-                <select id="browserDataOption" onchange="updateBrowserChart()" title="Browser Data Option">
-                    <option value="total">Total Clicks</option>
-                    <option value="unique">Unique Clicks</option>
-                    <option value="compare" selected>Total vs Unique</option>
-                </select>
             </div>
         </div>
 
         <div class="chart-section os-data">
-            <h2>Platforms</h2>
+            <div class="chart-header">
+                <h2>Platforms</h2>
+                <div class="chart-actions">
+                    <div class="cascade-select" data-chart="osChart">
+                        <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
+                            <i class="ti ti-switch-3"></i>
+                        </button>
+                        <div class="cascade-dropdown">
+                            <button class="cascade-option" data-value="total">
+                                <i class="ti ti-chart-bar"></i>
+                                <span>Total Clicks</span>
+                            </button>
+                            <button class="cascade-option" data-value="unique">
+                                <i class="ti ti-users"></i>
+                                <span>Unique Clicks</span>
+                            </button>
+                            <button class="cascade-option active" data-value="compare">
+                                <i class="ti ti-switch-3"></i>
+                                <span>Total vs Unique</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="chart-container">
                 <canvas id="osChart"></canvas>
-                <pre class="osJsonPre" style="padding: 0.318em; display: none;"><code id="osJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
-            </div>
-            <div class="chart-controls">
-                <select id="osDataOption" onchange="updateOsChart()" title="OS Data Option">
-                    <option value="total">Total Clicks</option>
-                    <option value="unique">Unique Clicks</option>
-                    <option value="compare" selected>Total vs Unique</option>
-                </select>
             </div>
         </div>
     </div>
@@ -135,59 +202,60 @@
     <!-- Charts Container - Row 3: Referrers and Countries -->
     <div class="charts-container">
         <div class="chart-section referrer-data">
-            <h2>Referrers</h2>
+            <div class="chart-header">
+                <h2>Referrers</h2>
+                <div class="chart-actions">
+                    <div class="cascade-select" data-chart="referrerChart">
+                        <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
+                            <i class="ti ti-switch-3"></i>
+                        </button>
+                        <div class="cascade-dropdown">
+                            <button class="cascade-option" data-value="total">
+                                <i class="ti ti-chart-bar"></i>
+                                <span>Total Clicks</span>
+                            </button>
+                            <button class="cascade-option" data-value="unique">
+                                <i class="ti ti-users"></i>
+                                <span>Unique Clicks</span>
+                            </button>
+                            <button class="cascade-option active" data-value="compare">
+                                <i class="ti ti-switch-3"></i>
+                                <span>Total vs Unique</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="chart-container">
                 <canvas id="referrerChart"></canvas>
-                <pre class="referrerJsonPre" style="padding: 0.318em; display: none;"><code id="referrerJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
-            </div>
-            <div class="chart-controls">
-                <select id="referrerDataOption" onchange="updateReferrerChart()" title="Referrer Data Option">
-                    <option value="total">Total Clicks</option>
-                    <option value="unique">Unique Clicks</option>
-                    <option value="compare" selected>Total vs Unique</option>
-                </select>
             </div>
         </div>
 
         <div class="chart-section country-data">
-            <h2>Countries</h2>
+            <div class="chart-header">
+                <h2>Countries</h2>
+                <div class="chart-actions">
+                    <div class="cascade-select" data-chart="countryChart">
+                        <button class="cascade-btn active" data-value="total" title="Total Clicks">
+                            <i class="ti ti-chart-bar"></i>
+                        </button>
+                        <div class="cascade-dropdown">
+                            <button class="cascade-option active" data-value="total">
+                                <i class="ti ti-chart-bar"></i>
+                                <span>Total Clicks</span>
+                            </button>
+                            <button class="cascade-option" data-value="unique">
+                                <i class="ti ti-users"></i>
+                                <span>Unique Clicks</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="chart-container" id="country-container">
                 <div id="countryChart"></div>
-                <pre class="countryJsonPre" style="padding: 0.318em; display: none;"><code id="countryJson" class="json-data language-json" style="font-size: 0.8em;"></code></pre>
-            </div>
-            <div class="chart-controls">
-                <select id="countryDataOption" onchange="updateCountryChart()" title="Country Data Option">
-                    <option value="total" selected>Total Clicks</option>
-                    <option value="unique">Unique Clicks</option>
-                </select>
             </div>
         </div>
-    </div>
-
-    <!-- Custom Date Range Modal -->
-    <div id="dateRangeModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Custom Date Range</h3>
-                <button class="modal-close" id="closeModal">
-                    <i class="ti ti-x"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="date-inputs">
-                    <div class="input-group">
-                        <label for="startDate">Start Date</label>
-                        <input type="date" id="startDate" class="date-input">
-                    </div>
-                    <div class="input-group">
-                        <label for="endDate">End Date</label>
-                        <input type="date" id="endDate" class="date-input">
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn-secondary" id="cancelRange">Cancel</button>
-                    <button class="btn-primary" id="applyRange">Apply Range</button>
-                </div>
             </div>
         </div>
     </div>
@@ -205,5 +273,6 @@
 <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-data-adapter.min.js"></script>
 <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-exports.min.js"></script>
 <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-ui.min.js"></script>
-<script src="{{ url_for('static', filename='js/dashboard/statistics.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='js/dashboard/dateRangePicker.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard/statistics.js') }}?v=3"></script>
 {% endblock %}

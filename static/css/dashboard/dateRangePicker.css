@@ -1,0 +1,332 @@
+/* Date Range Picker Styles */
+.date-range-picker {
+    position: relative;
+    display: inline-block;
+}
+
+.date-range-trigger {
+    padding: 10px 15px;
+    border-radius: 12px;
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: rgba(0, 0, 0, 0.16) 0 10px 36px 0px, rgba(0, 0, 0, 0.06) 0 0 0 1px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 180px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.date-range-trigger:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.selected-range {
+    flex: 1;
+    font-size: 14px;
+}
+
+.clock-icon {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.dropdown-icon {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    transition: transform 0.2s ease;
+}
+
+.dropdown-icon:hover {
+    transform: rotate(180deg);
+}
+
+.date-range-dropdown {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 0;
+    left: auto;
+    background: rgba(30, 35, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    box-shadow: rgba(0, 0, 0, 0.3) 0 20px 40px 0px;
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    min-width: 700px;
+    max-height: 500px;
+    overflow: hidden;
+}
+
+.dropdown-content {
+    position: relative;
+}
+
+.content-layout {
+    display: flex;
+    min-height: 400px;
+}
+
+.relative-section {
+    flex: 0.6;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+}
+
+.custom-section {
+    flex: 1.4;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.section-title {
+    color: white;
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Relative Section */
+.relative-options {
+    max-height: 380px;
+    overflow-y: auto;
+}
+
+.relative-option {
+    padding: 12px 16px;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.relative-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.relative-option.selected {
+    background: rgba(124, 58, 237, 0.3);
+    color: white;
+    border-left: 3px solid #7c3aed;
+}
+
+/* Custom Section */
+.custom-inputs {
+    margin-bottom: 20px;
+}
+
+.input-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.input-row .input-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.history-section {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 14px;
+    font-family: 'Courier New', monospace;
+    transition: all 0.2s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #7c3aed;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.input-group input.invalid:focus {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.input-group input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+    font-style: italic;
+}
+
+.apply-btn {
+    padding: 10px 20px;
+    background: #7c3aed;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.apply-btn:hover {
+    background: #6d28d9;
+}
+
+.apply-btn:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+    cursor: not-allowed;
+}
+
+.history-section h4 {
+    color: white;
+    margin: 0 0 15px 0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: scroll;
+    max-height: 205px;
+}
+
+.history-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 13px;
+}
+
+.history-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.history-icon {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+.history-empty {
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+    font-size: 13px;
+}
+
+/* Scrollbar Styling */
+.relative-options::-webkit-scrollbar,
+.history-section::-webkit-scrollbar {
+    width: 6px;
+}
+
+.relative-options::-webkit-scrollbar-track,
+.history-section::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.relative-options::-webkit-scrollbar-thumb,
+.history-section::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.relative-options::-webkit-scrollbar-thumb:hover,
+.history-section::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Animation for dropdown */
+.date-range-dropdown {
+    animation: slideDown 0.2s ease-out;
+    transform-origin: top;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scaleY(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scaleY(1);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .date-range-dropdown {
+        min-width: 300px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .dropdown-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .custom-inputs {
+        padding: 15px;
+    }
+    
+    .history-section {
+        padding: 15px;
+    }
+}
+
+/* Dark theme consistency */
+.date-range-picker * {
+    box-sizing: border-box;
+}
+
+/* Focus states for accessibility */
+.tab-btn:focus,
+.relative-option:focus,
+.history-item:focus,
+.apply-btn:focus {
+    outline: 2px solid #7c3aed;
+    outline-offset: 2px;
+}
+
+/* Error states */
+.input-error {
+    color: #ef4444;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+}
