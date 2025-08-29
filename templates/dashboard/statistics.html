@@ -3,10 +3,12 @@
 {% block title %}Statistics Dashboard{% endblock %}
 
 {% block head_css %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/statistics.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/dateRangePicker.css') }}">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/spoo-me/url-shortener/static/css/anychart-ui.min.css" />
-    <link rel="stylesheet" type="text/css" href="https://cdn.anychart.com/releases/8.12.1/fonts/css/anychart-font.min.css" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/statistics.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/dateRangePicker.css') }}">
+<link rel="stylesheet" type="text/css"
+    href="https://cdn.jsdelivr.net/gh/spoo-me/url-shortener/static/css/anychart-ui.min.css" />
+<link rel="stylesheet" type="text/css"
+    href="https://cdn.anychart.com/releases/8.12.1/fonts/css/anychart-font.min.css" />
 {% endblock %}
 
 {% block content %}
@@ -58,238 +60,260 @@
 
     <!-- Main Stats Row -->
     <div class="main-stats-container">
-        <div class="clicks-counter-section">
-            <div class="chart-header">
-                <h2>Clicks Over Time</h2>
-                <div class="chart-actions">
-                    <div class="cascade-select" data-chart="timeSeriesChart">
-                        <button class="cascade-btn active" data-value="compare" title="Compare Both">
-                            <i class="ti ti-switch-3"></i>
-                        </button>
-                        <div class="cascade-dropdown">
-                            <button class="cascade-option" data-value="total">
-                                <i class="ti ti-chart-line"></i>
-                                <span>Total Clicks</span>
-                            </button>
-                            <button class="cascade-option" data-value="unique">
-                                <i class="ti ti-users"></i>
-                                <span>Unique Clicks</span>
-                            </button>
-                            <button class="cascade-option active" data-value="compare">
+        <div class="card-parent clicks-counter-parent">
+            <div class="clicks-counter-section">
+                <div class="chart-header">
+                    <h2>Clicks Over Time</h2>
+                    <div class="chart-actions">
+                        <div class="cascade-select" data-chart="timeSeriesChart">
+                            <button class="cascade-btn active" data-value="compare" title="Compare Both">
                                 <i class="ti ti-switch-3"></i>
-                                <span>Compare Both</span>
                             </button>
+                            <div class="cascade-dropdown">
+                                <button class="cascade-option" data-value="total">
+                                    <i class="ti ti-chart-line"></i>
+                                    <span>Total Clicks</span>
+                                </button>
+                                <button class="cascade-option" data-value="unique">
+                                    <i class="ti ti-users"></i>
+                                    <span>Unique Clicks</span>
+                                </button>
+                                <button class="cascade-option active" data-value="compare">
+                                    <i class="ti ti-switch-3"></i>
+                                    <span>Compare Both</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="chart-container">
-                <canvas id="timeSeriesChart"></canvas>
+                <div class="chart-container">
+                    <canvas id="timeSeriesChart"></canvas>
+                </div>
             </div>
         </div>
 
         <div class="summary-stats">
-            <div class="stat-card">
-                <div class="stat-value" id="totalClicks">0</div>
-                <div class="stat-label">Total Clicks</div>
+            <div class="card-parent">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalClicks">0</div>
+                    <div class="stat-label">Total Clicks</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="uniqueClicks">0</div>
-                <div class="stat-label">Unique Visitors</div>
+            <div class="card-parent">
+                <div class="stat-card">
+                    <div class="stat-value" id="uniqueClicks">0</div>
+                    <div class="stat-label">Unique Visitors</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="clickRate">0%</div>
-                <div class="stat-label">Unique Rate</div>
+            <div class="card-parent">
+                <div class="stat-card">
+                    <div class="stat-value" id="clickRate">0%</div>
+                    <div class="stat-label">Unique Rate</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="activeUrls">0</div>
-                <div class="stat-label">Active URLs</div>
+            <div class="card-parent">
+                <div class="stat-card">
+                    <div class="stat-value" id="activeUrls">0</div>
+                    <div class="stat-label">Active URLs</div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Charts Container - Row 1: Short URLs and Devices -->
     <div class="charts-container">
-        <div class="chart-section key-data">
-            <div class="chart-header">
-                <h2>Short URLs</h2>
-                <div class="chart-actions">
-                    <div class="cascade-select" data-chart="keyChart">
-                        <button class="cascade-btn active" data-value="total" title="Total Clicks">
-                            <i class="ti ti-chart-bar"></i>
-                        </button>
-                        <div class="cascade-dropdown">
-                            <button class="cascade-option active" data-value="total">
+        <div class="card-parent chart-section-parent">
+            <div class="chart-section key-data">
+                <div class="chart-header">
+                    <h2>Short URLs</h2>
+                    <div class="chart-actions">
+                        <div class="cascade-select" data-chart="keyChart">
+                            <button class="cascade-btn active" data-value="total" title="Total Clicks">
                                 <i class="ti ti-chart-bar"></i>
-                                <span>Total Clicks</span>
                             </button>
-                            <button class="cascade-option" data-value="unique">
-                                <i class="ti ti-users"></i>
-                                <span>Unique Clicks</span>
-                            </button>
+                            <div class="cascade-dropdown">
+                                <button class="cascade-option active" data-value="total">
+                                    <i class="ti ti-chart-bar"></i>
+                                    <span>Total Clicks</span>
+                                </button>
+                                <button class="cascade-option" data-value="unique">
+                                    <i class="ti ti-users"></i>
+                                    <span>Unique Clicks</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="chart-container">
-                <canvas id="keyChart"></canvas>
+                <div class="chart-container">
+                    <canvas id="keyChart"></canvas>
+                </div>
             </div>
         </div>
 
-        <div class="chart-section device-data">
-            <div class="chart-header">
-                <h2>Devices</h2>
-                <div class="chart-actions">
-                    <div class="cascade-select" data-chart="deviceChart">
-                        <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
-                            <i class="ti ti-switch-3"></i>
-                        </button>
-                        <div class="cascade-dropdown">
-                            <button class="cascade-option" data-value="total">
-                                <i class="ti ti-chart-bar"></i>
-                                <span>Total Clicks</span>
-                            </button>
-                            <button class="cascade-option" data-value="unique">
-                                <i class="ti ti-users"></i>
-                                <span>Unique Clicks</span>
-                            </button>
-                            <button class="cascade-option active" data-value="compare">
+        <div class="card-parent chart-section-parent">
+            <div class="chart-section device-data">
+                <div class="chart-header">
+                    <h2>Devices</h2>
+                    <div class="chart-actions">
+                        <div class="cascade-select" data-chart="deviceChart">
+                            <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
-                                <span>Total vs Unique</span>
                             </button>
+                            <div class="cascade-dropdown">
+                                <button class="cascade-option" data-value="total">
+                                    <i class="ti ti-chart-bar"></i>
+                                    <span>Total Clicks</span>
+                                </button>
+                                <button class="cascade-option" data-value="unique">
+                                    <i class="ti ti-users"></i>
+                                    <span>Unique Clicks</span>
+                                </button>
+                                <button class="cascade-option active" data-value="compare">
+                                    <i class="ti ti-switch-3"></i>
+                                    <span>Total vs Unique</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="chart-container">
-                <canvas id="deviceChart"></canvas>
+                <div class="chart-container">
+                    <canvas id="deviceChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Charts Container - Row 2: Browsers and Platforms -->
     <div class="charts-container">
-        <div class="chart-section browsers-data">
-            <div class="chart-header">
-                <h2>Browsers</h2>
-                <div class="chart-actions">
-                    <div class="cascade-select" data-chart="browserChart">
-                        <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
-                            <i class="ti ti-switch-3"></i>
-                        </button>
-                        <div class="cascade-dropdown">
-                            <button class="cascade-option" data-value="total">
-                                <i class="ti ti-chart-bar"></i>
-                                <span>Total Clicks</span>
-                            </button>
-                            <button class="cascade-option" data-value="unique">
-                                <i class="ti ti-users"></i>
-                                <span>Unique Clicks</span>
-                            </button>
-                            <button class="cascade-option active" data-value="compare">
+        <div class="card-parent chart-section-parent">
+            <div class="chart-section browsers-data">
+                <div class="chart-header">
+                    <h2>Browsers</h2>
+                    <div class="chart-actions">
+                        <div class="cascade-select" data-chart="browserChart">
+                            <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
-                                <span>Total vs Unique</span>
                             </button>
+                            <div class="cascade-dropdown">
+                                <button class="cascade-option" data-value="total">
+                                    <i class="ti ti-chart-bar"></i>
+                                    <span>Total Clicks</span>
+                                </button>
+                                <button class="cascade-option" data-value="unique">
+                                    <i class="ti ti-users"></i>
+                                    <span>Unique Clicks</span>
+                                </button>
+                                <button class="cascade-option active" data-value="compare">
+                                    <i class="ti ti-switch-3"></i>
+                                    <span>Total vs Unique</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="chart-container">
-                <canvas id="browserChart"></canvas>
+                <div class="chart-container">
+                    <canvas id="browserChart"></canvas>
+                </div>
             </div>
         </div>
 
-        <div class="chart-section os-data">
-            <div class="chart-header">
-                <h2>Platforms</h2>
-                <div class="chart-actions">
-                    <div class="cascade-select" data-chart="osChart">
-                        <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
-                            <i class="ti ti-switch-3"></i>
-                        </button>
-                        <div class="cascade-dropdown">
-                            <button class="cascade-option" data-value="total">
-                                <i class="ti ti-chart-bar"></i>
-                                <span>Total Clicks</span>
-                            </button>
-                            <button class="cascade-option" data-value="unique">
-                                <i class="ti ti-users"></i>
-                                <span>Unique Clicks</span>
-                            </button>
-                            <button class="cascade-option active" data-value="compare">
+        <div class="card-parent chart-section-parent">
+            <div class="chart-section os-data">
+                <div class="chart-header">
+                    <h2>Platforms</h2>
+                    <div class="chart-actions">
+                        <div class="cascade-select" data-chart="osChart">
+                            <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
-                                <span>Total vs Unique</span>
                             </button>
+                            <div class="cascade-dropdown">
+                                <button class="cascade-option" data-value="total">
+                                    <i class="ti ti-chart-bar"></i>
+                                    <span>Total Clicks</span>
+                                </button>
+                                <button class="cascade-option" data-value="unique">
+                                    <i class="ti ti-users"></i>
+                                    <span>Unique Clicks</span>
+                                </button>
+                                <button class="cascade-option active" data-value="compare">
+                                    <i class="ti ti-switch-3"></i>
+                                    <span>Total vs Unique</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="chart-container">
-                <canvas id="osChart"></canvas>
+                <div class="chart-container">
+                    <canvas id="osChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Charts Container - Row 3: Referrers and Countries -->
     <div class="charts-container">
-        <div class="chart-section referrer-data">
-            <div class="chart-header">
-                <h2>Referrers</h2>
-                <div class="chart-actions">
-                    <div class="cascade-select" data-chart="referrerChart">
-                        <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
-                            <i class="ti ti-switch-3"></i>
-                        </button>
-                        <div class="cascade-dropdown">
-                            <button class="cascade-option" data-value="total">
-                                <i class="ti ti-chart-bar"></i>
-                                <span>Total Clicks</span>
-                            </button>
-                            <button class="cascade-option" data-value="unique">
-                                <i class="ti ti-users"></i>
-                                <span>Unique Clicks</span>
-                            </button>
-                            <button class="cascade-option active" data-value="compare">
+        <div class="card-parent chart-section-parent">
+            <div class="chart-section referrer-data">
+                <div class="chart-header">
+                    <h2>Referrers</h2>
+                    <div class="chart-actions">
+                        <div class="cascade-select" data-chart="referrerChart">
+                            <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
-                                <span>Total vs Unique</span>
                             </button>
+                            <div class="cascade-dropdown">
+                                <button class="cascade-option" data-value="total">
+                                    <i class="ti ti-chart-bar"></i>
+                                    <span>Total Clicks</span>
+                                </button>
+                                <button class="cascade-option" data-value="unique">
+                                    <i class="ti ti-users"></i>
+                                    <span>Unique Clicks</span>
+                                </button>
+                                <button class="cascade-option active" data-value="compare">
+                                    <i class="ti ti-switch-3"></i>
+                                    <span>Total vs Unique</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="chart-container">
-                <canvas id="referrerChart"></canvas>
+                <div class="chart-container">
+                    <canvas id="referrerChart"></canvas>
+                </div>
             </div>
         </div>
 
-        <div class="chart-section country-data">
-            <div class="chart-header">
-                <h2>Countries</h2>
-                <div class="chart-actions">
-                    <div class="cascade-select" data-chart="countryChart">
-                        <button class="cascade-btn active" data-value="total" title="Total Clicks">
-                            <i class="ti ti-chart-bar"></i>
-                        </button>
-                        <div class="cascade-dropdown">
-                            <button class="cascade-option active" data-value="total">
+        <div class="card-parent chart-section-parent">
+            <div class="chart-section country-data">
+                <div class="chart-header">
+                    <h2>Countries</h2>
+                    <div class="chart-actions">
+                        <div class="cascade-select" data-chart="countryChart">
+                            <button class="cascade-btn active" data-value="total" title="Total Clicks">
                                 <i class="ti ti-chart-bar"></i>
-                                <span>Total Clicks</span>
                             </button>
-                            <button class="cascade-option" data-value="unique">
-                                <i class="ti ti-users"></i>
-                                <span>Unique Clicks</span>
-                            </button>
+                            <div class="cascade-dropdown">
+                                <button class="cascade-option active" data-value="total">
+                                    <i class="ti ti-chart-bar"></i>
+                                    <span>Total Clicks</span>
+                                </button>
+                                <button class="cascade-option" data-value="unique">
+                                    <i class="ti ti-users"></i>
+                                    <span>Unique Clicks</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="chart-container" id="country-container">
-                <div id="countryChart"></div>
-            </div>
-        </div>
+                <div class="chart-container" id="country-container">
+                    <div id="countryChart"></div>
+                </div>
             </div>
         </div>
     </div>
+</div>
+</div>
 
 </div>
 {% endblock %}

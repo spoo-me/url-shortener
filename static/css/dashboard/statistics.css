@@ -166,15 +166,26 @@
     margin-bottom: 20px;
 }
 
-/* Clicks Counter Section - Takes most of the width */
-.clicks-counter-section {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 20px 20px 5px 20px;
-    border-radius: 6px;
+.card-parent {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
     box-shadow: rgba(0, 0, 0, 0.24) 0 3px 8px;
     border: rgba(255, 255, 255, 0.05) 1px solid;
-    flex: 3;
-    /* Takes 3/4 of the width */
+    border-radius: 6px;
+    flex: 1;
+}
+
+.clicks-counter-parent {
+    flex: 3 !important;
+}
+
+/* Clicks Counter Section - Takes most of the width */
+.clicks-counter-section {
+    background-color: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    backdrop-filter: blur(20px);
+    padding: 20px 20px 5px 20px;
+    width: 100%;
+    height: 100%;
 }
 
 /* Summary Stats - Takes remaining width */
@@ -187,11 +198,13 @@
 }
 
 .stat-card {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.02);
     border-radius: 6px;
+    backdrop-filter: blur(20px);
+    width: 100%;
+    height: 100%;
+    padding: 15px;
     box-shadow: rgba(0, 0, 0, 0.24) 0 3px 8px;
-    border: rgba(255, 255, 255, 0.05) 1px solid;
     text-align: center;
 }
 
@@ -234,13 +247,11 @@
 }
 
 .chart-section {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 20px 20px 5px 20px;
+    background-color: rgba(255, 255, 255, 0.02);
     border-radius: 6px;
-    box-shadow: rgba(0, 0, 0, 0.24) 0 3px 8px;
-    border: rgba(255, 255, 255, 0.05) 1px solid;
-    flex: 1;
-    /* Equal width for charts in the same row */
+    backdrop-filter: blur(20px);
+    padding: 20px 20px 5px 20px;
+    width: 100%;
     min-height: 400px;
 }
 
