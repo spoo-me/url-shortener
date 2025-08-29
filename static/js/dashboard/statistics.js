@@ -42,9 +42,35 @@ class StatisticsDashboard {
     }
 
     setupEventListeners() {
-        // Refresh button
-        document.getElementById('refreshBtn').addEventListener('click', () => {
-            this.loadDashboardData();
+        // Manual refresh button click
+        const refreshBtn = document.querySelector('.refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.loadDashboardData();
+            });
+        }
+
+        // Auto-refresh dropdown toggle
+        const autoRefreshBtn = document.querySelector('.auto-refresh-btn');
+        if (autoRefreshBtn) {
+            autoRefreshBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const dropdown = autoRefreshBtn.nextElementSibling;
+                if (dropdown && dropdown.classList.contains('dropdown-menu')) {
+                    dropdown.classList.toggle('show');
+                }
+            });
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const autoRefreshDropdown = e.target.closest('.auto-refresh-dropdown');
+            if (!autoRefreshDropdown) {
+                const openDropdowns = document.querySelectorAll('.auto-refresh-dropdown .dropdown-menu.show');
+                openDropdowns.forEach(dropdown => dropdown.classList.remove('show'));
+            }
         });
 
         // Cascade button controls
@@ -57,12 +83,12 @@ class StatisticsDashboard {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const dropdown = btn.nextElementSibling;
-                
+
                 // Close other dropdowns
                 document.querySelectorAll('.cascade-dropdown').forEach(dd => {
                     if (dd !== dropdown) dd.classList.remove('show');
                 });
-                
+
                 // Toggle current dropdown
                 dropdown.classList.toggle('show');
             });
@@ -74,22 +100,22 @@ class StatisticsDashboard {
                 const value = option.dataset.value;
                 const cascadeSelect = option.closest('.cascade-select');
                 const chartType = cascadeSelect.dataset.chart;
-                
+
                 // Update active states
                 cascadeSelect.querySelectorAll('.cascade-option').forEach(opt => {
                     opt.classList.remove('active');
                 });
                 option.classList.add('active');
-                
+
                 // Update main button
                 const mainBtn = cascadeSelect.querySelector('.cascade-btn');
                 mainBtn.dataset.value = value;
                 mainBtn.querySelector('i').className = option.querySelector('i').className;
                 mainBtn.title = option.querySelector('span').textContent;
-                
+
                 // Close dropdown
                 cascadeSelect.querySelector('.cascade-dropdown').classList.remove('show');
-                
+
                 // Update chart
                 this.updateChartByType(chartType, value);
             });
@@ -105,8 +131,8 @@ class StatisticsDashboard {
 
     updateChartByType(chartType, value) {
         if (!this.apiData) return;
-        
-        switch(chartType) {
+
+        switch (chartType) {
             case 'timeSeriesChart':
                 this.updateTimeSeriesChart(this.apiData, value);
                 break;
@@ -556,8 +582,6 @@ class StatisticsDashboard {
             value: item.clicks || item.unique_clicks
         }));
 
-        const mapTitle = dataOption === 'total' ? "Countries Clicks Heatmap" : "Countries Unique Clicks Heatmap";
-
         // Create AnyChart map
         var dataSet = anychart.data.set(mapData);
         var map = anychart.map();
@@ -581,18 +605,14 @@ class StatisticsDashboard {
         });
 
         var title = map.title();
-        title.enabled(true);
-        title.text(mapTitle);
-        title.fontColor("#ffffff");
-        title.fontSize(12);
-        title.padding(0, 0, 10, 0);
+        title.enabled(false);
 
         map.tooltip().useHtml(true);
 
         map.colorRange().enabled(true);
         map.colorRange().orientation('bottom');
         map.colorRange().labels({ 'fontSize': 13, 'fontColor': 'white' });
-        map.colorRange().stroke('');
+        map.colorRange().stroke('', 0.5, '5 2', 'round');
 
         var grids = map.grids();
         grids.enabled(true);
@@ -796,10 +816,49 @@ class StatisticsDashboard {
     }
 
     setupAutoRefresh() {
-        // Refresh every 5 minutes
-        this.refreshInterval = setInterval(() => {
-            this.loadDashboardData();
-        }, 5 * 60 * 1000);
+        // Auto-refresh dropdown items
+        const refreshDropdown = document.querySelector('.auto-refresh-dropdown .dropdown-menu');
+        if (refreshDropdown) {
+            refreshDropdown.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const item = e.target.closest('.dropdown-item');
+                if (item && !item.classList.contains('disabled')) {
+                    const interval = parseInt(item.dataset.interval);
+                    this.setAutoRefreshInterval(interval);
+
+                    // Update button text
+                    const autoRefreshBtn = document.querySelector('.auto-refresh-btn');
+                    const intervalText = item.textContent.trim();
+                    autoRefreshBtn.innerHTML = `${intervalText} <i class="ti ti-chevron-down"></i>`;
+
+                    // Close dropdown
+                    const dropdown = refreshDropdown;
+                    dropdown.classList.remove('show');
+                }
+            });
+        }
+    }
+
+    setAutoRefreshInterval(seconds) {
+        // Clear existing interval
+        if (this.autoRefreshInterval) {
+            clearInterval(this.autoRefreshInterval);
+            this.autoRefreshInterval = null;
+        }
+
+        // Set new interval if seconds > 0
+        if (seconds > 0) {
+            const milliseconds = seconds * 1000;
+            this.autoRefreshInterval = setInterval(() => {
+                this.loadDashboardData();
+            }, milliseconds);
+
+            console.log(`Auto-refresh set to ${seconds} seconds`);
+        } else {
+            console.log('Auto-refresh disabled');
+        }
     }
 
     showError(message) {
@@ -809,8 +868,8 @@ class StatisticsDashboard {
     }
 
     destroy() {
-        if (this.refreshInterval) {
-            clearInterval(this.refreshInterval);
+        if (this.autoRefreshInterval) {
+            clearInterval(this.autoRefreshInterval);
         }
 
         this.charts.forEach(chart => {

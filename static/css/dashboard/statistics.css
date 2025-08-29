@@ -50,20 +50,112 @@
     color: black;
 }
 
-.refresh-btn {
-    padding: 10px;
-    border-radius: 12px;
-    border: 0;
-    color: white;
+/* Refresh Control */
+.refresh-control {
+    display: flex;
+    align-items: center;
     background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow: rgba(0, 0, 0, 0.16) 0 10px 36px 0px, rgba(0, 0, 0, 0.06) 0 0 0 1px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 4px;
+}
+
+.refresh-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 16px;
     cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .refresh-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transition: background-color 0.2s ease-in-out;
+    color: rgb(255, 255, 255);
+    background-color: rgba(255, 255, 255, 0.06);
+    transition: all 0.2s ease-in-out;
+}
+
+.separator {
+    width: 1px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.3);
+    margin: 0 4px;
+}
+
+.auto-refresh-dropdown {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.auto-refresh-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.auto-refresh-btn:hover {
+    color: rgb(255, 255, 255);
+    background-color: rgba(255, 255, 255, 0.06);
+    transition: all 0.2s ease-in-out;
+}
+
+.auto-refresh-dropdown .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: rgba(30, 35, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    min-width: 80px;
+    z-index: 1000;
+    display: none;
+    box-shadow: rgba(0, 0, 0, 0.3) 0 20px 40px 0px;
+    backdrop-filter: blur(10px);
+    margin-top: 8px;
+}
+
+.auto-refresh-dropdown .dropdown-menu.show {
+    display: block;
+}
+
+.auto-refresh-dropdown .dropdown-item {
+    padding: 6px 10px;
+    color: #ecf0f1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s ease;
+    font-size: 14px;
+}
+
+.auto-refresh-dropdown .dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.auto-refresh-dropdown .dropdown-item:first-child {
+    border-radius: 6px 6px 0 0;
+}
+
+.auto-refresh-dropdown .dropdown-item:last-child {
+    border-radius: 0 0 6px 6px;
 }
 
 /* Main Stats Container */

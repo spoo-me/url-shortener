@@ -11,16 +11,47 @@
 
 {% block content %}
 <div class="statistics-dashboard">
-    
+
     <!-- Page Header -->
     <div class="page-header">
         <div class="header-content">
             <h1 class="page-title">Analytics</h1>
             <div class="header-actions">
                 <div id="dateRangeContainer"></div>
-                <button id="refreshBtn" class="refresh-btn" title="Refresh Data">
-                    <i class="ti ti-refresh"></i>
-                </button>
+                <div class="refresh-control">
+                    <button class="refresh-btn" type="button" title="Refresh">
+                        <i class="ti ti-refresh"></i>
+                    </button>
+                    <div class="separator"></div>
+                    <div class="auto-refresh-dropdown">
+                        <button class="auto-refresh-btn" type="button">
+                            Off <i class="ti ti-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item" data-interval="0">
+                                Off
+                            </div>
+                            <div class="dropdown-item" data-interval="60">
+                                1m
+                            </div>
+                            <div class="dropdown-item" data-interval="300">
+                                5m
+                            </div>
+                            <div class="dropdown-item" data-interval="900">
+                                15m
+                            </div>
+                            <div class="dropdown-item" data-interval="1800">
+                                30m
+                            </div>
+                            <div class="dropdown-item" data-interval="3600">
+                                1h
+                            </div>
+                            <div class="dropdown-item" data-interval="7200">
+                                2h
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -56,7 +87,7 @@
                 <canvas id="timeSeriesChart"></canvas>
             </div>
         </div>
-        
+
         <div class="summary-stats">
             <div class="stat-card">
                 <div class="stat-value" id="totalClicks">0</div>
