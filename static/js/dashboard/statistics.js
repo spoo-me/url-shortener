@@ -73,6 +73,9 @@ class StatisticsDashboard {
             }
         });
 
+        // Table view button controls
+        this.setupTableViewControls();
+
         // Cascade button controls
         this.setupCascadeControls();
     }
@@ -129,6 +132,221 @@ class StatisticsDashboard {
         });
     }
 
+    setupTableViewControls() {
+        // Handle table view button clicks
+        document.querySelectorAll('.table-view-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const chartType = btn.dataset.chart;
+                this.toggleTableView(chartType, btn);
+            });
+        });
+    }
+
+    toggleTableView(chartType, btn) {
+        const chartContainer = document.getElementById(chartType);
+        const tableContainer = document.getElementById(chartType.replace('Chart', 'Table'));
+
+        if (!chartContainer || !tableContainer) return;
+
+        const isTableVisible = tableContainer.style.display !== 'none';
+
+        if (isTableVisible) {
+            // Switch to chart view with fade transition
+            this.fadeTransition(tableContainer, chartContainer, () => {
+                btn.classList.remove('active');
+                btn.title = 'Table View';
+
+                // Special handling for country chart (AnyChart map)
+                if (chartType === 'countryChart') {
+                    document.getElementById("country-container").style.padding = "5px";
+                }
+            });
+        } else {
+            // Switch to table view with fade transition
+            this.fadeTransition(chartContainer, tableContainer, () => {
+                btn.classList.add('active');
+                btn.title = 'Chart View';
+
+                // Update table data
+                this.updateTableData(chartType);
+            });
+        }
+    }
+
+    fadeTransition(fromElement, toElement, callback) {
+        // Add exit animation to current element
+        fromElement.classList.add('chart-view-exit-active');
+
+        setTimeout(() => {
+            // Hide the outgoing element and show the incoming element
+            fromElement.style.display = 'none';
+            fromElement.classList.remove('chart-view-exit-active');
+
+            toElement.style.display = 'block';
+            toElement.classList.add('table-view-enter');
+
+            // Force reflow to ensure the enter class is applied
+            toElement.offsetHeight;
+
+            // Add enter animation
+            toElement.classList.add('table-view-enter-active');
+            toElement.classList.remove('table-view-enter');
+
+            // Execute callback
+            if (callback) callback();
+
+            // Clean up transition classes
+            setTimeout(() => {
+                toElement.classList.remove('table-view-enter-active');
+            }, 300);
+
+        }, 150); // Half of the transition duration for overlap effect
+    }
+
+    updateTableData(chartType) {
+        if (!this.apiData) return;
+
+        const tableId = chartType.replace('Chart', 'Table');
+        const tableBodyId = tableId + 'Body';
+        const tableBody = document.getElementById(tableBodyId);
+
+        if (!tableBody) return;
+
+        // Clear existing data
+        tableBody.innerHTML = '';
+
+        // Get data based on chart type
+        let data = [];
+        let dataKey = '';
+
+        switch (chartType) {
+            case 'timeSeriesChart':
+                data = this.getTimeSeriesTableData();
+                break;
+            case 'keyChart':
+                data = this.getKeyTableData();
+                break;
+            case 'deviceChart':
+                data = this.getDeviceTableData();
+                break;
+            case 'browserChart':
+                data = this.getBrowserTableData();
+                break;
+            case 'osChart':
+                data = this.getOsTableData();
+                break;
+            case 'referrerChart':
+                data = this.getReferrerTableData();
+                break;
+            case 'countryChart':
+                data = this.getCountryTableData();
+                break;
+        }
+
+        // Populate table
+        if (data.length === 0) {
+            tableBody.innerHTML = '<div class="table-empty">No data available for the selected time range</div>';
+            return;
+        }
+
+        data.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'table-row';
+            row.innerHTML = `
+                <div class="table-cell">${this.escapeHtml(item.label)}</div>
+                <div class="table-cell">${this.formatNumber(item.clicks)}</div>
+                <div class="table-cell">${this.formatNumber(item.unique_clicks)}</div>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    getTimeSeriesTableData() {
+        const clicksByTime = this.apiData.metrics?.clicks_by_time || [];
+        const uniqueClicksByTime = this.apiData.metrics?.unique_clicks_by_time || [];
+
+        return clicksByTime.map((item, index) => ({
+            label: item.time || item.date || 'Unknown',
+            clicks: item.clicks || item.value || 0,
+            unique_clicks: uniqueClicksByTime[index]?.unique_clicks || uniqueClicksByTime[index]?.value || 0
+        }));
+    }
+
+    getKeyTableData() {
+        const clicksByKey = this.apiData.metrics?.clicks_by_key || [];
+        const uniqueClicksByKey = this.apiData.metrics?.unique_clicks_by_key || [];
+
+        return clicksByKey.map((item, index) => ({
+            label: item.key || 'Unknown',
+            clicks: item.clicks || item.value || 0,
+            unique_clicks: uniqueClicksByKey[index]?.unique_clicks || uniqueClicksByKey[index]?.value || 0
+        }));
+    }
+
+    getDeviceTableData() {
+        const clicksByDevice = this.apiData.metrics?.clicks_by_device || [];
+        const uniqueClicksByDevice = this.apiData.metrics?.unique_clicks_by_device || [];
+
+        return clicksByDevice.map((item, index) => ({
+            label: item.device || 'Unknown',
+            clicks: item.clicks || item.value || 0,
+            unique_clicks: uniqueClicksByDevice[index]?.unique_clicks || uniqueClicksByDevice[index]?.value || 0
+        }));
+    }
+
+    getBrowserTableData() {
+        const clicksByBrowser = this.apiData.metrics?.clicks_by_browser || [];
+        const uniqueClicksByBrowser = this.apiData.metrics?.unique_clicks_by_browser || [];
+
+        return clicksByBrowser.map((item, index) => ({
+            label: item.browser || 'Unknown',
+            clicks: item.clicks || item.value || 0,
+            unique_clicks: uniqueClicksByBrowser[index]?.unique_clicks || uniqueClicksByBrowser[index]?.value || 0
+        }));
+    }
+
+    getOsTableData() {
+        const clicksByOs = this.apiData.metrics?.clicks_by_os || [];
+        const uniqueClicksByOs = this.apiData.metrics?.unique_clicks_by_os || [];
+
+        return clicksByOs.map((item, index) => ({
+            label: item.os || 'Unknown',
+            clicks: item.clicks || item.value || 0,
+            unique_clicks: uniqueClicksByOs[index]?.unique_clicks || uniqueClicksByOs[index]?.value || 0
+        }));
+    }
+
+    getReferrerTableData() {
+        const clicksByReferrer = this.apiData.metrics?.clicks_by_referrer || [];
+        const uniqueClicksByReferrer = this.apiData.metrics?.unique_clicks_by_referrer || [];
+
+        return clicksByReferrer.map((item, index) => ({
+            label: item.referrer || 'Direct',
+            clicks: item.clicks || item.value || 0,
+            unique_clicks: uniqueClicksByReferrer[index]?.unique_clicks || uniqueClicksByReferrer[index]?.value || 0
+        }));
+    }
+
+    getCountryTableData() {
+        const clicksByCountry = this.apiData.metrics?.clicks_by_country || [];
+        const uniqueClicksByCountry = this.apiData.metrics?.unique_clicks_by_country || [];
+
+        return clicksByCountry.map((item, index) => ({
+            label: item.country || 'Unknown',
+            clicks: item.clicks || item.value || 0,
+            unique_clicks: uniqueClicksByCountry[index]?.unique_clicks || uniqueClicksByCountry[index]?.value || 0
+        }));
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     updateChartByType(chartType, value) {
         if (!this.apiData) return;
 
@@ -154,6 +372,12 @@ class StatisticsDashboard {
             case 'countryChart':
                 this.updateCountryChart(this.apiData, value);
                 break;
+        }
+
+        // Update table data if table is currently visible
+        const tableBtn = document.querySelector(`[data-chart="${chartType}"].table-view-btn`);
+        if (tableBtn && tableBtn.classList.contains('active')) {
+            this.updateTableData(chartType);
         }
     }
 
@@ -238,6 +462,12 @@ class StatisticsDashboard {
         this.updateOsChart(data);
         this.updateReferrerChart(data);
         this.updateCountryChart(data);
+
+        // Update any visible tables
+        document.querySelectorAll('.table-view-btn.active').forEach(btn => {
+            const chartType = btn.dataset.chart;
+            this.updateTableData(chartType);
+        });
     }
 
     updateTimeSeriesChart(data, option = null) {
@@ -323,7 +553,7 @@ class StatisticsDashboard {
         this.charts.set('timeSeries', chart);
     }
 
-    updateBrowserChart(data) {
+    updateBrowserChart(data, option = null) {
         const canvas = document.getElementById('browserChart');
         const ctx = canvas.getContext('2d');
 
@@ -340,7 +570,7 @@ class StatisticsDashboard {
         const browserClicks = clicksByBrowser.map(item => item.clicks);
         const browserUniqueClicks = uniqueClicksByBrowser.map(item => item.unique_clicks);
 
-        const dataOption = document.getElementById('browserDataOption')?.value || 'compare';
+        const dataOption = option || document.querySelector('[data-chart="browserChart"] .cascade-btn')?.dataset.value || 'compare';
         const datasets = [];
 
         if (dataOption === 'total' || dataOption === 'compare') {
@@ -403,7 +633,7 @@ class StatisticsDashboard {
         this.charts.set('browser', chart);
     }
 
-    updateOsChart(data) {
+    updateOsChart(data, option = null) {
         const canvas = document.getElementById('osChart');
         const ctx = canvas.getContext('2d');
 
@@ -420,7 +650,7 @@ class StatisticsDashboard {
         const osClicks = clicksByOs.map(item => item.clicks);
         const osUniqueClicks = uniqueClicksByOs.map(item => item.unique_clicks);
 
-        const dataOption = document.getElementById('osDataOption')?.value || 'compare';
+        const dataOption = option || document.querySelector('[data-chart="osChart"] .cascade-btn')?.dataset.value || 'compare';
         const datasets = [];
 
         if (dataOption === 'total' || dataOption === 'compare') {
@@ -483,7 +713,7 @@ class StatisticsDashboard {
         this.charts.set('os', chart);
     }
 
-    updateReferrerChart(data) {
+    updateReferrerChart(data, option = null) {
         const canvas = document.getElementById('referrerChart');
         const ctx = canvas.getContext('2d');
 
@@ -500,7 +730,7 @@ class StatisticsDashboard {
         const referrerClicks = clicksByReferrer.map(item => item.clicks);
         const referrerUniqueClicks = uniqueClicksByReferrer.map(item => item.unique_clicks);
 
-        const dataOption = document.getElementById('referrerDataOption')?.value || 'compare';
+        const dataOption = option || document.querySelector('[data-chart="referrerChart"] .cascade-btn')?.dataset.value || 'compare';
         const datasets = [];
 
         if (dataOption === 'total' || dataOption === 'compare') {
@@ -563,7 +793,7 @@ class StatisticsDashboard {
         this.charts.set('referrer', chart);
     }
 
-    updateCountryChart(data) {
+    updateCountryChart(data, option = null) {
         const countryChartContainer = document.getElementById('countryChart');
         countryChartContainer.innerHTML = ''; // Clear previous map
 
@@ -571,7 +801,7 @@ class StatisticsDashboard {
         const clicksByCountry = data.metrics?.clicks_by_country || [];
         const uniqueClicksByCountry = data.metrics?.unique_clicks_by_country || [];
 
-        const dataOption = document.getElementById('countryDataOption')?.value || 'total';
+        const dataOption = option || document.querySelector('[data-chart="countryChart"] .cascade-btn')?.dataset.value || 'total';
         const countryData = dataOption === 'unique' ? uniqueClicksByCountry : clicksByCountry;
 
         // Convert to AnyChart format: array of {id: 'country_code', value: clicks}
@@ -646,7 +876,7 @@ class StatisticsDashboard {
         this.charts.set('country', map);
     }
 
-    updateDeviceChart(data) {
+    updateDeviceChart(data, option = null) {
         const canvas = document.getElementById('deviceChart');
         const ctx = canvas.getContext('2d');
 
@@ -663,7 +893,7 @@ class StatisticsDashboard {
         const deviceClicks = clicksByDevice.map(item => item.clicks);
         const deviceUniqueClicks = uniqueClicksByDevice.map(item => item.unique_clicks);
 
-        const dataOption = document.getElementById('deviceDataOption')?.value || 'compare';
+        const dataOption = option || document.querySelector('[data-chart="deviceChart"] .cascade-btn')?.dataset.value || 'compare';
         const datasets = [];
 
         if (dataOption === 'total' || dataOption === 'compare') {
@@ -726,7 +956,7 @@ class StatisticsDashboard {
         this.charts.set('device', chart);
     }
 
-    updateKeyChart(data) {
+    updateKeyChart(data, option = null) {
         const canvas = document.getElementById('keyChart');
         const ctx = canvas.getContext('2d');
 
@@ -738,7 +968,7 @@ class StatisticsDashboard {
         const clicksByKey = data.metrics?.clicks_by_key || [];
         const uniqueClicksByKey = data.metrics?.unique_clicks_by_key || [];
 
-        const dataOption = document.getElementById('keyDataOption')?.value || 'total';
+        const dataOption = option || document.querySelector('[data-chart="keyChart"] .cascade-btn')?.dataset.value || 'total';
         const keyData = dataOption === 'unique' ? uniqueClicksByKey : clicksByKey;
 
         // Convert to chart format and take top 10

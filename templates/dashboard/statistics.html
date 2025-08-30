@@ -65,6 +65,9 @@
                 <div class="chart-header">
                     <h2>Clicks Over Time</h2>
                     <div class="chart-actions">
+                        <button class="table-view-btn" data-chart="timeSeriesChart" title="Table View">
+                            <i class="ti ti-table"></i>
+                        </button>
                         <div class="cascade-select" data-chart="timeSeriesChart">
                             <button class="cascade-btn active" data-value="compare" title="Compare Both">
                                 <i class="ti ti-switch-3"></i>
@@ -88,6 +91,14 @@
                 </div>
                 <div class="chart-container">
                     <canvas id="timeSeriesChart"></canvas>
+                    <div class="stats-table" id="timeSeriesTable" style="display: none;">
+                        <div class="table-header">
+                            <div class="header-cell col-date">Date</div>
+                            <div class="header-cell col-clicks">Total Clicks</div>
+                            <div class="header-cell col-unique">Unique Clicks</div>
+                        </div>
+                        <div class="table-body" id="timeSeriesTableBody"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -127,6 +138,9 @@
                 <div class="chart-header">
                     <h2>Short URLs</h2>
                     <div class="chart-actions">
+                        <button class="table-view-btn" data-chart="keyChart" title="Table View">
+                            <i class="ti ti-table"></i>
+                        </button>
                         <div class="cascade-select" data-chart="keyChart">
                             <button class="cascade-btn active" data-value="total" title="Total Clicks">
                                 <i class="ti ti-chart-bar"></i>
@@ -146,6 +160,14 @@
                 </div>
                 <div class="chart-container">
                     <canvas id="keyChart"></canvas>
+                    <div class="stats-table" id="keyTable" style="display: none;">
+                        <div class="table-header">
+                            <div class="header-cell col-key">Key</div>
+                            <div class="header-cell col-clicks">Total Clicks</div>
+                            <div class="header-cell col-unique">Unique Clicks</div>
+                        </div>
+                        <div class="table-body" id="keyTableBody"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -155,6 +177,9 @@
                 <div class="chart-header">
                     <h2>Devices</h2>
                     <div class="chart-actions">
+                        <button class="table-view-btn" data-chart="deviceChart" title="Table View">
+                            <i class="ti ti-table"></i>
+                        </button>
                         <div class="cascade-select" data-chart="deviceChart">
                             <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
@@ -178,6 +203,14 @@
                 </div>
                 <div class="chart-container">
                     <canvas id="deviceChart"></canvas>
+                    <div class="stats-table" id="deviceTable" style="display: none;">
+                        <div class="table-header">
+                            <div class="header-cell col-device">Name</div>
+                            <div class="header-cell col-clicks">Total Clicks</div>
+                            <div class="header-cell col-unique">Unique Clicks</div>
+                        </div>
+                        <div class="table-body" id="deviceTableBody"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -190,6 +223,9 @@
                 <div class="chart-header">
                     <h2>Browsers</h2>
                     <div class="chart-actions">
+                        <button class="table-view-btn" data-chart="browserChart" title="Table View">
+                            <i class="ti ti-table"></i>
+                        </button>
                         <div class="cascade-select" data-chart="browserChart">
                             <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
@@ -213,6 +249,14 @@
                 </div>
                 <div class="chart-container">
                     <canvas id="browserChart"></canvas>
+                    <div class="stats-table" id="browserTable" style="display: none;">
+                        <div class="table-header">
+                            <div class="header-cell col-browser">Name</div>
+                            <div class="header-cell col-clicks">Total Clicks</div>
+                            <div class="header-cell col-unique">Unique Clicks</div>
+                        </div>
+                        <div class="table-body" id="browserTableBody"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -222,6 +266,9 @@
                 <div class="chart-header">
                     <h2>Platforms</h2>
                     <div class="chart-actions">
+                        <button class="table-view-btn" data-chart="osChart" title="Table View">
+                            <i class="ti ti-table"></i>
+                        </button>
                         <div class="cascade-select" data-chart="osChart">
                             <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
@@ -245,6 +292,14 @@
                 </div>
                 <div class="chart-container">
                     <canvas id="osChart"></canvas>
+                    <div class="stats-table" id="osTable" style="display: none;">
+                        <div class="table-header">
+                            <div class="header-cell col-platform">Name</div>
+                            <div class="header-cell col-clicks">Total Clicks</div>
+                            <div class="header-cell col-unique">Unique Clicks</div>
+                        </div>
+                        <div class="table-body" id="osTableBody"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -257,6 +312,9 @@
                 <div class="chart-header">
                     <h2>Referrers</h2>
                     <div class="chart-actions">
+                        <button class="table-view-btn" data-chart="referrerChart" title="Table View">
+                            <i class="ti ti-table"></i>
+                        </button>
                         <div class="cascade-select" data-chart="referrerChart">
                             <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
@@ -280,6 +338,14 @@
                 </div>
                 <div class="chart-container">
                     <canvas id="referrerChart"></canvas>
+                    <div class="stats-table" id="referrerTable" style="display: none;">
+                        <div class="table-header">
+                            <div class="header-cell col-referrer">Host</div>
+                            <div class="header-cell col-clicks">Total Clicks</div>
+                            <div class="header-cell col-unique">Unique Clicks</div>
+                        </div>
+                        <div class="table-body" id="referrerTableBody"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -289,6 +355,9 @@
                 <div class="chart-header">
                     <h2>Countries</h2>
                     <div class="chart-actions">
+                        <button class="table-view-btn" data-chart="countryChart" title="Table View">
+                            <i class="ti ti-table"></i>
+                        </button>
                         <div class="cascade-select" data-chart="countryChart">
                             <button class="cascade-btn active" data-value="total" title="Total Clicks">
                                 <i class="ti ti-chart-bar"></i>
@@ -308,6 +377,14 @@
                 </div>
                 <div class="chart-container" id="country-container">
                     <div id="countryChart"></div>
+                    <div class="stats-table" id="countryTable" style="display: none;">
+                        <div class="table-header">
+                            <div class="header-cell col-country">Name</div>
+                            <div class="header-cell col-clicks">Total Clicks</div>
+                            <div class="header-cell col-unique">Unique Clicks</div>
+                        </div>
+                        <div class="table-body" id="countryTableBody"></div>
+                    </div>
                 </div>
             </div>
         </div>

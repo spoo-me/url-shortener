@@ -261,11 +261,44 @@
     margin: 10px;
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .chart-container canvas {
     max-width: 100% !important;
     max-height: 100% !important;
+    flex: 1;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.chart-container #countryChart {
+    flex: 1;
+    height: 100%;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Fade transition classes */
+.chart-view-enter {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.chart-view-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.chart-view-exit {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.chart-view-exit-active {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 /* Chart Section Headers */
@@ -285,6 +318,11 @@
 .chart-actions {
     display: flex;
     align-items: center;
+    gap: 8px;
+}
+
+.chart-actions>* {
+    flex-shrink: 0;
 }
 
 /* Cascade Select Buttons */
@@ -575,5 +613,259 @@
     .modal-content {
         min-width: 300px;
         margin: 20px;
+    }
+}
+
+/* Chart Actions Container */
+.chart-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chart-actions>* {
+    flex-shrink: 0;
+}
+
+/* Table View Button Styles */
+.table-view-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.table-view-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.table-view-btn.active {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.4);
+    color: rgba(139, 92, 246, 1);
+}
+
+.table-view-btn.active:hover {
+    background: rgba(139, 92, 246, 0.3);
+    border-color: rgba(139, 92, 246, 0.5);
+}
+
+/* Statistics Table Styles */
+.stats-table {
+    overflow: hidden;
+    overflow-y: scroll;
+    border-radius: 6px;
+    background: rgba(15, 20, 40, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    margin: 10px 5px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Table transition classes */
+.table-view-enter {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.table-view-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.table-view-exit {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.table-view-exit-active {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.stats-table .table-header {
+    display: grid;
+    grid-template-columns: 1fr 140px 140px;
+    background: rgba(255, 255, 255, 0.12);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    flex-shrink: 0;
+}
+
+.stats-table .header-cell {
+    padding: 16px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    overflow-y: scroll;
+    display: flex;
+    align-items: center;
+}
+
+.stats-table .header-cell:last-child {
+    border-right: none;
+}
+
+.stats-table .table-body {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+.stats-table .table-row {
+    display: grid;
+    grid-template-columns: 1fr 140px 140px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    transition: background 0.2s ease;
+}
+
+.stats-table .table-row:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.stats-table .table-row:last-child {
+    border-bottom: none;
+}
+
+.stats-table .table-cell {
+    padding: 14px 12px;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    min-height: 52px;
+    min-width: 0;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+}
+
+.stats-table .table-cell:last-child {
+    border-right: none;
+    justify-content: flex-end;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.stats-table .table-cell:nth-child(2) {
+    justify-content: flex-end;
+    color: rgba(139, 92, 246, 0.9);
+    font-weight: 500;
+}
+
+.stats-table .table-cell:first-child {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* Specific column styling for different metrics */
+.stats-table .col-key .table-cell:first-child {
+    color: var(--accent-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+}
+
+.stats-table .col-date .table-cell:first-child {
+    color: rgba(139, 92, 246, 0.9);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+}
+
+/* Scrollbar styling for table body */
+.stats-table .table-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.stats-table .table-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.stats-table .table-body::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.4);
+    border-radius: 3px;
+}
+
+.stats-table .table-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.6);
+}
+
+/* Empty state for tables */
+.stats-table .table-empty {
+    padding: 60px 20px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 200px;
+}
+
+/* Responsive table styles */
+@media (max-width: 768px) {
+
+    .stats-table .table-header,
+    .stats-table .table-row {
+        grid-template-columns: 1fr 100px 100px;
+    }
+
+    .stats-table .header-cell,
+    .stats-table .table-cell {
+        padding: 12px 8px;
+        font-size: 12px;
+    }
+
+    .chart-container {
+        height: 300px;
+        margin: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .stats-table .table-header,
+    .stats-table .table-row {
+        grid-template-columns: 1fr 80px 80px;
+    }
+
+    .stats-table .header-cell,
+    .stats-table .table-cell {
+        padding: 10px 6px;
+        font-size: 11px;
+    }
+
+    .chart-container {
+        height: 280px;
+        margin: 6px;
+    }
+
+    .chart-section {
+        padding: 15px 15px 5px 15px;
+        border-radius: 16px;
+    }
+
+    .stats-table {
+        border-radius: 16px;
     }
 }
