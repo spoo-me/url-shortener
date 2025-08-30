@@ -14,7 +14,8 @@
     --radius-lg: 16px;
     --radius-md: 12px;
     --radius-sm: 8px;
-    --transition-speed: 0.3s;
+    --transition-speed: 0.2s;
+    --transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Reset body for dashboard */
@@ -53,7 +54,7 @@ body.dashboard-layout {
     border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    transition: width var(--transition-speed) ease;
+    transition: width var(--transition-speed) var(--transition-easing);
     z-index: 100;
 }
 
@@ -84,7 +85,7 @@ body.dashboard-layout {
 }
 
 .brand-logo {
-    transition: opacity var(--transition-speed), width var(--transition-speed);
+    transition: opacity var(--transition-speed) var(--transition-easing), width var(--transition-speed) var(--transition-easing);
 }
 
 .brand-logo img {
@@ -99,7 +100,7 @@ body.dashboard-layout {
     letter-spacing: -0.5px;
     white-space: nowrap;
     overflow: hidden;
-    transition: opacity var(--transition-speed), width var(--transition-speed);
+    transition: opacity var(--transition-speed) var(--transition-easing), width var(--transition-speed) var(--transition-easing);
 }
 
 .collapsed .sidebar-brand {
@@ -174,7 +175,7 @@ body.dashboard-layout {
 }
 
 .nav-text {
-    transition: opacity var(--transition-speed);
+    transition: opacity var(--transition-speed) var(--transition-easing);
 }
 
 .collapsed .nav-text {
@@ -277,7 +278,7 @@ body.dashboard-layout {
     flex: 1;
     text-align: left;
     overflow: hidden;
-    transition: opacity var(--transition-speed);
+    transition: opacity var(--transition-speed) var(--transition-easing);
 }
 
 .collapsed .profile-info {
@@ -301,7 +302,7 @@ body.dashboard-layout {
 }
 
 .profile-chevron {
-    transition: transform 0.3s, opacity var(--transition-speed);
+    transition: transform var(--transition-speed) var(--transition-easing), opacity var(--transition-speed) var(--transition-easing);
     color: var(--text-secondary);
     font-size: 18px;
 }
@@ -391,7 +392,7 @@ body.dashboard-layout {
 .dashboard-main {
     flex: 1;
     margin-left: var(--sidebar-width);
-    transition: margin-left var(--transition-speed) ease;
+    transition: margin-left var(--transition-speed) var(--transition-easing);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -536,7 +537,7 @@ body.dashboard-layout {
         height: 100vh;
         width: 280px;
         transform: translateX(-100%);
-        transition: transform 0.3s ease;
+        transition: transform var(--transition-speed) var(--transition-easing);
         z-index: 160;
         /* Remove collapsed width behavior on mobile */
         width: 280px !important;

@@ -212,6 +212,18 @@ class UrlListQueryBuilder:
                 else None
             )
             password_present = d.get("password") is not None
+
+            # Handle last_click in the same format as created_at (ISO string)
+            last_click_iso = None
+            if d.get("last_click"):
+                last_click_dt = d["last_click"]
+                # If the datetime is naive (no timezone), assume it's UTC
+                if last_click_dt.tzinfo is None:
+                    last_click_dt = last_click_dt.replace(tzinfo=timezone.utc)
+                # Convert to UTC and format as ISO string
+                last_click_utc = last_click_dt.astimezone(timezone.utc)
+                last_click_iso = last_click_utc.isoformat().replace("+00:00", "Z")
+
             items.append(
                 {
                     "id": str(d["_id"]),
@@ -225,9 +237,7 @@ class UrlListQueryBuilder:
                     "password_set": password_present,
                     # Placeholders until implemented/populated
                     "total_clicks": d.get("total_clicks"),
-                    "last_click": int(d["last_click"].timestamp())
-                    if d.get("last_click")
-                    else None,
+                    "last_click": last_click_iso,
                 }
             )
 

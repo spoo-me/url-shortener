@@ -30,7 +30,7 @@
 		hasNext: false,
 		total: 0,
 		pageSize: 20,
-		sortBy: 'created_at',
+		sortBy: 'last_click',
 		sortOrder: 'descending',
 		filters: {},
 	};
@@ -68,18 +68,14 @@
 
 	function formatDate(iso) {
 		if (!iso) return '—';
-		try {
-			const d = new Date(iso);
-			return d.toLocaleString();
-		} catch { return '—'; }
+		return window.SmartDatetime ? window.SmartDatetime.formatCreated(iso) :
+			(() => { try { return new Date(iso).toLocaleString(); } catch { return '—'; } })();
 	}
 
 	function formatTs(ts) {
 		if (!ts && ts !== 0) return '—';
-		try {
-			const d = new Date(ts * 1000);
-			return d.toLocaleString();
-		} catch { return '—'; }
+		return window.SmartDatetime ? window.SmartDatetime.formatLastClick(ts) :
+			(() => { try { return new Date(ts * 1000).toLocaleString(); } catch { return '—'; } })();
 	}
 
 	function trimProtocol(url) {
@@ -177,7 +173,7 @@
 			for (const it of data.items) { frag.appendChild(createItem(it)); }
 			els.list.appendChild(frag);
 			renderPagination();
-			
+
 			// Initialize tooltips for the newly created items
 			initializeTooltips();
 		} catch (err) {
@@ -199,11 +195,11 @@
 
 		// Find all tooltip triggers and initialize Tippy.js
 		const tooltipTriggers = document.querySelectorAll('.tooltip-trigger[data-tooltip]');
-		
+
 		tooltipTriggers.forEach(element => {
 			// Remove the title attribute to prevent native tooltips
 			element.removeAttribute('title');
-			
+
 			const instance = tippy(element, {
 				content: element.getAttribute('data-tooltip'),
 				placement: 'top',
@@ -253,7 +249,7 @@
 		for (const key of ['search', 'status', 'password', 'maxClicks', 'createdAfter', 'createdBefore']) {
 			if (els[key]) els[key].value = '';
 		}
-		if (els.sortBy) els.sortBy.value = 'created_at';
+		if (els.sortBy) els.sortBy.value = 'last_click';
 		if (els.order) els.order.value = 'descending';
 		// reset segmented visual state
 		document.querySelectorAll('.seg').forEach(seg => {

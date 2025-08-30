@@ -273,8 +273,9 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
                 bot_name = "crawler"
 
         # Prepare click data for time-series collection following agreed schema
+        curr_time = datetime.now(timezone.utc)
         click_data = {
-            "clicked_at": datetime.now(timezone.utc),  # timestamp field for time-series
+            "clicked_at": curr_time,  # timestamp field for time-series
             "meta": {  # meta field for time-series
                 "url_id": url_data["_id"],
                 "short_code": short_code,
@@ -297,10 +298,7 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
             print(f"Failed to insert click data for {short_code}")
 
         # Update URLsV2 document atomically with new fields
-        current_time = datetime.now(timezone.utc)
-        update_result = update_url_v2_clicks(
-            url_data["_id"], last_click_time=current_time
-        )
+        update_result = update_url_v2_clicks(url_data["_id"], last_click_time=curr_time)
 
         # Check if URL should be expired due to max_clicks
         if url_data.get("max_clicks"):
