@@ -16,41 +16,48 @@
 
     <!-- Page Header -->
     <div class="page-header">
-        <div class="header-content">
-            <h1 class="page-title">Analytics</h1>
-            <div class="header-actions">
-                <div id="dateRangeContainer"></div>
-                <div class="refresh-control">
-                    <button class="refresh-btn" type="button" title="Refresh">
-                        <i class="ti ti-refresh"></i>
+        <div class="page-header-content">
+            <div class="page-header-text">
+                <h1 class="page-title">Analytics</h1>
+                <p class="page-subtitle">Monitor your link performance and user engagement metrics.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+        <div class="controls-actions">
+            <div id="dateRangeContainer"></div>
+            <div class="refresh-control">
+                <button class="refresh-btn" type="button" title="Refresh">
+                    <i class="ti ti-refresh"></i>
+                </button>
+                <div class="separator"></div>
+                <div class="auto-refresh-dropdown">
+                    <button class="auto-refresh-btn" type="button">
+                        Off <i class="ti ti-chevron-down"></i>
                     </button>
-                    <div class="separator"></div>
-                    <div class="auto-refresh-dropdown">
-                        <button class="auto-refresh-btn" type="button">
-                            Off <i class="ti ti-chevron-down"></i>
-                        </button>
-                        <div class="dropdown-menu">
-                            <div class="dropdown-item" data-interval="0">
-                                Off
-                            </div>
-                            <div class="dropdown-item" data-interval="60">
-                                1m
-                            </div>
-                            <div class="dropdown-item" data-interval="300">
-                                5m
-                            </div>
-                            <div class="dropdown-item" data-interval="900">
-                                15m
-                            </div>
-                            <div class="dropdown-item" data-interval="1800">
-                                30m
-                            </div>
-                            <div class="dropdown-item" data-interval="3600">
-                                1h
-                            </div>
-                            <div class="dropdown-item" data-interval="7200">
-                                2h
-                            </div>
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item" data-interval="0">
+                            Off
+                        </div>
+                        <div class="dropdown-item" data-interval="60">
+                            1m
+                        </div>
+                        <div class="dropdown-item" data-interval="300">
+                            5m
+                        </div>
+                        <div class="dropdown-item" data-interval="900">
+                            15m
+                        </div>
+                        <div class="dropdown-item" data-interval="1800">
+                            30m
+                        </div>
+                        <div class="dropdown-item" data-interval="3600">
+                            1h
+                        </div>
+                        <div class="dropdown-item" data-interval="7200">
+                            2h
                         </div>
                     </div>
                 </div>
@@ -142,17 +149,21 @@
                             <i class="ti ti-table"></i>
                         </button>
                         <div class="cascade-select" data-chart="keyChart">
-                            <button class="cascade-btn active" data-value="total" title="Total Clicks">
-                                <i class="ti ti-chart-bar"></i>
+                            <button class="cascade-btn active" data-value="compare" title="Compare Both">
+                                <i class="ti ti-switch-3"></i>
                             </button>
                             <div class="cascade-dropdown">
-                                <button class="cascade-option active" data-value="total">
+                                <button class="cascade-option" data-value="total">
                                     <i class="ti ti-chart-bar"></i>
                                     <span>Total Clicks</span>
                                 </button>
                                 <button class="cascade-option" data-value="unique">
                                     <i class="ti ti-users"></i>
                                     <span>Unique Clicks</span>
+                                </button>
+                                <button class="cascade-option active" data-value="compare">
+                                    <i class="ti ti-switch-3"></i>
+                                    <span>Compare Both</span>
                                 </button>
                             </div>
                         </div>
@@ -389,9 +400,6 @@
             </div>
         </div>
     </div>
-</div>
-</div>
-
 </div>
 {% endblock %}
 

@@ -6,6 +6,7 @@ class StatisticsDashboard {
         this.startDate = null;
         this.endDate = null;
         this.refreshInterval = null;
+        this.autoRefreshInterval = null;
         this.apiData = null;
         this.dateRangePicker = null;
 
@@ -17,6 +18,7 @@ class StatisticsDashboard {
         this.setupEventListeners();
         this.loadDashboardData();
         this.setupAutoRefresh();
+        this.restoreAutoRefreshSetting();
     }
 
     setupDateRangePicker() {
@@ -84,6 +86,13 @@ class StatisticsDashboard {
         // Handle cascade button clicks
         document.querySelectorAll('.cascade-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                // Don't proceed if button is disabled
+                if (btn.disabled) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
+
                 e.stopPropagation();
                 const dropdown = btn.nextElementSibling;
 
@@ -100,8 +109,16 @@ class StatisticsDashboard {
         // Handle cascade option selection
         document.querySelectorAll('.cascade-option').forEach(option => {
             option.addEventListener('click', (e) => {
-                const value = option.dataset.value;
                 const cascadeSelect = option.closest('.cascade-select');
+                
+                // Don't proceed if cascade select is disabled
+                if (cascadeSelect && cascadeSelect.style.pointerEvents === 'none') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
+
+                const value = option.dataset.value;
                 const chartType = cascadeSelect.dataset.chart;
 
                 // Update active states
@@ -148,6 +165,7 @@ class StatisticsDashboard {
     toggleTableView(chartType, btn) {
         const chartContainer = document.getElementById(chartType);
         const tableContainer = document.getElementById(chartType.replace('Chart', 'Table'));
+        const cascadeSelect = document.querySelector(`[data-chart="${chartType}"].cascade-select`);
 
         if (!chartContainer || !tableContainer) return;
 
@@ -159,6 +177,16 @@ class StatisticsDashboard {
                 btn.classList.remove('active');
                 btn.title = 'Table View';
 
+                // Enable cascade selector
+                if (cascadeSelect) {
+                    cascadeSelect.style.pointerEvents = 'auto';
+                    cascadeSelect.style.opacity = '1';
+                    const cascadeBtn = cascadeSelect.querySelector('.cascade-btn');
+                    if (cascadeBtn) {
+                        cascadeBtn.disabled = false;
+                    }
+                }
+
                 // Special handling for country chart (AnyChart map)
                 if (chartType === 'countryChart') {
                     document.getElementById("country-container").style.padding = "5px";
@@ -169,6 +197,16 @@ class StatisticsDashboard {
             this.fadeTransition(chartContainer, tableContainer, () => {
                 btn.classList.add('active');
                 btn.title = 'Chart View';
+
+                // Disable cascade selector
+                if (cascadeSelect) {
+                    cascadeSelect.style.pointerEvents = 'none';
+                    cascadeSelect.style.opacity = '0.5';
+                    const cascadeBtn = cascadeSelect.querySelector('.cascade-btn');
+                    if (cascadeBtn) {
+                        cascadeBtn.disabled = true;
+                    }
+                }
 
                 // Update table data
                 this.updateTableData(chartType);
@@ -279,10 +317,16 @@ class StatisticsDashboard {
         const clicksByKey = this.apiData.metrics?.clicks_by_key || [];
         const uniqueClicksByKey = this.apiData.metrics?.unique_clicks_by_key || [];
 
-        return clicksByKey.map((item, index) => ({
+        // Create a map for quick lookup of unique clicks by key
+        const uniqueClicksMap = new Map();
+        uniqueClicksByKey.forEach(item => {
+            uniqueClicksMap.set(item.key, item.unique_clicks || item.value || 0);
+        });
+
+        return clicksByKey.map(item => ({
             label: item.key || 'Unknown',
             clicks: item.clicks || item.value || 0,
-            unique_clicks: uniqueClicksByKey[index]?.unique_clicks || uniqueClicksByKey[index]?.value || 0
+            unique_clicks: uniqueClicksMap.get(item.key) || 0
         }));
     }
 
@@ -389,20 +433,30 @@ class StatisticsDashboard {
                 metrics: 'clicks,unique_clicks'
             });
 
-            // Add time range parameters from date range picker
+            // Always send specific start_date and end_date in UTC format
+            // Use the date range picker's built-in functionality to get current range
+            let startDate, endDate;
+            
             if (this.startDate && this.endDate) {
-                // Convert ISO strings to date format for API (YYYY-MM-DD)
-                const startDate = new Date(this.startDate).toISOString().split('T')[0];
-                const endDate = new Date(this.endDate).toISOString().split('T')[0];
-                params.append('start_date', startDate);
-                params.append('end_date', endDate);
-            } else if (this.currentTimeRange) {
-                // Use the range string directly from the date picker
-                params.append('range', this.currentTimeRange);
+                // Use provided datetime range
+                startDate = new Date(this.startDate);
+                endDate = new Date(this.endDate);
             } else {
-                // Default fallback
-                params.append('range', '7d');
+                // Get current range from date range picker (handles both relative and custom ranges)
+                const currentRange = this.dateRangePicker.getCurrentRange();
+                startDate = new Date(currentRange.start);
+                endDate = new Date(currentRange.end);
             }
+
+            // Send full ISO datetime strings in UTC (preserving time component)
+            params.append('start_date', startDate.toISOString());
+            params.append('end_date', endDate.toISOString());
+
+            console.log('Sending API request with dates:', {
+                start_date: startDate.toISOString(),
+                end_date: endDate.toISOString(),
+                original_range: this.currentTimeRange
+            });
 
             const response = await fetch(`/api/v1/stats?${params.toString()}`, {
                 method: 'GET',
@@ -968,26 +1022,45 @@ class StatisticsDashboard {
         const clicksByKey = data.metrics?.clicks_by_key || [];
         const uniqueClicksByKey = data.metrics?.unique_clicks_by_key || [];
 
-        const dataOption = option || document.querySelector('[data-chart="keyChart"] .cascade-btn')?.dataset.value || 'total';
-        const keyData = dataOption === 'unique' ? uniqueClicksByKey : clicksByKey;
+        const dataOption = option || document.querySelector('[data-chart="keyChart"] .cascade-btn')?.dataset.value || 'compare';
 
-        // Convert to chart format and take top 10
-        const topKeys = keyData.slice(0, 10);
-        const keyLabels = topKeys.map(item => item.key);
-        const keyValues = topKeys.map(item => item.clicks || item.unique_clicks);
+        // Take top 10 keys for display
+        const topClicksByKey = clicksByKey.slice(0, 10);
+        const topUniqueClicksByKey = uniqueClicksByKey.slice(0, 10);
+        
+        const keyLabels = topClicksByKey.map(item => item.key);
+        const totalClicksData = topClicksByKey.map(item => item.clicks);
+        const uniqueClicksData = topUniqueClicksByKey.map(item => item.unique_clicks);
+
+        const datasets = [];
+
+        if (dataOption === 'total' || dataOption === 'compare') {
+            datasets.push({
+                label: 'Total Clicks',
+                data: totalClicksData,
+                backgroundColor: 'rgba(255, 193, 7, 0.6)',
+                borderColor: 'rgba(255, 193, 7, 1)',
+                borderWidth: 2,
+                borderRadius: 6,
+            });
+        }
+
+        if (dataOption === 'unique' || dataOption === 'compare') {
+            datasets.push({
+                label: 'Unique Clicks',
+                data: uniqueClicksData,
+                backgroundColor: 'rgba(156, 39, 176, 0.6)',
+                borderColor: 'rgba(156, 39, 176, 1)',
+                borderWidth: 2,
+                borderRadius: 6,
+            });
+        }
 
         const chart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: keyLabels,
-                datasets: [{
-                    label: dataOption === 'unique' ? 'Unique Clicks per URL' : 'Total Clicks per URL',
-                    data: keyValues,
-                    backgroundColor: 'rgba(255, 193, 7, 0.6)',
-                    borderColor: 'rgba(255, 193, 7, 1)',
-                    borderWidth: 2,
-                    borderRadius: 6,
-                }],
+                datasets: datasets,
             },
             options: {
                 responsive: true,
@@ -1019,7 +1092,7 @@ class StatisticsDashboard {
                         callbacks: {
                             afterBody: function (context) {
                                 const index = context[0].dataIndex;
-                                const item = topKeys[index];
+                                const item = topClicksByKey[index];
                                 if (item.clicks_percentage) {
                                     return `${item.clicks_percentage.toFixed(1)}% of total clicks`;
                                 }
@@ -1076,6 +1149,13 @@ class StatisticsDashboard {
             this.autoRefreshInterval = null;
         }
 
+        // Save to localStorage
+        if (seconds > 0) {
+            localStorage.setItem('stats-auto-refresh-interval', seconds.toString());
+        } else {
+            localStorage.removeItem('stats-auto-refresh-interval');
+        }
+
         // Set new interval if seconds > 0
         if (seconds > 0) {
             const milliseconds = seconds * 1000;
@@ -1086,6 +1166,27 @@ class StatisticsDashboard {
             console.log(`Auto-refresh set to ${seconds} seconds`);
         } else {
             console.log('Auto-refresh disabled');
+        }
+    }
+
+    restoreAutoRefreshSetting() {
+        // Get saved auto-refresh interval from localStorage
+        const savedInterval = localStorage.getItem('stats-auto-refresh-interval');
+        
+        if (savedInterval !== null) {
+            const intervalSeconds = parseInt(savedInterval);
+            
+            // Find the corresponding dropdown item
+            const dropdownItem = document.querySelector(`[data-interval="${intervalSeconds}"]`);
+            if (dropdownItem) {
+                // Update the button text
+                const autoRefreshBtn = document.querySelector('.auto-refresh-btn');
+                const intervalText = dropdownItem.textContent.trim();
+                autoRefreshBtn.innerHTML = `${intervalText} <i class="ti ti-chevron-down"></i>`;
+                
+                // Set the auto-refresh interval
+                this.setAutoRefreshInterval(intervalSeconds);
+            }
         }
     }
 
