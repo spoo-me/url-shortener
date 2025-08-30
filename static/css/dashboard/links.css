@@ -193,7 +193,7 @@
     width: 150px;
     height: 150px;
     border-radius: 12px;
-    background: rgba(255,255,255,0.04);
+    background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--border-color);
     padding: 8px;
     display: block;
@@ -209,9 +209,11 @@
     0% {
         background: rgba(255, 255, 255, 0.04);
     }
+
     50% {
         background: rgba(255, 255, 255, 0.08);
     }
+
     100% {
         background: rgba(255, 255, 255, 0.04);
     }
@@ -287,7 +289,8 @@
     border-top-right-radius: 0 !important;
 }
 
-.copy-btn.copied, .btn.copied {
+.copy-btn.copied,
+.btn.copied {
     background: rgba(34, 197, 94, 0.12);
     border-color: rgba(34, 197, 94, 0.35);
     color: #22c55e;
@@ -335,8 +338,13 @@
 }
 
 @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Button Loading State */
@@ -565,8 +573,8 @@
 
 .select-wrapper:hover .select-icon,
 .datetime-wrapper:hover .datetime-icon,
-.select-wrapper select:focus + .select-icon,
-.datetime-wrapper input:focus + .datetime-icon {
+.select-wrapper select:focus+.select-icon,
+.datetime-wrapper input:focus+.datetime-icon {
     color: var(--accent-primary);
 }
 
@@ -963,13 +971,9 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
     }
 
     .page-header-actions {
-        justify-content: center;
+        justify-content: right;
         width: 100%;
-    }
-
-    .toolbar {
-        flex-direction: column;
-        align-items: stretch;
+        margin-top: 10px;
     }
 
     .filters {
@@ -978,7 +982,6 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
     .options-dropdown {
         right: -20px;
-        left: -20px;
         width: auto;
     }
 

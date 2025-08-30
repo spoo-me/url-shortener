@@ -602,21 +602,25 @@
 @media screen and (max-width: 768px) {
     .statistics-dashboard {
         padding: 0 10px;
-        margin-top: 40px;
     }
 
     .page-header-content {
         flex-direction: column;
         gap: 20px;
-        text-align: center;
+        text-align: left;
+        /* Match other pages - left align instead of center */
     }
 
-    .controls-bar {
-        justify-content: center;
+    .page-header-text {
+        text-align: left;
+        /* Ensure text is left-aligned on mobile */
     }
 
     .controls-actions {
-        justify-content: center;
+        justify-content: flex-end;
+        /* Left align instead of center */
+        flex-wrap: wrap;
+        /* Allow wrapping on small screens */
     }
 
     .summary-stats {
@@ -644,14 +648,11 @@
     .page-header-content {
         flex-direction: column;
         gap: 15px;
-    }
-
-    .controls-bar {
-        justify-content: center;
+        text-align: left;
+        /* Left align instead of default center */
     }
 
     .controls-actions {
-        flex-direction: column;
         gap: 10px;
         width: 100%;
     }
@@ -902,7 +903,7 @@
 
     .stats-table .header-cell,
     .stats-table .table-cell {
-        padding: 10px 6px;
+        padding: 10px 8px;
         font-size: 11px;
     }
 
@@ -913,10 +914,6 @@
 
     .chart-section {
         padding: 15px 15px 5px 15px;
-        border-radius: 16px;
-    }
-
-    .stats-table {
         border-radius: 16px;
     }
 }

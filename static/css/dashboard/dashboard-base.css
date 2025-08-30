@@ -131,8 +131,7 @@ body.dashboard-layout {
 
 /* When collapsed, center the toggle button */
 .collapsed .sidebar-header {
-    justify-content: center;
-    padding: 20px 12px;
+    padding: 20px 15px;
 }
 
 /* Ensure toggle button is always visible */
@@ -438,26 +437,180 @@ body.dashboard-layout {
     margin-bottom: 24px;
 }
 
+/* Mobile Header */
+.mobile-header {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+    backdrop-filter: blur(20px) saturate(1.2);
+    border-bottom: 1px solid var(--border-color);
+    z-index: 200;
+    padding: 0 16px;
+    align-items: center;
+    justify-content: space-between;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* Hide mobile header when sidebar is open */
+.mobile-header.sidebar-open {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.mobile-menu-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.mobile-menu-toggle:hover {
+    background: var(--hover-bg);
+}
+
+.mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.mobile-brand img {
+    width: 28px;
+    height: 28px;
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 150;
+    backdrop-filter: blur(4px);
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
+
+    /* Show mobile header */
+    .mobile-header {
+        display: flex;
+    }
+
+    /* Hide desktop sidebar toggle in mobile */
+    .sidebar-toggle {
+        display: none;
+    }
+
+    /* Mobile sidebar positioning */
     .dashboard-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        width: 280px;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 160;
+        /* Remove collapsed width behavior on mobile */
+        width: 280px !important;
+    }
+
+    /* Never show collapsed state on mobile */
+    .dashboard-sidebar.collapsed {
+        width: 280px !important;
         transform: translateX(-100%);
     }
 
+    /* Show sidebar when mobile-open */
     .dashboard-sidebar.mobile-open {
         transform: translateX(0);
     }
 
-    .dashboard-main {
-        margin-left: 0;
+    /* Always show nav text on mobile */
+    .dashboard-sidebar .nav-text,
+    .dashboard-sidebar .brand-text,
+    .dashboard-sidebar .profile-info,
+    .dashboard-sidebar .profile-chevron {
+        opacity: 1 !important;
+        width: auto !important;
+        overflow: visible !important;
     }
 
+    /* Always show sidebar brand on mobile */
+    .dashboard-sidebar .sidebar-brand {
+        display: flex !important;
+    }
+
+    /* Main content adjustments */
+    .dashboard-main {
+        margin-left: 0 !important;
+        /* Override collapsed state margin */
+        padding-top: 60px;
+        /* Account for mobile header */
+    }
+
+    /* Ensure collapsed sidebar doesn't affect main content on mobile */
     .collapsed~.dashboard-main {
-        margin-left: 0;
+        margin-left: 0 !important;
     }
 
     .dashboard-content {
-        padding: 20px;
+        padding: 20px 16px;
+    }
+
+    /* Page header adjustments */
+    .page-title {
+        font-size: 24px;
+    }
+
+    /* Profile menu positioning on mobile */
+    .profile-menu {
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        right: 0;
+        margin-bottom: 8px;
+        width: auto;
+        /* Ensure it appears above the button on mobile */
+        z-index: 1000;
+    }
+
+    /* Override collapsed positioning on mobile */
+    .collapsed .profile-menu {
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        right: 0;
+        margin-bottom: 8px;
+        margin-left: 0;
+        width: auto;
     }
 }
 

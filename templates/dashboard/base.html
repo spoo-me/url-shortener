@@ -1,46 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Dashboard | spoo.me{% endblock %}</title>
-    
-        <!-- Fonts -->
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nata+Sans:wght@100..900&display=swap" rel="stylesheet">
-    
+
     <!-- Base styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/dashboard-base.css') }}?v=1">
-    
+
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
-    
+
     <!-- Tippy.js for tooltips -->
     <script src="https://unpkg.com/@popperjs/core@2"></script>
     <script src="https://unpkg.com/tippy.js@6"></script>
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
-    
+
     {% block head_css %}{% endblock %}
 </head>
+
 <body class="dashboard-layout">
     <div class="dashboard-wrapper">
+        <!-- Mobile Header with Hamburger Menu -->
+        <header class="mobile-header">
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu">
+                <i class="ti ti-menu-2"></i>
+            </button>
+            <a href="/" class="mobile-brand">
+                <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="spoo.me" class="w-8 h-8">
+                <span>spoo.me</span>
+            </a>
+        </header>
+
         {% include 'dashboard/partials/sidebar.html' %}
-        
+
         <main class="dashboard-main">
             <div class="dashboard-content">
                 {% block content %}{% endblock %}
             </div>
         </main>
     </div>
-    
+
     <!-- Base scripts -->
     <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
     <script src="{{ url_for('static', filename='js/dashboard/dashboard-base.js') }}?v=1"></script>
-    
+
     <!-- Auth utilities -->
     <script>
         async function authFetch(url, options = {}) {
@@ -57,7 +70,7 @@
             }
             return response;
         }
-        
+
         async function logout() {
             const res = await authFetch('/auth/logout', { method: 'POST' });
             if (res.ok) {
@@ -65,7 +78,8 @@
             }
         }
     </script>
-    
+
     {% block scripts %}{% endblock %}
 </body>
+
 </html>

@@ -333,6 +333,7 @@
         opacity: 0;
         transform: scale(0.95) translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -495,13 +496,13 @@
     opacity: 1;
 }
 
-.access-option input:checked + .access-label {
+.access-option input:checked+.access-label {
     background: rgba(124, 58, 237, 0.1);
     border-color: var(--accent-primary);
     box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.2);
 }
 
-.access-option input:checked + .access-label::before {
+.access-option input:checked+.access-label::before {
     opacity: 1;
 }
 
@@ -558,6 +559,7 @@
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -608,13 +610,13 @@
     opacity: 1;
 }
 
-.permission-item input:checked + .permission-content {
+.permission-item input:checked+.permission-content {
     background: rgba(124, 58, 237, 0.15);
     border-color: var(--accent-primary);
     box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
 }
 
-.permission-item input:checked + .permission-content::before {
+.permission-item input:checked+.permission-content::before {
     opacity: 1;
 }
 
@@ -814,7 +816,9 @@
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Animations */
@@ -827,6 +831,7 @@
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -835,6 +840,7 @@
 
 /* Responsive Design */
 @media (max-width: 1200px) {
+
     .table-header,
     .table-row {
         grid-template-columns: 180px 160px 1fr 100px 100px 80px 80px;
@@ -842,11 +848,12 @@
 }
 
 @media (max-width: 992px) {
+
     .table-header,
     .table-row {
         grid-template-columns: 150px 140px 1fr 90px 90px 70px 70px;
     }
-    
+
     .header-cell,
     .table-cell {
         padding: 12px 8px;
@@ -859,31 +866,30 @@
         flex-direction: column;
         gap: 16px;
     }
-    
+
     .page-header-actions {
-        justify-content: center;
+        justify-content: right;
         width: 100%;
+        margin-top: 10px;
     }
-    
+
     .keys-toolbar {
-        flex-direction: column;
         gap: 16px;
-        align-items: stretch;
     }
-    
+
     .toolbar-right {
         justify-content: center;
     }
-    
+
     /* Stack table vertically on mobile */
     .keys-table {
         border: none;
     }
-    
+
     .table-header {
         display: none;
     }
-    
+
     .table-row {
         display: block;
         border: 1px solid var(--border-color);
@@ -892,14 +898,14 @@
         padding: 16px;
         background: rgba(15, 20, 40, 0.6);
     }
-    
+
     .table-cell {
         display: block;
         padding: 8px 0;
         border: none;
         min-height: auto;
     }
-    
+
     .table-cell::before {
         content: attr(data-label);
         display: block;
@@ -910,51 +916,71 @@
         letter-spacing: 0.5px;
         margin-bottom: 4px;
     }
-    
-    .col-name::before { content: "Name"; }
-    .col-key::before { content: "Key"; }
-    .col-scopes::before { content: "Permissions"; }
-    .col-created::before { content: "Created"; }
-    .col-expires::before { content: "Expires"; }
-    .col-status::before { content: "Status"; }
-    .col-actions::before { content: "Actions"; }
-    
+
+    .col-name::before {
+        content: "Name";
+    }
+
+    .col-key::before {
+        content: "Key";
+    }
+
+    .col-scopes::before {
+        content: "Permissions";
+    }
+
+    .col-created::before {
+        content: "Created";
+    }
+
+    .col-expires::before {
+        content: "Expires";
+    }
+
+    .col-status::before {
+        content: "Status";
+    }
+
+    .col-actions::before {
+        content: "Actions";
+    }
+
     .modal-content {
         max-width: 95vw;
         margin: 20px;
     }
-    
+
     /* Responsive permissions selector */
     .access-level-selector {
         grid-template-columns: 1fr;
         gap: 8px;
     }
-    
+
     .access-label {
         padding: 12px;
     }
-    
+
     .access-title {
         font-size: 13px;
     }
-    
+
     .access-subtitle {
         font-size: 11px;
     }
-    
+
     .permission-content {
         padding: 10px 12px;
         min-height: 50px;
     }
-    
+
     .permission-icon {
         font-size: 18px;
     }
-    
+
     .permission-title {
         font-size: 13px;
     }
-    
+
     .permission-description {
         font-size: 11px;
     }

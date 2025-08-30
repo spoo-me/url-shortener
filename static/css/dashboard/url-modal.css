@@ -44,7 +44,7 @@
     background: #1a1a1a;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
-    box-shadow: 
+    box-shadow:
         0 20px 40px rgba(0, 0, 0, 0.5),
         0 0 0 1px rgba(255, 255, 255, 0.05);
     width: 100%;
@@ -75,7 +75,7 @@
     background: rgba(255, 255, 255, 0.02);
 }
 
-.modal-title-section {
+.modal-title-section-delete {
     display: flex;
     align-items: center;
     gap: 16px;
@@ -243,6 +243,7 @@
         opacity: 0;
         transform: translateY(8px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -266,6 +267,8 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    width: 100%;
+    min-width: 0;
 }
 
 .field label {
@@ -283,6 +286,9 @@
     color: var(--text-primary);
     font-size: 14px;
     transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
 }
 
 .field input:focus,
@@ -312,6 +318,9 @@
     border-radius: 8px;
     overflow: hidden;
     transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
 }
 
 .input-group:focus-within {
@@ -326,12 +335,16 @@
     font-size: 14px;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .input-group input {
     background: none;
     border: none;
     flex: 1;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Select Wrapper */
@@ -437,24 +450,24 @@
     display: none;
 }
 
-.checkbox-field input[type="checkbox"]:checked + .checkbox-label .checkbox-indicator {
+.checkbox-field input[type="checkbox"]:checked+.checkbox-label .checkbox-indicator {
     background: var(--accent-color);
     border-color: var(--accent-color);
 }
 
-.checkbox-field input[type="checkbox"]:checked + .checkbox-label .checkbox-indicator::after {
+.checkbox-field input[type="checkbox"]:checked+.checkbox-label .checkbox-indicator::after {
     content: '✓';
     color: white;
     font-size: 12px;
     font-weight: bold;
 }
 
-.checkbox-field input[type="checkbox"]:disabled + .checkbox-label {
+.checkbox-field input[type="checkbox"]:disabled+.checkbox-label {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-.checkbox-field input[type="checkbox"]:disabled + .checkbox-label .checkbox-indicator {
+.checkbox-field input[type="checkbox"]:disabled+.checkbox-label .checkbox-indicator {
     background: rgba(255, 255, 255, 0.02);
     border-color: rgba(255, 255, 255, 0.1);
 }
@@ -655,47 +668,87 @@
     .modal-container {
         padding: 16px;
     }
-    
+
     .modal-content {
         max-width: none;
         max-height: 95vh;
     }
-    
+
     .modal-header,
     .modal-body,
     .modal-footer {
         padding: 20px;
     }
-    
+
+    /* Fix input overflow on mobile */
+    .field input,
+    .field select {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    /* Fix input group overflow */
+    .input-group {
+        width: 100%;
+        min-width: 0;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    .input-group input {
+        min-width: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .input-prefix {
+        flex-shrink: 0;
+        max-width: 50%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 12px;
+        padding: 12px 12px;
+    }
+
+    /* Ensure form grid is responsive */
+    .form-grid {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Make field containers responsive */
+    .field {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
     .footer-actions {
         flex-direction: column;
         gap: 12px;
         align-items: stretch;
     }
-    
+
     .footer-actions-left,
     .footer-actions-right {
         width: 100%;
         justify-content: center;
     }
-    
+
     .footer-actions-left {
         order: 2;
     }
-    
+
     .footer-actions-right {
         order: 1;
     }
-    
+
     .footer-actions .btn {
         width: 100%;
         justify-content: center;
     }
-    
-    .tabs {
-        flex-direction: column;
-    }
-    
+
     .tab {
         justify-content: flex-start;
     }
