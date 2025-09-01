@@ -273,7 +273,6 @@
 /* Chart Container */
 .chart-container {
     height: 350px;
-    margin: 10px;
     position: relative;
     overflow: hidden;
     display: flex;
@@ -915,7 +914,6 @@
 
     .chart-container {
         height: 300px;
-        margin: 8px;
     }
 }
 
@@ -930,15 +928,5 @@
     .stats-table .table-cell {
         padding: 10px 8px;
         font-size: 11px;
-    }
-
-    .chart-container {
-        height: 280px;
-        margin: 6px;
-    }
-
-    .chart-section {
-        padding: 15px 15px 5px 15px;
-        border-radius: 16px;
     }
 }

@@ -2,7 +2,7 @@
 
 .navbar {
     background-color: rgba(255, 255, 255, 0.05);
-    padding: 10px 16px;
+    padding: 7px 16px;
     text-align: right;
     border-radius: 4px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -14,12 +14,13 @@
     flex-direction: row;
     font-family: 'Allerta Stencil', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     transition: margin 0.2s cubic-bezier(0.8, 0, 0.2, 1);
+    align-items: center;
 }
 
 .navbar.scrolled {
     position: fixed;
-    width: -webkit-fill-available;
     width: 100%; /* Fallback for Firefox */
+    width: -webkit-fill-available;
     margin: 10px;
     border-radius: 10px;
     box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;

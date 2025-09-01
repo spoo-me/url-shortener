@@ -46,7 +46,7 @@ async function updateAuthNav(){
             const data = await res.json().catch(() => ({}));
             user = data && data.user ? data.user : null;
         }
-        const show = (id, visible, displayType='list-item') => { const el = document.getElementById(id); if(el){ el.style.display = visible ? displayType : 'none'; } };
+        const show = (id, visible, displayType='contents') => { const el = document.getElementById(id); if(el){ el.style.display = visible ? displayType : 'none'; } };
         // Desktop
         show('nav-auth', !loggedIn);
         show('nav-profile', loggedIn);
