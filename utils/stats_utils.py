@@ -255,10 +255,11 @@ def validate_date_range(
 
     # Check if dates are in the future
     now = datetime.now(timezone.utc)
-    if start_date and start_date > now:
+    if start_date and start_date.replace(microsecond=0) > now.replace(microsecond=0):
         return {"is_valid": False, "error": "start_date cannot be in the future"}
 
-    if end_date and end_date > now:
+    if end_date and end_date.replace(microsecond=0) > now.replace(microsecond=0):
+        print(end_date, now)
         return {"is_valid": False, "error": "end_date cannot be in the future"}
 
     return {"is_valid": True}

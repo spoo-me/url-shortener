@@ -154,6 +154,12 @@ class StatsQueryBuilder:
             # If only start_date provided, set end_date to now
             self.end_date = now
 
+        # Cap future dates to current time to handle timing differences
+        if self.start_date and self.start_date > now:
+            self.start_date = now
+        if self.end_date and self.end_date > now:
+            self.end_date = now
+
         # Validate date range
         validation = validate_date_range(self.start_date, self.end_date)
         if not validation["is_valid"]:
