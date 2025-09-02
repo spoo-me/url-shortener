@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any
+from utils.analytics_utils import convert_country_name
 
 
 class AggregationStrategy(ABC):
@@ -178,7 +179,9 @@ class CountryAggregationStrategy(AggregationStrategy):
     def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         return [
             {
-                "country": result["_id"],
+                "country": convert_country_name(
+                    result["_id"]
+                ),  # Send country code after conversion
                 "total_clicks": result.get("total_clicks", 0),
                 "unique_clicks": result.get("unique_clicks", 0),
             }

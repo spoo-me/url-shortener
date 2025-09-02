@@ -9,13 +9,25 @@ def convert_country_data(data):
 
 @functools.lru_cache(maxsize=None)
 def convert_country_name(country_name: str) -> str:
+    """
+    Convert country name to ISO 2-letter country code with caching
+
+    Args:
+        country_name: Full country name (e.g., "United States", "Germany")
+
+    Returns:
+        ISO 2-letter country code (e.g., "US", "DE") or "XX" if not found
+    """
     try:
         return pycountry.countries.lookup(country_name.strip()).alpha_2
-    except LookupError:
+    except (LookupError, ImportError):
+        # Handle special cases and fallback
         if country_name == "Turkey":
             return "TR"
         elif country_name == "Russia":
             return "RU"
+        elif country_name == "Unknown":
+            return "XX"
         return "XX"
 
 
