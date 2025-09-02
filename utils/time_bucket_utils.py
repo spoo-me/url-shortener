@@ -97,7 +97,7 @@ def determine_optimal_bucket_strategy(
     total_hours = time_delta.total_seconds() / 3600
 
     # < 1 hour: 10-minute buckets
-    if total_hours < 1:
+    if total_hours <= 1:
         return TimeBucketStrategy.MINUTE_10
 
     # ≤ 24 hours: hourly buckets
