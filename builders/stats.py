@@ -263,7 +263,16 @@ class StatsQueryBuilder:
 
         for group_dimension in self.group_by:
             try:
-                strategy = AggregationStrategyFactory.get(group_dimension)
+                # Pass time range information for time aggregation strategy
+                if group_dimension == "time":
+                    strategy = AggregationStrategyFactory.get(
+                        group_dimension, 
+                        start_date=self.start_date,
+                        end_date=self.end_date
+                    )
+                else:
+                    strategy = AggregationStrategyFactory.get(group_dimension)
+                
                 pipeline = strategy.build_pipeline(query)
                 raw_results = list(clicks_collection.aggregate(pipeline))
                 formatted_results = strategy.format_results(raw_results)
@@ -296,6 +305,21 @@ class StatsQueryBuilder:
             "start_date": self.start_date.isoformat() if self.start_date else None,
             "end_date": self.end_date.isoformat() if self.end_date else None,
         }
+
+        # Add time bucketing information if time aggregation is used
+        if "time" in self.group_by and "time" in aggregation_results:
+            try:
+                # Create a temporary strategy to get bucket info
+                time_strategy = AggregationStrategyFactory.get(
+                    "time", 
+                    start_date=self.start_date,
+                    end_date=self.end_date
+                )
+                if hasattr(time_strategy, 'get_bucket_info'):
+                    response["time_bucket_info"] = time_strategy.get_bucket_info()
+            except Exception as e:
+                print(f"Error getting bucket info: {e}")
+                # Continue without bucket info if there's an error
 
         # Add aggregation results for each dimension
         for dimension, results in aggregation_results.items():

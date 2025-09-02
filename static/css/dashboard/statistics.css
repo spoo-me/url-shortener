@@ -563,6 +563,10 @@
     opacity: 0.8;
 }
 
+.anychart-credits {
+    display: none !important;
+}
+
 /* Responsive Design */
 @media screen and (max-width: 1200px) {
     .main-stats-container {

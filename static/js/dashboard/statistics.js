@@ -13,6 +13,46 @@ class StatisticsDashboard {
         this.init();
     }
 
+    /**
+     * Format time labels based on bucket strategy for better readability
+     * @param {string} timeValue - Raw time value from API
+     * @param {string} bucketStrategy - The bucketing strategy used ('10_minute', 'hourly', 'daily', etc.)
+     * @returns {string} - Formatted human-readable label
+     */
+    formatTimeLabel(timeValue, bucketStrategy) {
+        if (!timeValue) return timeValue;
+
+        try {
+            const date = dayjs(timeValue);
+
+            switch (bucketStrategy) {
+                case '10_minute':
+                case 'hourly':
+                    // For hourly: "1:00 AM", "2:00 PM", etc.
+                    return date.format('h:mm A');
+
+                case 'daily':
+                    // For daily: "Aug 12", "Sep 11", etc.
+                    return date.format('MMM D');
+
+                case 'weekly':
+                    // For weekly: "Week 32", "Week 33", etc.
+                    return `Week ${date.week()}`;
+
+                case 'monthly':
+                    // For monthly: "Aug 2025", "Sep 2025", etc.
+                    return date.format('MMM YYYY');
+
+                default:
+                    // Fallback to daily format
+                    return date.format('MMM D');
+            }
+        } catch (error) {
+            console.warn('Error formatting time label:', error);
+            return timeValue; // Return original if parsing fails
+        }
+    }
+
     // Comprehensive country code to name mapping
     getCountryName(countryCode) {
         const countryMap = {
@@ -592,10 +632,14 @@ class StatisticsDashboard {
         const clicksByTime = data.metrics?.clicks_by_time || [];
         const uniqueClicksByTime = data.metrics?.unique_clicks_by_time || [];
 
-        // Convert to chart format
-        const labels = clicksByTime.map(item => item.time || item.date);
-        const clicksData = clicksByTime.map(item => item.clicks || item.value);
-        const uniqueClicksData = uniqueClicksByTime.map(item => item.unique_clicks || item.value);
+        // Get bucket strategy from API response for label formatting
+        const bucketStrategy = data.time_bucket_info?.strategy || 'daily';
+
+        // Convert to chart format with human-readable labels
+        const rawLabels = clicksByTime.map(item => item.time || item.date);
+        const labels = rawLabels.map(label => this.formatTimeLabel(label, bucketStrategy));
+        const clicksData = clicksByTime.map(item => item.clicks !== undefined ? item.clicks : (item.value || 0));
+        const uniqueClicksData = uniqueClicksByTime.map(item => item.unique_clicks !== undefined ? item.unique_clicks : (item.value || 0));
 
         const datasets = [];
         const dataOption = option || document.querySelector('[data-chart="timeSeriesChart"] .cascade-btn')?.dataset.value || 'compare';
@@ -608,7 +652,7 @@ class StatisticsDashboard {
                 backgroundColor: 'rgba(255, 159, 64, 0.15)',
                 borderColor: 'rgba(255, 159, 64, 1)',
                 borderWidth: 2,
-                tension: 0.3,
+                tension: 0,
             });
         }
 
@@ -620,7 +664,7 @@ class StatisticsDashboard {
                 backgroundColor: 'rgba(201, 203, 207, 0.25)',
                 borderColor: 'rgba(201, 203, 207, 1)',
                 borderWidth: 2,
-                tension: 0.3,
+                tension: 0,
             });
         }
 
@@ -633,9 +677,10 @@ class StatisticsDashboard {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                pointStyle: false,
                 scales: {
                     x: {
-                        ticks: { color: '#fff' },
+                        ticks: { color: '#fff', maxTicksLimit: 8 },
                         grid: { color: 'rgba(255, 255, 255, 0.1)' }
                     },
                     y: {
@@ -653,7 +698,30 @@ class StatisticsDashboard {
                     tooltip: {
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         titleColor: '#ffffff',
-                        bodyColor: '#ffffff'
+                        bodyColor: '#ffffff',
+                        callbacks: {
+                            title: (context) => {
+                                // Show both formatted label and original timestamp
+                                const index = context[0].dataIndex;
+                                const formattedLabel = labels[index];
+                                const originalTime = rawLabels[index];
+
+                                // For hourly/10-minute, show date + time
+                                if (bucketStrategy === 'hourly' || bucketStrategy === '10_minute') {
+                                    const date = dayjs(originalTime);
+                                    return `${date.format('MMM D, YYYY')} at ${formattedLabel}`;
+                                }
+                                // For daily, show full date
+                                else if (bucketStrategy === 'daily') {
+                                    const date = dayjs(originalTime);
+                                    return `${formattedLabel}, ${date.format('YYYY')}`;
+                                }
+                                // For other strategies, use formatted label
+                                else {
+                                    return formattedLabel;
+                                }
+                            }
+                        }
                     }
                 },
             },
@@ -1100,7 +1168,7 @@ class StatisticsDashboard {
                 backgroundColor: 'rgba(255, 193, 7, 0.6)',
                 borderColor: 'rgba(255, 193, 7, 1)',
                 borderWidth: 2,
-                borderRadius: 6,
+                borderRadius: 20,
             });
         }
 
@@ -1111,7 +1179,7 @@ class StatisticsDashboard {
                 backgroundColor: 'rgba(156, 39, 176, 0.6)',
                 borderColor: 'rgba(156, 39, 176, 1)',
                 borderWidth: 2,
-                borderRadius: 6,
+                borderRadius: 20,
             });
         }
 
