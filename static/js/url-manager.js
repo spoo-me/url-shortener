@@ -708,6 +708,11 @@ class UrlManager {
                             privateBadge.style.display = updatedUrlData.private_stats ? 'inline-flex' : 'none';
                         }
 
+                        const blockBotsBadge = row.querySelector('.badge-block-bots');
+                        if (blockBotsBadge) {
+                            blockBotsBadge.style.display = updatedUrlData.block_bots ? 'inline-flex' : 'none';
+                        }
+
                         // Add update animation
                         row.style.transition = 'all 0.3s ease';
                         row.style.background = 'rgba(16, 185, 129, 0.1)';

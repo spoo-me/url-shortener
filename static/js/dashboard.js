@@ -92,6 +92,7 @@
 		const pwBadge = node.querySelector('.badge-password');
 		const mcBadge = node.querySelector('.badge-max-clicks');
 		const privBadge = node.querySelector('.badge-private');
+		const blockBotsBadge = node.querySelector('.badge-block-bots');
 		const created = node.querySelector('.created-date');
 		const last = node.querySelector('.last-click-date');
 		const total = node.querySelector('.total-clicks-count');
@@ -135,6 +136,11 @@
 		// Private stats badge
 		if (it.private_stats) {
 			privBadge.style.display = 'inline-flex';
+		}
+
+		// Block bots badge
+		if (it.block_bots) {
+			blockBotsBadge.style.display = 'inline-flex';
 		}
 
 		// Store full URL data on the row for the modal

@@ -834,6 +834,12 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
     border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
+.badge-block-bots {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
 .badge:hover {
     transform: scale(1.1);
 }

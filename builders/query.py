@@ -33,6 +33,7 @@ class UrlListQueryBuilder:
             "password": 1,
             "total_clicks": 1,
             "last_click": 1,
+            "block_bots": 1,
         }
 
     def _parse_datetime(self, value: Any) -> Optional[datetime]:
@@ -234,8 +235,8 @@ class UrlListQueryBuilder:
                     "expire_after": expire_after_ts,
                     "max_clicks": d.get("max_clicks"),
                     "private_stats": d.get("private_stats"),
+                    "block_bots": d.get("block_bots", False),
                     "password_set": password_present,
-                    # Placeholders until implemented/populated
                     "total_clicks": d.get("total_clicks"),
                     "last_click": last_click_iso,
                 }
