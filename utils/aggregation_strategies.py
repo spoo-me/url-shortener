@@ -6,7 +6,7 @@ from utils.time_bucket_utils import (
     get_optimal_bucket_config,
     create_mongo_time_bucket_pipeline,
     format_time_bucket_display,
-    fill_missing_buckets
+    fill_missing_buckets,
 )
 
 
@@ -34,22 +34,22 @@ class TimeAggregationStrategy(AggregationStrategy):
     """Strategy for time-based aggregation with dynamic bucketing"""
 
     def __init__(
-        self, 
+        self,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
-        time_format: Optional[str] = None
+        time_format: Optional[str] = None,
     ):
         """
         Initialize time aggregation strategy.
-        
+
         Args:
             start_date: Start date for determining optimal bucket strategy
-            end_date: End date for determining optimal bucket strategy  
+            end_date: End date for determining optimal bucket strategy
             time_format: Manual override for time format (legacy support)
         """
         self.start_date = start_date
         self.end_date = end_date
-        
+
         # Determine bucket configuration
         if time_format:
             # Legacy mode: use provided format
@@ -62,7 +62,7 @@ class TimeAggregationStrategy(AggregationStrategy):
 
     def build_pipeline(self, base_query: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Build aggregation pipeline with dynamic time bucketing"""
-        
+
         if self.bucket_config:
             # Use dynamic bucketing with specialized pipeline
             time_bucket_expr = create_mongo_time_bucket_pipeline(self.bucket_config)
@@ -74,7 +74,7 @@ class TimeAggregationStrategy(AggregationStrategy):
                     "date": "$clicked_at",
                 }
             }
-        
+
         return [
             {"$match": base_query},
             {
@@ -91,39 +91,42 @@ class TimeAggregationStrategy(AggregationStrategy):
     def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Format results with proper time bucket display and fill missing buckets"""
         formatted_results = []
-        
+
         for result in results:
             bucket_value = result["_id"]
-            
+
             # Format the time bucket for display if using dynamic bucketing
             if self.bucket_config:
-                display_value = format_time_bucket_display(bucket_value, self.bucket_config)
+                display_value = format_time_bucket_display(
+                    bucket_value, self.bucket_config
+                )
             else:
                 display_value = bucket_value
-            
-            formatted_results.append({
-                "date": display_value,
-                "total_clicks": result.get("total_clicks", 0),
-                "unique_clicks": result.get("unique_clicks", 0),
-                "bucket_strategy": self.bucket_config.strategy.value if self.bucket_config else "legacy",
-                "raw_bucket": bucket_value  # Include raw value for debugging
-            })
-        
+
+            formatted_results.append(
+                {
+                    "date": display_value,
+                    "total_clicks": result.get("total_clicks", 0),
+                    "unique_clicks": result.get("unique_clicks", 0),
+                    "bucket_strategy": self.bucket_config.strategy.value
+                    if self.bucket_config
+                    else "legacy",
+                    "raw_bucket": bucket_value,  # Include raw value for debugging
+                }
+            )
+
         # Fill missing buckets if using dynamic bucketing and we have date range
         if self.bucket_config and self.start_date and self.end_date:
             formatted_results = fill_missing_buckets(
-                formatted_results,
-                self.start_date,
-                self.end_date,
-                self.bucket_config
+                formatted_results, self.start_date, self.end_date, self.bucket_config
             )
-        
+
         return formatted_results
 
     @property
     def dimension_name(self) -> str:
         return "time"
-    
+
     def get_bucket_info(self) -> Dict[str, Any]:
         """Get information about the current bucketing strategy"""
         if self.bucket_config:

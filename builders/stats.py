@@ -266,13 +266,13 @@ class StatsQueryBuilder:
                 # Pass time range information for time aggregation strategy
                 if group_dimension == "time":
                     strategy = AggregationStrategyFactory.get(
-                        group_dimension, 
+                        group_dimension,
                         start_date=self.start_date,
-                        end_date=self.end_date
+                        end_date=self.end_date,
                     )
                 else:
                     strategy = AggregationStrategyFactory.get(group_dimension)
-                
+
                 pipeline = strategy.build_pipeline(query)
                 raw_results = list(clicks_collection.aggregate(pipeline))
                 formatted_results = strategy.format_results(raw_results)
@@ -311,11 +311,9 @@ class StatsQueryBuilder:
             try:
                 # Create a temporary strategy to get bucket info
                 time_strategy = AggregationStrategyFactory.get(
-                    "time", 
-                    start_date=self.start_date,
-                    end_date=self.end_date
+                    "time", start_date=self.start_date, end_date=self.end_date
                 )
-                if hasattr(time_strategy, 'get_bucket_info'):
+                if hasattr(time_strategy, "get_bucket_info"):
                     response["time_bucket_info"] = time_strategy.get_bucket_info()
             except Exception as e:
                 print(f"Error getting bucket info: {e}")
