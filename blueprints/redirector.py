@@ -260,6 +260,21 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
         # device = ua.device.family if ua.device else "Unknown"
 
         referrer = request.headers.get("Referer")
+        sanitized_referrer_domain = None
+
+        # parse the referrer
+        if referrer:
+            referrer_domain = tld_no_cache_extract(referrer)
+            referrer_domain = (
+                f"{referrer_domain.domain}.{referrer_domain.suffix}"
+                if referrer_domain.suffix
+                else referrer_domain.domain
+            )
+            # First, replace any control characters, special characters like '$', and non-printable ASCII with underscores
+            sanitized_referrer_domain = re.sub(r"[$\x00-\x1F\x7F-\x9F]", "_", referrer_domain)
+            # Then, replace any character not in the allowed set [a-zA-Z0-9.-] with underscores for extra safety
+            sanitized_referrer_domain = re.sub(r"[^a-zA-Z0-9.-]", "_", sanitized_referrer_domain)
+
         country = get_country(user_ip)
         city = get_city(user_ip) or get_city_cf(request)
 
@@ -306,7 +321,7 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
             "os": os_name,
             "device": None,  # TODO: find and move to a reliable device detection
             "redirect_ms": redirect_ms,
-            "referrer": referrer,  # nullable
+            "referrer": sanitized_referrer_domain,  # nullable
             "bot_name": bot_name,  # nullable
         }
 
