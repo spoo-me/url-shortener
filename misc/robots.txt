@@ -1,11 +1,3 @@
 User-agent: *
-Disallow: /
-
-Allow: /$
-Allow: /stats
-Allow: /api
-Allow: /report
-Allow: /contact
-Allow: /docs/
-
+Allow: /
 Sitemap: https://spoo.me/sitemap.xml

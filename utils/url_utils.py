@@ -29,6 +29,22 @@ def get_country(ip_address):
         reader.close()
 
 
+def get_city_cf(request):
+    return request.headers.get("CF-IPCity", None)
+
+
+def get_city(ip_address):
+    reader = geoip2.database.Reader("misc/GeoLite2-City.mmdb")
+    try:
+        response = reader.city(ip_address)
+        city = response.city.name
+        return city
+    except geoip2.errors.AddressNotFoundError:
+        return "Unknown"
+    finally:
+        reader.close()
+
+
 def get_client_ip() -> str:
     # Check for common proxy headers first
     headers_to_check: list[str] = [

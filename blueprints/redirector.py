@@ -10,7 +10,9 @@ from flask import (
 from utils.url_utils import (
     BOT_USER_AGENTS,
     get_country,
+    get_city,
     get_client_ip,
+    get_city_cf,
 )
 from utils.mongo_utils import (
     update_url,
@@ -55,12 +57,11 @@ def redirect_url(short_code):
             "url": cached_url_data.long_url,
             "long_url": cached_url_data.long_url,
             "password": cached_url_data.password_hash,
-            "block-bots": cached_url_data.block_bots,
+            "block_bots": cached_url_data.block_bots,
             "expiration-time": cached_url_data.expiration_time,
             "expire_after": cached_url_data.expiration_time,
             "status": cached_url_data.url_status,
-            # Add missing fields that might be needed for v2 URLs
-            "max_clicks": cached_url_data.max_clicks,  # Not cached for performance
+            "max_clicks": cached_url_data.max_clicks,
             "owner_id": cached_url_data.owner_id,
         }
         schema_type = cached_url_data.schema_version
@@ -137,7 +138,7 @@ def redirect_url(short_code):
                     _id=short_code,  # For v1, _id is the short_code
                     alias=short_code,
                     long_url=url_data["url"],
-                    block_bots=url_data.get("block-bots", False),
+                    block_bots=url_data.get("block_bots", False),
                     password_hash=url_data.get("password"),
                     expiration_time=url_data.get("expiration-time"),
                     max_clicks=url_data.get("max-clicks"),
@@ -204,20 +205,27 @@ def redirect_url(short_code):
             )
 
     # Process the click and track analytics
-    success = process_url_click(
-        url_data, short_code, schema_type, is_emoji, user_ip, start_time
-    )
+    # For HEAD and OPTIONS, skip analytics and just redirect
+    if request.method in ("HEAD", "OPTIONS"):
+        pass  # Do not log click, just proceed to redirect
+    else:
+        success = process_url_click(
+            url_data, short_code, schema_type, is_emoji, user_ip, start_time
+        )
 
-    if not success:
-        return jsonify(
-            {
-                "error_code": "500",
-                "error_message": "Internal server error",
-                "host_url": request.host_url,
-            }
-        ), 500
+        if not success:
+            return jsonify(
+                {
+                    "error_code": "500",
+                    "error_message": "Internal server error",
+                    "host_url": request.host_url,
+                }
+            ), 500
 
-    return redirect(url)
+    redirect_response = redirect(url, code=302)
+    redirect_response.headers["X-Robots-Tag"] = "noindex, nofollow"
+
+    return redirect_response
 
 
 def process_url_click(url_data, short_code, schema_type, is_emoji, user_ip, start_time):
@@ -243,17 +251,17 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
             return False
 
         ua = parse(user_agent)
-        if not ua or not ua.user_agent or not ua.os:
+
+        if not ua.user_agent:
             return False
 
-        os_name = ua.os.family
-        browser = ua.user_agent.family
-        device = ua.device.family if ua.device else "Unknown"
-
-        print(ua.device)
+        os_name = ua.os.family if ua.os else "Unknown"
+        browser = ua.user_agent.family if ua.user_agent else "Unknown"
+        # device = ua.device.family if ua.device else "Unknown"
 
         referrer = request.headers.get("Referer")
         country = get_country(user_ip)
+        city = get_city(user_ip) or get_city_cf(request)
 
         # Calculate redirect time in milliseconds
         redirect_ms = int((time.perf_counter() - start_time) * 1000)
@@ -262,15 +270,25 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
         is_bot = crawler_detect.isCrawler(user_agent) or any(
             re.search(bot, user_agent, re.IGNORECASE) for bot in BOT_USER_AGENTS
         )
+
+        if url_data.get("block_bots", False) and is_bot:
+            # Dont log the click, but do redirect for SEO and meta tags
+            print(
+                "Bot blocked, but redirecting for SEO and meta tags, user_agent:",
+                user_agent,
+            )
+            return True
+
         bot_name = None
         if is_bot:
             # Try to identify specific bot
-            for bot in BOT_USER_AGENTS:
-                if re.search(bot, user_agent, re.IGNORECASE):
-                    bot_name = bot
-                    break
-            if not bot_name and crawler_detect.isCrawler(user_agent):
-                bot_name = "crawler"
+            if crawler_detect.getMatches():
+                bot_name = crawler_detect.getMatches()
+            else:
+                for bot in BOT_USER_AGENTS:
+                    if re.search(bot, user_agent, re.IGNORECASE):
+                        bot_name = bot
+                        break
 
         # Prepare click data for time-series collection following agreed schema
         curr_time = datetime.now(timezone.utc)
@@ -283,10 +301,10 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
             },
             "ip_address": user_ip,
             "country": country or "Unknown",
-            "city": None,  # TODO: Implement city detection if needed
+            "city": city or "Unknown",
             "browser": browser,
             "os": os_name,
-            "device": device,
+            "device": None,  # TODO: find and move to a reliable device detection
             "redirect_ms": redirect_ms,
             "referrer": referrer,  # nullable
             "bot_name": bot_name,  # nullable
@@ -299,7 +317,6 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
 
         # Update URLsV2 document atomically with new fields
         update_result = update_url_v2_clicks(url_data["_id"], last_click_time=curr_time)
-
         # Check if URL should be expired due to max_clicks
         if url_data.get("max_clicks"):
             expire_result = expire_url_if_max_clicks_reached(
@@ -361,14 +378,14 @@ def handle_legacy_click(url_data, short_code, is_emoji, user_ip, start_time):
         # Bot detection and blocking
         for bot in BOT_USER_AGENTS:
             if re.search(bot, user_agent, re.IGNORECASE):
-                if url_data.get("block-bots", False):
+                if url_data.get("block_bots", False):
                     return False  # Bot blocked
                 sanitized_bot = re.sub(r"[.$\x00-\x1F\x7F-\x9F]", "_", bot)
                 updates["$inc"][f"bots.{sanitized_bot}"] = 1
                 break
         else:
             if crawler_detect.isCrawler(user_agent):
-                if url_data.get("block-bots", False):
+                if url_data.get("block_bots", False):
                     return False  # Bot blocked
                 updates["$inc"][f"bots.{crawler_detect.getMatches()}"] = 1
 
