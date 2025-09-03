@@ -135,6 +135,43 @@ class StatisticsDashboard {
         this.restoreAutoRefreshSetting();
     }
 
+    /**
+     * Process chart data to show only top 7 items and group the rest as "Others"
+     * @param {Array} data - Array of data objects with value and label properties
+     * @param {string} valueKey - Key for the numeric value (e.g., 'clicks', 'unique_clicks')
+     * @param {string} labelKey - Key for the label (e.g., 'browser', 'city', 'key')
+     * @returns {Object} - Processed data with labels and values arrays
+     */
+    processTopDataWithOthers(data, valueKey, labelKey) {
+        if (!data || data.length === 0) {
+            return { labels: [], values: [] };
+        }
+
+        // Sort data by the value in descending order
+        const sortedData = [...data].sort((a, b) => (b[valueKey] || 0) - (a[valueKey] || 0));
+
+        // If we have 7 or fewer items, return all
+        if (sortedData.length <= 7) {
+            return {
+                labels: sortedData.map(item => item[labelKey] || 'Unknown'),
+                values: sortedData.map(item => item[valueKey] || 0)
+            };
+        }
+
+        // Take top 7 items
+        const topItems = sortedData.slice(0, 7);
+        const remainingItems = sortedData.slice(7);
+
+        // Calculate "Others" total
+        const othersTotal = remainingItems.reduce((sum, item) => sum + (item[valueKey] || 0), 0);
+
+        // Combine top items with "Others"
+        const labels = [...topItems.map(item => item[labelKey] || 'Unknown'), 'Others'];
+        const values = [...topItems.map(item => item[valueKey] || 0), othersTotal];
+
+        return { labels, values };
+    }
+
     setupDateRangePicker() {
         this.dateRangePicker = new DateRangePicker({
             container: 'dateRangeContainer',
@@ -396,8 +433,6 @@ class StatisticsDashboard {
             this.showFilterTypes();
         }
     }
-
-
 
     populateFilterValues(filterType) {
         const valuesList = document.querySelector('.filter-values-list');
@@ -1057,6 +1092,7 @@ class StatisticsDashboard {
             uniqueClicksMap.set(item.key, item.unique_clicks || item.value || 0);
         });
 
+        // Return ALL data for tables (not limited to top 7)
         return clicksByKey.map(item => ({
             label: item.key || 'Unknown',
             clicks: item.clicks || item.value || 0,
@@ -1068,6 +1104,7 @@ class StatisticsDashboard {
         const clicksByCity = this.apiData.metrics?.clicks_by_city || [];
         const uniqueClicksByCity = this.apiData.metrics?.unique_clicks_by_city || [];
 
+        // Return ALL data for tables (not limited to top 7)
         return clicksByCity.map((item, index) => ({
             label: item.city || 'Unknown',
             clicks: item.clicks || item.value || 0,
@@ -1079,6 +1116,7 @@ class StatisticsDashboard {
         const clicksByBrowser = this.apiData.metrics?.clicks_by_browser || [];
         const uniqueClicksByBrowser = this.apiData.metrics?.unique_clicks_by_browser || [];
 
+        // Return ALL data for tables (not limited to top 7)
         return clicksByBrowser.map((item, index) => ({
             label: item.browser || 'Unknown',
             clicks: item.clicks || item.value || 0,
@@ -1090,6 +1128,7 @@ class StatisticsDashboard {
         const clicksByOs = this.apiData.metrics?.clicks_by_os || [];
         const uniqueClicksByOs = this.apiData.metrics?.unique_clicks_by_os || [];
 
+        // Return ALL data for tables (not limited to top 7)
         return clicksByOs.map((item, index) => ({
             label: item.os || 'Unknown',
             clicks: item.clicks || item.value || 0,
@@ -1101,6 +1140,7 @@ class StatisticsDashboard {
         const clicksByReferrer = this.apiData.metrics?.clicks_by_referrer || [];
         const uniqueClicksByReferrer = this.apiData.metrics?.unique_clicks_by_referrer || [];
 
+        // Return ALL data for tables (not limited to top 7)
         return clicksByReferrer.map((item, index) => ({
             label: item.referrer || 'Direct',
             clicks: item.clicks || item.value || 0,
@@ -1387,18 +1427,14 @@ class StatisticsDashboard {
         const clicksByBrowser = data.metrics?.clicks_by_browser || [];
         const uniqueClicksByBrowser = data.metrics?.unique_clicks_by_browser || [];
 
-        // Convert to chart format
-        const browserLabels = clicksByBrowser.map(item => item.browser);
-        const browserClicks = clicksByBrowser.map(item => item.clicks);
-        const browserUniqueClicks = uniqueClicksByBrowser.map(item => item.unique_clicks);
-
         const dataOption = option || document.querySelector('[data-chart="browserChart"] .cascade-btn')?.dataset.value || 'compare';
         const datasets = [];
 
         if (dataOption === 'total' || dataOption === 'compare') {
+            const processedClicks = this.processTopDataWithOthers(clicksByBrowser, 'clicks', 'browser');
             datasets.push({
                 label: 'Browsers',
-                data: browserClicks,
+                data: processedClicks.values,
                 backgroundColor: 'rgba(153, 102, 255, 0.15)',
                 borderColor: 'rgba(153, 102, 255, 1)',
                 borderWidth: 2,
@@ -1407,9 +1443,10 @@ class StatisticsDashboard {
         }
 
         if (dataOption === 'unique' || dataOption === 'compare') {
+            const processedUniqueClicks = this.processTopDataWithOthers(uniqueClicksByBrowser, 'unique_clicks', 'browser');
             datasets.push({
                 label: 'Unique Browsers',
-                data: browserUniqueClicks,
+                data: processedUniqueClicks.values,
                 backgroundColor: 'rgba(255, 159, 64, 0.25)',
                 borderColor: 'rgba(255, 159, 64, 1)',
                 borderWidth: 2,
@@ -1417,10 +1454,15 @@ class StatisticsDashboard {
             });
         }
 
+        // Use the labels from the first dataset (they should be the same for both total and unique)
+        const processedData = dataOption === 'unique' ?
+            this.processTopDataWithOthers(uniqueClicksByBrowser, 'unique_clicks', 'browser') :
+            this.processTopDataWithOthers(clicksByBrowser, 'clicks', 'browser');
+
         const chart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: browserLabels,
+                labels: processedData.labels,
                 datasets: datasets,
             },
             options: {
@@ -1468,18 +1510,14 @@ class StatisticsDashboard {
         const clicksByOs = data.metrics?.clicks_by_os || [];
         const uniqueClicksByOs = data.metrics?.unique_clicks_by_os || [];
 
-        // Convert to chart format
-        const osLabels = clicksByOs.map(item => item.os);
-        const osClicks = clicksByOs.map(item => item.clicks);
-        const osUniqueClicks = uniqueClicksByOs.map(item => item.unique_clicks);
-
         const dataOption = option || document.querySelector('[data-chart="osChart"] .cascade-btn')?.dataset.value || 'compare';
         const datasets = [];
 
         if (dataOption === 'total' || dataOption === 'compare') {
+            const processedClicks = this.processTopDataWithOthers(clicksByOs, 'clicks', 'os');
             datasets.push({
                 label: 'Platforms',
-                data: osClicks,
+                data: processedClicks.values,
                 backgroundColor: 'rgba(144, 238, 144, 0.15)',
                 borderColor: 'rgba(144, 238, 144, 1)',
                 borderWidth: 2,
@@ -1488,9 +1526,10 @@ class StatisticsDashboard {
         }
 
         if (dataOption === 'unique' || dataOption === 'compare') {
+            const processedUniqueClicks = this.processTopDataWithOthers(uniqueClicksByOs, 'unique_clicks', 'os');
             datasets.push({
                 label: 'Unique Platforms',
-                data: osUniqueClicks,
+                data: processedUniqueClicks.values,
                 backgroundColor: 'rgba(255, 69, 0, 0.25)',
                 borderColor: 'rgba(255, 69, 0, 1)',
                 borderWidth: 2,
@@ -1498,10 +1537,15 @@ class StatisticsDashboard {
             });
         }
 
+        // Use the labels from the first dataset (they should be the same for both total and unique)
+        const processedData = dataOption === 'unique' ?
+            this.processTopDataWithOthers(uniqueClicksByOs, 'unique_clicks', 'os') :
+            this.processTopDataWithOthers(clicksByOs, 'clicks', 'os');
+
         const chart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: osLabels,
+                labels: processedData.labels,
                 datasets: datasets,
             },
             options: {
@@ -1549,18 +1593,14 @@ class StatisticsDashboard {
         const clicksByReferrer = data.metrics?.clicks_by_referrer || [];
         const uniqueClicksByReferrer = data.metrics?.unique_clicks_by_referrer || [];
 
-        // Convert to chart format
-        const referrerLabels = clicksByReferrer.map(item => item.referrer);
-        const referrerClicks = clicksByReferrer.map(item => item.clicks);
-        const referrerUniqueClicks = uniqueClicksByReferrer.map(item => item.unique_clicks);
-
         const dataOption = option || document.querySelector('[data-chart="referrerChart"] .cascade-btn')?.dataset.value || 'compare';
         const datasets = [];
 
         if (dataOption === 'total' || dataOption === 'compare') {
+            const processedClicks = this.processTopDataWithOthers(clicksByReferrer, 'clicks', 'referrer');
             datasets.push({
                 label: 'Referrers',
-                data: referrerClicks,
+                data: processedClicks.values,
                 backgroundColor: 'rgba(128, 0, 128, 0.15)',
                 borderColor: 'rgba(128, 0, 128, 1)',
                 borderWidth: 2,
@@ -1569,9 +1609,10 @@ class StatisticsDashboard {
         }
 
         if (dataOption === 'unique' || dataOption === 'compare') {
+            const processedUniqueClicks = this.processTopDataWithOthers(uniqueClicksByReferrer, 'unique_clicks', 'referrer');
             datasets.push({
                 label: 'Unique Referrers',
-                data: referrerUniqueClicks,
+                data: processedUniqueClicks.values,
                 backgroundColor: 'rgba(255, 0, 255, 0.25)',
                 borderColor: 'rgba(255, 0, 255, 1)',
                 borderWidth: 2,
@@ -1579,10 +1620,15 @@ class StatisticsDashboard {
             });
         }
 
+        // Use the labels from the first dataset (they should be the same for both total and unique)
+        const processedData = dataOption === 'unique' ?
+            this.processTopDataWithOthers(uniqueClicksByReferrer, 'unique_clicks', 'referrer') :
+            this.processTopDataWithOthers(clicksByReferrer, 'clicks', 'referrer');
+
         const chart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: referrerLabels,
+                labels: processedData.labels,
                 datasets: datasets,
             },
             options: {
@@ -1713,18 +1759,14 @@ class StatisticsDashboard {
         const clicksByCity = data.metrics?.clicks_by_city || [];
         const uniqueClicksByCity = data.metrics?.unique_clicks_by_city || [];
 
-        // Convert to chart format
-        const cityLabels = clicksByCity.map(item => item.city);
-        const cityClicks = clicksByCity.map(item => item.clicks);
-        const cityUniqueClicks = uniqueClicksByCity.map(item => item.unique_clicks);
-
         const dataOption = option || document.querySelector('[data-chart="cityChart"] .cascade-btn')?.dataset.value || 'compare';
         const datasets = [];
 
         if (dataOption === 'total' || dataOption === 'compare') {
+            const processedClicks = this.processTopDataWithOthers(clicksByCity, 'clicks', 'city');
             datasets.push({
                 label: 'Cities',
-                data: cityClicks,
+                data: processedClicks.values,
                 backgroundColor: 'rgba(75, 192, 192, 0.15)',
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 2,
@@ -1733,9 +1775,10 @@ class StatisticsDashboard {
         }
 
         if (dataOption === 'unique' || dataOption === 'compare') {
+            const processedUniqueClicks = this.processTopDataWithOthers(uniqueClicksByCity, 'unique_clicks', 'city');
             datasets.push({
                 label: 'Unique Cities',
-                data: cityUniqueClicks,
+                data: processedUniqueClicks.values,
                 backgroundColor: 'rgba(255, 99, 132, 0.25)',
                 borderColor: 'rgba(255, 99, 132, 1)',
                 borderWidth: 2,
@@ -1743,10 +1786,15 @@ class StatisticsDashboard {
             });
         }
 
+        // Use the labels from the first dataset (they should be the same for both total and unique)
+        const processedData = dataOption === 'unique' ?
+            this.processTopDataWithOthers(uniqueClicksByCity, 'unique_clicks', 'city') :
+            this.processTopDataWithOthers(clicksByCity, 'clicks', 'city');
+
         const chart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: cityLabels,
+                labels: processedData.labels,
                 datasets: datasets,
             },
             options: {
@@ -1796,20 +1844,13 @@ class StatisticsDashboard {
 
         const dataOption = option || document.querySelector('[data-chart="keyChart"] .cascade-btn')?.dataset.value || 'compare';
 
-        // Take top 10 keys for display
-        const topClicksByKey = clicksByKey.slice(0, 10);
-        const topUniqueClicksByKey = uniqueClicksByKey.slice(0, 10);
-
-        const keyLabels = topClicksByKey.map(item => item.key);
-        const totalClicksData = topClicksByKey.map(item => item.clicks);
-        const uniqueClicksData = topUniqueClicksByKey.map(item => item.unique_clicks);
-
         const datasets = [];
 
         if (dataOption === 'total' || dataOption === 'compare') {
+            const processedClicks = this.processTopDataWithOthers(clicksByKey, 'clicks', 'key');
             datasets.push({
                 label: 'Total Clicks',
-                data: totalClicksData,
+                data: processedClicks.values,
                 backgroundColor: 'rgba(255, 193, 7, 0.6)',
                 borderColor: 'rgba(255, 193, 7, 1)',
                 borderWidth: 2,
@@ -1818,9 +1859,10 @@ class StatisticsDashboard {
         }
 
         if (dataOption === 'unique' || dataOption === 'compare') {
+            const processedUniqueClicks = this.processTopDataWithOthers(uniqueClicksByKey, 'unique_clicks', 'key');
             datasets.push({
                 label: 'Unique Clicks',
-                data: uniqueClicksData,
+                data: processedUniqueClicks.values,
                 backgroundColor: 'rgba(156, 39, 176, 0.6)',
                 borderColor: 'rgba(156, 39, 176, 1)',
                 borderWidth: 2,
@@ -1828,10 +1870,15 @@ class StatisticsDashboard {
             });
         }
 
+        // Use the labels from the first dataset (they should be the same for both total and unique)
+        const processedData = dataOption === 'unique' ?
+            this.processTopDataWithOthers(uniqueClicksByKey, 'unique_clicks', 'key') :
+            this.processTopDataWithOthers(clicksByKey, 'clicks', 'key');
+
         const chart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: keyLabels,
+                labels: processedData.labels,
                 datasets: datasets,
             },
             options: {
@@ -1865,8 +1912,12 @@ class StatisticsDashboard {
                         callbacks: {
                             afterBody: function (context) {
                                 const index = context[0].dataIndex;
-                                const item = topClicksByKey[index];
-                                if (item.clicks_percentage) {
+                                // Skip percentage display for "Others" category
+                                if (processedData.labels[index] === 'Others') {
+                                    return '';
+                                }
+                                const item = clicksByKey[index];
+                                if (item && item.clicks_percentage) {
                                     return `${item.clicks_percentage.toFixed(1)}% of total clicks`;
                                 }
                                 return '';
