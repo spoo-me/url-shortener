@@ -144,8 +144,6 @@ class StatisticsDashboard {
     }
 
     handleDateRangeChange(dateRange) {
-        console.log('Date range changed:', dateRange);
-
         // Convert the date range to API parameters
         this.startDate = dateRange.start;
         this.endDate = dateRange.end;
@@ -265,11 +263,14 @@ class StatisticsDashboard {
         if (backBtn) {
             backBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                // If there are pending changes for current type, apply and go back
+                if (this.currentFilterType && this.pendingChanges.has(this.currentFilterType)) {
+                    this.pendingChanges.delete(this.currentFilterType);
+                    this.filterManager.notifyChange();
+                }
                 this.showFilterTypes();
             });
         }
-
-
 
         // Set up search in values view
         const valuesSearchInput = document.querySelector('.values-search-input');
@@ -283,12 +284,12 @@ class StatisticsDashboard {
     }
 
     showFilterValues(filterType) {
-        console.log(`Showing filter values for: ${filterType}`);
         this.currentFilterType = filterType;
 
         // Hide main list, show values view
         const typesList = document.querySelector('.filter-types-list');
         const valuesView = document.querySelector('.filter-values-view');
+        const backBtn = document.querySelector('.back-btn');
 
         if (typesList && valuesView) {
             // exit current view
@@ -320,15 +321,17 @@ class StatisticsDashboard {
                 searchInput.value = '';
                 setTimeout(() => searchInput.focus(), 100);
             }
+
+            // Ensure back button shows arrow initially (no pending yet)
+            if (backBtn) {
+                this.setBackButtonApplyState(false);
+            }
         }
     }
 
     showFilterTypes() {
-        console.log('Showing filter types list');
-
         // Apply pending changes if any
         if (this.currentFilterType && this.pendingChanges.has(this.currentFilterType)) {
-            console.log(`Applying filters for ${this.currentFilterType} on back navigation`);
             this.pendingChanges.delete(this.currentFilterType);
             this.filterManager.notifyChange();
         }
@@ -338,6 +341,7 @@ class StatisticsDashboard {
         // Hide values view, show main list
         const typesList = document.querySelector('.filter-types-list');
         const valuesView = document.querySelector('.filter-values-view');
+        const backBtn = document.querySelector('.back-btn');
 
         if (typesList && valuesView) {
             valuesView.classList.add('view-exit-active');
@@ -356,6 +360,25 @@ class StatisticsDashboard {
                     typesList.classList.remove('view-enter-active');
                 }, 200);
             }, 80);
+        }
+
+        // Reset back button to arrow
+        if (backBtn) {
+            this.setBackButtonApplyState(false);
+        }
+    }
+
+    setBackButtonApplyState(shouldApply) {
+        const backBtn = document.querySelector('.back-btn');
+        if (!backBtn) return;
+        const icon = backBtn.querySelector('i');
+        if (!icon) return;
+        if (shouldApply) {
+            icon.className = 'ti ti-check';
+            backBtn.title = 'Apply & Back';
+        } else {
+            icon.className = 'ti ti-arrow-left';
+            backBtn.title = 'Back';
         }
     }
 
@@ -416,6 +439,7 @@ class StatisticsDashboard {
 
             // Mark this category as having pending changes
             this.pendingChanges.add(type);
+            this.setBackButtonApplyState(true);
 
             // Update the main list summary
             this.updateFilterTypeStatus(type);
@@ -505,7 +529,6 @@ class StatisticsDashboard {
 
                         // Apply filters when dropdown closes if there are changes for this category
                         if (this.pendingChanges.has(filterType)) {
-                            console.log(`Applying filters for ${filterType} category on dropdown close`);
                             this.pendingChanges.delete(filterType);
                             this.filterManager.notifyChange();
                         }
@@ -563,7 +586,6 @@ class StatisticsDashboard {
 
                     // Apply filters when dropdown closes if there are changes for this category
                     if (this.pendingChanges.has(filterType)) {
-                        console.log(`Applying filters for ${filterType} category on outside click close`);
                         this.pendingChanges.delete(filterType);
                         this.filterManager.notifyChange();
                     }
@@ -578,14 +600,12 @@ class StatisticsDashboard {
         if (clearAllBtn) {
             clearAllBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                console.log('Clear All Filters button clicked');
                 this.filterManager.clearAllFilters();
             });
         }
     }
 
     populateFilterOptions(data) {
-        console.log('Populating filter options with data:', data);
 
         // Extract available options from API data
         const filterTypes = ['browser', 'os', 'device', 'country', 'referrer'];
@@ -593,8 +613,6 @@ class StatisticsDashboard {
         filterTypes.forEach(type => {
             const metricKey = `clicks_by_${type}`;
             const options = data.metrics?.[metricKey] || [];
-
-            console.log(`Processing ${type} options:`, options);
 
             this.availableOptions[type] = options.map(item => {
                 if (type === 'country') {
@@ -615,8 +633,6 @@ class StatisticsDashboard {
                 }
             }).filter(option => option.value)
                 .sort((a, b) => b.count - a.count); // Sort by count descending
-
-            console.log(`Available ${type} options:`, this.availableOptions[type]);
         });
 
         // Update filter type statuses in main list
@@ -631,19 +647,16 @@ class StatisticsDashboard {
     }
 
     renderFilterOptions() {
-        console.log('Rendering filter options...');
         const filterTypes = ['browser', 'os', 'device', 'country', 'referrer'];
 
         filterTypes.forEach(type => {
             const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
-            console.log(`Rendering ${type} options in:`, optionsList);
 
             if (optionsList) {
                 optionsList.innerHTML = '';
                 optionsList.classList.remove('loading', 'empty');
 
                 const options = this.availableOptions[type] || [];
-                console.log(`${type} options to render:`, options);
 
                 if (options.length === 0) {
                     optionsList.innerHTML = '<div class="empty">No data available</div>';
@@ -655,8 +668,6 @@ class StatisticsDashboard {
                     const optionElement = this.createOptionElement(type, option);
                     optionsList.appendChild(optionElement);
                 });
-
-                console.log(`Rendered ${options.length} options for ${type}`);
             } else {
                 console.warn(`Options list not found for ${type}`);
             }
@@ -720,24 +731,18 @@ class StatisticsDashboard {
         }
 
         const checkboxes = optionsList.querySelectorAll('input[type="checkbox"]');
-        console.log(`Updating ${type} UI - found ${checkboxes.length} checkboxes`);
 
         checkboxes.forEach(checkbox => {
             const value = checkbox.dataset.value;
             const isSelected = this.filterManager.isSelected(type, value);
-            console.log(`Setting ${type} checkbox ${value} to ${isSelected}`);
             checkbox.checked = isSelected;
         });
     }
 
     updateFilterUI() {
-        console.log('Updating filter UI...');
-
         // Update active filter count
         const totalActiveFilters = this.filterManager.getTotalActiveFilters();
         const countElement = document.querySelector('.active-filters-count');
-
-        console.log(`Total active filters: ${totalActiveFilters}`);
 
         if (countElement) {
             if (totalActiveFilters > 0) {
@@ -759,7 +764,6 @@ class StatisticsDashboard {
         const clearAllBtn = document.querySelector('.clear-all-filters-btn');
         if (clearAllBtn) {
             clearAllBtn.disabled = totalActiveFilters === 0;
-            console.log(`Clear All button disabled: ${clearAllBtn.disabled}`);
         }
     }
 
@@ -1179,13 +1183,6 @@ class StatisticsDashboard {
                 }
             });
 
-            console.log('Sending API request with dates and filters:', {
-                start_date: startDate.toISOString(),
-                end_date: endDate.toISOString(),
-                filters: activeFilters,
-                original_range: this.currentTimeRange
-            });
-
             const response = await fetch(`/api/v1/stats?${params.toString()}`, {
                 method: 'GET',
                 credentials: 'include', // Include cookies for authentication
@@ -1199,7 +1196,6 @@ class StatisticsDashboard {
             }
 
             this.apiData = await response.json();
-            console.log('API Response:', this.apiData); // Debug log
 
             // Always populate filter options from API data
             this.populateFilterOptions(this.apiData);
@@ -1927,10 +1923,6 @@ class StatisticsDashboard {
             this.autoRefreshInterval = setInterval(() => {
                 this.loadDashboardData();
             }, milliseconds);
-
-            console.log(`Auto-refresh set to ${seconds} seconds`);
-        } else {
-            console.log('Auto-refresh disabled');
         }
     }
 
@@ -2108,15 +2100,10 @@ class FilterManager {
     }
 
     clearAllFilters() {
-        console.log('Clearing all filters...');
-        console.log('Active filters before clear:', this.activeFilters);
-
         // Clear all active filters
         Object.keys(this.activeFilters).forEach(type => {
             this.activeFilters[type] = [];
         });
-
-        console.log('Filters cleared. Notifying change...');
 
         // Immediately trigger data refresh for clear all
         this.notifyChange();
@@ -2135,9 +2122,7 @@ class FilterManager {
     }
 
     notifyChange() {
-        console.log('FilterManager: notifyChange called');
         if (this.onFiltersChanged) {
-            console.log('FilterManager: calling onFiltersChanged callback');
             this.onFiltersChanged();
         } else {
             console.warn('FilterManager: onFiltersChanged callback not set');
