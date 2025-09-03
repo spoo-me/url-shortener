@@ -9,7 +9,7 @@ class StatisticsDashboard {
         this.autoRefreshInterval = null;
         this.apiData = null;
         this.dateRangePicker = null;
-        
+
         // Filter system
         this.filterManager = new FilterManager();
         this.availableOptions = {
@@ -20,6 +20,7 @@ class StatisticsDashboard {
             referrer: []
         };
         this.pendingChanges = new Set(); // Track which categories have pending changes
+        this.currentFilterType = null; // Track which filter type is currently being edited
 
         this.init();
     }
@@ -196,34 +197,40 @@ class StatisticsDashboard {
     setupFilterSystem() {
         // Set up filter toggle
         const filtersBtn = document.querySelector('.filters-btn');
-        const filtersContent = document.querySelector('.filters-content');
-        const filtersChevron = document.querySelector('.filters-chevron');
+        const filtersDropdown = document.querySelector('.filters-dropdown');
 
-        if (filtersBtn && filtersContent) {
+        if (filtersBtn && filtersDropdown) {
             filtersBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                
-                const isExpanded = filtersContent.classList.contains('expanded');
-                
-                if (isExpanded) {
-                    filtersContent.classList.remove('expanded');
+
+                const isOpen = filtersDropdown.classList.contains('show');
+
+                if (isOpen) {
+                    filtersDropdown.classList.remove('show');
                     filtersBtn.classList.remove('active');
                 } else {
-                    filtersContent.classList.add('expanded');
+                    filtersDropdown.classList.add('show');
                     filtersBtn.classList.add('active');
                 }
             });
         }
 
-        // Initialize loading state for all filter dropdowns
-        this.initializeFilterLoadingState();
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.filters-dropdown-container')) {
+                const filtersDropdown = document.querySelector('.filters-dropdown');
+                const filtersBtn = document.querySelector('.filters-btn');
 
-        // Set up multi-select dropdowns
-        this.setupMultiSelectDropdowns();
+                if (filtersDropdown && filtersBtn) {
+                    filtersDropdown.classList.remove('show');
+                    filtersBtn.classList.remove('active');
+                }
+            }
+        });
 
-        // Set up filter actions
-        this.setupFilterActions();
+        // Set up hierarchical filter navigation
+        this.setupHierarchicalFilters();
 
         // Set up filter change listeners
         this.filterManager.onFiltersChanged = () => {
@@ -232,9 +239,199 @@ class StatisticsDashboard {
         };
     }
 
+    setupHierarchicalFilters() {
+        // Set up filter type item clicks
+        const filterTypeItems = document.querySelectorAll('.filter-type-item:not(.clear-all-item)');
+        filterTypeItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const filterType = item.dataset.filter;
+                this.showFilterValues(filterType);
+            });
+        });
+
+        // Set up clear all button
+        const clearAllItem = document.querySelector('.filter-type-item.clear-all-item');
+        if (clearAllItem) {
+            clearAllItem.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.filterManager.clearAllFilters();
+                this.closeFiltersDropdown();
+            });
+        }
+
+        // Set up back button
+        const backBtn = document.querySelector('.back-btn');
+        if (backBtn) {
+            backBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showFilterTypes();
+            });
+        }
+
+
+
+        // Set up search in values view
+        const valuesSearchInput = document.querySelector('.values-search-input');
+        if (valuesSearchInput) {
+            valuesSearchInput.addEventListener('input', (e) => {
+                if (this.currentFilterType) {
+                    this.filterValuesOptions(this.currentFilterType, e.target.value);
+                }
+            });
+        }
+    }
+
+    showFilterValues(filterType) {
+        console.log(`Showing filter values for: ${filterType}`);
+        this.currentFilterType = filterType;
+
+        // Hide main list, show values view
+        const typesList = document.querySelector('.filter-types-list');
+        const valuesView = document.querySelector('.filter-values-view');
+
+        if (typesList && valuesView) {
+            typesList.style.display = 'none';
+            valuesView.style.display = 'block';
+
+            // Populate values
+            this.populateFilterValues(filterType);
+
+            // Clear and focus search
+            const searchInput = valuesView.querySelector('.values-search-input');
+            if (searchInput) {
+                searchInput.value = '';
+                setTimeout(() => searchInput.focus(), 100);
+            }
+        }
+    }
+
+    showFilterTypes() {
+        console.log('Showing filter types list');
+
+        // Apply pending changes if any
+        if (this.currentFilterType && this.pendingChanges.has(this.currentFilterType)) {
+            console.log(`Applying filters for ${this.currentFilterType} on back navigation`);
+            this.pendingChanges.delete(this.currentFilterType);
+            this.filterManager.notifyChange();
+        }
+
+        this.currentFilterType = null;
+
+        // Hide values view, show main list
+        const typesList = document.querySelector('.filter-types-list');
+        const valuesView = document.querySelector('.filter-values-view');
+
+        if (typesList && valuesView) {
+            valuesView.style.display = 'none';
+            typesList.style.display = 'block';
+        }
+    }
+
+    closeFiltersDropdown() {
+        const filtersDropdown = document.querySelector('.filters-dropdown');
+        const filtersBtn = document.querySelector('.filters-btn');
+
+        if (filtersDropdown && filtersBtn) {
+            filtersDropdown.classList.remove('show');
+            filtersBtn.classList.remove('active');
+
+            // Reset to main view
+            this.showFilterTypes();
+        }
+    }
+
+
+
+    populateFilterValues(filterType) {
+        const valuesList = document.querySelector('.filter-values-list');
+        if (!valuesList) return;
+
+        valuesList.innerHTML = '';
+
+        const options = this.availableOptions[filterType] || [];
+        if (options.length === 0) {
+            valuesList.innerHTML = '<div class="empty">No data available</div>';
+            return;
+        }
+
+        options.forEach(option => {
+            const optionElement = this.createFilterValueElement(filterType, option);
+            valuesList.appendChild(optionElement);
+        });
+    }
+
+    createFilterValueElement(type, option) {
+        const label = document.createElement('label');
+        label.className = 'option-item';
+
+        const isSelected = this.filterManager.isSelected(type, option.value);
+
+        label.innerHTML = `
+            <input type="checkbox" ${isSelected ? 'checked' : ''} data-value="${option.value}">
+            <span class="checkmark"></span>
+            <span class="option-text">${this.escapeHtml(option.label)}</span>
+            <span class="option-count">${this.formatNumber(option.count)}</span>
+        `;
+
+        // Add change listener
+        const checkbox = label.querySelector('input[type="checkbox"]');
+        checkbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                this.filterManager.addFilter(type, option.value);
+            } else {
+                this.filterManager.removeFilter(type, option.value);
+            }
+
+            // Mark this category as having pending changes
+            this.pendingChanges.add(type);
+
+            // Update the main list summary
+            this.updateFilterTypeStatus(type);
+        });
+
+        return label;
+    }
+
+    filterValuesOptions(type, searchTerm) {
+        const valuesList = document.querySelector('.filter-values-list');
+        if (!valuesList) return;
+
+        const options = valuesList.querySelectorAll('.option-item');
+        const term = searchTerm.toLowerCase();
+
+        options.forEach(option => {
+            const text = option.querySelector('.option-text').textContent.toLowerCase();
+            if (text.includes(term)) {
+                option.style.display = 'flex';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+    }
+
+    updateFilterTypeStatus(type) {
+        const typeItem = document.querySelector(`[data-filter="${type}"]`);
+        const countElement = typeItem?.querySelector('.filter-count');
+
+        if (!countElement) return;
+
+        const activeFilters = this.filterManager.getActiveFilters()[type] || [];
+
+        if (activeFilters.length === 0) {
+            countElement.textContent = 'All';
+            countElement.style.background = 'rgba(255, 255, 255, 0.08)';
+            countElement.style.color = 'rgba(255, 255, 255, 0.6)';
+        } else {
+            countElement.textContent = activeFilters.length.toString();
+            countElement.style.background = 'rgba(124, 58, 237, 0.2)';
+            countElement.style.color = 'rgba(124, 58, 237, 1)';
+        }
+    }
+
     initializeFilterLoadingState() {
         const filterTypes = ['browser', 'os', 'device', 'country', 'referrer'];
-        
+
         filterTypes.forEach(type => {
             const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
             if (optionsList) {
@@ -246,7 +443,7 @@ class StatisticsDashboard {
 
     setupMultiSelectDropdowns() {
         const wrappers = document.querySelectorAll('.multi-select-wrapper');
-        
+
         wrappers.forEach(wrapper => {
             const trigger = wrapper.querySelector('.multi-select-trigger');
             const dropdown = wrapper.querySelector('.multi-select-dropdown');
@@ -257,7 +454,7 @@ class StatisticsDashboard {
                 trigger.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    
+
                     // Close other dropdowns
                     document.querySelectorAll('.multi-select-dropdown.show').forEach(dd => {
                         if (dd !== dropdown) {
@@ -274,7 +471,7 @@ class StatisticsDashboard {
                         dropdown.classList.remove('show');
                         trigger.classList.remove('active');
                         wrapper.classList.remove('active');
-                        
+
                         // Apply filters when dropdown closes if there are changes for this category
                         if (this.pendingChanges.has(filterType)) {
                             console.log(`Applying filters for ${filterType} category on dropdown close`);
@@ -285,7 +482,7 @@ class StatisticsDashboard {
                         dropdown.classList.add('show');
                         trigger.classList.add('active');
                         wrapper.classList.add('active');
-                        
+
                         // Focus search input
                         const searchInput = dropdown.querySelector('.search-input');
                         if (searchInput) {
@@ -329,10 +526,10 @@ class StatisticsDashboard {
                     dropdown.classList.remove('show');
                     const parentWrapper = dropdown.parentElement;
                     const filterType = parentWrapper.dataset.filter;
-                    
+
                     parentWrapper.querySelector('.multi-select-trigger').classList.remove('active');
                     parentWrapper.classList.remove('active');
-                    
+
                     // Apply filters when dropdown closes if there are changes for this category
                     if (this.pendingChanges.has(filterType)) {
                         console.log(`Applying filters for ${filterType} category on outside click close`);
@@ -358,16 +555,16 @@ class StatisticsDashboard {
 
     populateFilterOptions(data) {
         console.log('Populating filter options with data:', data);
-        
+
         // Extract available options from API data
         const filterTypes = ['browser', 'os', 'device', 'country', 'referrer'];
-        
+
         filterTypes.forEach(type => {
             const metricKey = `clicks_by_${type}`;
             const options = data.metrics?.[metricKey] || [];
-            
+
             console.log(`Processing ${type} options:`, options);
-            
+
             this.availableOptions[type] = options.map(item => {
                 if (type === 'country') {
                     // For countries, use country name as both value and label
@@ -386,41 +583,48 @@ class StatisticsDashboard {
                     };
                 }
             }).filter(option => option.value)
-              .sort((a, b) => b.count - a.count); // Sort by count descending
-            
+                .sort((a, b) => b.count - a.count); // Sort by count descending
+
             console.log(`Available ${type} options:`, this.availableOptions[type]);
         });
 
-        // Render options in dropdowns
-        this.renderFilterOptions();
+        // Update filter type statuses in main list
+        this.updateAllFilterTypeStatuses();
+    }
+
+    updateAllFilterTypeStatuses() {
+        const filterTypes = ['browser', 'os', 'device', 'country', 'referrer'];
+        filterTypes.forEach(type => {
+            this.updateFilterTypeStatus(type);
+        });
     }
 
     renderFilterOptions() {
         console.log('Rendering filter options...');
         const filterTypes = ['browser', 'os', 'device', 'country', 'referrer'];
-        
+
         filterTypes.forEach(type => {
             const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
             console.log(`Rendering ${type} options in:`, optionsList);
-            
+
             if (optionsList) {
                 optionsList.innerHTML = '';
                 optionsList.classList.remove('loading', 'empty');
-                
+
                 const options = this.availableOptions[type] || [];
                 console.log(`${type} options to render:`, options);
-                
+
                 if (options.length === 0) {
                     optionsList.innerHTML = '<div class="empty">No data available</div>';
                     optionsList.classList.add('empty');
                     return;
                 }
-                
+
                 options.forEach(option => {
                     const optionElement = this.createOptionElement(type, option);
                     optionsList.appendChild(optionElement);
                 });
-                
+
                 console.log(`Rendered ${options.length} options for ${type}`);
             } else {
                 console.warn(`Options list not found for ${type}`);
@@ -431,13 +635,12 @@ class StatisticsDashboard {
     createOptionElement(type, option) {
         const label = document.createElement('label');
         label.className = 'option-item';
-        
+
         const isSelected = this.filterManager.isSelected(type, option.value);
-        
+
         label.innerHTML = `
             <input type="checkbox" ${isSelected ? 'checked' : ''} data-value="${option.value}">
             <span class="checkmark"></span>
-            ${type === 'country' ? `<span class="country-flag">${this.getCountryFlag(option.code || option.value)}</span>` : ''}
             <span class="option-text">${this.escapeHtml(option.label)}</span>
             <span class="option-count">${this.formatNumber(option.count)}</span>
         `;
@@ -450,49 +653,15 @@ class StatisticsDashboard {
             } else {
                 this.filterManager.removeFilter(type, option.value);
             }
-            
+
             // Mark this category as having pending changes
             this.pendingChanges.add(type);
-            
+
             // Update the summary immediately for visual feedback
             this.updateFilterSummary(type);
         });
 
         return label;
-    }
-
-    getCountryFlag(countryCode) {
-        // Simple flag emoji mapping for common countries
-        const flagMap = {
-            'US': '🇺🇸', 'GB': '🇬🇧', 'CA': '🇨🇦', 'AU': '🇦🇺', 'DE': '🇩🇪',
-            'FR': '🇫🇷', 'JP': '🇯🇵', 'CN': '🇨🇳', 'IN': '🇮🇳', 'BR': '🇧🇷',
-            'IT': '🇮🇹', 'ES': '🇪🇸', 'RU': '🇷🇺', 'KR': '🇰🇷', 'MX': '🇲🇽',
-            'NL': '🇳🇱', 'SE': '🇸🇪', 'NO': '🇳🇴', 'DK': '🇩🇰', 'FI': '🇫🇮',
-            'PL': '🇵🇱', 'CH': '🇨🇭', 'AT': '🇦🇹', 'BE': '🇧🇪', 'IE': '🇮🇪',
-            'XX': '🌍', 'Unknown': '🌍'
-        };
-        
-        // Handle both country codes and country names
-        if (!countryCode) return '🌍';
-        
-        // If it's already a country code, use it
-        if (countryCode.length === 2) {
-            return flagMap[countryCode.toUpperCase()] || '🌍';
-        }
-        
-        // If it's a country name, try to find the code
-        const reverseMap = {
-            'United States': 'US', 'United Kingdom': 'GB', 'Canada': 'CA',
-            'Australia': 'AU', 'Germany': 'DE', 'France': 'FR', 'Japan': 'JP',
-            'China': 'CN', 'India': 'IN', 'Brazil': 'BR', 'Italy': 'IT',
-            'Spain': 'ES', 'Russia': 'RU', 'South Korea': 'KR', 'Mexico': 'MX',
-            'Netherlands': 'NL', 'Sweden': 'SE', 'Norway': 'NO', 'Denmark': 'DK',
-            'Finland': 'FI', 'Poland': 'PL', 'Switzerland': 'CH', 'Austria': 'AT',
-            'Belgium': 'BE', 'Ireland': 'IE'
-        };
-        
-        const code = reverseMap[countryCode];
-        return flagMap[code] || '🌍';
     }
 
     filterOptions(type, searchTerm) {
@@ -512,43 +681,6 @@ class StatisticsDashboard {
         });
     }
 
-    selectAllOptions(type) {
-        const visibleOptions = this.getVisibleOptions(type);
-        visibleOptions.forEach(option => {
-            this.filterManager.addFilter(type, option.value);
-        });
-        this.pendingChanges.add(type);
-        this.updateFilterOptionsUI(type);
-        this.updateFilterSummary(type);
-    }
-
-    clearAllOptions(type) {
-        this.filterManager.clearFilter(type);
-        this.pendingChanges.add(type);
-        this.updateFilterOptionsUI(type);
-        this.updateFilterSummary(type);
-    }
-
-    getVisibleOptions(type) {
-        const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
-        if (!optionsList) return [];
-
-        const visibleOptions = [];
-        const options = optionsList.querySelectorAll('.option-item');
-        
-        options.forEach(option => {
-            if (option.style.display !== 'none') {
-                const value = option.querySelector('input').dataset.value;
-                const optionData = this.availableOptions[type].find(opt => opt.value === value);
-                if (optionData) {
-                    visibleOptions.push(optionData);
-                }
-            }
-        });
-
-        return visibleOptions;
-    }
-
     updateFilterOptionsUI(type) {
         const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
         if (!optionsList) {
@@ -558,7 +690,7 @@ class StatisticsDashboard {
 
         const checkboxes = optionsList.querySelectorAll('input[type="checkbox"]');
         console.log(`Updating ${type} UI - found ${checkboxes.length} checkboxes`);
-        
+
         checkboxes.forEach(checkbox => {
             const value = checkbox.dataset.value;
             const isSelected = this.filterManager.isSelected(type, value);
@@ -569,13 +701,13 @@ class StatisticsDashboard {
 
     updateFilterUI() {
         console.log('Updating filter UI...');
-        
+
         // Update active filter count
         const totalActiveFilters = this.filterManager.getTotalActiveFilters();
         const countElement = document.querySelector('.active-filters-count');
-        
+
         console.log(`Total active filters: ${totalActiveFilters}`);
-        
+
         if (countElement) {
             if (totalActiveFilters > 0) {
                 countElement.textContent = totalActiveFilters;
@@ -603,13 +735,13 @@ class StatisticsDashboard {
     updateFilterSummary(type) {
         const trigger = document.querySelector(`[data-filter="${type}"] .multi-select-trigger`);
         const summary = trigger?.querySelector('.selected-summary');
-        
+
         if (!summary) return;
 
         const selectedFilters = this.filterManager.getActiveFilters()[type] || [];
         const typeLabels = {
             browser: 'browsers',
-            os: 'systems', 
+            os: 'systems',
             device: 'devices',
             country: 'countries',
             referrer: 'referrers'
@@ -1037,10 +1169,10 @@ class StatisticsDashboard {
 
             this.apiData = await response.json();
             console.log('API Response:', this.apiData); // Debug log
-            
+
             // Always populate filter options from API data
             this.populateFilterOptions(this.apiData);
-            
+
             this.updateDashboard(this.apiData);
 
         } catch (error) {
@@ -1920,7 +2052,7 @@ class FilterManager {
         if (!this.activeFilters[type]) {
             this.activeFilters[type] = [];
         }
-        
+
         if (!this.activeFilters[type].includes(value)) {
             this.activeFilters[type].push(value);
             // Don't notify change immediately - wait for dropdown close
@@ -1929,7 +2061,7 @@ class FilterManager {
 
     removeFilter(type, value) {
         if (!this.activeFilters[type]) return;
-        
+
         const index = this.activeFilters[type].indexOf(value);
         if (index > -1) {
             this.activeFilters[type].splice(index, 1);
@@ -1947,14 +2079,14 @@ class FilterManager {
     clearAllFilters() {
         console.log('Clearing all filters...');
         console.log('Active filters before clear:', this.activeFilters);
-        
+
         // Clear all active filters
         Object.keys(this.activeFilters).forEach(type => {
             this.activeFilters[type] = [];
         });
-        
+
         console.log('Filters cleared. Notifying change...');
-        
+
         // Immediately trigger data refresh for clear all
         this.notifyChange();
     }
@@ -1985,19 +2117,19 @@ class FilterManager {
     saveToURL() {
         const url = new URL(window.location);
         const params = url.searchParams;
-        
+
         // Clear existing filter params
         Object.keys(this.activeFilters).forEach(type => {
             params.delete(type);
         });
-        
+
         // Add active filters
         Object.keys(this.activeFilters).forEach(type => {
             if (this.activeFilters[type].length > 0) {
                 params.set(type, this.activeFilters[type].join(','));
             }
         });
-        
+
         // Update URL without reloading
         window.history.replaceState({}, '', url);
     }
@@ -2006,7 +2138,7 @@ class FilterManager {
     loadFromURL() {
         const params = new URLSearchParams(window.location.search);
         let hasFilters = false;
-        
+
         Object.keys(this.activeFilters).forEach(type => {
             const value = params.get(type);
             if (value) {
@@ -2014,7 +2146,7 @@ class FilterManager {
                 hasFilters = true;
             }
         });
-        
+
         return hasFilters;
     }
 }

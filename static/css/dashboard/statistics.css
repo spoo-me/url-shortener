@@ -179,15 +179,10 @@
     border-radius: 0 0 6px 6px;
 }
 
-/* Filters Panel */
-.filters-panel {
-    margin-bottom: 25px;
+/* Filters Dropdown Container */
+.filters-dropdown-container {
     position: relative;
-    z-index: 100;
-}
-
-.filters-toggle {
-    display: none; /* Hidden since button moved to controls bar */
+    z-index: 1000;
 }
 
 .filters-btn {
@@ -240,32 +235,212 @@
     transform: rotate(180deg);
 }
 
-.filters-content {
-    max-height: 0;
-    overflow: visible;
-    transition: max-height 0.3s ease, opacity 0.3s ease;
-    opacity: 0;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
-    border: 1px solid rgba(255, 255, 255, 0.1);
+/* Floating Filters Dropdown */
+.filters-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    width: 260px;
+    max-width: 90vw;
+    background: rgba(20, 25, 40, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 12px;
     backdrop-filter: blur(20px);
-    box-shadow: rgba(0, 0, 0, 0.24) 0 3px 8px;
-    position: relative;
-    z-index: 1000;
+    box-shadow: rgba(0, 0, 0, 0.3) 0 20px 60px;
+    z-index: 9999;
+    display: none;
+    overflow: hidden;
 }
 
-.filters-content.expanded {
-    max-height: 500px;
-    opacity: 1;
-    padding: 20px;
-    overflow: visible;
+.filters-dropdown.show {
+    display: block;
+    animation: filtersDropdownSlideIn 0.3s ease-out;
+}
+
+@keyframes filtersDropdownSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Filter Types List */
+.filter-types-list {
+    padding: 6px;
+}
+
+.filter-type-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 2px;
+}
+
+.filter-type-item:hover:not(.clear-all-item) {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.filter-type-item.clear-all-item {
+    color: rgba(239, 68, 68, 0.9);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 8px;
+    padding-top: 16px;
+}
+
+.filter-type-item.clear-all-item:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.filter-type-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.filter-type-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.filter-type-info i {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.7);
+    width: 20px;
+    text-align: center;
+}
+
+.filter-type-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.filter-type-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-count {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.08);
+    padding: 4px 8px;
+    border-radius: 12px;
+    min-width: 24px;
+    text-align: center;
+}
+
+.filter-type-status i {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.filter-actions-separator {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 8px 16px;
+}
+
+/* Filter Values View */
+.filter-values-view {
+    padding: 8px;
+}
+
+.filter-values-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.filter-values-search {
+    position: relative;
+    flex: 1;
+}
+
+.filter-values-search i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+}
+
+.values-search-input {
+    width: 100%;
+    height: 36px;
+    padding: 10px 12px 10px 36px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.values-search-input:focus {
+    outline: none;
+    border-color: #7c3aed;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.filter-values-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.filter-values-list .option-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 2px;
+}
+
+.filter-values-list .option-item:hover {
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .filters-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    margin-bottom: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
 }
 
 .filter-group {
@@ -499,8 +674,8 @@
 }
 
 .checkmark {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     border: 2px solid rgba(255, 255, 255, 0.4);
     border-radius: 4px;
     position: relative;
@@ -550,15 +725,19 @@
     font-size: 14px;
     font-weight: 500;
     line-height: 1.4;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .option-count {
     color: rgba(255, 255, 255, 0.6);
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 600;
     background: rgba(255, 255, 255, 0.08);
     padding: 4px 8px;
-    border-radius: 12px;
+    border-radius: 10px;
     min-width: 24px;
     text-align: center;
 }
@@ -1079,7 +1258,6 @@
     }
 
     .controls-bar {
-        flex-direction: column;
         gap: 15px;
         align-items: stretch;
     }
@@ -1095,12 +1273,8 @@
     }
 
     .filters-grid {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 15px;
-    }
-
-    .filters-content.expanded {
-        max-height: 500px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
     }
 }
 
@@ -1183,18 +1357,13 @@
     }
 
 
-
     .filters-grid {
         grid-template-columns: 1fr;
         gap: 12px;
     }
 
-    .filters-content.expanded {
-        max-height: 600px;
-    }
-
     .multi-select-dropdown {
-        max-height: 280px;
+        max-height: 240px;
     }
 }
 

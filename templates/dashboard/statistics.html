@@ -27,12 +27,111 @@
     <!-- Controls Bar -->
     <div class="controls-bar">
         <div class="controls-left">
-            <button class="filters-btn" type="button">
-                <i class="ti ti-filter"></i>
-                <span class="filters-text">Filters</span>
-                <span class="active-filters-count" style="display: none;">0</span>
-                <i class="ti ti-chevron-down filters-chevron"></i>
-            </button>
+            <div class="filters-dropdown-container">
+                <button class="filters-btn" type="button">
+                    <i class="ti ti-filter"></i>
+                    <span class="filters-text">Filters</span>
+                    <span class="active-filters-count" style="display: none;">0</span>
+                    <i class="ti ti-chevron-down filters-chevron"></i>
+                </button>
+                
+                <!-- Floating Filters Dropdown -->
+                <div class="filters-dropdown">
+                    <!-- Main Filter Types List -->
+                    <div class="filter-types-list">
+                        <div class="filter-type-item" data-filter="browser">
+                            <div class="filter-type-content">
+                                <div class="filter-type-info">
+                                    <i class="ti ti-browser"></i>
+                                    <span class="filter-type-label">Browsers</span>
+                                </div>
+                                <div class="filter-type-status">
+                                    <span class="filter-count">All</span>
+                                    <i class="ti ti-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-type-item" data-filter="os">
+                            <div class="filter-type-content">
+                                <div class="filter-type-info">
+                                    <i class="ti ti-device-desktop"></i>
+                                    <span class="filter-type-label">Operating Systems</span>
+                                </div>
+                                <div class="filter-type-status">
+                                    <span class="filter-count">All</span>
+                                    <i class="ti ti-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-type-item" data-filter="device">
+                            <div class="filter-type-content">
+                                <div class="filter-type-info">
+                                    <i class="ti ti-devices"></i>
+                                    <span class="filter-type-label">Devices</span>
+                                </div>
+                                <div class="filter-type-status">
+                                    <span class="filter-count">All</span>
+                                    <i class="ti ti-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-type-item" data-filter="country">
+                            <div class="filter-type-content">
+                                <div class="filter-type-info">
+                                    <i class="ti ti-world"></i>
+                                    <span class="filter-type-label">Countries</span>
+                                </div>
+                                <div class="filter-type-status">
+                                    <span class="filter-count">All</span>
+                                    <i class="ti ti-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-type-item" data-filter="referrer">
+                            <div class="filter-type-content">
+                                <div class="filter-type-info">
+                                    <i class="ti ti-external-link"></i>
+                                    <span class="filter-type-label">Referrers</span>
+                                </div>
+                                <div class="filter-type-status">
+                                    <span class="filter-count">All</span>
+                                    <i class="ti ti-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+                                                
+                        <div class="filter-type-item clear-all-item">
+                            <div class="filter-type-content">
+                                <div class="filter-type-info">
+                                    <i class="ti ti-x"></i>
+                                    <span class="filter-type-label">Clear All Filters</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Values View -->
+                    <div class="filter-values-view" style="display: none;">
+                        <div class="filter-values-top">
+                            <button class="back-btn" type="button">
+                                <i class="ti ti-arrow-left"></i>
+                            </button>
+                            <div class="filter-values-search">
+                                <i class="ti ti-search"></i>
+                                <input type="text" placeholder="Search..." class="values-search-input">
+                            </div>
+                        </div>
+                        
+                        <div class="filter-values-list">
+                            <!-- Values will be populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="controls-actions">
             <div id="dateRangeContainer"></div>
@@ -69,169 +168,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Filters Panel -->
-    <div class="filters-panel">
-        <div class="filters-toggle" style="display: none;">
-            <!-- Moved to controls bar -->
-        </div>
-        
-        <div class="filters-content">
-            <div class="filters-grid">
-                <!-- Browser Filter -->
-                <div class="filter-group">
-                    <label class="filter-label">
-                        <i class="ti ti-browser"></i>
-                        Browsers
-                    </label>
-                    <div class="multi-select-wrapper" data-filter="browser">
-                        <button class="multi-select-trigger" type="button">
-                            <span class="selected-summary">All browsers</span>
-                            <i class="ti ti-chevron-down"></i>
-                        </button>
-                        <div class="multi-select-dropdown">
-                            <div class="dropdown-header">
-                                <div class="dropdown-search">
-                                    <i class="ti ti-search"></i>
-                                    <input type="text" placeholder="Search browsers..." class="search-input">
-                                </div>
-                                <div class="dropdown-actions">
-                                    <button class="select-all-btn" type="button">Select All</button>
-                                    <button class="clear-all-btn" type="button">Clear</button>
-                                </div>
-                            </div>
-                            <div class="options-list" data-filter="browser">
-                                <!-- Options will be populated dynamically -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Operating System Filter -->
-                <div class="filter-group">
-                    <label class="filter-label">
-                        <i class="ti ti-device-desktop"></i>
-                        Operating Systems
-                    </label>
-                    <div class="multi-select-wrapper" data-filter="os">
-                        <button class="multi-select-trigger" type="button">
-                            <span class="selected-summary">All systems</span>
-                            <i class="ti ti-chevron-down"></i>
-                        </button>
-                        <div class="multi-select-dropdown">
-                            <div class="dropdown-header">
-                                <div class="dropdown-search">
-                                    <i class="ti ti-search"></i>
-                                    <input type="text" placeholder="Search systems..." class="search-input">
-                                </div>
-                                <div class="dropdown-actions">
-                                    <button class="select-all-btn" type="button">Select All</button>
-                                    <button class="clear-all-btn" type="button">Clear</button>
-                                </div>
-                            </div>
-                            <div class="options-list" data-filter="os">
-                                <!-- Options will be populated dynamically -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Device Filter -->
-                <div class="filter-group">
-                    <label class="filter-label">
-                        <i class="ti ti-devices"></i>
-                        Devices
-                    </label>
-                    <div class="multi-select-wrapper" data-filter="device">
-                        <button class="multi-select-trigger" type="button">
-                            <span class="selected-summary">All devices</span>
-                            <i class="ti ti-chevron-down"></i>
-                        </button>
-                        <div class="multi-select-dropdown">
-                            <div class="dropdown-header">
-                                <div class="dropdown-search">
-                                    <i class="ti ti-search"></i>
-                                    <input type="text" placeholder="Search devices..." class="search-input">
-                                </div>
-                                <div class="dropdown-actions">
-                                    <button class="select-all-btn" type="button">Select All</button>
-                                    <button class="clear-all-btn" type="button">Clear</button>
-                                </div>
-                            </div>
-                            <div class="options-list" data-filter="device">
-                                <!-- Options will be populated dynamically -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Country Filter -->
-                <div class="filter-group">
-                    <label class="filter-label">
-                        <i class="ti ti-world"></i>
-                        Countries
-                    </label>
-                    <div class="multi-select-wrapper" data-filter="country">
-                        <button class="multi-select-trigger" type="button">
-                            <span class="selected-summary">All countries</span>
-                            <i class="ti ti-chevron-down"></i>
-                        </button>
-                        <div class="multi-select-dropdown countries-dropdown">
-                            <div class="dropdown-header">
-                                <div class="dropdown-search">
-                                    <i class="ti ti-search"></i>
-                                    <input type="text" placeholder="Search countries..." class="search-input">
-                                </div>
-                                <div class="dropdown-actions">
-                                    <button class="select-all-btn" type="button">Select All</button>
-                                    <button class="clear-all-btn" type="button">Clear</button>
-                                </div>
-                            </div>
-                            <div class="options-list" data-filter="country">
-                                <!-- Options will be populated dynamically -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Referrer Filter -->
-                <div class="filter-group">
-                    <label class="filter-label">
-                        <i class="ti ti-external-link"></i>
-                        Referrers
-                    </label>
-                    <div class="multi-select-wrapper" data-filter="referrer">
-                        <button class="multi-select-trigger" type="button">
-                            <span class="selected-summary">All referrers</span>
-                            <i class="ti ti-chevron-down"></i>
-                        </button>
-                        <div class="multi-select-dropdown">
-                            <div class="dropdown-header">
-                                <div class="dropdown-search">
-                                    <i class="ti ti-search"></i>
-                                    <input type="text" placeholder="Search referrers..." class="search-input">
-                                </div>
-                                <div class="dropdown-actions">
-                                    <button class="select-all-btn" type="button">Select All</button>
-                                    <button class="clear-all-btn" type="button">Clear</button>
-                                </div>
-                            </div>
-                            <div class="options-list" data-filter="referrer">
-                                <!-- Options will be populated dynamically -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="filters-actions">
-                <button class="clear-all-filters-btn" type="button">
-                    <i class="ti ti-x"></i>
-                    Clear All Filters
-                </button>
             </div>
         </div>
     </div>
