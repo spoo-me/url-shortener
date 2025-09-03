@@ -37,14 +37,16 @@ class StatsQueryBuilder:
             "time",
             "browser",
             "os",
-            "device",
+            # "device",  # DISABLED: Reliable device detection not available yet
             "country",
             "city",
             "referrer",
             "key",
         }
         self.allowed_metrics = {"clicks", "unique_clicks"}
-        self.allowed_filters = {"browser", "os", "device", "country", "referrer"}
+        # Allowed dimensions for filtering statistics
+        # TODO: "device" is disabled until reliable device detection is implemented
+        self.allowed_filters = {"browser", "os", "country", "city", "referrer", "key"}
 
     def _fail(self, body: dict, status: int) -> "StatsQueryBuilder":
         self.error = (jsonify(body), status)

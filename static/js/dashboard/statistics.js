@@ -15,9 +15,11 @@ class StatisticsDashboard {
         this.availableOptions = {
             browser: [],
             os: [],
-            device: [],
+            // device: [], // DISABLED: Reliable device detection not available yet
             country: [],
-            referrer: []
+            city: [],
+            referrer: [],
+            key: []
         };
         this.pendingChanges = new Set(); // Track which categories have pending changes
         this.currentFilterType = null; // Track which filter type is currently being edited
@@ -485,7 +487,7 @@ class StatisticsDashboard {
     }
 
     initializeFilterLoadingState() {
-        const filterTypes = ['browser', 'os', 'device', 'country', 'referrer'];
+        const filterTypes = ['browser', 'os', 'country', 'city', 'referrer', 'key'];
 
         filterTypes.forEach(type => {
             const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
@@ -608,7 +610,7 @@ class StatisticsDashboard {
     populateFilterOptions(data) {
 
         // Extract available options from API data
-        const filterTypes = ['browser', 'os', 'device', 'country', 'referrer'];
+        const filterTypes = ['browser', 'os', 'country', 'city', 'referrer', 'key'];
 
         filterTypes.forEach(type => {
             const metricKey = `clicks_by_${type}`;
@@ -622,6 +624,14 @@ class StatisticsDashboard {
                         value: countryName,
                         label: countryName,
                         code: item[type], // Keep the code for reference
+                        count: item.clicks || item.total_clicks || 0
+                    };
+                } else if (type === 'key') {
+                    // For keys, handle both "key" and "short_code" fields
+                    const keyValue = item.key || item.short_code || item[type];
+                    return {
+                        value: keyValue,
+                        label: keyValue,
                         count: item.clicks || item.total_clicks || 0
                     };
                 } else {
@@ -640,14 +650,14 @@ class StatisticsDashboard {
     }
 
     updateAllFilterTypeStatuses() {
-        const filterTypes = ['browser', 'os', 'device', 'country', 'referrer'];
+        const filterTypes = ['browser', 'os', 'country', 'city', 'referrer', 'key'];
         filterTypes.forEach(type => {
             this.updateFilterTypeStatus(type);
         });
     }
 
     renderFilterOptions() {
-        const filterTypes = ['browser', 'os', 'device', 'country', 'referrer'];
+        const filterTypes = ['browser', 'os', 'country', 'city', 'referrer', 'key'];
 
         filterTypes.forEach(type => {
             const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
@@ -754,7 +764,7 @@ class StatisticsDashboard {
         }
 
         // Update filter summaries
-        const filterTypes = ['browser', 'os', 'device', 'country', 'referrer'];
+        const filterTypes = ['browser', 'os', 'country', 'city', 'referrer', 'key'];
         filterTypes.forEach(type => {
             this.updateFilterSummary(type);
             this.updateFilterOptionsUI(type);
@@ -777,9 +787,11 @@ class StatisticsDashboard {
         const typeLabels = {
             browser: 'browsers',
             os: 'systems',
-            device: 'devices',
+            // device: 'devices', // DISABLED: Reliable device detection not available yet
             country: 'countries',
-            referrer: 'referrers'
+            city: 'cities',
+            referrer: 'referrers',
+            key: 'short URLs'
         };
 
         if (selectedFilters.length === 0) {
@@ -989,8 +1001,8 @@ class StatisticsDashboard {
             case 'keyChart':
                 data = this.getKeyTableData();
                 break;
-            case 'deviceChart':
-                data = this.getDeviceTableData();
+            case 'cityChart':
+                data = this.getCityTableData();
                 break;
             case 'browserChart':
                 data = this.getBrowserTableData();
@@ -1052,14 +1064,14 @@ class StatisticsDashboard {
         }));
     }
 
-    getDeviceTableData() {
-        const clicksByDevice = this.apiData.metrics?.clicks_by_device || [];
-        const uniqueClicksByDevice = this.apiData.metrics?.unique_clicks_by_device || [];
+    getCityTableData() {
+        const clicksByCity = this.apiData.metrics?.clicks_by_city || [];
+        const uniqueClicksByCity = this.apiData.metrics?.unique_clicks_by_city || [];
 
-        return clicksByDevice.map((item, index) => ({
-            label: item.device || 'Unknown',
+        return clicksByCity.map((item, index) => ({
+            label: item.city || 'Unknown',
             clicks: item.clicks || item.value || 0,
-            unique_clicks: uniqueClicksByDevice[index]?.unique_clicks || uniqueClicksByDevice[index]?.value || 0
+            unique_clicks: uniqueClicksByCity[index]?.unique_clicks || uniqueClicksByCity[index]?.value || 0
         }));
     }
 
@@ -1123,8 +1135,8 @@ class StatisticsDashboard {
             case 'keyChart':
                 this.updateKeyChart(this.apiData, value);
                 break;
-            case 'deviceChart':
-                this.updateDeviceChart(this.apiData, value);
+            case 'cityChart':
+                this.updateCityChart(this.apiData, value);
                 break;
             case 'browserChart':
                 this.updateBrowserChart(this.apiData, value);
@@ -1151,7 +1163,7 @@ class StatisticsDashboard {
         try {
             const params = new URLSearchParams({
                 scope: 'all',
-                group_by: 'time,browser,os,country,referrer,device,key',
+                group_by: 'time,browser,os,country,city,referrer,key',
                 metrics: 'clicks,unique_clicks'
             });
 
@@ -1239,7 +1251,7 @@ class StatisticsDashboard {
     updateCharts(data) {
         this.updateTimeSeriesChart(data);
         this.updateKeyChart(data);
-        this.updateDeviceChart(data);
+        this.updateCityChart(data);
         this.updateBrowserChart(data);
         this.updateOsChart(data);
         this.updateReferrerChart(data);
@@ -1689,30 +1701,30 @@ class StatisticsDashboard {
         this.charts.set('country', map);
     }
 
-    updateDeviceChart(data, option = null) {
-        const canvas = document.getElementById('deviceChart');
+    updateCityChart(data, option = null) {
+        const canvas = document.getElementById('cityChart');
         const ctx = canvas.getContext('2d');
 
-        if (this.charts.has('device')) {
-            this.charts.get('device').destroy();
+        if (this.charts.has('city')) {
+            this.charts.get('city').destroy();
         }
 
-        // Extract device data from metrics
-        const clicksByDevice = data.metrics?.clicks_by_device || [];
-        const uniqueClicksByDevice = data.metrics?.unique_clicks_by_device || [];
+        // Extract city data from metrics
+        const clicksByCity = data.metrics?.clicks_by_city || [];
+        const uniqueClicksByCity = data.metrics?.unique_clicks_by_city || [];
 
         // Convert to chart format
-        const deviceLabels = clicksByDevice.map(item => item.device);
-        const deviceClicks = clicksByDevice.map(item => item.clicks);
-        const deviceUniqueClicks = uniqueClicksByDevice.map(item => item.unique_clicks);
+        const cityLabels = clicksByCity.map(item => item.city);
+        const cityClicks = clicksByCity.map(item => item.clicks);
+        const cityUniqueClicks = uniqueClicksByCity.map(item => item.unique_clicks);
 
-        const dataOption = option || document.querySelector('[data-chart="deviceChart"] .cascade-btn')?.dataset.value || 'compare';
+        const dataOption = option || document.querySelector('[data-chart="cityChart"] .cascade-btn')?.dataset.value || 'compare';
         const datasets = [];
 
         if (dataOption === 'total' || dataOption === 'compare') {
             datasets.push({
-                label: 'Devices',
-                data: deviceClicks,
+                label: 'Cities',
+                data: cityClicks,
                 backgroundColor: 'rgba(75, 192, 192, 0.15)',
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 2,
@@ -1722,8 +1734,8 @@ class StatisticsDashboard {
 
         if (dataOption === 'unique' || dataOption === 'compare') {
             datasets.push({
-                label: 'Unique Devices',
-                data: deviceUniqueClicks,
+                label: 'Unique Cities',
+                data: cityUniqueClicks,
                 backgroundColor: 'rgba(255, 99, 132, 0.25)',
                 borderColor: 'rgba(255, 99, 132, 1)',
                 borderWidth: 2,
@@ -1734,7 +1746,7 @@ class StatisticsDashboard {
         const chart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: deviceLabels,
+                labels: cityLabels,
                 datasets: datasets,
             },
             options: {
@@ -1767,7 +1779,7 @@ class StatisticsDashboard {
             },
         });
 
-        this.charts.set('device', chart);
+        this.charts.set('city', chart);
     }
 
     updateKeyChart(data, option = null) {
@@ -2034,9 +2046,9 @@ function updateCountryChart() {
     }
 }
 
-function updateDeviceChart() {
+function updateCityChart() {
     if (window.dashboard && window.dashboard.apiData) {
-        window.dashboard.updateDeviceChart(window.dashboard.apiData);
+        window.dashboard.updateCityChart(window.dashboard.apiData);
     }
 }
 
@@ -2064,9 +2076,11 @@ class FilterManager {
         this.activeFilters = {
             browser: [],
             os: [],
-            device: [],
+            // device: [], // DISABLED: Reliable device detection not available yet
             country: [],
-            referrer: []
+            city: [],
+            referrer: [],
+            key: []
         };
         this.onFiltersChanged = null;
     }

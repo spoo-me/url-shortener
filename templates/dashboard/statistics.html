@@ -34,7 +34,7 @@
                     <span class="active-filters-count" style="display: none;">0</span>
                     <i class="ti ti-chevron-down filters-chevron"></i>
                 </button>
-                
+
                 <!-- Floating Filters Dropdown -->
                 <div class="filters-dropdown">
                     <!-- Main Filter Types List -->
@@ -51,7 +51,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="filter-type-item" data-filter="os">
                             <div class="filter-type-content">
                                 <div class="filter-type-info">
@@ -64,20 +64,9 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="filter-type-item" data-filter="device">
-                            <div class="filter-type-content">
-                                <div class="filter-type-info">
-                                    <i class="ti ti-devices"></i>
-                                    <span class="filter-type-label">Devices</span>
-                                </div>
-                                <div class="filter-type-status">
-                                    <span class="filter-count">All</span>
-                                    <i class="ti ti-chevron-right"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
+
+                        <!-- Device filter disabled - reliable device detection not available yet -->
+
                         <div class="filter-type-item" data-filter="country">
                             <div class="filter-type-content">
                                 <div class="filter-type-info">
@@ -90,7 +79,20 @@
                                 </div>
                             </div>
                         </div>
-                        
+
+                        <div class="filter-type-item" data-filter="city">
+                            <div class="filter-type-content">
+                                <div class="filter-type-info">
+                                    <i class="ti ti-building"></i>
+                                    <span class="filter-type-label">Cities</span>
+                                </div>
+                                <div class="filter-type-status">
+                                    <span class="filter-count">All</span>
+                                    <i class="ti ti-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="filter-type-item" data-filter="referrer">
                             <div class="filter-type-content">
                                 <div class="filter-type-info">
@@ -103,7 +105,20 @@
                                 </div>
                             </div>
                         </div>
-                                                
+
+                        <div class="filter-type-item" data-filter="key">
+                            <div class="filter-type-content">
+                                <div class="filter-type-info">
+                                    <i class="ti ti-key"></i>
+                                    <span class="filter-type-label">Short URLs</span>
+                                </div>
+                                <div class="filter-type-status">
+                                    <span class="filter-count">All</span>
+                                    <i class="ti ti-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="filter-type-item clear-all-item">
                             <div class="filter-type-content">
                                 <div class="filter-type-info">
@@ -125,7 +140,7 @@
                                 <input type="text" placeholder="Search..." class="values-search-input">
                             </div>
                         </div>
-                        
+
                         <div class="filter-values-list">
                             <!-- Values will be populated dynamically -->
                         </div>
@@ -245,7 +260,7 @@
         </div>
     </div>
 
-    <!-- Charts Container - Row 1: Short URLs and Devices -->
+    <!-- Charts Container - Row 1: Short URLs and Referrers -->
     <div class="charts-container">
         <div class="card-parent chart-section-parent">
             <div class="chart-section key-data">
@@ -291,14 +306,14 @@
         </div>
 
         <div class="card-parent chart-section-parent">
-            <div class="chart-section device-data">
+            <div class="chart-section referrer-data">
                 <div class="chart-header">
-                    <h2>Devices</h2>
+                    <h2>Referrers</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="deviceChart" title="Table View">
+                        <button class="table-view-btn" data-chart="referrerChart" title="Table View">
                             <i class="ti ti-table"></i>
                         </button>
-                        <div class="cascade-select" data-chart="deviceChart">
+                        <div class="cascade-select" data-chart="referrerChart">
                             <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
                             </button>
@@ -320,14 +335,14 @@
                     </div>
                 </div>
                 <div class="chart-container">
-                    <canvas id="deviceChart" class="stats-chart"></canvas>
-                    <div class="stats-table" id="deviceTable" style="display: none;">
+                    <canvas id="referrerChart" class="stats-chart"></canvas>
+                    <div class="stats-table" id="referrerTable" style="display: none;">
                         <div class="table-header">
-                            <div class="header-cell col-device">Name</div>
+                            <div class="header-cell col-referrer">Host</div>
                             <div class="header-cell col-clicks">Total Clicks</div>
                             <div class="header-cell col-unique">Unique Clicks</div>
                         </div>
-                        <div class="table-body" id="deviceTableBody"></div>
+                        <div class="table-body" id="referrerTableBody"></div>
                     </div>
                 </div>
             </div>
@@ -423,17 +438,17 @@
         </div>
     </div>
 
-    <!-- Charts Container - Row 3: Referrers and Countries -->
+    <!-- Charts Container - Row 3: Cities and Countries -->
     <div class="charts-container">
         <div class="card-parent chart-section-parent">
-            <div class="chart-section referrer-data">
+            <div class="chart-section city-data">
                 <div class="chart-header">
-                    <h2>Referrers</h2>
+                    <h2>Cities</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="referrerChart" title="Table View">
+                        <button class="table-view-btn" data-chart="cityChart" title="Table View">
                             <i class="ti ti-table"></i>
                         </button>
-                        <div class="cascade-select" data-chart="referrerChart">
+                        <div class="cascade-select" data-chart="cityChart">
                             <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
                             </button>
@@ -455,14 +470,14 @@
                     </div>
                 </div>
                 <div class="chart-container">
-                    <canvas id="referrerChart" class="stats-chart"></canvas>
-                    <div class="stats-table" id="referrerTable" style="display: none;">
+                    <canvas id="cityChart" class="stats-chart"></canvas>
+                    <div class="stats-table" id="cityTable" style="display: none;">
                         <div class="table-header">
-                            <div class="header-cell col-referrer">Host</div>
+                            <div class="header-cell col-city">Name</div>
                             <div class="header-cell col-clicks">Total Clicks</div>
                             <div class="header-cell col-unique">Unique Clicks</div>
                         </div>
-                        <div class="table-body" id="referrerTableBody"></div>
+                        <div class="table-body" id="cityTableBody"></div>
                     </div>
                 </div>
             </div>
@@ -509,8 +524,6 @@
     </div>
 </div>
 {% endblock %}
-
-
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>

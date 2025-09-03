@@ -64,7 +64,11 @@ class StatsQueryBuilder:
 
         # Add dimension filters
         for dimension, values in self.dimension_filters.items():
-            self.query[dimension] = {"$in": values}
+            if dimension == "key":
+                # Map "key" filter to the actual field name in MongoDB
+                self.query["meta.short_code"] = {"$in": values}
+            else:
+                self.query[dimension] = {"$in": values}
 
         return self.query
 

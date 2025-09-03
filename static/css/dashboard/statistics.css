@@ -262,6 +262,7 @@
         opacity: 0;
         transform: translateY(-20px) scale(0.95);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -451,6 +452,12 @@
     background: rgba(255, 255, 255, 0.08);
 }
 
+.filter-values-list .empty {
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
 .filters-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -567,6 +574,7 @@
         opacity: 0;
         transform: translateY(-10px) scaleY(0.8);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scaleY(1);
@@ -704,25 +712,25 @@
     background: rgba(255, 255, 255, 0.08);
 }
 
-.option-item input[type="checkbox"]:checked + .checkmark {
+.option-item input[type="checkbox"]:checked+.checkmark {
     background: #7c3aed;
     border-color: #7c3aed;
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
     transform: scale(1.1);
 }
 
-.option-item input[type="checkbox"]:checked ~ .option-text {
+.option-item input[type="checkbox"]:checked~.option-text {
     color: rgba(255, 255, 255, 1);
     font-weight: 600;
 }
 
-.option-item input[type="checkbox"]:checked ~ .option-count {
+.option-item input[type="checkbox"]:checked~.option-count {
     background: rgba(124, 58, 237, 0.2);
     color: rgba(124, 58, 237, 1);
     border: 1px solid rgba(124, 58, 237, 0.3);
 }
 
-.option-item input[type="checkbox"]:checked + .checkmark::after {
+.option-item input[type="checkbox"]:checked+.checkmark::after {
     content: '✓';
     position: absolute;
     top: 50%;
@@ -1431,7 +1439,8 @@
     padding: 0 20px 20px 20px;
 }
 
-.chart-section, .clicks-counter-section {
+.chart-section,
+.clicks-counter-section {
     padding: 0;
 }
 
