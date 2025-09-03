@@ -9,6 +9,17 @@ class StatisticsDashboard {
         this.autoRefreshInterval = null;
         this.apiData = null;
         this.dateRangePicker = null;
+        
+        // Filter system
+        this.filterManager = new FilterManager();
+        this.availableOptions = {
+            browser: [],
+            os: [],
+            device: [],
+            country: [],
+            referrer: []
+        };
+        this.pendingChanges = new Set(); // Track which categories have pending changes
 
         this.init();
     }
@@ -115,6 +126,7 @@ class StatisticsDashboard {
     init() {
         this.setupDateRangePicker();
         this.setupEventListeners();
+        this.setupFilterSystem();
         this.loadDashboardData();
         this.setupAutoRefresh();
         this.restoreAutoRefreshSetting();
@@ -180,6 +192,454 @@ class StatisticsDashboard {
         // Cascade button controls
         this.setupCascadeControls();
     }
+
+    setupFilterSystem() {
+        // Set up filter toggle
+        const filtersBtn = document.querySelector('.filters-btn');
+        const filtersContent = document.querySelector('.filters-content');
+        const filtersChevron = document.querySelector('.filters-chevron');
+
+        if (filtersBtn && filtersContent) {
+            filtersBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const isExpanded = filtersContent.classList.contains('expanded');
+                
+                if (isExpanded) {
+                    filtersContent.classList.remove('expanded');
+                    filtersBtn.classList.remove('active');
+                } else {
+                    filtersContent.classList.add('expanded');
+                    filtersBtn.classList.add('active');
+                }
+            });
+        }
+
+        // Initialize loading state for all filter dropdowns
+        this.initializeFilterLoadingState();
+
+        // Set up multi-select dropdowns
+        this.setupMultiSelectDropdowns();
+
+        // Set up filter actions
+        this.setupFilterActions();
+
+        // Set up filter change listeners
+        this.filterManager.onFiltersChanged = () => {
+            this.updateFilterUI();
+            this.loadDashboardData();
+        };
+    }
+
+    initializeFilterLoadingState() {
+        const filterTypes = ['browser', 'os', 'device', 'country', 'referrer'];
+        
+        filterTypes.forEach(type => {
+            const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
+            if (optionsList) {
+                optionsList.innerHTML = '<div class="loading">Loading options...</div>';
+                optionsList.classList.add('loading');
+            }
+        });
+    }
+
+    setupMultiSelectDropdowns() {
+        const wrappers = document.querySelectorAll('.multi-select-wrapper');
+        
+        wrappers.forEach(wrapper => {
+            const trigger = wrapper.querySelector('.multi-select-trigger');
+            const dropdown = wrapper.querySelector('.multi-select-dropdown');
+            const filterType = wrapper.dataset.filter;
+
+            if (trigger && dropdown) {
+                // Toggle dropdown
+                trigger.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Close other dropdowns
+                    document.querySelectorAll('.multi-select-dropdown.show').forEach(dd => {
+                        if (dd !== dropdown) {
+                            dd.classList.remove('show');
+                            const parentWrapper = dd.parentElement;
+                            parentWrapper.querySelector('.multi-select-trigger').classList.remove('active');
+                            parentWrapper.classList.remove('active');
+                        }
+                    });
+
+                    // Toggle current dropdown
+                    const isOpen = dropdown.classList.contains('show');
+                    if (isOpen) {
+                        dropdown.classList.remove('show');
+                        trigger.classList.remove('active');
+                        wrapper.classList.remove('active');
+                        
+                        // Apply filters when dropdown closes if there are changes for this category
+                        if (this.pendingChanges.has(filterType)) {
+                            console.log(`Applying filters for ${filterType} category on dropdown close`);
+                            this.pendingChanges.delete(filterType);
+                            this.filterManager.notifyChange();
+                        }
+                    } else {
+                        dropdown.classList.add('show');
+                        trigger.classList.add('active');
+                        wrapper.classList.add('active');
+                        
+                        // Focus search input
+                        const searchInput = dropdown.querySelector('.search-input');
+                        if (searchInput) {
+                            setTimeout(() => searchInput.focus(), 100);
+                        }
+                    }
+                });
+
+                // Set up search functionality
+                const searchInput = dropdown.querySelector('.search-input');
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => {
+                        this.filterOptions(filterType, e.target.value);
+                    });
+                }
+
+                // Set up select all / clear all buttons
+                const selectAllBtn = dropdown.querySelector('.select-all-btn');
+                const clearAllBtn = dropdown.querySelector('.clear-all-btn');
+
+                if (selectAllBtn) {
+                    selectAllBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.selectAllOptions(filterType);
+                    });
+                }
+
+                if (clearAllBtn) {
+                    clearAllBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.clearAllOptions(filterType);
+                    });
+                }
+            }
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.multi-select-wrapper')) {
+                document.querySelectorAll('.multi-select-dropdown.show').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                    const parentWrapper = dropdown.parentElement;
+                    const filterType = parentWrapper.dataset.filter;
+                    
+                    parentWrapper.querySelector('.multi-select-trigger').classList.remove('active');
+                    parentWrapper.classList.remove('active');
+                    
+                    // Apply filters when dropdown closes if there are changes for this category
+                    if (this.pendingChanges.has(filterType)) {
+                        console.log(`Applying filters for ${filterType} category on outside click close`);
+                        this.pendingChanges.delete(filterType);
+                        this.filterManager.notifyChange();
+                    }
+                });
+            }
+        });
+    }
+
+    setupFilterActions() {
+        const clearAllBtn = document.querySelector('.clear-all-filters-btn');
+
+        if (clearAllBtn) {
+            clearAllBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Clear All Filters button clicked');
+                this.filterManager.clearAllFilters();
+            });
+        }
+    }
+
+    populateFilterOptions(data) {
+        console.log('Populating filter options with data:', data);
+        
+        // Extract available options from API data
+        const filterTypes = ['browser', 'os', 'device', 'country', 'referrer'];
+        
+        filterTypes.forEach(type => {
+            const metricKey = `clicks_by_${type}`;
+            const options = data.metrics?.[metricKey] || [];
+            
+            console.log(`Processing ${type} options:`, options);
+            
+            this.availableOptions[type] = options.map(item => {
+                if (type === 'country') {
+                    // For countries, use country name as both value and label
+                    const countryName = this.getCountryName(item[type]);
+                    return {
+                        value: countryName,
+                        label: countryName,
+                        code: item[type], // Keep the code for reference
+                        count: item.clicks || item.total_clicks || 0
+                    };
+                } else {
+                    return {
+                        value: item[type],
+                        label: item[type],
+                        count: item.clicks || item.total_clicks || 0
+                    };
+                }
+            }).filter(option => option.value)
+              .sort((a, b) => b.count - a.count); // Sort by count descending
+            
+            console.log(`Available ${type} options:`, this.availableOptions[type]);
+        });
+
+        // Render options in dropdowns
+        this.renderFilterOptions();
+    }
+
+    renderFilterOptions() {
+        console.log('Rendering filter options...');
+        const filterTypes = ['browser', 'os', 'device', 'country', 'referrer'];
+        
+        filterTypes.forEach(type => {
+            const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
+            console.log(`Rendering ${type} options in:`, optionsList);
+            
+            if (optionsList) {
+                optionsList.innerHTML = '';
+                optionsList.classList.remove('loading', 'empty');
+                
+                const options = this.availableOptions[type] || [];
+                console.log(`${type} options to render:`, options);
+                
+                if (options.length === 0) {
+                    optionsList.innerHTML = '<div class="empty">No data available</div>';
+                    optionsList.classList.add('empty');
+                    return;
+                }
+                
+                options.forEach(option => {
+                    const optionElement = this.createOptionElement(type, option);
+                    optionsList.appendChild(optionElement);
+                });
+                
+                console.log(`Rendered ${options.length} options for ${type}`);
+            } else {
+                console.warn(`Options list not found for ${type}`);
+            }
+        });
+    }
+
+    createOptionElement(type, option) {
+        const label = document.createElement('label');
+        label.className = 'option-item';
+        
+        const isSelected = this.filterManager.isSelected(type, option.value);
+        
+        label.innerHTML = `
+            <input type="checkbox" ${isSelected ? 'checked' : ''} data-value="${option.value}">
+            <span class="checkmark"></span>
+            ${type === 'country' ? `<span class="country-flag">${this.getCountryFlag(option.code || option.value)}</span>` : ''}
+            <span class="option-text">${this.escapeHtml(option.label)}</span>
+            <span class="option-count">${this.formatNumber(option.count)}</span>
+        `;
+
+        // Add change listener
+        const checkbox = label.querySelector('input[type="checkbox"]');
+        checkbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                this.filterManager.addFilter(type, option.value);
+            } else {
+                this.filterManager.removeFilter(type, option.value);
+            }
+            
+            // Mark this category as having pending changes
+            this.pendingChanges.add(type);
+            
+            // Update the summary immediately for visual feedback
+            this.updateFilterSummary(type);
+        });
+
+        return label;
+    }
+
+    getCountryFlag(countryCode) {
+        // Simple flag emoji mapping for common countries
+        const flagMap = {
+            'US': '🇺🇸', 'GB': '🇬🇧', 'CA': '🇨🇦', 'AU': '🇦🇺', 'DE': '🇩🇪',
+            'FR': '🇫🇷', 'JP': '🇯🇵', 'CN': '🇨🇳', 'IN': '🇮🇳', 'BR': '🇧🇷',
+            'IT': '🇮🇹', 'ES': '🇪🇸', 'RU': '🇷🇺', 'KR': '🇰🇷', 'MX': '🇲🇽',
+            'NL': '🇳🇱', 'SE': '🇸🇪', 'NO': '🇳🇴', 'DK': '🇩🇰', 'FI': '🇫🇮',
+            'PL': '🇵🇱', 'CH': '🇨🇭', 'AT': '🇦🇹', 'BE': '🇧🇪', 'IE': '🇮🇪',
+            'XX': '🌍', 'Unknown': '🌍'
+        };
+        
+        // Handle both country codes and country names
+        if (!countryCode) return '🌍';
+        
+        // If it's already a country code, use it
+        if (countryCode.length === 2) {
+            return flagMap[countryCode.toUpperCase()] || '🌍';
+        }
+        
+        // If it's a country name, try to find the code
+        const reverseMap = {
+            'United States': 'US', 'United Kingdom': 'GB', 'Canada': 'CA',
+            'Australia': 'AU', 'Germany': 'DE', 'France': 'FR', 'Japan': 'JP',
+            'China': 'CN', 'India': 'IN', 'Brazil': 'BR', 'Italy': 'IT',
+            'Spain': 'ES', 'Russia': 'RU', 'South Korea': 'KR', 'Mexico': 'MX',
+            'Netherlands': 'NL', 'Sweden': 'SE', 'Norway': 'NO', 'Denmark': 'DK',
+            'Finland': 'FI', 'Poland': 'PL', 'Switzerland': 'CH', 'Austria': 'AT',
+            'Belgium': 'BE', 'Ireland': 'IE'
+        };
+        
+        const code = reverseMap[countryCode];
+        return flagMap[code] || '🌍';
+    }
+
+    filterOptions(type, searchTerm) {
+        const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
+        if (!optionsList) return;
+
+        const options = optionsList.querySelectorAll('.option-item');
+        const term = searchTerm.toLowerCase();
+
+        options.forEach(option => {
+            const text = option.querySelector('.option-text').textContent.toLowerCase();
+            if (text.includes(term)) {
+                option.style.display = 'flex';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+    }
+
+    selectAllOptions(type) {
+        const visibleOptions = this.getVisibleOptions(type);
+        visibleOptions.forEach(option => {
+            this.filterManager.addFilter(type, option.value);
+        });
+        this.pendingChanges.add(type);
+        this.updateFilterOptionsUI(type);
+        this.updateFilterSummary(type);
+    }
+
+    clearAllOptions(type) {
+        this.filterManager.clearFilter(type);
+        this.pendingChanges.add(type);
+        this.updateFilterOptionsUI(type);
+        this.updateFilterSummary(type);
+    }
+
+    getVisibleOptions(type) {
+        const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
+        if (!optionsList) return [];
+
+        const visibleOptions = [];
+        const options = optionsList.querySelectorAll('.option-item');
+        
+        options.forEach(option => {
+            if (option.style.display !== 'none') {
+                const value = option.querySelector('input').dataset.value;
+                const optionData = this.availableOptions[type].find(opt => opt.value === value);
+                if (optionData) {
+                    visibleOptions.push(optionData);
+                }
+            }
+        });
+
+        return visibleOptions;
+    }
+
+    updateFilterOptionsUI(type) {
+        const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
+        if (!optionsList) {
+            console.warn(`Options list not found for ${type}`);
+            return;
+        }
+
+        const checkboxes = optionsList.querySelectorAll('input[type="checkbox"]');
+        console.log(`Updating ${type} UI - found ${checkboxes.length} checkboxes`);
+        
+        checkboxes.forEach(checkbox => {
+            const value = checkbox.dataset.value;
+            const isSelected = this.filterManager.isSelected(type, value);
+            console.log(`Setting ${type} checkbox ${value} to ${isSelected}`);
+            checkbox.checked = isSelected;
+        });
+    }
+
+    updateFilterUI() {
+        console.log('Updating filter UI...');
+        
+        // Update active filter count
+        const totalActiveFilters = this.filterManager.getTotalActiveFilters();
+        const countElement = document.querySelector('.active-filters-count');
+        
+        console.log(`Total active filters: ${totalActiveFilters}`);
+        
+        if (countElement) {
+            if (totalActiveFilters > 0) {
+                countElement.textContent = totalActiveFilters;
+                countElement.style.display = 'inline-block';
+            } else {
+                countElement.style.display = 'none';
+            }
+        }
+
+        // Update filter summaries
+        const filterTypes = ['browser', 'os', 'device', 'country', 'referrer'];
+        filterTypes.forEach(type => {
+            this.updateFilterSummary(type);
+            this.updateFilterOptionsUI(type);
+        });
+
+        // Update clear all button state
+        const clearAllBtn = document.querySelector('.clear-all-filters-btn');
+        if (clearAllBtn) {
+            clearAllBtn.disabled = totalActiveFilters === 0;
+            console.log(`Clear All button disabled: ${clearAllBtn.disabled}`);
+        }
+    }
+
+    updateFilterSummary(type) {
+        const trigger = document.querySelector(`[data-filter="${type}"] .multi-select-trigger`);
+        const summary = trigger?.querySelector('.selected-summary');
+        
+        if (!summary) return;
+
+        const selectedFilters = this.filterManager.getActiveFilters()[type] || [];
+        const typeLabels = {
+            browser: 'browsers',
+            os: 'systems', 
+            device: 'devices',
+            country: 'countries',
+            referrer: 'referrers'
+        };
+
+        if (selectedFilters.length === 0) {
+            summary.textContent = `All ${typeLabels[type]}`;
+            trigger.classList.remove('active');
+        } else if (selectedFilters.length === 1) {
+            const option = this.availableOptions[type].find(opt => opt.value === selectedFilters[0]);
+            summary.textContent = option ? option.label : selectedFilters[0];
+            trigger.classList.add('active');
+        } else if (selectedFilters.length <= 3) {
+            const labels = selectedFilters.map(value => {
+                const option = this.availableOptions[type].find(opt => opt.value === value);
+                return option ? option.label : value;
+            });
+            summary.textContent = labels.join(', ');
+            trigger.classList.add('active');
+        } else {
+            const firstTwo = selectedFilters.slice(0, 2).map(value => {
+                const option = this.availableOptions[type].find(opt => opt.value === value);
+                return option ? option.label : value;
+            });
+            summary.textContent = `${firstTwo.join(', ')} +${selectedFilters.length - 2}`;
+            trigger.classList.add('active');
+        }
+    }
+
+
 
     setupCascadeControls() {
         // Handle cascade button clicks
@@ -547,9 +1007,19 @@ class StatisticsDashboard {
             params.append('start_date', startDate.toISOString());
             params.append('end_date', endDate.toISOString());
 
-            console.log('Sending API request with dates:', {
+            // Add active filters to the request
+            const activeFilters = this.filterManager.getActiveFilters();
+            Object.keys(activeFilters).forEach(filterType => {
+                const values = activeFilters[filterType];
+                if (values && values.length > 0) {
+                    params.append(filterType, values.join(','));
+                }
+            });
+
+            console.log('Sending API request with dates and filters:', {
                 start_date: startDate.toISOString(),
                 end_date: endDate.toISOString(),
+                filters: activeFilters,
                 original_range: this.currentTimeRange
             });
 
@@ -567,6 +1037,10 @@ class StatisticsDashboard {
 
             this.apiData = await response.json();
             console.log('API Response:', this.apiData); // Debug log
+            
+            // Always populate filter options from API data
+            this.populateFilterOptions(this.apiData);
+            
             this.updateDashboard(this.apiData);
 
         } catch (error) {
@@ -1428,3 +1902,119 @@ window.addEventListener('beforeunload', () => {
         window.dashboard.destroy();
     }
 });
+
+// Filter Manager Class
+class FilterManager {
+    constructor() {
+        this.activeFilters = {
+            browser: [],
+            os: [],
+            device: [],
+            country: [],
+            referrer: []
+        };
+        this.onFiltersChanged = null;
+    }
+
+    addFilter(type, value) {
+        if (!this.activeFilters[type]) {
+            this.activeFilters[type] = [];
+        }
+        
+        if (!this.activeFilters[type].includes(value)) {
+            this.activeFilters[type].push(value);
+            // Don't notify change immediately - wait for dropdown close
+        }
+    }
+
+    removeFilter(type, value) {
+        if (!this.activeFilters[type]) return;
+        
+        const index = this.activeFilters[type].indexOf(value);
+        if (index > -1) {
+            this.activeFilters[type].splice(index, 1);
+            // Don't notify change immediately - wait for dropdown close
+        }
+    }
+
+    clearFilter(type) {
+        if (this.activeFilters[type] && this.activeFilters[type].length > 0) {
+            this.activeFilters[type] = [];
+            // Don't notify change immediately - wait for dropdown close
+        }
+    }
+
+    clearAllFilters() {
+        console.log('Clearing all filters...');
+        console.log('Active filters before clear:', this.activeFilters);
+        
+        // Clear all active filters
+        Object.keys(this.activeFilters).forEach(type => {
+            this.activeFilters[type] = [];
+        });
+        
+        console.log('Filters cleared. Notifying change...');
+        
+        // Immediately trigger data refresh for clear all
+        this.notifyChange();
+    }
+
+    isSelected(type, value) {
+        return this.activeFilters[type] && this.activeFilters[type].includes(value);
+    }
+
+    getActiveFilters() {
+        return { ...this.activeFilters };
+    }
+
+    getTotalActiveFilters() {
+        return Object.values(this.activeFilters).reduce((total, filters) => total + filters.length, 0);
+    }
+
+    notifyChange() {
+        console.log('FilterManager: notifyChange called');
+        if (this.onFiltersChanged) {
+            console.log('FilterManager: calling onFiltersChanged callback');
+            this.onFiltersChanged();
+        } else {
+            console.warn('FilterManager: onFiltersChanged callback not set');
+        }
+    }
+
+    // Save filters to URL for sharing/bookmarking
+    saveToURL() {
+        const url = new URL(window.location);
+        const params = url.searchParams;
+        
+        // Clear existing filter params
+        Object.keys(this.activeFilters).forEach(type => {
+            params.delete(type);
+        });
+        
+        // Add active filters
+        Object.keys(this.activeFilters).forEach(type => {
+            if (this.activeFilters[type].length > 0) {
+                params.set(type, this.activeFilters[type].join(','));
+            }
+        });
+        
+        // Update URL without reloading
+        window.history.replaceState({}, '', url);
+    }
+
+    // Load filters from URL
+    loadFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        let hasFilters = false;
+        
+        Object.keys(this.activeFilters).forEach(type => {
+            const value = params.get(type);
+            if (value) {
+                this.activeFilters[type] = value.split(',').filter(v => v.trim());
+                hasFilters = true;
+            }
+        });
+        
+        return hasFilters;
+    }
+}
