@@ -291,8 +291,25 @@ class StatisticsDashboard {
         const valuesView = document.querySelector('.filter-values-view');
 
         if (typesList && valuesView) {
-            typesList.style.display = 'none';
-            valuesView.style.display = 'block';
+            // exit current view
+            typesList.classList.add('view-exit-active');
+
+            setTimeout(() => {
+                typesList.style.display = 'none';
+                typesList.classList.remove('view-exit-active');
+
+                valuesView.style.display = 'block';
+                valuesView.classList.add('view-enter');
+
+                // force reflow
+                valuesView.offsetHeight;
+                valuesView.classList.add('view-enter-active');
+                valuesView.classList.remove('view-enter');
+
+                setTimeout(() => {
+                    valuesView.classList.remove('view-enter-active');
+                }, 200);
+            }, 80);
 
             // Populate values
             this.populateFilterValues(filterType);
@@ -323,8 +340,22 @@ class StatisticsDashboard {
         const valuesView = document.querySelector('.filter-values-view');
 
         if (typesList && valuesView) {
-            valuesView.style.display = 'none';
-            typesList.style.display = 'block';
+            valuesView.classList.add('view-exit-active');
+
+            setTimeout(() => {
+                valuesView.style.display = 'none';
+                valuesView.classList.remove('view-exit-active');
+
+                typesList.style.display = 'block';
+                typesList.classList.add('view-enter');
+                typesList.offsetHeight;
+                typesList.classList.add('view-enter-active');
+                typesList.classList.remove('view-enter');
+
+                setTimeout(() => {
+                    typesList.classList.remove('view-enter-active');
+                }, 200);
+            }, 80);
         }
     }
 

@@ -273,6 +273,21 @@
     padding: 6px;
 }
 
+/* Subtle crossfade transitions between filter views */
+.view-enter {
+    opacity: 0;
+}
+
+.view-enter-active {
+    opacity: 1;
+    transition: opacity 0.18s ease;
+}
+
+.view-exit-active {
+    opacity: 0;
+    transition: opacity 0.14s ease;
+}
+
 .filter-type-item {
     display: flex;
     align-items: center;
