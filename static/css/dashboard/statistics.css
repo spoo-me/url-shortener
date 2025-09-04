@@ -182,7 +182,6 @@
 /* Filters Dropdown Container */
 .filters-dropdown-container {
     position: relative;
-    z-index: 1000;
 }
 
 .filters-btn {
