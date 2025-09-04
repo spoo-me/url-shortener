@@ -379,7 +379,9 @@ class StatsQueryBuilder:
                     "last_click": summary["last_click"].isoformat()
                     if summary.get("last_click")
                     else None,
-                    "avg_redirection_time": round(summary.get("avg_redirection_time", 0), 2),
+                    "avg_redirection_time": round(
+                        summary.get("avg_redirection_time", 0), 2
+                    ),
                 }
         except Exception:
             pass
