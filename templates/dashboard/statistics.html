@@ -5,8 +5,10 @@
 {% block head_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/statistics.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/dateRangePicker.css') }}">
+<!-- <link rel="stylesheet" type="text/css" -->
+    <!-- href="https://cdn.jsdelivr.net/gh/spoo-me/url-shortener/static/css/anychart-ui.min.css" /> -->
 <link rel="stylesheet" type="text/css"
-    href="https://cdn.jsdelivr.net/gh/spoo-me/url-shortener/static/css/anychart-ui.min.css" />
+    href="{{ url_for('static', filename='css/anychart-ui.min.css') }}" />
 <link rel="stylesheet" type="text/css"
     href="https://cdn.anychart.com/releases/8.12.1/fonts/css/anychart-font.min.css" />
 {% endblock %}

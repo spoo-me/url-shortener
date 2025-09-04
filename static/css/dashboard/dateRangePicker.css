@@ -45,7 +45,7 @@
 
 .date-range-dropdown {
     position: absolute;
-    top: calc(100% + 5px);
+    top: calc(100% + 10px);
     right: 0;
     left: auto;
     background: rgba(20, 25, 40, 0.98);

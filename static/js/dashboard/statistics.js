@@ -74,8 +74,8 @@ const CHART_CONFIGS = {
         totalLabel: 'Browsers',
         uniqueLabel: 'Unique Browsers',
         colors: {
-            total: { bg: 'rgba(153, 102, 255, 0.15)', border: 'rgba(153, 102, 255, 1)' },
-            unique: { bg: 'rgba(255, 159, 64, 0.25)', border: 'rgba(255, 159, 64, 1)' }
+            total: { bg: 'rgba(59, 130, 246, 0.2)', border: 'rgba(59, 130, 246, 0.9)' },   // modern blue
+            unique: { bg: 'rgba(147, 197, 253, 0.4)', border: 'rgba(147, 197, 253, 1)' }   // light blue
         },
         defaultMode: 'compare'
     },
@@ -87,8 +87,8 @@ const CHART_CONFIGS = {
         totalLabel: 'Platforms',
         uniqueLabel: 'Unique Platforms',
         colors: {
-            total: { bg: 'rgba(144, 238, 144, 0.15)', border: 'rgba(144, 238, 144, 1)' },
-            unique: { bg: 'rgba(255, 69, 0, 0.25)', border: 'rgba(255, 69, 0, 1)' }
+            total: { bg: 'rgba(16, 185, 129, 0.2)', border: 'rgba(16, 185, 129, 0.9)' },  // emerald green
+            unique: { bg: 'rgba(110, 231, 183, 0.4)', border: 'rgba(110, 231, 183, 1)' }  // light emerald
         },
         defaultMode: 'compare'
     },
@@ -100,8 +100,8 @@ const CHART_CONFIGS = {
         totalLabel: 'Referrers',
         uniqueLabel: 'Unique Referrers',
         colors: {
-            total: { bg: 'rgba(128, 0, 128, 0.15)', border: 'rgba(128, 0, 128, 1)' },
-            unique: { bg: 'rgba(255, 0, 255, 0.25)', border: 'rgba(255, 0, 255, 1)' }
+            total: { bg: 'rgba(245, 158, 11, 0.2)', border: 'rgba(245, 158, 11, 0.9)' },  // amber
+            unique: { bg: 'rgba(252, 211, 77, 0.4)', border: 'rgba(252, 211, 77, 1)' }   // light amber
         },
         defaultMode: 'compare'
     },
@@ -113,8 +113,8 @@ const CHART_CONFIGS = {
         totalLabel: 'Cities',
         uniqueLabel: 'Unique Cities',
         colors: {
-            total: { bg: 'rgba(75, 192, 192, 0.15)', border: 'rgba(75, 192, 192, 1)' },
-            unique: { bg: 'rgba(255, 99, 132, 0.25)', border: 'rgba(255, 99, 132, 1)' }
+            total: { bg: 'rgba(239, 68, 68, 0.2)', border: 'rgba(239, 68, 68, 0.9)' },   // modern red
+            unique: { bg: 'rgba(252, 165, 165, 0.4)', border: 'rgba(252, 165, 165, 1)' } // light red
         },
         defaultMode: 'compare'
     },
@@ -126,8 +126,8 @@ const CHART_CONFIGS = {
         totalLabel: 'Total Clicks',
         uniqueLabel: 'Unique Clicks',
         colors: {
-            total: { bg: 'rgba(255, 193, 7, 0.6)', border: 'rgba(255, 193, 7, 1)' },
-            unique: { bg: 'rgba(156, 39, 176, 0.6)', border: 'rgba(156, 39, 176, 1)' }
+            total: { bg: 'rgba(139, 92, 246, 0.25)', border: 'rgba(139, 92, 246, 1)' },   // violet (kept as accent)
+            unique: { bg: 'rgba(196, 181, 253, 0.4)', border: 'rgba(196, 181, 253, 1)' }  // light violet
         },
         defaultMode: 'compare',
         // Custom tooltip extension replicating previous percentage logic
@@ -146,6 +146,7 @@ const CHART_CONFIGS = {
         }
     }
 };
+
 class StatisticsDashboard {
     constructor() {
         this.charts = new Map();
@@ -1605,8 +1606,8 @@ class StatisticsDashboard {
                 label: 'Total Clicks',
                 data: clicksData,
                 fill: 'start',
-                backgroundColor: 'rgba(255, 159, 64, 0.15)',
-                borderColor: 'rgba(255, 159, 64, 1)',
+                backgroundColor: 'rgba(139, 92, 246, 0.15)',
+                borderColor: 'rgba(139, 92, 246, 1)',
                 borderWidth: 2,
                 tension: 0,
             });
@@ -1616,8 +1617,8 @@ class StatisticsDashboard {
                 label: 'Unique Clicks',
                 data: uniqueClicksData,
                 fill: 'start',
-                backgroundColor: 'rgba(201, 203, 207, 0.25)',
-                borderColor: 'rgba(201, 203, 207, 1)',
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                borderColor: 'rgba(59, 130, 246, 1)',
                 borderWidth: 2,
                 tension: 0,
             });
@@ -1678,10 +1679,10 @@ class StatisticsDashboard {
         var series = map.choropleth(dataSet);
 
         series.colorScale(
-            anychart.scales.linearColor("#f5e6f7", "#ba68c8", "#9c27b0", "#6a1b9a")
+            anychart.scales.linearColor("#2d1b3d", "#8b5cf6", "#a855f7", "#c084fc")
         );
 
-        series.stroke('#9c27b0', 1, '5 2', 'round');
+        series.stroke('#8b5cf6', 1);
 
         series.hovered().fill(function (d) {
             return anychart.color.darken(d.sourceColor, 0.1);
