@@ -74,7 +74,7 @@
     background: rgba(255, 255, 255, 0.02);
 }
 
-.modal-title-section-delete {
+.modal-title-section-delete, .modal-title-section-success {
     display: flex;
     align-items: center;
     gap: 16px;
