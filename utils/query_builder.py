@@ -72,19 +72,19 @@ class StatsQueryBuilder:
                 if "Direct" in values:
                     # Split Direct and non-Direct referrers
                     non_direct_values = [v for v in values if v != "Direct"]
-                    
+
                     if non_direct_values:
                         # Both Direct and specific referrers requested
                         self.query["$or"] = [
                             {"referrer": {"$in": non_direct_values}},
                             {"referrer": {"$in": [None, ""]}},
-                            {"referrer": {"$exists": False}}
+                            {"referrer": {"$exists": False}},
                         ]
                     else:
                         # Only Direct referrers requested
                         self.query["$or"] = [
                             {"referrer": {"$in": [None, ""]}},
-                            {"referrer": {"$exists": False}}
+                            {"referrer": {"$exists": False}},
                         ]
                 else:
                     # No Direct referrers, normal filtering
