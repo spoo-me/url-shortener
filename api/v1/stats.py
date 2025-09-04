@@ -68,7 +68,8 @@ def stats_v1() -> tuple[Response, int]:
         "total_clicks": 150,
         "unique_clicks": 89,
         "first_click": "2025-01-01T10:30:00Z",
-        "last_click": "2025-01-07T18:45:00Z"
+        "last_click": "2025-01-07T18:45:00Z",
+        "avg_redirection_time": 142.35
       },
       "metrics": {
         "clicks_by_time": [

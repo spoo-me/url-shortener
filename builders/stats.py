@@ -360,6 +360,7 @@ class StatsQueryBuilder:
                     "unique_clicks": {"$addToSet": "$ip_address"},
                     "first_click": {"$min": "$clicked_at"},
                     "last_click": {"$max": "$clicked_at"},
+                    "avg_redirection_time": {"$avg": "$redirect_ms"},
                 }
             },
             {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
@@ -378,6 +379,7 @@ class StatsQueryBuilder:
                     "last_click": summary["last_click"].isoformat()
                     if summary.get("last_click")
                     else None,
+                    "avg_redirection_time": round(summary.get("avg_redirection_time", 0), 2),
                 }
         except Exception:
             pass
@@ -387,6 +389,7 @@ class StatsQueryBuilder:
             "unique_clicks": 0,
             "first_click": None,
             "last_click": None,
+            "avg_redirection_time": 0,
         }
 
     def build(self) -> tuple[Response, int]:

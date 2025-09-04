@@ -1440,13 +1440,13 @@ class StatisticsDashboard {
         const totalClicks = data.summary?.total_clicks || 0;
         const uniqueClicks = data.summary?.unique_clicks || 0;
         const uniqueRate = totalClicks > 0 ? ((uniqueClicks / totalClicks) * 100).toFixed(1) : 0;
-        const activeUrls = data.summary?.total_urls || 0;
+        const redirectionTime = data.summary?.avg_redirection_time || 0;
 
         // Update stat values
         document.getElementById('totalClicks').textContent = this.formatNumber(totalClicks);
         document.getElementById('uniqueClicks').textContent = this.formatNumber(uniqueClicks);
         document.getElementById('clickRate').textContent = `${uniqueRate}%`;
-        document.getElementById('activeUrls').textContent = this.formatNumber(activeUrls);
+        document.getElementById('redirectionTime').textContent = this.formatNumber(redirectionTime) + ' ms';
     }
 
     updateChangeIndicator(elementId, changeValue) {
