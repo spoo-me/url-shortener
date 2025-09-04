@@ -5,22 +5,30 @@
 }
 
 .date-range-trigger {
-    padding: 10px 15px;
-    border-radius: 12px;
-    color: white;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow: rgba(0, 0, 0, 0.16) 0 10px 36px 0px, rgba(0, 0, 0, 0.06) 0 0 0 1px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     min-width: 160px;
-    transition: background-color 0.2s ease-in-out;
+    transition: all 0.2s ease;
+    font-weight: 500;
 }
 
 .date-range-trigger:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.date-range-trigger.active {
+    background: rgba(124, 58, 237, 0.15);
+    border-color: rgba(124, 58, 237, 0.4);
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .selected-range {
@@ -30,17 +38,18 @@
 
 .clock-icon {
     font-size: 16px;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .dropdown-icon {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
     transition: transform 0.2s ease;
 }
 
-.dropdown-icon:hover {
+.date-range-trigger.active .dropdown-icon {
     transform: rotate(180deg);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .date-range-dropdown {
@@ -48,11 +57,11 @@
     top: calc(100% + 10px);
     right: 0;
     left: auto;
-    background: rgba(20, 25, 40, 0.98);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(15, 20, 35, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 12px;
     box-shadow: rgba(0, 0, 0, 0.3) 0 20px 40px 0px;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(16px);
     z-index: 1000;
     min-width: 700px;
     max-height: 500px;
@@ -281,6 +290,7 @@
         opacity: 0;
         transform: translateY(-10px) scaleY(0.8);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scaleY(1);
@@ -294,16 +304,16 @@
         left: 50%;
         transform: translateX(-50%);
     }
-    
+
     .dropdown-header {
         flex-direction: column;
         gap: 15px;
     }
-    
+
     .custom-inputs {
         padding: 15px;
     }
-    
+
     .history-section {
         padding: 15px;
     }

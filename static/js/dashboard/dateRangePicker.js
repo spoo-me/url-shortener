@@ -131,13 +131,22 @@ class DateRangePicker {
         // Toggle dropdown
         trigger?.addEventListener('click', (e) => {
             e.stopPropagation();
-            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            const isOpen = dropdown.style.display === 'block';
+            dropdown.style.display = isOpen ? 'none' : 'block';
+            
+            // Toggle active class
+            if (isOpen) {
+                trigger.classList.remove('active');
+            } else {
+                trigger.classList.add('active');
+            }
         });
 
         // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.date-range-picker')) {
                 dropdown.style.display = 'none';
+                trigger.classList.remove('active');
             }
         });
 
@@ -198,6 +207,7 @@ class DateRangePicker {
         
         // Close dropdown
         document.getElementById('dateRangeDropdown').style.display = 'none';
+        document.getElementById('dateRangeTrigger').classList.remove('active');
         
         // Notify parent
         const dateRange = this.parseRelativeRange(value);
@@ -240,6 +250,7 @@ class DateRangePicker {
             
             // Close dropdown
             document.getElementById('dateRangeDropdown').style.display = 'none';
+            document.getElementById('dateRangeTrigger').classList.remove('active');
             
             // Notify parent
             this.options.onRangeChange(dateRange);

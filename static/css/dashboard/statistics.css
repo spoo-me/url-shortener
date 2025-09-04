@@ -75,18 +75,18 @@
 .refresh-control {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    padding: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 2px;
 }
 
 .refresh-btn {
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.75);
     padding: 6px 8px;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 16px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -96,16 +96,15 @@
 }
 
 .refresh-btn:hover {
-    color: rgb(255, 255, 255);
-    background-color: rgba(255, 255, 255, 0.06);
-    transition: all 0.2s ease-in-out;
+    color: rgba(255, 255, 255, 0.95);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .separator {
     width: 1px;
-    height: 20px;
-    background: rgba(255, 255, 255, 0.3);
-    margin: 0 4px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 6px;
 }
 
 .auto-refresh-dropdown {
@@ -118,9 +117,9 @@
 .auto-refresh-btn {
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.75);
     padding: 6px 8px;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 14px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -128,27 +127,40 @@
     align-items: center;
     gap: 6px;
     white-space: nowrap;
+    font-weight: 500;
 }
 
 .auto-refresh-btn:hover {
-    color: rgb(255, 255, 255);
-    background-color: rgba(255, 255, 255, 0.06);
-    transition: all 0.2s ease-in-out;
+    color: rgba(255, 255, 255, 0.95);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.auto-refresh-btn.active {
+    /* background-color: rgba(124, 58, 237, 0.15); */
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.auto-refresh-btn.active .ti-chevron-down {
+    transform: rotate(180deg);
+}
+
+.auto-refresh-btn .ti-chevron-down {
+    transition: transform 0.2s ease;
 }
 
 .auto-refresh-dropdown .dropdown-menu {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 10px);
     right: 0;
-    background: rgba(30, 35, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 6px;
+    background: rgba(15, 20, 35, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
     min-width: 80px;
     z-index: 1000;
     display: none;
     box-shadow: rgba(0, 0, 0, 0.3) 0 20px 40px 0px;
-    backdrop-filter: blur(10px);
-    margin-top: 8px;
+    backdrop-filter: blur(16px);
+    overflow: hidden;
 }
 
 .auto-refresh-dropdown .dropdown-menu.show {
@@ -156,27 +168,28 @@
 }
 
 .auto-refresh-dropdown .dropdown-item {
-    padding: 6px 10px;
-    color: #ecf0f1;
+    padding: 8px 12px;
+    color: rgba(255, 255, 255, 0.8);
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 6px;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
     font-size: 14px;
+    font-weight: 500;
 }
 
 .auto-refresh-dropdown .dropdown-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .auto-refresh-dropdown .dropdown-item:first-child {
-    border-radius: 6px 6px 0 0;
+    border-radius: 8px 8px 0 0;
 }
 
 .auto-refresh-dropdown .dropdown-item:last-child {
-    border-radius: 0 0 6px 6px;
+    border-radius: 0 0 8px 8px;
 }
 
 /* Filters Dropdown Container */
@@ -188,26 +201,27 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 16px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 10px;
-    color: rgba(255, 255, 255, 0.9);
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.85);
     font-size: 14px;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: rgba(0, 0, 0, 0.16) 0 10px 36px 0px, rgba(0, 0, 0, 0.06) 0 0 0 1px;
+    font-weight: 500;
 }
 
 .filters-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
-    color: white;
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .filters-btn.active {
-    background: rgba(124, 58, 237, 0.3);
-    border-color: #7c3aed;
-    color: white;
+    background: rgba(124, 58, 237, 0.15);
+    border-color: rgba(124, 58, 237, 0.4);
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .filters-text {
@@ -215,23 +229,26 @@
 }
 
 .active-filters-count {
-    background: #7c3aed;
+    background: rgba(124, 58, 237, 0.9);
     color: white;
-    border-radius: 12px;
-    padding: 2px 8px;
-    font-size: 12px;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 11px;
     font-weight: 600;
-    min-width: 20px;
+    min-width: 18px;
     text-align: center;
+    line-height: 1.2;
 }
 
 .filters-chevron {
     font-size: 12px;
     transition: transform 0.2s ease;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .filters-btn.active .filters-chevron {
     transform: rotate(180deg);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 /* Floating Filters Dropdown */
@@ -241,11 +258,11 @@
     left: 0;
     width: 260px;
     max-width: 90vw;
-    background: rgba(20, 25, 40, 0.98);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(15, 20, 35, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 12px;
-    backdrop-filter: blur(20px);
-    box-shadow: rgba(0, 0, 0, 0.3) 0 20px 60px;
+    backdrop-filter: blur(16px);
+    box-shadow: rgba(0, 0, 0, 0.3) 0 20px 40px 0px;
     z-index: 9999;
     display: none;
     overflow: hidden;
@@ -295,7 +312,6 @@
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
-    margin-bottom: 2px;
 }
 
 .filter-type-item:hover:not(.clear-all-item) {
@@ -306,7 +322,6 @@
     color: rgba(239, 68, 68, 0.9);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     margin-top: 8px;
-    padding-top: 16px;
 }
 
 .filter-type-item.clear-all-item:hover {
@@ -901,7 +916,7 @@
     backdrop-filter: blur(20px);
     width: 100%;
     height: 100%;
-    padding: 15px;
+    padding: 14px 15px;
     box-shadow: rgba(0, 0, 0, 0.24) 0 3px 8px;
     text-align: center;
 }

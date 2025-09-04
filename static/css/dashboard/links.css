@@ -482,17 +482,18 @@
 
 .options-dropdown {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 10px);
     right: 0;
-    margin-top: 8px;
+    left: auto;
     width: 500px;
     max-width: 90vw;
-    background: rgba(20, 25, 40, 0.98);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
+    position: absolute;
     padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    background: rgba(15, 20, 35, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    backdrop-filter: blur(60px);
+    box-shadow: rgba(0, 0, 0, 0.3) 0 20px 40px 0px;
     z-index: 9999;
 }
 
@@ -620,7 +621,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
 .seg-indicator {
     position: absolute;
-    top: 2px;
+    top: 3px;
     bottom: 2.5px;
     left: 2.5px;
     width: calc(33.33% - 2.67px);

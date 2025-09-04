@@ -302,7 +302,15 @@ class StatisticsDashboard {
                 e.stopPropagation();
                 const dropdown = autoRefreshBtn.nextElementSibling;
                 if (dropdown && dropdown.classList.contains('dropdown-menu')) {
+                    const isOpen = dropdown.classList.contains('show');
                     dropdown.classList.toggle('show');
+                    
+                    // Toggle active class
+                    if (isOpen) {
+                        autoRefreshBtn.classList.remove('active');
+                    } else {
+                        autoRefreshBtn.classList.add('active');
+                    }
                 }
             });
         }
@@ -312,7 +320,11 @@ class StatisticsDashboard {
             const autoRefreshDropdown = e.target.closest('.auto-refresh-dropdown');
             if (!autoRefreshDropdown) {
                 const openDropdowns = document.querySelectorAll('.auto-refresh-dropdown .dropdown-menu.show');
+                const autoRefreshBtn = document.querySelector('.auto-refresh-btn');
                 openDropdowns.forEach(dropdown => dropdown.classList.remove('show'));
+                if (autoRefreshBtn) {
+                    autoRefreshBtn.classList.remove('active');
+                }
             }
         });
 

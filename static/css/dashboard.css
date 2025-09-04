@@ -325,16 +325,17 @@ body {
 
 .options-dropdown {
 	position: absolute;
+	top: calc(100% + 10px);
 	right: 0;
-	top: calc(100% + 8px);
+	left: auto;
 	min-width: 720px;
 	max-width: 86vw;
 	padding: 20px;
-	border: 1px solid var(--border);
-	border-radius: var(--radius-lg);
-	background: rgba(13, 17, 35, 0.98);
-	backdrop-filter: blur(70px);
-	box-shadow: var(--shadow);
+	background: rgba(15, 20, 35, 0.98);
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	border-radius: 12px;
+	backdrop-filter: blur(16px);
+	box-shadow: rgba(0, 0, 0, 0.3) 0 20px 40px 0px;
 	z-index: 1000;
 }
 
