@@ -768,22 +768,6 @@ class StatisticsDashboard {
         });
     }
 
-    updateFilterOptionsUI(type) {
-        const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
-        if (!optionsList) {
-            console.warn(`Options list not found for ${type}`);
-            return;
-        }
-
-        const checkboxes = optionsList.querySelectorAll('input[type="checkbox"]');
-
-        checkboxes.forEach(checkbox => {
-            const value = checkbox.dataset.value;
-            const isSelected = this.filterManager.isSelected(type, value);
-            checkbox.checked = isSelected;
-        });
-    }
-
     updateFilterUI() {
         // Update active filter count
         const totalActiveFilters = this.filterManager.getTotalActiveFilters();
@@ -802,13 +786,40 @@ class StatisticsDashboard {
         const filterTypes = ['browser', 'os', 'country', 'city', 'referrer', 'key'];
         filterTypes.forEach(type => {
             this.updateFilterSummary(type);
-            this.updateFilterOptionsUI(type);
+            this.updateChartFilterIndicator(type);
         });
 
         // Update clear all button state
         const clearAllBtn = document.querySelector('.clear-all-filters-btn');
         if (clearAllBtn) {
             clearAllBtn.disabled = totalActiveFilters === 0;
+        }
+    }
+
+    /**
+     * Update visual indicator on charts when filters are active
+     * @param {string} filterType - Type of filter to check
+     */
+    updateChartFilterIndicator(filterType) {
+        const activeFilters = this.filterManager.getActiveFilters()[filterType] || [];
+        const hasActiveFilter = activeFilters.length > 0;
+
+        // Map filter types to chart container selectors
+        const chartMap = {
+            browser: '#browserChart',
+            os: '#osChart',
+            country: '#countryChart',
+            city: '#cityChart',
+            referrer: '#referrerChart',
+            key: '#keyChart'
+        };
+
+        const chartSelector = chartMap[filterType];
+        if (chartSelector) {
+            const chartContainer = document.querySelector(chartSelector)?.closest('.chart-container');
+            if (chartContainer) {
+                chartContainer.setAttribute('data-has-active-filter', hasActiveFilter.toString());
+            }
         }
     }
 
@@ -1165,6 +1176,127 @@ class StatisticsDashboard {
         return div.innerHTML;
     }
 
+    /**
+     * Add click handler to chart for interactive filtering
+     * @param {Chart} chart - Chart.js chart instance
+     * @param {string} filterType - Type of filter (browser, os, country, etc.)
+     */
+    addChartClickHandler(chart, filterType) {
+        if (!chart || !chart.canvas) return;
+
+        chart.canvas.onclick = (event) => {
+            const activePoints = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+
+            if (activePoints.length > 0) {
+                const firstPoint = activePoints[0];
+                const label = chart.data.labels[firstPoint.index];
+
+                // Don't allow filtering on "Others" category
+                if (label === 'Others') {
+                    return;
+                }
+
+                // Toggle filter
+                this.toggleChartFilter(filterType, label);
+            }
+        };
+
+        // Change cursor to pointer when hovering over chart elements
+        chart.canvas.onmousemove = (event) => {
+            const activePoints = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+
+            if (activePoints.length > 0) {
+                const firstPoint = activePoints[0];
+                const label = chart.data.labels[firstPoint.index];
+                chart.canvas.style.cursor = label === 'Others' ? 'default' : 'pointer';
+            } else {
+                chart.canvas.style.cursor = 'default';
+            }
+        };
+
+        // Store chart reference for potential updates
+        chart._filterType = filterType;
+    }
+
+    /**
+     * Toggle filter when chart element is clicked
+     * @param {string} filterType - Type of filter
+     * @param {string} value - Value to toggle
+     */
+    toggleChartFilter(filterType, value) {
+        // Check if filter is currently active
+        const isActive = this.filterManager.isSelected(filterType, value);
+
+        if (isActive) {
+            // Remove filter
+            this.filterManager.removeFilter(filterType, value);
+        } else {
+            // Add filter
+            this.filterManager.addFilter(filterType, value);
+        }
+
+        // Update UI and trigger data refresh
+        this.updateFilterUI();
+        this.filterManager.notifyChange();
+    }
+
+    /**
+     * Add click handler to AnyChart map for country filtering
+     * @param {anychart.Map} map - AnyChart map instance
+     */
+    addMapClickHandler(map) {
+        if (!map) return;
+
+        map.listen('pointClick', (e) => {
+            // Get the clicked point data
+            const point = e.point;
+
+            // Try to get country code from the point's data
+            let countryCode = null;
+
+            try {
+                // AnyChart map points have different API - try these methods
+                countryCode = point.get('id') ||
+                    point.get('iso_a2') ||
+                    point.get('code');
+
+                if (countryCode) {
+                    const countryName = this.getCountryName(countryCode);
+                    if (countryName && countryName !== 'Unknown') {
+                        this.toggleChartFilter('country', countryName);
+                    }
+                } else {
+                    console.warn('Could not extract country code from map click');
+                }
+            } catch (error) {
+                console.error('Error in map click handler:', error);
+            }
+        });
+
+        // Simplified cursor handling - directly set on container
+        map.listen('pointMouseOver', (e) => {
+            try {
+                const container = document.getElementById('countryChart');
+                if (container) {
+                    container.style.cursor = 'pointer';
+                }
+            } catch (error) {
+                console.warn('Error setting cursor on mouse over:', error);
+            }
+        });
+
+        map.listen('pointMouseOut', (e) => {
+            try {
+                const container = document.getElementById('countryChart');
+                if (container) {
+                    container.style.cursor = 'default';
+                }
+            } catch (error) {
+                console.warn('Error setting cursor on mouse out:', error);
+            }
+        });
+    }
+
     updateChartByType(chartType, value) {
         if (!this.apiData) return;
 
@@ -1495,6 +1627,9 @@ class StatisticsDashboard {
             },
         });
 
+        // Add click handler for interactive filtering
+        this.addChartClickHandler(chart, 'browser');
+
         this.charts.set('browser', chart);
     }
 
@@ -1577,6 +1712,9 @@ class StatisticsDashboard {
                 },
             },
         });
+
+        // Add click handler for interactive filtering
+        this.addChartClickHandler(chart, 'os');
 
         this.charts.set('os', chart);
     }
@@ -1661,6 +1799,9 @@ class StatisticsDashboard {
             },
         });
 
+        // Add click handler for interactive filtering
+        this.addChartClickHandler(chart, 'referrer');
+
         this.charts.set('referrer', chart);
     }
 
@@ -1742,6 +1883,9 @@ class StatisticsDashboard {
         });
 
         map.draw();
+
+        // Add click handler for interactive filtering
+        this.addMapClickHandler(map);
 
         // Store map instance for cleanup
         this.charts.set('country', map);
@@ -1826,6 +1970,9 @@ class StatisticsDashboard {
                 },
             },
         });
+
+        // Add click handler for interactive filtering
+        this.addChartClickHandler(chart, 'city');
 
         this.charts.set('city', chart);
     }
@@ -1912,14 +2059,16 @@ class StatisticsDashboard {
                         callbacks: {
                             afterBody: function (context) {
                                 const index = context[0].dataIndex;
+                                const label = processedData.labels[index];
+
                                 // Skip percentage display for "Others" category
-                                if (processedData.labels[index] === 'Others') {
-                                    return '';
+                                if (label !== 'Others') {
+                                    const clicksData = datasets.find(d => d.label.includes('Clicks'))?.data || [];
+                                    const totalClicks = clicksData.reduce((sum, val) => sum + val, 0);
+                                    const percentage = totalClicks > 0 ? ((clicksData[index] / totalClicks) * 100).toFixed(1) : 0;
+                                    return `\nPercentage: ${percentage}%`;
                                 }
-                                const item = clicksByKey[index];
-                                if (item && item.clicks_percentage) {
-                                    return `${item.clicks_percentage.toFixed(1)}% of total clicks`;
-                                }
+
                                 return '';
                             }
                         }
@@ -1927,6 +2076,9 @@ class StatisticsDashboard {
                 },
             },
         });
+
+        // Add click handler for interactive filtering
+        this.addChartClickHandler(chart, 'key');
 
         this.charts.set('key', chart);
     }
@@ -2145,6 +2297,24 @@ class FilterManager {
             this.activeFilters[type].push(value);
             // Don't notify change immediately - wait for dropdown close
         }
+    }
+
+    toggleFilter(type, value) {
+        if (!this.activeFilters[type]) {
+            this.activeFilters[type] = [];
+        }
+
+        const index = this.activeFilters[type].indexOf(value);
+        if (index > -1) {
+            // Remove filter
+            this.activeFilters[type].splice(index, 1);
+        } else {
+            // Add filter
+            this.activeFilters[type].push(value);
+        }
+
+        // Immediately notify change for chart interactions
+        this.notifyChange();
     }
 
     removeFilter(type, value) {
