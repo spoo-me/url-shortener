@@ -180,10 +180,6 @@ function openKeySuccessModal(token, tokenPrefix) {
         } catch (error) {
             console.log('Auto-copy failed, user can copy manually');
         }
-
-        // Focus and select token for manual copy if needed
-        keyElements.tokenInput.focus();
-        keyElements.tokenInput.select();
     }, 100);
 }
 

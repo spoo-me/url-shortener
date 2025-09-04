@@ -30,7 +30,7 @@
     padding: 20px;
     position: relative;
     z-index: 2;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.7);
     -webkit-backdrop-filter: blur(10px) saturate(180%) brightness(0.7);
     backdrop-filter: blur(10px) saturate(180%) brightness(0.7);
 }
@@ -41,12 +41,11 @@
 
 /* Modal Content */
 .modal-content {
-    background: #1a1a1a;
+    backdrop-filter: blur(60px);
+    background: rgba(15, 20, 35, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
-    box-shadow:
-        0 20px 40px rgba(0, 0, 0, 0.5),
-        0 0 0 1px rgba(255, 255, 255, 0.05);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
     width: 100%;
     max-width: 800px;
     max-height: 90vh;
@@ -294,9 +293,8 @@
 .field input:focus,
 .field select:focus {
     outline: none;
-    border-color: var(--accent-color);
+    border-color: var(--accent-primary);
     background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .field input::placeholder {

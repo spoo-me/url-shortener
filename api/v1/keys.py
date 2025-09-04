@@ -40,7 +40,7 @@ def _parse_expires_at(value: Optional[str | int | float]):
 
 
 @api_v1.route("/keys", methods=["POST"])
-@limiter.limit("3 per hour", key_func=rate_limit_key_for_request)
+@limiter.limit("5 per hour", key_func=rate_limit_key_for_request)
 @requires_auth
 def create_api_key():
     body = request.get_json(silent=True) or {}
