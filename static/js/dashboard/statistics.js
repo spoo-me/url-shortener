@@ -1,4 +1,151 @@
 // Statistics Dashboard JavaScript - Using new /api/v1/stats endpoint
+// Phase 1 Refactor: introduce configuration-driven categorical chart builder & shared constants
+
+// Central list of filter types used across UI & API param building (keeps country & key aligned)
+const FILTER_TYPES = ['browser', 'os', 'country', 'city', 'referrer', 'key'];
+
+// Top N threshold for categorical charts before grouping remaining into "Others"
+const TOP_N = 7;
+
+// Country code map extracted from method for reuse & clarity (kept identical)
+const COUNTRY_MAP = {
+    'AD': 'Andorra', 'AE': 'United Arab Emirates', 'AF': 'Afghanistan', 'AG': 'Antigua and Barbuda',
+    'AI': 'Anguilla', 'AL': 'Albania', 'AM': 'Armenia', 'AO': 'Angola', 'AQ': 'Antarctica',
+    'AR': 'Argentina', 'AS': 'American Samoa', 'AT': 'Austria', 'AU': 'Australia', 'AW': 'Aruba',
+    'AX': 'Åland Islands', 'AZ': 'Azerbaijan', 'BA': 'Bosnia and Herzegovina', 'BB': 'Barbados',
+    'BD': 'Bangladesh', 'BE': 'Belgium', 'BF': 'Burkina Faso', 'BG': 'Bulgaria', 'BH': 'Bahrain',
+    'BI': 'Burundi', 'BJ': 'Benin', 'BL': 'Saint Barthélemy', 'BM': 'Bermuda', 'BN': 'Brunei',
+    'BO': 'Bolivia', 'BQ': 'Caribbean Netherlands', 'BR': 'Brazil', 'BS': 'Bahamas', 'BT': 'Bhutan',
+    'BV': 'Bouvet Island', 'BW': 'Botswana', 'BY': 'Belarus', 'BZ': 'Belize', 'CA': 'Canada',
+    'CC': 'Cocos Islands', 'CD': 'Democratic Republic of the Congo', 'CF': 'Central African Republic',
+    'CG': 'Republic of the Congo', 'CH': 'Switzerland', 'CI': 'Côte d\'Ivoire', 'CK': 'Cook Islands',
+    'CL': 'Chile', 'CM': 'Cameroon', 'CN': 'China', 'CO': 'Colombia', 'CR': 'Costa Rica',
+    'CU': 'Cuba', 'CV': 'Cape Verde', 'CW': 'Curaçao', 'CX': 'Christmas Island', 'CY': 'Cyprus',
+    'CZ': 'Czech Republic', 'DE': 'Germany', 'DJ': 'Djibouti', 'DK': 'Denmark', 'DM': 'Dominica',
+    'DO': 'Dominican Republic', 'DZ': 'Algeria', 'EC': 'Ecuador', 'EE': 'Estonia', 'EG': 'Egypt',
+    'EH': 'Western Sahara', 'ER': 'Eritrea', 'ES': 'Spain', 'ET': 'Ethiopia', 'FI': 'Finland',
+    'FJ': 'Fiji', 'FK': 'Falkland Islands', 'FM': 'Micronesia', 'FO': 'Faroe Islands', 'FR': 'France',
+    'GA': 'Gabon', 'GB': 'United Kingdom', 'GD': 'Grenada', 'GE': 'Georgia', 'GF': 'French Guiana',
+    'GG': 'Guernsey', 'GH': 'Ghana', 'GI': 'Gibraltar', 'GL': 'Greenland', 'GM': 'Gambia',
+    'GN': 'Guinea', 'GP': 'Guadeloupe', 'GQ': 'Equatorial Guinea', 'GR': 'Greece', 'GS': 'South Georgia',
+    'GT': 'Guatemala', 'GU': 'Guam', 'GW': 'Guinea-Bissau', 'GY': 'Guyana', 'HK': 'Hong Kong',
+    'HM': 'Heard Island', 'HN': 'Honduras', 'HR': 'Croatia', 'HT': 'Haiti', 'HU': 'Hungary',
+    'ID': 'Indonesia', 'IE': 'Ireland', 'IL': 'Israel', 'IM': 'Isle of Man', 'IN': 'India',
+    'IO': 'British Indian Ocean Territory', 'IQ': 'Iraq', 'IR': 'Iran', 'IS': 'Iceland', 'IT': 'Italy',
+    'JE': 'Jersey', 'JM': 'Jamaica', 'JO': 'Jordan', 'JP': 'Japan', 'KE': 'Kenya', 'KG': 'Kyrgyzstan',
+    'KH': 'Cambodia', 'KI': 'Kiribati', 'KM': 'Comoros', 'KN': 'Saint Kitts and Nevis', 'KP': 'North Korea',
+    'KR': 'South Korea', 'KW': 'Kuwait', 'KY': 'Cayman Islands', 'KZ': 'Kazakhstan', 'LA': 'Laos',
+    'LB': 'Lebanon', 'LC': 'Saint Lucia', 'LI': 'Liechtenstein', 'LK': 'Sri Lanka', 'LR': 'Liberia',
+    'LS': 'Lesotho', 'LT': 'Lithuania', 'LU': 'Luxembourg', 'LV': 'Latvia', 'LY': 'Libya',
+    'MA': 'Morocco', 'MC': 'Monaco', 'MD': 'Moldova', 'ME': 'Montenegro', 'MF': 'Saint Martin',
+    'MG': 'Madagascar', 'MH': 'Marshall Islands', 'MK': 'North Macedonia', 'ML': 'Mali', 'MM': 'Myanmar',
+    'MN': 'Mongolia', 'MO': 'Macao', 'MP': 'Northern Mariana Islands', 'MQ': 'Martinique', 'MR': 'Mauritania',
+    'MS': 'Montserrat', 'MT': 'Malta', 'MU': 'Mauritius', 'MV': 'Maldives', 'MW': 'Malawi',
+    'MX': 'Mexico', 'MY': 'Malaysia', 'MZ': 'Mozambique', 'NA': 'Namibia', 'NC': 'New Caledonia',
+    'NE': 'Niger', 'NF': 'Norfolk Island', 'NG': 'Nigeria', 'NI': 'Nicaragua', 'NL': 'Netherlands',
+    'NO': 'Norway', 'NP': 'Nepal', 'NR': 'Nauru', 'NU': 'Niue', 'NZ': 'New Zealand', 'OM': 'Oman',
+    'PA': 'Panama', 'PE': 'Peru', 'PF': 'French Polynesia', 'PG': 'Papua New Guinea', 'PH': 'Philippines',
+    'PK': 'Pakistan', 'PL': 'Poland', 'PM': 'Saint Pierre and Miquelon', 'PN': 'Pitcairn Islands',
+    'PR': 'Puerto Rico', 'PS': 'Palestine', 'PT': 'Portugal', 'PW': 'Palau', 'PY': 'Paraguay',
+    'QA': 'Qatar', 'RE': 'Réunion', 'RO': 'Romania', 'RS': 'Serbia', 'RU': 'Russia', 'RW': 'Rwanda',
+    'SA': 'Saudi Arabia', 'SB': 'Solomon Islands', 'SC': 'Seychelles', 'SD': 'Sudan', 'SE': 'Sweden',
+    'SG': 'Singapore', 'SH': 'Saint Helena', 'SI': 'Slovenia', 'SJ': 'Svalbard and Jan Mayen',
+    'SK': 'Slovakia', 'SL': 'Sierra Leone', 'SM': 'San Marino', 'SN': 'Senegal', 'SO': 'Somalia',
+    'SR': 'Suriname', 'SS': 'South Sudan', 'ST': 'São Tomé and Príncipe', 'SV': 'El Salvador',
+    'SX': 'Sint Maarten', 'SY': 'Syria', 'SZ': 'Eswatini', 'TC': 'Turks and Caicos Islands',
+    'TD': 'Chad', 'TF': 'French Southern Territories', 'TG': 'Togo', 'TH': 'Thailand', 'TJ': 'Tajikistan',
+    'TK': 'Tokelau', 'TL': 'Timor-Leste', 'TM': 'Turkmenistan', 'TN': 'Tunisia', 'TO': 'Tonga',
+    'TR': 'Turkey', 'TT': 'Trinidad and Tobago', 'TV': 'Tuvalu', 'TW': 'Taiwan', 'TZ': 'Tanzania',
+    'UA': 'Ukraine', 'UG': 'Uganda', 'UM': 'United States Minor Outlying Islands', 'US': 'United States',
+    'UY': 'Uruguay', 'UZ': 'Uzbekistan', 'VA': 'Vatican City', 'VC': 'Saint Vincent and the Grenadines',
+    'VE': 'Venezuela', 'VG': 'British Virgin Islands', 'VI': 'United States Virgin Islands',
+    'VN': 'Vietnam', 'VU': 'Vanuatu', 'WF': 'Wallis and Futuna', 'WS': 'Samoa', 'YE': 'Yemen',
+    'YT': 'Mayotte', 'ZA': 'South Africa', 'ZM': 'Zambia', 'ZW': 'Zimbabwe', 'XX': 'Unknown'
+};
+
+// Configuration map for categorical (bar) charts (excludes timeSeries & country map which are special)
+// Each entry defines how to extract & render that dimension.
+const CHART_CONFIGS = {
+    browser: {
+        id: 'browserChart',
+        metricBase: 'browser',
+        totalKey: 'clicks_by_browser',
+        uniqueKey: 'unique_clicks_by_browser',
+        totalLabel: 'Browsers',
+        uniqueLabel: 'Unique Browsers',
+        colors: {
+            total: { bg: 'rgba(153, 102, 255, 0.15)', border: 'rgba(153, 102, 255, 1)' },
+            unique: { bg: 'rgba(255, 159, 64, 0.25)', border: 'rgba(255, 159, 64, 1)' }
+        },
+        defaultMode: 'compare'
+    },
+    os: {
+        id: 'osChart',
+        metricBase: 'os',
+        totalKey: 'clicks_by_os',
+        uniqueKey: 'unique_clicks_by_os',
+        totalLabel: 'Platforms',
+        uniqueLabel: 'Unique Platforms',
+        colors: {
+            total: { bg: 'rgba(144, 238, 144, 0.15)', border: 'rgba(144, 238, 144, 1)' },
+            unique: { bg: 'rgba(255, 69, 0, 0.25)', border: 'rgba(255, 69, 0, 1)' }
+        },
+        defaultMode: 'compare'
+    },
+    referrer: {
+        id: 'referrerChart',
+        metricBase: 'referrer',
+        totalKey: 'clicks_by_referrer',
+        uniqueKey: 'unique_clicks_by_referrer',
+        totalLabel: 'Referrers',
+        uniqueLabel: 'Unique Referrers',
+        colors: {
+            total: { bg: 'rgba(128, 0, 128, 0.15)', border: 'rgba(128, 0, 128, 1)' },
+            unique: { bg: 'rgba(255, 0, 255, 0.25)', border: 'rgba(255, 0, 255, 1)' }
+        },
+        defaultMode: 'compare'
+    },
+    city: {
+        id: 'cityChart',
+        metricBase: 'city',
+        totalKey: 'clicks_by_city',
+        uniqueKey: 'unique_clicks_by_city',
+        totalLabel: 'Cities',
+        uniqueLabel: 'Unique Cities',
+        colors: {
+            total: { bg: 'rgba(75, 192, 192, 0.15)', border: 'rgba(75, 192, 192, 1)' },
+            unique: { bg: 'rgba(255, 99, 132, 0.25)', border: 'rgba(255, 99, 132, 1)' }
+        },
+        defaultMode: 'compare'
+    },
+    key: {
+        id: 'keyChart',
+        metricBase: 'key',
+        totalKey: 'clicks_by_key',
+        uniqueKey: 'unique_clicks_by_key',
+        totalLabel: 'Total Clicks',
+        uniqueLabel: 'Unique Clicks',
+        colors: {
+            total: { bg: 'rgba(255, 193, 7, 0.6)', border: 'rgba(255, 193, 7, 1)' },
+            unique: { bg: 'rgba(156, 39, 176, 0.6)', border: 'rgba(156, 39, 176, 1)' }
+        },
+        defaultMode: 'compare',
+        // Custom tooltip extension replicating previous percentage logic
+        tooltipAfterBody(context, meta) {
+            const index = context[0]?.dataIndex ?? -1;
+            if (index < 0) return '';
+            const label = meta.labels[index];
+            if (label === 'Others') return '';
+            // Use first dataset with 'Clicks' in label (total) for percentage base
+            const clicksDs = meta.datasets.find(d => /Clicks/i.test(d.label));
+            if (!clicksDs) return '';
+            const totalClicks = clicksDs.data.reduce((s, v) => s + v, 0);
+            const value = clicksDs.data[index];
+            const pct = totalClicks > 0 ? ((value / totalClicks) * 100).toFixed(1) : 0;
+            return `\nPercentage: ${pct}%`;
+        }
+    }
+};
 class StatisticsDashboard {
     constructor() {
         this.charts = new Map();
@@ -9,6 +156,7 @@ class StatisticsDashboard {
         this.autoRefreshInterval = null;
         this.apiData = null;
         this.dateRangePicker = null;
+        this.activeRequestController = null; // AbortController for in-flight API requests
 
         // Filter system
         this.filterManager = new FilterManager();
@@ -67,64 +215,7 @@ class StatisticsDashboard {
         }
     }
 
-    // Comprehensive country code to name mapping
-    getCountryName(countryCode) {
-        const countryMap = {
-            'AD': 'Andorra', 'AE': 'United Arab Emirates', 'AF': 'Afghanistan', 'AG': 'Antigua and Barbuda',
-            'AI': 'Anguilla', 'AL': 'Albania', 'AM': 'Armenia', 'AO': 'Angola', 'AQ': 'Antarctica',
-            'AR': 'Argentina', 'AS': 'American Samoa', 'AT': 'Austria', 'AU': 'Australia', 'AW': 'Aruba',
-            'AX': 'Åland Islands', 'AZ': 'Azerbaijan', 'BA': 'Bosnia and Herzegovina', 'BB': 'Barbados',
-            'BD': 'Bangladesh', 'BE': 'Belgium', 'BF': 'Burkina Faso', 'BG': 'Bulgaria', 'BH': 'Bahrain',
-            'BI': 'Burundi', 'BJ': 'Benin', 'BL': 'Saint Barthélemy', 'BM': 'Bermuda', 'BN': 'Brunei',
-            'BO': 'Bolivia', 'BQ': 'Caribbean Netherlands', 'BR': 'Brazil', 'BS': 'Bahamas', 'BT': 'Bhutan',
-            'BV': 'Bouvet Island', 'BW': 'Botswana', 'BY': 'Belarus', 'BZ': 'Belize', 'CA': 'Canada',
-            'CC': 'Cocos Islands', 'CD': 'Democratic Republic of the Congo', 'CF': 'Central African Republic',
-            'CG': 'Republic of the Congo', 'CH': 'Switzerland', 'CI': 'Côte d\'Ivoire', 'CK': 'Cook Islands',
-            'CL': 'Chile', 'CM': 'Cameroon', 'CN': 'China', 'CO': 'Colombia', 'CR': 'Costa Rica',
-            'CU': 'Cuba', 'CV': 'Cape Verde', 'CW': 'Curaçao', 'CX': 'Christmas Island', 'CY': 'Cyprus',
-            'CZ': 'Czech Republic', 'DE': 'Germany', 'DJ': 'Djibouti', 'DK': 'Denmark', 'DM': 'Dominica',
-            'DO': 'Dominican Republic', 'DZ': 'Algeria', 'EC': 'Ecuador', 'EE': 'Estonia', 'EG': 'Egypt',
-            'EH': 'Western Sahara', 'ER': 'Eritrea', 'ES': 'Spain', 'ET': 'Ethiopia', 'FI': 'Finland',
-            'FJ': 'Fiji', 'FK': 'Falkland Islands', 'FM': 'Micronesia', 'FO': 'Faroe Islands', 'FR': 'France',
-            'GA': 'Gabon', 'GB': 'United Kingdom', 'GD': 'Grenada', 'GE': 'Georgia', 'GF': 'French Guiana',
-            'GG': 'Guernsey', 'GH': 'Ghana', 'GI': 'Gibraltar', 'GL': 'Greenland', 'GM': 'Gambia',
-            'GN': 'Guinea', 'GP': 'Guadeloupe', 'GQ': 'Equatorial Guinea', 'GR': 'Greece', 'GS': 'South Georgia',
-            'GT': 'Guatemala', 'GU': 'Guam', 'GW': 'Guinea-Bissau', 'GY': 'Guyana', 'HK': 'Hong Kong',
-            'HM': 'Heard Island', 'HN': 'Honduras', 'HR': 'Croatia', 'HT': 'Haiti', 'HU': 'Hungary',
-            'ID': 'Indonesia', 'IE': 'Ireland', 'IL': 'Israel', 'IM': 'Isle of Man', 'IN': 'India',
-            'IO': 'British Indian Ocean Territory', 'IQ': 'Iraq', 'IR': 'Iran', 'IS': 'Iceland', 'IT': 'Italy',
-            'JE': 'Jersey', 'JM': 'Jamaica', 'JO': 'Jordan', 'JP': 'Japan', 'KE': 'Kenya', 'KG': 'Kyrgyzstan',
-            'KH': 'Cambodia', 'KI': 'Kiribati', 'KM': 'Comoros', 'KN': 'Saint Kitts and Nevis', 'KP': 'North Korea',
-            'KR': 'South Korea', 'KW': 'Kuwait', 'KY': 'Cayman Islands', 'KZ': 'Kazakhstan', 'LA': 'Laos',
-            'LB': 'Lebanon', 'LC': 'Saint Lucia', 'LI': 'Liechtenstein', 'LK': 'Sri Lanka', 'LR': 'Liberia',
-            'LS': 'Lesotho', 'LT': 'Lithuania', 'LU': 'Luxembourg', 'LV': 'Latvia', 'LY': 'Libya',
-            'MA': 'Morocco', 'MC': 'Monaco', 'MD': 'Moldova', 'ME': 'Montenegro', 'MF': 'Saint Martin',
-            'MG': 'Madagascar', 'MH': 'Marshall Islands', 'MK': 'North Macedonia', 'ML': 'Mali', 'MM': 'Myanmar',
-            'MN': 'Mongolia', 'MO': 'Macao', 'MP': 'Northern Mariana Islands', 'MQ': 'Martinique', 'MR': 'Mauritania',
-            'MS': 'Montserrat', 'MT': 'Malta', 'MU': 'Mauritius', 'MV': 'Maldives', 'MW': 'Malawi',
-            'MX': 'Mexico', 'MY': 'Malaysia', 'MZ': 'Mozambique', 'NA': 'Namibia', 'NC': 'New Caledonia',
-            'NE': 'Niger', 'NF': 'Norfolk Island', 'NG': 'Nigeria', 'NI': 'Nicaragua', 'NL': 'Netherlands',
-            'NO': 'Norway', 'NP': 'Nepal', 'NR': 'Nauru', 'NU': 'Niue', 'NZ': 'New Zealand', 'OM': 'Oman',
-            'PA': 'Panama', 'PE': 'Peru', 'PF': 'French Polynesia', 'PG': 'Papua New Guinea', 'PH': 'Philippines',
-            'PK': 'Pakistan', 'PL': 'Poland', 'PM': 'Saint Pierre and Miquelon', 'PN': 'Pitcairn Islands',
-            'PR': 'Puerto Rico', 'PS': 'Palestine', 'PT': 'Portugal', 'PW': 'Palau', 'PY': 'Paraguay',
-            'QA': 'Qatar', 'RE': 'Réunion', 'RO': 'Romania', 'RS': 'Serbia', 'RU': 'Russia', 'RW': 'Rwanda',
-            'SA': 'Saudi Arabia', 'SB': 'Solomon Islands', 'SC': 'Seychelles', 'SD': 'Sudan', 'SE': 'Sweden',
-            'SG': 'Singapore', 'SH': 'Saint Helena', 'SI': 'Slovenia', 'SJ': 'Svalbard and Jan Mayen',
-            'SK': 'Slovakia', 'SL': 'Sierra Leone', 'SM': 'San Marino', 'SN': 'Senegal', 'SO': 'Somalia',
-            'SR': 'Suriname', 'SS': 'South Sudan', 'ST': 'São Tomé and Príncipe', 'SV': 'El Salvador',
-            'SX': 'Sint Maarten', 'SY': 'Syria', 'SZ': 'Eswatini', 'TC': 'Turks and Caicos Islands',
-            'TD': 'Chad', 'TF': 'French Southern Territories', 'TG': 'Togo', 'TH': 'Thailand', 'TJ': 'Tajikistan',
-            'TK': 'Tokelau', 'TL': 'Timor-Leste', 'TM': 'Turkmenistan', 'TN': 'Tunisia', 'TO': 'Tonga',
-            'TR': 'Turkey', 'TT': 'Trinidad and Tobago', 'TV': 'Tuvalu', 'TW': 'Taiwan', 'TZ': 'Tanzania',
-            'UA': 'Ukraine', 'UG': 'Uganda', 'UM': 'United States Minor Outlying Islands', 'US': 'United States',
-            'UY': 'Uruguay', 'UZ': 'Uzbekistan', 'VA': 'Vatican City', 'VC': 'Saint Vincent and the Grenadines',
-            'VE': 'Venezuela', 'VG': 'British Virgin Islands', 'VI': 'United States Virgin Islands',
-            'VN': 'Vietnam', 'VU': 'Vanuatu', 'WF': 'Wallis and Futuna', 'WS': 'Samoa', 'YE': 'Yemen',
-            'YT': 'Mayotte', 'ZA': 'South Africa', 'ZM': 'Zambia', 'ZW': 'Zimbabwe', 'XX': 'Unknown'
-        };
-        return countryMap[countryCode] || countryCode;
-    }
+    getCountryName(countryCode) { return COUNTRY_MAP[countryCode] || countryCode; }
 
     init() {
         this.setupDateRangePicker();
@@ -150,17 +241,17 @@ class StatisticsDashboard {
         // Sort data by the value in descending order
         const sortedData = [...data].sort((a, b) => (b[valueKey] || 0) - (a[valueKey] || 0));
 
-        // If we have 7 or fewer items, return all
-        if (sortedData.length <= 7) {
+        // If we have TOP_N or fewer items, return all
+        if (sortedData.length <= TOP_N) {
             return {
                 labels: sortedData.map(item => item[labelKey] || 'Unknown'),
                 values: sortedData.map(item => item[valueKey] || 0)
             };
         }
 
-        // Take top 7 items
-        const topItems = sortedData.slice(0, 7);
-        const remainingItems = sortedData.slice(7);
+        // Take top N items
+        const topItems = sortedData.slice(0, TOP_N);
+        const remainingItems = sortedData.slice(TOP_N);
 
         // Calculate "Others" total
         const othersTotal = remainingItems.reduce((sum, item) => sum + (item[valueKey] || 0), 0);
@@ -452,20 +543,17 @@ class StatisticsDashboard {
         });
     }
 
-    createFilterValueElement(type, option) {
+    // Unified option element creator (variant: 'panel' for hierarchical view, 'dropdown' for multi-select)
+    createFilterOption(type, option, variant) {
         const label = document.createElement('label');
         label.className = 'option-item';
-
         const isSelected = this.filterManager.isSelected(type, option.value);
-
         label.innerHTML = `
             <input type="checkbox" ${isSelected ? 'checked' : ''} data-value="${option.value}">
             <span class="checkmark"></span>
             <span class="option-text">${this.escapeHtml(option.label)}</span>
             <span class="option-count">${this.formatNumber(option.count)}</span>
         `;
-
-        // Add change listener
         const checkbox = label.querySelector('input[type="checkbox"]');
         checkbox.addEventListener('change', (e) => {
             if (e.target.checked) {
@@ -473,17 +561,21 @@ class StatisticsDashboard {
             } else {
                 this.filterManager.removeFilter(type, option.value);
             }
-
-            // Mark this category as having pending changes
+            // Mark pending for both variants (applied on close or back)
             this.pendingChanges.add(type);
-            this.setBackButtonApplyState(true);
-
-            // Update the main list summary
-            this.updateFilterTypeStatus(type);
+            if (variant === 'panel') {
+                this.setBackButtonApplyState(true);
+                this.updateFilterTypeStatus(type);
+            } else {
+                // Update summary instantly for dropdown variant
+                this.updateFilterSummary(type);
+            }
         });
-
         return label;
     }
+
+    // Backwards compatibility wrappers (original method names)
+    createFilterValueElement(type, option) { return this.createFilterOption(type, option, 'panel'); }
 
     filterValuesOptions(type, searchTerm) {
         const valuesList = document.querySelector('.filter-values-list');
@@ -522,9 +614,7 @@ class StatisticsDashboard {
     }
 
     initializeFilterLoadingState() {
-        const filterTypes = ['browser', 'os', 'country', 'city', 'referrer', 'key'];
-
-        filterTypes.forEach(type => {
+        FILTER_TYPES.forEach(type => {
             const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
             if (optionsList) {
                 optionsList.innerHTML = '<div class="loading">Loading options...</div>';
@@ -643,11 +733,8 @@ class StatisticsDashboard {
     }
 
     populateFilterOptions(data) {
-
         // Extract available options from API data
-        const filterTypes = ['browser', 'os', 'country', 'city', 'referrer', 'key'];
-
-        filterTypes.forEach(type => {
+        FILTER_TYPES.forEach(type => {
             const metricKey = `clicks_by_${type}`;
             const options = data.metrics?.[metricKey] || [];
 
@@ -685,16 +772,11 @@ class StatisticsDashboard {
     }
 
     updateAllFilterTypeStatuses() {
-        const filterTypes = ['browser', 'os', 'country', 'city', 'referrer', 'key'];
-        filterTypes.forEach(type => {
-            this.updateFilterTypeStatus(type);
-        });
+        FILTER_TYPES.forEach(type => this.updateFilterTypeStatus(type));
     }
 
     renderFilterOptions() {
-        const filterTypes = ['browser', 'os', 'country', 'city', 'referrer', 'key'];
-
-        filterTypes.forEach(type => {
+        FILTER_TYPES.forEach(type => {
             const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
 
             if (optionsList) {
@@ -719,37 +801,7 @@ class StatisticsDashboard {
         });
     }
 
-    createOptionElement(type, option) {
-        const label = document.createElement('label');
-        label.className = 'option-item';
-
-        const isSelected = this.filterManager.isSelected(type, option.value);
-
-        label.innerHTML = `
-            <input type="checkbox" ${isSelected ? 'checked' : ''} data-value="${option.value}">
-            <span class="checkmark"></span>
-            <span class="option-text">${this.escapeHtml(option.label)}</span>
-            <span class="option-count">${this.formatNumber(option.count)}</span>
-        `;
-
-        // Add change listener
-        const checkbox = label.querySelector('input[type="checkbox"]');
-        checkbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                this.filterManager.addFilter(type, option.value);
-            } else {
-                this.filterManager.removeFilter(type, option.value);
-            }
-
-            // Mark this category as having pending changes
-            this.pendingChanges.add(type);
-
-            // Update the summary immediately for visual feedback
-            this.updateFilterSummary(type);
-        });
-
-        return label;
-    }
+    createOptionElement(type, option) { return this.createFilterOption(type, option, 'dropdown'); }
 
     filterOptions(type, searchTerm) {
         const optionsList = document.querySelector(`[data-filter="${type}"] .options-list`);
@@ -783,8 +835,7 @@ class StatisticsDashboard {
         }
 
         // Update filter summaries
-        const filterTypes = ['browser', 'os', 'country', 'city', 'referrer', 'key'];
-        filterTypes.forEach(type => {
+        FILTER_TYPES.forEach(type => {
             this.updateFilterSummary(type);
             this.updateChartFilterIndicator(type);
         });
@@ -1123,52 +1174,27 @@ class StatisticsDashboard {
         }));
     }
 
-    getBrowserTableData() {
-        const clicksByBrowser = this.apiData.metrics?.clicks_by_browser || [];
-        const uniqueClicksByBrowser = this.apiData.metrics?.unique_clicks_by_browser || [];
-
-        // Return ALL data for tables (not limited to top 7)
-        return clicksByBrowser.map((item, index) => ({
-            label: item.browser || 'Unknown',
-            clicks: item.clicks || item.value || 0,
-            unique_clicks: uniqueClicksByBrowser[index]?.unique_clicks || uniqueClicksByBrowser[index]?.value || 0
-        }));
+    // Generic table builders for categorical metrics
+    buildTableData(totalKey, uniqueKey, { labelField, fallback = 'Unknown', labelTransform } = {}) {
+        const totalArr = this.apiData.metrics?.[totalKey] || [];
+        const uniqueArr = this.apiData.metrics?.[uniqueKey] || [];
+        return totalArr.map((item, index) => {
+            const raw = item[labelField];
+            const labelBase = raw || fallback;
+            const label = labelTransform ? labelTransform(labelBase, item) : labelBase;
+            const uniqueVal = uniqueArr[index]?.unique_clicks || uniqueArr[index]?.value || 0;
+            return {
+                label,
+                clicks: item.clicks || item.value || 0,
+                unique_clicks: uniqueVal
+            };
+        });
     }
 
-    getOsTableData() {
-        const clicksByOs = this.apiData.metrics?.clicks_by_os || [];
-        const uniqueClicksByOs = this.apiData.metrics?.unique_clicks_by_os || [];
-
-        // Return ALL data for tables (not limited to top 7)
-        return clicksByOs.map((item, index) => ({
-            label: item.os || 'Unknown',
-            clicks: item.clicks || item.value || 0,
-            unique_clicks: uniqueClicksByOs[index]?.unique_clicks || uniqueClicksByOs[index]?.value || 0
-        }));
-    }
-
-    getReferrerTableData() {
-        const clicksByReferrer = this.apiData.metrics?.clicks_by_referrer || [];
-        const uniqueClicksByReferrer = this.apiData.metrics?.unique_clicks_by_referrer || [];
-
-        // Return ALL data for tables (not limited to top 7)
-        return clicksByReferrer.map((item, index) => ({
-            label: item.referrer || 'Direct',
-            clicks: item.clicks || item.value || 0,
-            unique_clicks: uniqueClicksByReferrer[index]?.unique_clicks || uniqueClicksByReferrer[index]?.value || 0
-        }));
-    }
-
-    getCountryTableData() {
-        const clicksByCountry = this.apiData.metrics?.clicks_by_country || [];
-        const uniqueClicksByCountry = this.apiData.metrics?.unique_clicks_by_country || [];
-
-        return clicksByCountry.map((item, index) => ({
-            label: this.getCountryName(item.country) || 'Unknown', // Convert country code to name for table
-            clicks: item.clicks || item.value || 0,
-            unique_clicks: uniqueClicksByCountry[index]?.unique_clicks || uniqueClicksByCountry[index]?.value || 0
-        }));
-    }
+    getBrowserTableData() { return this.buildTableData('clicks_by_browser', 'unique_clicks_by_browser', { labelField: 'browser' }); }
+    getOsTableData() { return this.buildTableData('clicks_by_os', 'unique_clicks_by_os', { labelField: 'os' }); }
+    getReferrerTableData() { return this.buildTableData('clicks_by_referrer', 'unique_clicks_by_referrer', { labelField: 'referrer', fallback: 'Direct' }); }
+    getCountryTableData() { return this.buildTableData('clicks_by_country', 'unique_clicks_by_country', { labelField: 'country', labelTransform: (label, item) => this.getCountryName(item.country) }); }
 
     escapeHtml(text) {
         const div = document.createElement('div');
@@ -1333,6 +1359,12 @@ class StatisticsDashboard {
 
     async loadDashboardData() {
         try {
+            // Abort prior request if still in-flight
+            if (this.activeRequestController) {
+                this.activeRequestController.abort();
+            }
+            this.activeRequestController = new AbortController();
+            const { signal } = this.activeRequestController;
             const params = new URLSearchParams({
                 scope: 'all',
                 group_by: 'time,browser,os,country,city,referrer,key',
@@ -1372,7 +1404,8 @@ class StatisticsDashboard {
                 credentials: 'include', // Include cookies for authentication
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                signal
             });
 
             if (!response.ok) {
@@ -1387,6 +1420,10 @@ class StatisticsDashboard {
             this.updateDashboard(this.apiData);
 
         } catch (error) {
+            if (error.name === 'AbortError') {
+                // Silently ignore aborted requests
+                return;
+            }
             console.error('Error loading dashboard data:', error);
             this.showError('Failed to load dashboard data. Please try again.');
         }
@@ -1421,12 +1458,19 @@ class StatisticsDashboard {
     }
 
     updateCharts(data) {
+        // Time series & country handled separately; categorical charts via config map
         this.updateTimeSeriesChart(data);
-        this.updateKeyChart(data);
-        this.updateCityChart(data);
-        this.updateBrowserChart(data);
-        this.updateOsChart(data);
-        this.updateReferrerChart(data);
+        // Generic categorical charts
+        Object.keys(CHART_CONFIGS).forEach(type => {
+            // Map type key to its specific update wrapper for backwards compatibility of external calls
+            switch (type) {
+                case 'browser': this.updateBrowserChart(data); break;
+                case 'os': this.updateOsChart(data); break;
+                case 'referrer': this.updateReferrerChart(data); break;
+                case 'city': this.updateCityChart(data); break;
+                case 'key': this.updateKeyChart(data); break;
+            }
+        });
         this.updateCountryChart(data);
 
         // Update any visible tables
@@ -1434,6 +1478,101 @@ class StatisticsDashboard {
             const chartType = btn.dataset.chart;
             this.updateTableData(chartType);
         });
+    }
+
+    // Generic categorical chart builder (browser/os/referrer/city/key)
+    updateCategoricalChart(type, data, option = null) {
+        const cfg = CHART_CONFIGS[type];
+        if (!cfg) {
+            console.warn(`No chart config for type: ${type}`);
+            return;
+        }
+        const canvas = document.getElementById(cfg.id);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        // Destroy existing chart instance if present
+        if (this.charts.has(type)) {
+            try { this.charts.get(type).destroy(); } catch (_) { /* ignore */ }
+        }
+
+        const totalArr = data.metrics?.[cfg.totalKey] || [];
+        const uniqueArr = data.metrics?.[cfg.uniqueKey] || [];
+        // Determine mode precedence: explicit arg > cascade button state > default
+        const cascadeVal = document.querySelector(`[data-chart="${cfg.id}"] .cascade-btn`)?.dataset.value;
+        const mode = option || cascadeVal || cfg.defaultMode;
+
+        const datasets = [];
+        let labelsRef; // labels chosen (mirrors prior implementation behaviour)
+
+        // Helper to push dataset
+        const pushDs = (label, values, color) => {
+            datasets.push({
+                label,
+                data: values,
+                backgroundColor: color.bg,
+                borderColor: color.border,
+                borderWidth: 2,
+                borderRadius: 20,
+            });
+        };
+
+        if (mode === 'total' || mode === 'compare') {
+            const processed = this.processTopDataWithOthers(totalArr, 'clicks', cfg.metricBase);
+            pushDs(cfg.totalLabel, processed.values, cfg.colors.total);
+            if (!labelsRef) labelsRef = processed.labels;
+        }
+        if (mode === 'unique' || mode === 'compare') {
+            const processedUnique = this.processTopDataWithOthers(uniqueArr, 'unique_clicks', cfg.metricBase);
+            pushDs(cfg.uniqueLabel, processedUnique.values, cfg.colors.unique);
+            if (!labelsRef && mode === 'unique') labelsRef = processedUnique.labels; // In unique-only mode labels come from unique dataset
+        }
+
+        // Fallback if no labels (empty data)
+        labelsRef = labelsRef || [];
+
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    ticks: { color: '#fff' },
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                },
+                y: {
+                    stacked: mode === 'compare',
+                    ticks: { color: '#fff' },
+                    grid: { display: false }
+                },
+            },
+            plugins: {
+                legend: {
+                    labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 },
+                    position: 'bottom',
+                    align: 'start',
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                }
+            }
+        };
+
+        if (cfg.tooltipAfterBody) {
+            chartOptions.plugins.tooltip.callbacks = chartOptions.plugins.tooltip.callbacks || {};
+            chartOptions.plugins.tooltip.callbacks.afterBody = (context) => cfg.tooltipAfterBody(context, { labels: labelsRef, datasets });
+        }
+
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: labelsRef, datasets },
+            options: chartOptions,
+        });
+
+        this.addChartClickHandler(chart, cfg.metricBase); // enable interactive filtering
+        this.charts.set(type, chart);
     }
 
     updateTimeSeriesChart(data, option = null) {
@@ -1458,9 +1597,9 @@ class StatisticsDashboard {
         const clicksData = clicksByTime.map(item => item.clicks !== undefined ? item.clicks : (item.value || 0));
         const uniqueClicksData = uniqueClicksByTime.map(item => item.unique_clicks !== undefined ? item.unique_clicks : (item.value || 0));
 
+        // Build datasets (restored after refactor consolidation)
         const datasets = [];
         const dataOption = option || document.querySelector('[data-chart="timeSeriesChart"] .cascade-btn')?.dataset.value || 'compare';
-
         if (dataOption === 'total' || dataOption === 'compare') {
             datasets.push({
                 label: 'Total Clicks',
@@ -1472,7 +1611,6 @@ class StatisticsDashboard {
                 tension: 0,
             });
         }
-
         if (dataOption === 'unique' || dataOption === 'compare') {
             datasets.push({
                 label: 'Unique Clicks',
@@ -1485,325 +1623,34 @@ class StatisticsDashboard {
             });
         }
 
-        const chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: datasets,
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                pointStyle: false,
-                scales: {
-                    x: {
-                        ticks: { color: '#fff', maxTicksLimit: 8 },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: '#fff' },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                    },
-                },
-                plugins: {
-                    legend: {
-                        labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 },
-                        position: "bottom",
-                        align: "start",
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff',
-                        callbacks: {
-                            title: (context) => {
-                                // Show both formatted label and original timestamp
-                                const index = context[0].dataIndex;
-                                const formattedLabel = labels[index];
-                                const originalTime = rawLabels[index];
-
-                                // For hourly/10-minute, show date + time
-                                if (bucketStrategy === 'hourly' || bucketStrategy === '10_minute') {
-                                    const date = dayjs(originalTime);
-                                    return `${date.format('MMM D, YYYY')} at ${formattedLabel}`;
-                                }
-                                // For daily, show full date
-                                else if (bucketStrategy === 'daily') {
-                                    const date = dayjs(originalTime);
-                                    return `${formattedLabel}, ${date.format('YYYY')}`;
-                                }
-                                // For other strategies, use formatted label
-                                else {
-                                    return formattedLabel;
-                                }
-                            }
-                        }
+        const baseLegend = { labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 }, position: 'bottom', align: 'start' };
+        const baseTooltip = {
+            backgroundColor: 'rgba(0,0,0,0.8)', titleColor: '#ffffff', bodyColor: '#ffffff', callbacks: {
+                title: (context) => {
+                    const index = context[0].dataIndex;
+                    const formattedLabel = labels[index];
+                    const originalTime = rawLabels[index];
+                    if (bucketStrategy === 'hourly' || bucketStrategy === '10_minute') {
+                        const date = dayjs(originalTime);
+                        return `${date.format('MMM D, YYYY')} at ${formattedLabel}`;
+                    } else if (bucketStrategy === 'daily') {
+                        const date = dayjs(originalTime);
+                        return `${formattedLabel}, ${date.format('YYYY')}`;
                     }
-                },
-            },
-        });
+                    return formattedLabel;
+                }
+            }
+        };
+        const chart = new Chart(ctx, { type: 'line', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, pointStyle: false, scales: { x: { ticks: { color: '#fff', maxTicksLimit: 8 }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { beginAtZero: true, ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } } }, plugins: { legend: baseLegend, tooltip: baseTooltip } } });
 
         this.charts.set('timeSeries', chart);
     }
 
-    updateBrowserChart(data, option = null) {
-        const canvas = document.getElementById('browserChart');
-        const ctx = canvas.getContext('2d');
+    updateBrowserChart(data, option = null) { this.updateCategoricalChart('browser', data, option); }
 
-        if (this.charts.has('browser')) {
-            this.charts.get('browser').destroy();
-        }
+    updateOsChart(data, option = null) { this.updateCategoricalChart('os', data, option); }
 
-        // Extract browser data from metrics
-        const clicksByBrowser = data.metrics?.clicks_by_browser || [];
-        const uniqueClicksByBrowser = data.metrics?.unique_clicks_by_browser || [];
-
-        const dataOption = option || document.querySelector('[data-chart="browserChart"] .cascade-btn')?.dataset.value || 'compare';
-        const datasets = [];
-
-        if (dataOption === 'total' || dataOption === 'compare') {
-            const processedClicks = this.processTopDataWithOthers(clicksByBrowser, 'clicks', 'browser');
-            datasets.push({
-                label: 'Browsers',
-                data: processedClicks.values,
-                backgroundColor: 'rgba(153, 102, 255, 0.15)',
-                borderColor: 'rgba(153, 102, 255, 1)',
-                borderWidth: 2,
-                borderRadius: 20,
-            });
-        }
-
-        if (dataOption === 'unique' || dataOption === 'compare') {
-            const processedUniqueClicks = this.processTopDataWithOthers(uniqueClicksByBrowser, 'unique_clicks', 'browser');
-            datasets.push({
-                label: 'Unique Browsers',
-                data: processedUniqueClicks.values,
-                backgroundColor: 'rgba(255, 159, 64, 0.25)',
-                borderColor: 'rgba(255, 159, 64, 1)',
-                borderWidth: 2,
-                borderRadius: 20,
-            });
-        }
-
-        // Use the labels from the first dataset (they should be the same for both total and unique)
-        const processedData = dataOption === 'unique' ?
-            this.processTopDataWithOthers(uniqueClicksByBrowser, 'unique_clicks', 'browser') :
-            this.processTopDataWithOthers(clicksByBrowser, 'clicks', 'browser');
-
-        const chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: processedData.labels,
-                datasets: datasets,
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                scales: {
-                    x: {
-                        ticks: { color: '#fff' },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                    },
-                    y: {
-                        stacked: dataOption === 'compare',
-                        ticks: { color: '#fff' },
-                        grid: { display: false }
-                    },
-                },
-                plugins: {
-                    legend: {
-                        labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 },
-                        position: "bottom",
-                        align: "start",
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff'
-                    }
-                },
-            },
-        });
-
-        // Add click handler for interactive filtering
-        this.addChartClickHandler(chart, 'browser');
-
-        this.charts.set('browser', chart);
-    }
-
-    updateOsChart(data, option = null) {
-        const canvas = document.getElementById('osChart');
-        const ctx = canvas.getContext('2d');
-
-        if (this.charts.has('os')) {
-            this.charts.get('os').destroy();
-        }
-
-        // Extract OS data from metrics
-        const clicksByOs = data.metrics?.clicks_by_os || [];
-        const uniqueClicksByOs = data.metrics?.unique_clicks_by_os || [];
-
-        const dataOption = option || document.querySelector('[data-chart="osChart"] .cascade-btn')?.dataset.value || 'compare';
-        const datasets = [];
-
-        if (dataOption === 'total' || dataOption === 'compare') {
-            const processedClicks = this.processTopDataWithOthers(clicksByOs, 'clicks', 'os');
-            datasets.push({
-                label: 'Platforms',
-                data: processedClicks.values,
-                backgroundColor: 'rgba(144, 238, 144, 0.15)',
-                borderColor: 'rgba(144, 238, 144, 1)',
-                borderWidth: 2,
-                borderRadius: 20,
-            });
-        }
-
-        if (dataOption === 'unique' || dataOption === 'compare') {
-            const processedUniqueClicks = this.processTopDataWithOthers(uniqueClicksByOs, 'unique_clicks', 'os');
-            datasets.push({
-                label: 'Unique Platforms',
-                data: processedUniqueClicks.values,
-                backgroundColor: 'rgba(255, 69, 0, 0.25)',
-                borderColor: 'rgba(255, 69, 0, 1)',
-                borderWidth: 2,
-                borderRadius: 20,
-            });
-        }
-
-        // Use the labels from the first dataset (they should be the same for both total and unique)
-        const processedData = dataOption === 'unique' ?
-            this.processTopDataWithOthers(uniqueClicksByOs, 'unique_clicks', 'os') :
-            this.processTopDataWithOthers(clicksByOs, 'clicks', 'os');
-
-        const chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: processedData.labels,
-                datasets: datasets,
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                scales: {
-                    x: {
-                        ticks: { color: '#fff' },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                    },
-                    y: {
-                        stacked: dataOption === 'compare',
-                        ticks: { color: '#fff' },
-                        grid: { display: false }
-                    },
-                },
-                plugins: {
-                    legend: {
-                        labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 },
-                        position: "bottom",
-                        align: "start",
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff'
-                    }
-                },
-            },
-        });
-
-        // Add click handler for interactive filtering
-        this.addChartClickHandler(chart, 'os');
-
-        this.charts.set('os', chart);
-    }
-
-    updateReferrerChart(data, option = null) {
-        const canvas = document.getElementById('referrerChart');
-        const ctx = canvas.getContext('2d');
-
-        if (this.charts.has('referrer')) {
-            this.charts.get('referrer').destroy();
-        }
-
-        // Extract referrer data from metrics
-        const clicksByReferrer = data.metrics?.clicks_by_referrer || [];
-        const uniqueClicksByReferrer = data.metrics?.unique_clicks_by_referrer || [];
-
-        const dataOption = option || document.querySelector('[data-chart="referrerChart"] .cascade-btn')?.dataset.value || 'compare';
-        const datasets = [];
-
-        if (dataOption === 'total' || dataOption === 'compare') {
-            const processedClicks = this.processTopDataWithOthers(clicksByReferrer, 'clicks', 'referrer');
-            datasets.push({
-                label: 'Referrers',
-                data: processedClicks.values,
-                backgroundColor: 'rgba(128, 0, 128, 0.15)',
-                borderColor: 'rgba(128, 0, 128, 1)',
-                borderWidth: 2,
-                borderRadius: 20,
-            });
-        }
-
-        if (dataOption === 'unique' || dataOption === 'compare') {
-            const processedUniqueClicks = this.processTopDataWithOthers(uniqueClicksByReferrer, 'unique_clicks', 'referrer');
-            datasets.push({
-                label: 'Unique Referrers',
-                data: processedUniqueClicks.values,
-                backgroundColor: 'rgba(255, 0, 255, 0.25)',
-                borderColor: 'rgba(255, 0, 255, 1)',
-                borderWidth: 2,
-                borderRadius: 20,
-            });
-        }
-
-        // Use the labels from the first dataset (they should be the same for both total and unique)
-        const processedData = dataOption === 'unique' ?
-            this.processTopDataWithOthers(uniqueClicksByReferrer, 'unique_clicks', 'referrer') :
-            this.processTopDataWithOthers(clicksByReferrer, 'clicks', 'referrer');
-
-        const chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: processedData.labels,
-                datasets: datasets,
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                scales: {
-                    x: {
-                        ticks: { color: '#fff' },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                    },
-                    y: {
-                        stacked: dataOption === 'compare',
-                        ticks: { color: '#fff' },
-                        grid: { display: false }
-                    },
-                },
-                plugins: {
-                    legend: {
-                        labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 },
-                        position: "bottom",
-                        align: "start",
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff'
-                    }
-                },
-            },
-        });
-
-        // Add click handler for interactive filtering
-        this.addChartClickHandler(chart, 'referrer');
-
-        this.charts.set('referrer', chart);
-    }
+    updateReferrerChart(data, option = null) { this.updateCategoricalChart('referrer', data, option); }
 
     updateCountryChart(data, option = null) {
         const countryChartContainer = document.getElementById('countryChart');
@@ -1891,197 +1738,9 @@ class StatisticsDashboard {
         this.charts.set('country', map);
     }
 
-    updateCityChart(data, option = null) {
-        const canvas = document.getElementById('cityChart');
-        const ctx = canvas.getContext('2d');
+    updateCityChart(data, option = null) { this.updateCategoricalChart('city', data, option); }
 
-        if (this.charts.has('city')) {
-            this.charts.get('city').destroy();
-        }
-
-        // Extract city data from metrics
-        const clicksByCity = data.metrics?.clicks_by_city || [];
-        const uniqueClicksByCity = data.metrics?.unique_clicks_by_city || [];
-
-        const dataOption = option || document.querySelector('[data-chart="cityChart"] .cascade-btn')?.dataset.value || 'compare';
-        const datasets = [];
-
-        if (dataOption === 'total' || dataOption === 'compare') {
-            const processedClicks = this.processTopDataWithOthers(clicksByCity, 'clicks', 'city');
-            datasets.push({
-                label: 'Cities',
-                data: processedClicks.values,
-                backgroundColor: 'rgba(75, 192, 192, 0.15)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 2,
-                borderRadius: 20,
-            });
-        }
-
-        if (dataOption === 'unique' || dataOption === 'compare') {
-            const processedUniqueClicks = this.processTopDataWithOthers(uniqueClicksByCity, 'unique_clicks', 'city');
-            datasets.push({
-                label: 'Unique Cities',
-                data: processedUniqueClicks.values,
-                backgroundColor: 'rgba(255, 99, 132, 0.25)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 2,
-                borderRadius: 20,
-            });
-        }
-
-        // Use the labels from the first dataset (they should be the same for both total and unique)
-        const processedData = dataOption === 'unique' ?
-            this.processTopDataWithOthers(uniqueClicksByCity, 'unique_clicks', 'city') :
-            this.processTopDataWithOthers(clicksByCity, 'clicks', 'city');
-
-        const chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: processedData.labels,
-                datasets: datasets,
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                scales: {
-                    x: {
-                        ticks: { color: '#fff' },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                    },
-                    y: {
-                        stacked: dataOption === 'compare',
-                        ticks: { color: '#fff' },
-                        grid: { display: false }
-                    },
-                },
-                plugins: {
-                    legend: {
-                        labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 },
-                        position: "bottom",
-                        align: "start",
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff'
-                    }
-                },
-            },
-        });
-
-        // Add click handler for interactive filtering
-        this.addChartClickHandler(chart, 'city');
-
-        this.charts.set('city', chart);
-    }
-
-    updateKeyChart(data, option = null) {
-        const canvas = document.getElementById('keyChart');
-        const ctx = canvas.getContext('2d');
-
-        if (this.charts.has('key')) {
-            this.charts.get('key').destroy();
-        }
-
-        // Extract key data from metrics
-        const clicksByKey = data.metrics?.clicks_by_key || [];
-        const uniqueClicksByKey = data.metrics?.unique_clicks_by_key || [];
-
-        const dataOption = option || document.querySelector('[data-chart="keyChart"] .cascade-btn')?.dataset.value || 'compare';
-
-        const datasets = [];
-
-        if (dataOption === 'total' || dataOption === 'compare') {
-            const processedClicks = this.processTopDataWithOthers(clicksByKey, 'clicks', 'key');
-            datasets.push({
-                label: 'Total Clicks',
-                data: processedClicks.values,
-                backgroundColor: 'rgba(255, 193, 7, 0.6)',
-                borderColor: 'rgba(255, 193, 7, 1)',
-                borderWidth: 2,
-                borderRadius: 20,
-            });
-        }
-
-        if (dataOption === 'unique' || dataOption === 'compare') {
-            const processedUniqueClicks = this.processTopDataWithOthers(uniqueClicksByKey, 'unique_clicks', 'key');
-            datasets.push({
-                label: 'Unique Clicks',
-                data: processedUniqueClicks.values,
-                backgroundColor: 'rgba(156, 39, 176, 0.6)',
-                borderColor: 'rgba(156, 39, 176, 1)',
-                borderWidth: 2,
-                borderRadius: 20,
-            });
-        }
-
-        // Use the labels from the first dataset (they should be the same for both total and unique)
-        const processedData = dataOption === 'unique' ?
-            this.processTopDataWithOthers(uniqueClicksByKey, 'unique_clicks', 'key') :
-            this.processTopDataWithOthers(clicksByKey, 'clicks', 'key');
-
-        const chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: processedData.labels,
-                datasets: datasets,
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                scales: {
-                    x: {
-                        ticks: { color: '#fff' },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                    },
-                    y: {
-                        stacked: dataOption === 'compare',
-                        ticks: {
-                            color: '#fff',
-                            maxTicksLimit: 10
-                        },
-                        grid: { display: false }
-                    },
-                },
-                plugins: {
-                    legend: {
-                        labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 },
-                        position: "bottom",
-                        align: "start",
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff',
-                        callbacks: {
-                            afterBody: function (context) {
-                                const index = context[0].dataIndex;
-                                const label = processedData.labels[index];
-
-                                // Skip percentage display for "Others" category
-                                if (label !== 'Others') {
-                                    const clicksData = datasets.find(d => d.label.includes('Clicks'))?.data || [];
-                                    const totalClicks = clicksData.reduce((sum, val) => sum + val, 0);
-                                    const percentage = totalClicks > 0 ? ((clicksData[index] / totalClicks) * 100).toFixed(1) : 0;
-                                    return `\nPercentage: ${percentage}%`;
-                                }
-
-                                return '';
-                            }
-                        }
-                    }
-                },
-            },
-        });
-
-        // Add click handler for interactive filtering
-        this.addChartClickHandler(chart, 'key');
-
-        this.charts.set('key', chart);
-    }
+    updateKeyChart(data, option = null) { this.updateCategoricalChart('key', data, option); }
 
     formatNumber(num) {
         if (num >= 1000000) {
