@@ -11,6 +11,7 @@ from utils.mongo_utils import (
     list_api_keys_by_user,
     revoke_api_key_by_id,
 )
+from blueprints.limiter import limiter, rate_limit_key_for_request
 
 from . import api_v1
 
@@ -39,6 +40,7 @@ def _parse_expires_at(value: Optional[str | int | float]):
 
 
 @api_v1.route("/keys", methods=["POST"])
+@limiter.limit("3 per hour", key_func=rate_limit_key_for_request)
 @requires_auth
 def create_api_key():
     body = request.get_json(silent=True) or {}
@@ -53,6 +55,14 @@ def create_api_key():
         return jsonify({"error": "scopes must be a non-empty array"}), 400
     if any(scope not in ALLOWED_SCOPES for scope in scopes):
         return jsonify({"error": "invalid scope requested"}), 400
+
+    # Check if user has too many active keys (prevent abuse)
+    existing_keys = list_api_keys_by_user(g.user_id, projection={"revoked": 1})
+    active_keys = [k for k in existing_keys if not k.get("revoked", False)]
+
+    MAX_ACTIVE_KEYS = 20
+    if len(active_keys) >= MAX_ACTIVE_KEYS:
+        return jsonify({"error": f"maximum {MAX_ACTIVE_KEYS} active keys allowed"}), 400
 
     expires_at = _parse_expires_at(expires_at_raw)
     if expires_at_raw is not None and expires_at is None:
@@ -128,8 +138,11 @@ def list_api_keys():
 @api_v1.route("/keys/<key_id>", methods=["DELETE"])
 @requires_auth
 def delete_api_key(key_id):
-    hard = (request.args.get("hard") or "false").lower() == "true"
-    ok = revoke_api_key_by_id(g.user_id, key_id, hard_delete=hard)
+    # Default to hard delete for cleaner UX, use ?revoke=true to just revoke
+    revoke_only = (request.args.get("revoke") or "false").lower() == "true"
+    ok = revoke_api_key_by_id(g.user_id, key_id, hard_delete=not revoke_only)
     if not ok:
-        return jsonify({"error": "not found"}), 404
-    return jsonify({"success": True})
+        return jsonify({"error": "key not found or access denied"}), 404
+
+    action = "revoked" if revoke_only else "deleted"
+    return jsonify({"success": True, "action": action})

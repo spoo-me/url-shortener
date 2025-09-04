@@ -103,10 +103,10 @@ function createKeyRow(key) {
     statusEl.textContent = status.toUpperCase();
     statusEl.className = `status-badge status-${status}`;
 
-    // Revoke button
+    // Delete/Revoke button
     const revokeBtn = node.querySelector('.btn-revoke');
     revokeBtn.disabled = key.revoked;
-    revokeBtn.textContent = key.revoked ? 'Revoked' : 'Revoke';
+    revokeBtn.textContent = key.revoked ? 'Deleted' : 'Delete';
     revokeBtn.setAttribute('data-id', key.id);
 
     if (!key.revoked) {
@@ -117,7 +117,7 @@ function createKeyRow(key) {
 }
 
 async function revokeKey(keyId) {
-    if (!confirm('Revoke this key? This action cannot be undone.')) return;
+    if (!confirm('Delete this key permanently? This action cannot be undone.')) return;
 
     try {
         const res = await authFetch(`/api/v1/keys/${keyId}`, {
@@ -126,7 +126,9 @@ async function revokeKey(keyId) {
         });
 
         if (res.ok) {
-            customTopNotification('KeyRevoked', 'Key revoked successfully', 6, 'success');
+            const data = await res.json().catch(() => ({}));
+            const action = data.action || 'deleted';
+            customTopNotification('KeyDeleted', `Key ${action} successfully`, 6, 'success');
             fetchKeys();
         } else {
             customTopNotification('KeyRevokeError', 'Failed to revoke key', 8, 'error');
