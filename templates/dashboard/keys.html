@@ -12,8 +12,8 @@
     <div class="page-header-content">
         <div class="page-header-text">
             <h1 class="page-title">API Keys</h1>
-            <p class="page-subtitle">Create and manage tokens for your integrations. 
-                <small style="color: var(--text-secondary);">Limit: 3 keys per hour, 20 active keys max.</small>
+            <p class="page-subtitle">Create and manage tokens for your integrations.
+                <small style="color: var(--text-secondary);">Limit: 5 keys per hour, 20 active keys max.</small>
             </p>
         </div>
         <div class="page-header-actions">
@@ -40,8 +40,9 @@
 
     <div id="keys-container" class="keys-list-container">
         <div id="keys-loading" class="loading">Loading…</div>
-        <div id="keys-empty" class="empty" style="display:none">No API keys yet. Create your first key to get started.</div>
-        
+        <div id="keys-empty" class="empty" style="display:none">No API keys yet. Create your first key to get started.
+        </div>
+
         <div class="keys-table" id="keys-table" style="display:none">
             <div class="table-header">
                 <div class="header-cell col-name">Name</div>
@@ -67,7 +68,7 @@
                 <i class="ti ti-x"></i>
             </button>
         </div>
-        
+
         <div class="modal-body">
             <div class="form-grid">
                 <div class="field">
@@ -97,7 +98,7 @@
                                     </div>
                                 </label>
                             </div>
-                            
+
                             <div class="access-option" data-level="custom">
                                 <input type="radio" name="access-level" id="custom-access" value="custom" />
                                 <label for="custom-access" class="access-label">
@@ -111,7 +112,7 @@
                                 </label>
                             </div>
                         </div>
-                        
+
                         <!-- Detailed Permissions (shown when Custom Access is selected) -->
                         <div class="detailed-permissions" id="detailed-permissions">
                             <div class="permissions-list">
@@ -127,7 +128,7 @@
                                         </div>
                                     </div>
                                 </label>
-                                
+
                                 <label class="permission-item">
                                     <input type="checkbox" class="scope-input" value="urls:read" />
                                     <div class="permission-content">
@@ -140,7 +141,7 @@
                                         </div>
                                     </div>
                                 </label>
-                                
+
                                 <label class="permission-item">
                                     <input type="checkbox" class="scope-input" value="urls:manage" />
                                     <div class="permission-content">
@@ -153,7 +154,7 @@
                                         </div>
                                     </div>
                                 </label>
-                                
+
                                 <label class="permission-item">
                                     <input type="checkbox" class="scope-input" value="stats:read" />
                                     <div class="permission-content">
@@ -162,7 +163,8 @@
                                         </div>
                                         <div class="permission-details">
                                             <div class="permission-title">View Stats</div>
-                                            <div class="permission-description">Access click analytics and statistics</div>
+                                            <div class="permission-description">Access click analytics and statistics
+                                            </div>
                                         </div>
                                     </div>
                                 </label>
@@ -177,7 +179,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="modal-footer">
             <button class="btn btn-ghost" onclick="closeCreateKeyModal()">Cancel</button>
             <button class="btn btn-primary" id="btn-create">Create Key</button>
@@ -188,44 +190,49 @@
 <!-- Key success modal -->
 <div id="keySuccessModal" class="modal key-success-modal" aria-hidden="true" style="display:none">
     <div class="modal-overlay"></div>
-    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="keySuccessModalTitle">
-        <div class="modal-header">
-            <h2 id="keySuccessModalTitle">API Key Created</h2>
-        </div>
-        
-        <div class="modal-body">
-            <div class="success-message">
-                <div class="success-icon">
-                    <i class="ti ti-check"></i>
+    <div class="modal-container modal-sm">
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="keySuccessModalTitle">
+            <div class="modal-header">
+                <div class="modal-title-section-success">
+                    <div class="modal-icon success-icon">
+                        <i class="ti ti-check"></i>
+                    </div>
+                    <div>
+                        <h2 class="modal-title" id="keySuccessModalTitle">API Key Created!</h2>
+                        <p class="modal-subtitle">Save your key now. It will not be shown again.</p>
+                    </div>
                 </div>
-                <p><strong>Save your key now.</strong> It will <strong>not</strong> be shown again.</p>
-            </div>
-            
-            <div class="token-display">
-                <input id="fullTokenInput" class="token-input" type="text" readonly value="" aria-label="API key" />
-                <button class="copy-btn" onclick="copyTokenToClipboard()">
-                    <i class="ti ti-copy"></i>
+                <button class="modal-close" type="button" aria-label="Close modal" onclick="closeKeySuccessModal()">
+                    <i class="ti ti-x"></i>
                 </button>
             </div>
-            
-            <div class="security-warnings">
-                <div class="warning-item">
-                    <i class="ti ti-alert-triangle"></i>
-                    <span>Never expose this key in frontend or client-side code</span>
-                </div>
-                <div class="warning-item">
-                    <i class="ti ti-shield"></i>
-                    <span>Store it securely using environment variables</span>
-                </div>
-                <div class="warning-item">
-                    <i class="ti ti-refresh"></i>
-                    <span>Rotate if you suspect exposure</span>
+
+            <div class="modal-body">
+                <div class="success-content">
+                    <div class="token-display">
+                        <input id="fullTokenInput" class="token-input" type="text" readonly value=""
+                            aria-label="API key" />
+                        <button class="copy-btn" onclick="copyTokenToClipboard()">
+                            <i class="ti ti-copy"></i>
+                        </button>
+                    </div>
+
+                    <div class="security-warnings">
+                        <div class="warning-item">
+                            <i class="ti ti-alert-triangle"></i>
+                            <span>Never expose this key in frontend or client-side code</span>
+                        </div>
+                        <div class="warning-item">
+                            <i class="ti ti-shield"></i>
+                            <span>Store it securely using environment variables</span>
+                        </div>
+                        <div class="warning-item">
+                            <i class="ti ti-refresh"></i>
+                            <span>Rotate if you suspect exposure</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="modal-footer">
-            <button class="btn btn-primary" onclick="closeKeySuccessModal()">Done</button>
         </div>
     </div>
 </div>

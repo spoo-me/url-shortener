@@ -60,7 +60,6 @@
 #link-success-modal .modal-close:hover {
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
-    transform: scale(1.1);
 }
 
 /* Success Modal Styles */
@@ -277,7 +276,7 @@
 .link-result .copy-btn:hover {
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: var(--accent-primary);
 }
 
 .link-result .copy-btn i {
@@ -291,10 +290,6 @@
 
 .copy-btn.copied,
 .btn.copied {
-    background: rgba(34, 197, 94, 0.12);
-    border-color: rgba(34, 197, 94, 0.35);
-    color: #22c55e;
-    transform: scale(1.05);
     transition: all 0.2s ease;
 }
 
