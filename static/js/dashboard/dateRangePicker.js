@@ -333,8 +333,8 @@ class DateRangePicker {
             return new Date(); // UTC
         }
         
-        // Parse relative formats like "now-30d", "now-2h", etc.
-        const relativeMatch = input.match(/^now-(\d+)([dhym])$/);
+        // Parse relative formats like "now-30d", "now-2h", "now-15m", etc.
+        const relativeMatch = input.match(/^now-(\d+)([dhm])$/);
         if (relativeMatch) {
             const amount = parseInt(relativeMatch[1]);
             const unit = relativeMatch[2];
@@ -345,10 +345,8 @@ class DateRangePicker {
                     return new Date(now.getTime() - amount * 24 * 60 * 60 * 1000);
                 case 'h': // hours
                     return new Date(now.getTime() - amount * 60 * 60 * 1000);
-                case 'y': // years
-                    return new Date(now.getFullYear() - amount, now.getMonth(), now.getDate());
-                case 'm': // months
-                    return new Date(now.getFullYear(), now.getMonth() - amount, now.getDate());
+                case 'm': // minutes
+                    return new Date(now.getTime() - amount * 60 * 1000);
                 default:
                     throw new Error(`Invalid time unit: ${unit}`);
             }
@@ -357,7 +355,7 @@ class DateRangePicker {
         // Try parsing as regular date
         const date = new Date(input);
         if (isNaN(date.getTime())) {
-            throw new Error(`Invalid date format: ${input}. Use formats like "now", "now-30d", "now-2h", "2024-01-01", etc.`);
+            throw new Error(`Invalid date format: ${input}. Use formats like "now", "now-30d", "now-2h", "now-15m", "2024-01-01", etc.`);
         }
         
         return date;
