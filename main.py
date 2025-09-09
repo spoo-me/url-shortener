@@ -19,6 +19,8 @@ from blueprints.stats import stats
 from blueprints.url_shortener import url_shortener
 from blueprints.redirector import url_redirector
 from blueprints.auth import auth
+from blueprints.oauth import oauth_bp, init_oauth_for_app
+from blueprints.dashboard import dashboard_bp
 from api.v1 import api_v1
 from utils.mongo_utils import client, ensure_indexes
 
@@ -31,6 +33,10 @@ if flask_secret:
 # Enable credentials so refresh cookies can be sent cross-origin from frontend
 CORS(app, supports_credentials=True)
 limiter.init_app(app)
+
+# Initialize OAuth
+init_oauth_for_app(app)
+
 ensure_indexes()
 
 app.register_blueprint(url_shortener)
@@ -41,6 +47,8 @@ app.register_blueprint(contact)
 app.register_blueprint(api)
 app.register_blueprint(stats)
 app.register_blueprint(auth)
+app.register_blueprint(oauth_bp, url_prefix="/oauth")
+app.register_blueprint(dashboard_bp, url_prefix="/dashboard")
 app.register_blueprint(api_v1)
 
 
@@ -84,4 +92,4 @@ def cleanup():
 
 
 if __name__ == "__main__":
-    app.run(port=8000, use_reloader=True)
+    app.run(port=8000, use_reloader=True, debug=True)

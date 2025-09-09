@@ -2,6 +2,7 @@ import os
 import hashlib
 from datetime import datetime, timedelta, timezone
 from functools import wraps, lru_cache
+from typing import Any, Dict
 
 from flask import request, jsonify, g, make_response
 import jwt
@@ -57,7 +58,7 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
         return False
 
 
-def generate_access_jwt(user_id: str) -> str:
+def generate_access_jwt(user_id: str, auth_method: str = "pwd") -> str:
     issuer, audience, access_ttl, _ = _jwt_settings()
     private_key, _ = _jwt_keys()
     algorithm = "RS256" if _use_rs256() else "HS256"
@@ -68,6 +69,7 @@ def generate_access_jwt(user_id: str) -> str:
         "sub": str(user_id),
         "iat": int(now.timestamp()),
         "exp": int((now + timedelta(seconds=access_ttl)).timestamp()),
+        "amr": [auth_method],  # Authentication Methods References
     }
     return jwt.encode(claims, private_key, algorithm=algorithm)
 
@@ -81,7 +83,7 @@ def verify_access_jwt(token: str):
     )
 
 
-def generate_refresh_jwt(user_id: str) -> str:
+def generate_refresh_jwt(user_id: str, auth_method: str = "pwd") -> str:
     """Generate a stateless refresh JWT token."""
     issuer, audience, _, refresh_ttl = _jwt_settings()
     private_key, _ = _jwt_keys()
@@ -94,6 +96,7 @@ def generate_refresh_jwt(user_id: str) -> str:
         "iat": int(now.timestamp()),
         "exp": int((now + timedelta(seconds=refresh_ttl)).timestamp()),
         "type": "refresh",
+        "amr": [auth_method],  # Authentication Methods References
     }
     return jwt.encode(claims, private_key, algorithm=algorithm)
 
@@ -341,3 +344,43 @@ def resolve_owner_id_from_request():
         except Exception:
             pass
     return None
+
+
+def get_user_profile(user_doc: Dict[str, Any]) -> Dict[str, Any]:
+    """Create minimal user profile including OAuth provider info
+
+    Args:
+        user_doc: User document from database
+
+    Returns:
+        Minimal user profile dict
+    """
+    profile = {
+        "id": str(user_doc["_id"]),
+        "email": user_doc.get("email"),
+        "email_verified": user_doc.get("email_verified", False),
+        "user_name": user_doc.get("user_name"),
+        "plan": user_doc.get("plan", "free"),
+        "password_set": user_doc.get("password_set", False),
+        "auth_providers": [],
+    }
+
+    # Add OAuth providers info (without sensitive data)
+    auth_providers = user_doc.get("auth_providers", [])
+    for provider in auth_providers:
+        profile["auth_providers"].append(
+            {
+                "provider": provider.get("provider"),
+                "email": provider.get("email"),
+                "linked_at": provider.get("linked_at").isoformat()
+                if provider.get("linked_at")
+                else None,
+            }
+        )
+
+    # Add profile picture info
+    pfp = user_doc.get("pfp")
+    if pfp:
+        profile["pfp"] = {"url": pfp.get("url"), "source": pfp.get("source")}
+
+    return profile

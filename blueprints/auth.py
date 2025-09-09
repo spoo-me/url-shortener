@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from flask import Blueprint, jsonify, request, g, render_template, redirect
+from flask import Blueprint, jsonify, request, g
 
 from .limiter import limiter
 from utils.auth_utils import (
@@ -21,19 +21,11 @@ from utils.mongo_utils import (
     users_collection,
 )
 from utils.url_utils import get_client_ip
+from utils.auth_utils import get_user_profile
 import jwt
-
+from bson import ObjectId
 
 auth = Blueprint("auth", __name__)
-
-
-def _minimal_user_profile(user_doc):
-    return {
-        "id": str(user_doc["_id"]),
-        "email": user_doc.get("email"),
-        "user_name": user_doc.get("user_name"),
-        "plan": user_doc.get("plan", "free"),
-    }
 
 
 @auth.route("/auth/login", methods=["POST"])
@@ -47,16 +39,16 @@ def login():
         return jsonify({"error": "email and password are required"}), 400
 
     user = get_user_by_email(email)
-    if not user or not user.get("password"):
+    if not user or not user.get("password_hash"):
         # Do not reveal which part failed
         return jsonify({"error": "invalid credentials"}), 401
 
-    if not verify_password(password, user["password"]):
+    if not verify_password(password, user["password_hash"]):
         return jsonify({"error": "invalid credentials"}), 401
 
     access_token = generate_access_jwt(str(user["_id"]))
     refresh_token = generate_refresh_jwt(str(user["_id"]))
-    resp = jsonify({"access_token": access_token, "user": _minimal_user_profile(user)})
+    resp = jsonify({"access_token": access_token, "user": get_user_profile(user)})
     set_refresh_cookie(resp, refresh_token)
     set_access_cookie(resp, access_token)
     return resp, 200
@@ -105,7 +97,7 @@ def me():
     user = get_user_by_id(user_id)
     if not user:
         return jsonify({"error": "user not found"}), 404
-    return jsonify({"user": _minimal_user_profile(user)})
+    return jsonify({"user": get_user_profile(user)})
 
 
 @auth.route("/auth/register", methods=["POST"])
@@ -129,12 +121,17 @@ def register():
     password_hash = hash_password(password)
     user_doc = {
         "email": email,
-        "password": password_hash,
+        "email_verified": False,  # Email not verified initially
+        "password_hash": password_hash,
+        "password_set": True,
         "user_name": user_name,
+        "pfp": None,
+        "auth_providers": [],
         "plan": "free",
         "signup_ip": get_client_ip(),
         "created_at": datetime.now(timezone.utc),
         "updated_at": datetime.now(timezone.utc),
+        "status": "ACTIVE",
     }
     try:
         insert_result = users_collection.insert_one(user_doc)
@@ -148,7 +145,7 @@ def register():
     resp = jsonify(
         {
             "access_token": access_token,
-            "user": _minimal_user_profile({"_id": user_id, **user_doc}),
+            "user": get_user_profile({"_id": user_id, **user_doc}),
         }
     )
     set_refresh_cookie(resp, refresh_token)
@@ -156,60 +153,46 @@ def register():
     return resp, 201
 
 
-@auth.route("/dashboard", methods=["GET"])
+@auth.route("/auth/set-password", methods=["POST"])
 @requires_auth
-def dashboard():
-    # Redirect to links page as the default dashboard view
-    return redirect("/dashboard/links")
-
-
-@auth.route("/dashboard/links", methods=["GET"])
-@requires_auth
-def dashboard_links():
+@limiter.limit("5/minute")
+def set_password():
+    """Set password for OAuth-only users"""
     user = get_user_by_id(g.user_id)
     if not user:
         return jsonify({"error": "user not found"}), 404
-    return render_template(
-        "dashboard/links.html",
-        host_url=request.host_url,
-        user=_minimal_user_profile(user),
-    )
 
+    if user.get("password_set", False):
+        return jsonify({"error": "password already set"}), 400
 
-@auth.route("/dashboard/keys", methods=["GET"])
-@requires_auth
-def dashboard_keys():
-    user = get_user_by_id(g.user_id)
-    if not user:
-        return jsonify({"error": "user not found"}), 404
-    return render_template(
-        "dashboard/keys.html",
-        host_url=request.host_url,
-        user=_minimal_user_profile(user),
-    )
+    body = request.get_json(silent=True) or {}
+    password = body.get("password") or ""
 
+    if not password:
+        return jsonify({"error": "password is required"}), 400
 
-@auth.route("/dashboard/statistics", methods=["GET"])
-@requires_auth
-def dashboard_statistics():
-    user = get_user_by_id(g.user_id)
-    if not user:
-        return jsonify({"error": "user not found"}), 404
-    return render_template(
-        "dashboard/statistics.html",
-        host_url=request.host_url,
-        user=_minimal_user_profile(user),
-    )
+    if len(password) < 8:
+        return jsonify({"error": "password must be at least 8 characters"}), 400
 
+    try:
+        password_hash = hash_password(password)
 
-@auth.route("/dashboard/settings", methods=["GET"])
-@requires_auth
-def dashboard_settings():
-    user = get_user_by_id(g.user_id)
-    if not user:
-        return jsonify({"error": "user not found"}), 404
-    return render_template(
-        "dashboard/settings.html",
-        host_url=request.host_url,
-        user=_minimal_user_profile(user),
-    )
+        result = users_collection.update_one(
+            {"_id": ObjectId(g.user_id)},
+            {
+                "$set": {
+                    "password_hash": password_hash,
+                    "password_set": True,
+                    "updated_at": datetime.now(timezone.utc),
+                }
+            },
+        )
+
+        if result.modified_count > 0:
+            return jsonify({"success": True, "message": "password set successfully"})
+        else:
+            return jsonify({"error": "failed to set password"}), 500
+
+    except Exception as e:
+        print(f"Error setting password: {e}")
+        return jsonify({"error": "failed to set password"}), 500

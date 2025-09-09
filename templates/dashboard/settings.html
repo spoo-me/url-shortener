@@ -8,14 +8,14 @@
         display: grid;
         gap: 24px;
     }
-    
+
     .settings-section {
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
         border: 1px solid var(--border-color);
         border-radius: var(--radius-md);
         padding: 24px;
     }
-    
+
     .section-header {
         display: flex;
         align-items: center;
@@ -24,7 +24,7 @@
         padding-bottom: 16px;
         border-bottom: 1px solid var(--border-color);
     }
-    
+
     .section-icon {
         width: 40px;
         height: 40px;
@@ -35,23 +35,23 @@
         justify-content: center;
         color: var(--accent-primary);
     }
-    
+
     .section-icon i {
         font-size: 22px;
     }
-    
+
     .section-title {
         font-size: 18px;
         font-weight: 600;
         color: var(--text-primary);
     }
-    
+
     .section-description {
         font-size: 14px;
         color: var(--text-secondary);
         margin-top: 4px;
     }
-    
+
     .settings-item {
         display: flex;
         justify-content: space-between;
@@ -59,21 +59,21 @@
         padding: 12px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
-    
+
     .settings-item:last-child {
         border-bottom: none;
     }
-    
+
     .setting-label {
         font-size: 14px;
         color: var(--text-primary);
     }
-    
+
     .setting-value {
         font-size: 14px;
         color: var(--text-secondary);
     }
-    
+
     .placeholder-badge {
         display: inline-block;
         padding: 4px 12px;
@@ -82,6 +82,187 @@
         border-radius: var(--radius-sm);
         font-size: 12px;
         font-weight: 500;
+    }
+
+    .badge {
+        padding: 4px 8px;
+        border-radius: var(--radius-sm);
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .badge-success {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+    }
+
+    .badge-warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+
+    .btn-primary {
+        background: var(--accent-primary);
+        color: white;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .btn-danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .oauth-provider {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .oauth-provider:last-child {
+        border-bottom: none;
+    }
+
+    .provider-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .provider-icon {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .provider-details {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .provider-name {
+        font-size: 14px;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .provider-email {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    .oauth-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        padding: 20px;
+    }
+
+    .modal-content {
+        background: var(--surface-primary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        max-width: 400px;
+        margin: 50px auto;
+        padding: 24px;
+        position: relative;
+    }
+
+    .modal-header {
+        margin-bottom: 20px;
+    }
+
+    .modal-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .modal-subtitle {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 14px;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+        font-weight: 500;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 24px;
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 18px;
     }
 </style>
 <meta name="robots" content="noindex">
@@ -117,7 +298,7 @@
             <span class="placeholder-badge">{{ user.plan|capitalize }}</span>
         </div>
     </div>
-    
+
     <div class="settings-section surface">
         <div class="section-header">
             <div class="section-icon">
@@ -129,6 +310,27 @@
             </div>
         </div>
         <div class="settings-item">
+            <span class="setting-label">Password Authentication</span>
+            <span class="setting-value">
+                {% if user.password_set %}
+                <span class="badge badge-success">Enabled</span>
+                {% else %}
+                <span class="badge badge-warning">Not Set</span>
+                <button class="btn btn-sm btn-primary" onclick="showSetPasswordModal()">Set Password</button>
+                {% endif %}
+            </span>
+        </div>
+        <div class="settings-item">
+            <span class="setting-label">Email Verification</span>
+            <span class="setting-value">
+                {% if user.email_verified %}
+                <span class="badge badge-success">Verified</span>
+                {% else %}
+                <span class="badge badge-warning">Unverified</span>
+                {% endif %}
+            </span>
+        </div>
+        <div class="settings-item">
             <span class="setting-label">Two-Factor Authentication</span>
             <span class="placeholder-badge">Coming Soon</span>
         </div>
@@ -136,12 +338,32 @@
             <span class="setting-label">Session Management</span>
             <span class="placeholder-badge">Coming Soon</span>
         </div>
+    </div>
+
+    <div class="settings-section surface">
+        <div class="section-header">
+            <div class="section-icon">
+                <i class="ti ti-plug"></i>
+            </div>
+            <div>
+                <div class="section-title">Connected Accounts</div>
+                <div class="section-description">Link OAuth providers for easier login</div>
+            </div>
+        </div>
+        <div id="oauth-providers-container">
+            <!-- OAuth providers will be loaded here -->
+        </div>
         <div class="settings-item">
-            <span class="setting-label">Privacy Mode</span>
-            <span class="placeholder-badge">Coming Soon</span>
+            <span class="setting-label">Add Provider</span>
+            <div class="oauth-buttons">
+                <button class="btn btn-sm btn-outline" onclick="linkGoogleAccount()">
+                    <i class="ti ti-brand-google"></i> Connect Google
+                </button>
+                <!-- Future providers can be added here -->
+            </div>
         </div>
     </div>
-    
+
     <div class="settings-section surface">
         <div class="section-header">
             <div class="section-icon">
@@ -165,7 +387,7 @@
             <span class="placeholder-badge">Coming Soon</span>
         </div>
     </div>
-    
+
     <div class="settings-section surface">
         <div class="section-header">
             <div class="section-icon">
@@ -190,4 +412,222 @@
         </div>
     </div>
 </div>
+
+<!-- Set Password Modal -->
+<div id="setPasswordModal" class="modal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('setPasswordModal')">&times;</button>
+        <div class="modal-header">
+            <div class="modal-title">Set Password</div>
+            <div class="modal-subtitle">Create a password to enable password-based login</div>
+        </div>
+        <form id="setPasswordForm">
+            <div class="form-group">
+                <label class="form-label" for="newPassword">New Password</label>
+                <input type="password" id="newPassword" name="password" class="form-input"
+                    placeholder="Enter your new password" minlength="8" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm your password"
+                    minlength="8" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('setPasswordModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Set Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Load OAuth providers on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        loadOAuthProviders();
+    });
+
+    async function loadOAuthProviders() {
+        try {
+            const response = await fetch('/oauth/providers', {
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                displayOAuthProviders(data.providers);
+            } else {
+                console.error('Failed to load OAuth providers');
+            }
+        } catch (error) {
+            console.error('Error loading OAuth providers:', error);
+        }
+    }
+
+    function displayOAuthProviders(providers) {
+        const container = document.getElementById('oauth-providers-container');
+        container.innerHTML = '';
+
+        if (providers.length === 0) {
+            container.innerHTML = `
+            <div class="settings-item">
+                <span class="setting-label">No connected accounts</span>
+                <span class="setting-value">Connect an OAuth provider to enable easy login</span>
+            </div>
+        `;
+            return;
+        }
+
+        providers.forEach(provider => {
+            const providerElement = document.createElement('div');
+            providerElement.className = 'oauth-provider';
+
+            const providerIcon = getProviderIcon(provider.provider);
+            const linkedDate = new Date(provider.linked_at).toLocaleDateString();
+
+            providerElement.innerHTML = `
+            <div class="provider-info">
+                <div class="provider-icon">${providerIcon}</div>
+                <div class="provider-details">
+                    <div class="provider-name">${provider.provider.charAt(0).toUpperCase() + provider.provider.slice(1)}</div>
+                    <div class="provider-email">${provider.email} • Linked ${linkedDate}</div>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-danger" onclick="unlinkProvider('${provider.provider}')">
+                Disconnect
+            </button>
+        `;
+
+            container.appendChild(providerElement);
+        });
+    }
+
+    function getProviderIcon(provider) {
+        switch (provider) {
+            case 'google':
+                return '<i class="ti ti-brand-google"></i>';
+            case 'github':
+                return '<i class="ti ti-brand-github"></i>';
+            case 'microsoft':
+                return '<i class="ti ti-brand-microsoft"></i>';
+            default:
+                return '<i class="ti ti-user"></i>';
+        }
+    }
+
+    function linkGoogleAccount() {
+        window.location.href = '/oauth/google/link';
+    }
+
+    async function unlinkProvider(provider) {
+        if (!confirm(`Are you sure you want to disconnect your ${provider} account?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/oauth/providers/${provider}/unlink`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Reload providers list
+                loadOAuthProviders();
+                showNotification('success', data.message);
+            } else {
+                showNotification('error', data.error || 'Failed to unlink provider');
+            }
+        } catch (error) {
+            console.error('Error unlinking provider:', error);
+            showNotification('error', 'Failed to unlink provider');
+        }
+    }
+
+    function showSetPasswordModal() {
+        document.getElementById('setPasswordModal').style.display = 'block';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    // Handle set password form
+    document.getElementById('setPasswordForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const password = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (password !== confirmPassword) {
+            showNotification('error', 'Passwords do not match');
+            return;
+        }
+
+        if (password.length < 8) {
+            showNotification('error', 'Password must be at least 8 characters');
+            return;
+        }
+
+        try {
+            const response = await fetch('/auth/set-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                closeModal('setPasswordModal');
+                showNotification('success', data.message);
+                // Reload page to update UI
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification('error', data.error || 'Failed to set password');
+            }
+        } catch (error) {
+            console.error('Error setting password:', error);
+            showNotification('error', 'Failed to set password');
+        }
+    });
+
+    function showNotification(type, message) {
+        // Simple notification - you can enhance this
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 16px;
+        border-radius: 6px;
+        color: white;
+        font-weight: 500;
+        z-index: 9999;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        ${type === 'success' ? 'background: #22c55e;' : 'background: #ef4444;'}
+    `;
+        notification.textContent = message;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function (event) {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+</script>
 {% endblock %}

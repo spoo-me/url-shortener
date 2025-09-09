@@ -127,6 +127,21 @@ def get_user_by_email(email, projection=None):
     return user
 
 
+def get_user_by_oauth_provider(provider, provider_user_id, projection=None):
+    """Get user by OAuth provider and provider user ID"""
+    try:
+        user = users_collection.find_one(
+            {
+                "auth_providers.provider": provider,
+                "auth_providers.provider_user_id": provider_user_id,
+            },
+            projection,
+        )
+    except Exception:
+        user = None
+    return user
+
+
 def get_user_by_id(user_id, projection=None):
     try:
         user = users_collection.find_one({"_id": ObjectId(user_id)}, projection)
@@ -367,6 +382,18 @@ def revoke_api_key_by_id(user_id, key_id, *, hard_delete: bool = False) -> bool:
 def ensure_indexes():
     try:
         users_collection.create_index([("email", ASCENDING)], unique=True)
+
+        # OAuth provider indexes
+        users_collection.create_index(
+            [
+                ("auth_providers.provider", ASCENDING),
+                ("auth_providers.provider_user_id", ASCENDING),
+            ],
+            unique=True,
+            sparse=True,
+        )
+        users_collection.create_index([("auth_providers.provider", ASCENDING)])
+
         # v2 urls indexes
         urls_v2_collection.create_index([("alias", ASCENDING)], unique=True)
         urls_v2_collection.create_index([("owner_id", ASCENDING)])
