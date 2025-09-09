@@ -499,6 +499,75 @@
         display: block;
     }
 
+    /* Password Strength Indicator */
+    .password-strength-container {
+        margin: 8px 0 0 0;
+        padding: 0;
+    }
+
+    .password-strength-bar-container {
+        width: 100%;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-bottom: 4px;
+    }
+
+    .password-strength-bar {
+        height: 100%;
+        width: 0%;
+        background: #ef4444;
+        border-radius: 2px;
+        transition: all 0.3s ease;
+    }
+
+    .password-strength-label {
+        font-size: 12px;
+        color: #ef4444;
+        text-align: right;
+        font-weight: 500;
+    }
+
+    /* Password Requirements */
+    .password-requirements {
+        margin: 8px 0 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: 12px;
+    }
+
+    .password-requirements li {
+        display: flex;
+        align-items: center;
+        margin: 2px 0;
+        color: rgba(255, 255, 255, 0.7);
+        transition: color 0.2s ease;
+    }
+
+    .password-requirements .requirement-icon {
+        margin-right: 6px;
+        font-weight: bold;
+        width: 12px;
+        text-align: center;
+    }
+
+    .password-requirements .requirement-missing {
+        color: #ef4444;
+    }
+
+    .password-requirements .requirement-missing .requirement-icon {
+        color: #ef4444;
+    }
+
+    .password-requirements .requirement-met {
+        color: #22c55e;
+    }
+
+    .password-requirements .requirement-met .requirement-icon {
+        color: #22c55e;
+    }
+
     /* Mobile Responsive */
     @media (max-width: 768px) {
         .modal-container {
@@ -714,7 +783,18 @@
                             <label for="newPassword">New Password</label>
                             <input type="password" id="newPassword" name="password"
                                 placeholder="Enter your new password" minlength="8" required>
-                            <small class="field-hint">Password must be at least 8 characters long</small>
+
+                            <!-- Password Strength Indicator -->
+                            <div id="passwordStrengthContainer" class="password-strength-container"
+                                style="display: none;">
+                                <div class="password-strength-bar-container">
+                                    <div class="password-strength-bar" id="passwordStrengthBar"></div>
+                                </div>
+                                <div class="password-strength-label" id="passwordStrengthLabel">Very Weak</div>
+                            </div>
+
+                            <!-- Password Requirements -->
+                            <ul id="passwordRequirements" class="password-requirements" style="display: none;"></ul>
                         </div>
                         <div class="field">
                             <label for="confirmPassword">Confirm Password</label>
@@ -744,6 +824,14 @@
     document.addEventListener('DOMContentLoaded', function () {
         // Load OAuth providers
         loadOAuthProviders();
+
+        // Initialize password strength monitoring
+        const passwordInput = document.getElementById('newPassword');
+        if (passwordInput) {
+            passwordInput.addEventListener('input', function () {
+                updatePasswordStrength(this.value);
+            });
+        }
 
         // Initialize modal event handlers
         const modal = document.getElementById('setPasswordModal');
@@ -780,10 +868,10 @@
                 showFieldError('newPassword', '');
                 showFieldError('confirmPassword', '');
 
-                // Validate password
-                const passwordValidation = validatePassword(password);
-                if (!passwordValidation.valid) {
-                    showFieldError('newPassword', passwordValidation.message);
+                // Validate password with comprehensive checks
+                const passwordValidation = validateAuthPassword(password);
+                if (!passwordValidation.isValid) {
+                    showPasswordRequirements(passwordValidation.missingRequirements);
                     return;
                 }
 
@@ -1014,7 +1102,213 @@
         }
     }
 
-    // Enhanced form validation functions
+    // Enhanced password validation functions
+    function validateAuthPassword(password) {
+        if (!password) {
+            return {
+                isValid: false,
+                missingRequirements: ["Password is required"],
+                strengthScore: 0
+            };
+        }
+
+        const missing = [];
+        let strengthScore = 0;
+
+        // Basic requirements - only award points if requirement is met
+        const hasMinLength = password.length >= 8;
+        const hasMaxLength = password.length <= 128;
+        const hasUppercase = /[A-Z]/.test(password);
+        const hasLowercase = /[a-z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(password);
+        const hasSafeChars = /^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`\s]+$/.test(password);
+
+        // Check requirements and add to missing if not met
+        if (!hasMinLength) {
+            missing.push("At least 8 characters");
+        } else {
+            strengthScore += 20; // Only award if requirement is met
+        }
+
+        if (!hasMaxLength) {
+            missing.push("Maximum 128 characters");
+        } else {
+            strengthScore += 5; // Small bonus for reasonable length
+        }
+
+        if (!hasUppercase) {
+            missing.push("At least one uppercase letter");
+        } else {
+            strengthScore += 15;
+        }
+
+        if (!hasLowercase) {
+            missing.push("At least one lowercase letter");
+        } else {
+            strengthScore += 15;
+        }
+
+        if (!hasNumber) {
+            missing.push("At least one number");
+        } else {
+            strengthScore += 15;
+        }
+
+        if (!hasSpecialChar) {
+            missing.push("At least one special character");
+        } else {
+            strengthScore += 15;
+        }
+
+        if (!hasSafeChars) {
+            missing.push("Contains invalid characters");
+        } else {
+            strengthScore += 5; // Small bonus for safe characters
+        }
+
+        // Additional strength bonuses (only if basic requirements are met)
+        if (hasMinLength && password.length >= 12) {
+            strengthScore += 5;
+        }
+        if (hasMinLength && password.length >= 16) {
+            strengthScore += 5;
+        }
+
+        // Penalties for weak patterns
+        if (/(.)\1{2,}/.test(password)) {  // 3+ repeated characters
+            strengthScore -= 15;
+        }
+
+        if (/(012|123|234|345|456|567|678|789|890|abc|bcd|cde|def)/i.test(password)) {
+            strengthScore -= 20;
+        }
+
+        // Common weak passwords - heavy penalty
+        const weakPatterns = [
+            /password/i,
+            /123456/i,
+            /qwerty/i,
+            /admin/i,
+            /login/i,
+            /welcome/i
+        ];
+
+        for (const pattern of weakPatterns) {
+            if (pattern.test(password)) {
+                strengthScore -= 30;
+                break;
+            }
+        }
+
+        // Ensure score is between 0-100
+        strengthScore = Math.max(0, Math.min(100, strengthScore));
+
+        return {
+            isValid: missing.length === 0,
+            missingRequirements: missing,
+            strengthScore: strengthScore
+        };
+    }
+
+    function getStrengthLabel(score) {
+        if (score < 20) return "Very Weak";
+        if (score < 40) return "Weak";
+        if (score < 60) return "Fair";
+        if (score < 80) return "Good";
+        return "Strong";
+    }
+
+    function getStrengthColor(score) {
+        if (score < 20) return "#ef4444";  // red
+        if (score < 40) return "#f97316";  // orange
+        if (score < 60) return "#eab308";  // yellow
+        if (score < 80) return "#22c55e";  // green
+        return "#16a34a";  // dark green
+    }
+
+    function updatePasswordStrength(password) {
+        const strengthContainer = document.getElementById('passwordStrengthContainer');
+        const strengthBar = document.getElementById('passwordStrengthBar');
+        const strengthLabel = document.getElementById('passwordStrengthLabel');
+        const requirementsList = document.getElementById('passwordRequirements');
+
+        // Hide strength indicator if password is empty
+        if (!password || password.length === 0) {
+            if (strengthContainer) {
+                strengthContainer.style.display = 'none';
+            }
+            if (requirementsList) {
+                requirementsList.style.display = 'none';
+            }
+            return { isValid: false, missingRequirements: ["Password is required"], strengthScore: 0 };
+        }
+
+        // Show strength indicator when there's input
+        if (strengthContainer) {
+            strengthContainer.style.display = 'block';
+        }
+        if (requirementsList) {
+            requirementsList.style.display = 'block';
+        }
+
+        const validation = validateAuthPassword(password);
+
+        if (!validation || typeof validation.strengthScore === 'undefined') {
+            console.error('validateAuthPassword returned invalid object:', validation);
+            return { isValid: false, missingRequirements: [], strengthScore: 0 };
+        }
+
+        const strengthScore = validation.strengthScore || 0;
+
+        if (strengthBar) {
+            const color = getStrengthColor(strengthScore);
+            strengthBar.style.width = `${strengthScore}%`;
+            strengthBar.style.backgroundColor = color;
+        }
+
+        if (strengthLabel) {
+            const label = getStrengthLabel(strengthScore);
+            const color = getStrengthColor(strengthScore);
+            strengthLabel.textContent = label;
+            strengthLabel.style.color = color;
+        }
+
+        if (requirementsList) {
+            // Ensure validation object has the required properties
+            const missingReqs = (validation && validation.missingRequirements) ? validation.missingRequirements : [];
+
+            // Only show missing requirements
+            if (missingReqs.length > 0) {
+                requirementsList.innerHTML = missingReqs.map(req => {
+                    return `<li class="requirement-missing"><span class="requirement-icon">✗</span> ${req}</li>`;
+                }).join('');
+                requirementsList.style.display = 'block';
+            } else {
+                requirementsList.style.display = 'none';
+            }
+        }
+
+        return validation;
+    }
+
+    function showPasswordRequirements(missingRequirements) {
+        if (missingRequirements.length === 0) return;
+
+        const requirementsList = missingRequirements.map(req =>
+            `<li style="margin: 4px 0;"><span style="color: #ef4444; margin-right: 8px;">✗</span>${req}</li>`
+        ).join('');
+
+        showFieldError('newPassword', `
+            <div style="text-align: left;">
+                <div style="margin-bottom: 8px; font-weight: 500;">Password requirements not met:</div>
+                <ul style="margin: 0; padding-left: 0; list-style: none;">
+                    ${requirementsList}
+                </ul>
+            </div>
+        `);
+    }
+
     function validatePassword(password) {
         if (!password) return { valid: false, message: 'Password is required' };
 
@@ -1047,10 +1341,17 @@
             field.style.borderColor = '#ef4444';
 
             // Add error message
-            const errorEl = document.createElement('small');
+            const errorEl = document.createElement('div');
             errorEl.className = 'field-error';
             errorEl.style.cssText = 'color: #ef4444; font-size: 12px; margin-top: 4px;';
-            errorEl.textContent = message;
+
+            // Check if message contains HTML
+            if (message.includes('<')) {
+                errorEl.innerHTML = message;
+            } else {
+                errorEl.textContent = message;
+            }
+
             field.parentNode.appendChild(errorEl);
         } else {
             // Remove error styling

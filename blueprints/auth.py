@@ -15,6 +15,7 @@ from utils.auth_utils import (
     clear_access_cookie,
     requires_auth,
 )
+from utils.password_utils import validate_password
 from utils.mongo_utils import (
     get_user_by_email,
     get_user_by_id,
@@ -110,8 +111,16 @@ def register():
     user_name = (body.get("user_name") or "").strip() or None
     if not email or not password:
         return jsonify({"error": "email and password are required"}), 400
-    if len(password) < 8:
-        return jsonify({"error": "password must be at least 8 characters"}), 400
+
+    # Validate password with comprehensive checks
+    is_valid, missing_requirements = validate_password(password)
+    if not is_valid:
+        return jsonify(
+            {
+                "error": "Password does not meet requirements",
+                "missing_requirements": missing_requirements,
+            }
+        ), 400
 
     # Check existing user
     existing = get_user_by_email(email)
@@ -171,8 +180,15 @@ def set_password():
     if not password:
         return jsonify({"error": "password is required"}), 400
 
-    if len(password) < 8:
-        return jsonify({"error": "password must be at least 8 characters"}), 400
+    # Validate password with comprehensive checks
+    is_valid, missing_requirements = validate_password(password)
+    if not is_valid:
+        return jsonify(
+            {
+                "error": "Password does not meet requirements",
+                "missing_requirements": missing_requirements,
+            }
+        ), 400
 
     try:
         password_hash = hash_password(password)

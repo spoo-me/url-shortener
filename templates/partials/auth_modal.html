@@ -232,6 +232,75 @@
         border-radius: 8px;
     }
 
+    /* Password Strength Indicator */
+    #authModal .password-strength-container {
+        margin: 8px 0 0 0;
+        padding: 0;
+    }
+
+    #authModal .password-strength-bar-container {
+        width: 100%;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-bottom: 4px;
+    }
+
+    #authModal .password-strength-bar {
+        height: 100%;
+        width: 0%;
+        background: #ef4444;
+        border-radius: 2px;
+        transition: all 0.3s ease;
+    }
+
+    #authModal .password-strength-label {
+        font-size: 12px;
+        color: #ef4444;
+        text-align: right;
+        font-weight: 500;
+    }
+
+    /* Password Requirements */
+    #authModal .password-requirements {
+        margin: 8px 0 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: 12px;
+    }
+
+    #authModal .password-requirements li {
+        display: flex;
+        align-items: center;
+        margin: 2px 0;
+        color: rgba(255, 255, 255, 0.7);
+        transition: color 0.2s ease;
+    }
+
+    #authModal .password-requirements .requirement-icon {
+        margin-right: 6px;
+        font-weight: bold;
+        width: 12px;
+        text-align: center;
+    }
+
+    #authModal .password-requirements .requirement-missing {
+        color: #ef4444;
+    }
+
+    #authModal .password-requirements .requirement-missing .requirement-icon {
+        color: #ef4444;
+    }
+
+    #authModal .password-requirements .requirement-met {
+        color: #22c55e;
+    }
+
+    #authModal .password-requirements .requirement-met .requirement-icon {
+        color: #22c55e;
+    }
+
     /* Mobile responsiveness */
     @media screen and (max-width: 600px) {
         #authModal .modal-container {
@@ -303,6 +372,18 @@
                             <label for="authPassword">Password</label>
                             <input type="password" id="authPassword" name="password" placeholder="At least 8 characters"
                                 autocomplete="new-password" required />
+
+                            <!-- Password Strength Indicator (only shown in register mode) -->
+                            <div id="passwordStrengthContainer" class="password-strength-container"
+                                style="display: none;">
+                                <div class="password-strength-bar-container">
+                                    <div class="password-strength-bar" id="passwordStrengthBar"></div>
+                                </div>
+                                <div class="password-strength-label" id="passwordStrengthLabel">Very Weak</div>
+                            </div>
+
+                            <!-- Password Requirements (only shown in register mode) -->
+                            <ul id="passwordRequirements" class="password-requirements" style="display: none;"></ul>
                         </div>
                     </div>
                 </form>
@@ -359,8 +440,31 @@
             document.getElementById('toggleText').textContent = isRegister ? 'Already have an account?' : "Don't have an account?";
             document.getElementById('toggleBtn').textContent = isRegister ? 'Login' : 'Sign up';
 
+            // Show/hide password strength indicator and requirements
+            const strengthContainer = document.getElementById('passwordStrengthContainer');
+            const requirementsContainer = document.getElementById('passwordRequirements');
+
+            if (!isRegister) {
+                // Hide strength indicator in login mode
+                if (strengthContainer) {
+                    strengthContainer.style.display = 'none';
+                }
+                if (requirementsContainer) {
+                    requirementsContainer.style.display = 'none';
+                }
+            }
+
             const pwd = document.getElementById('authPassword');
-            if (pwd) pwd.setAttribute('autocomplete', isRegister ? 'new-password' : 'current-password');
+            if (pwd) {
+                pwd.setAttribute('autocomplete', isRegister ? 'new-password' : 'current-password');
+                // Initialize password strength if in register mode and there's a value
+                if (isRegister && pwd.value && typeof updatePasswordStrength === 'function') {
+                    updatePasswordStrength(pwd.value);
+                } else if (!isRegister) {
+                    // Clear password field when switching to login to avoid confusion
+                    pwd.value = '';
+                }
+            }
         }
 
         function toggleAuthMode() {
