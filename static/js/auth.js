@@ -1,3 +1,19 @@
+function showAuthError(message) {
+    const errorEl = document.getElementById('authError');
+    if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+    }
+}
+
+function clearAuthError() {
+    const errorEl = document.getElementById('authError');
+    if (errorEl) {
+        errorEl.textContent = '';
+        errorEl.style.display = 'none';
+    }
+}
+
 async function authFetch(input, init) {
     const opts = init || {};
     if (!opts.credentials) { opts.credentials = 'include'; }
@@ -23,10 +39,15 @@ async function submitAuth() {
     try {
         const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(body) });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) { document.getElementById('authError').innerText = (data && data.error) || 'Something went wrong'; return; }
+        if (!res.ok) { 
+            showAuthError((data && data.error) || 'Something went wrong'); 
+            return; 
+        }
         closeAuthModal();
         window.location.href = '/dashboard';
-    } catch (e) { document.getElementById('authError').innerText = 'Something went wrong'; }
+    } catch (e) { 
+        showAuthError('Something went wrong'); 
+    }
 }
 
 async function logout() {
