@@ -4,7 +4,10 @@
     </div>
     <div class="mobile-profile" id="m-nav-profile" style="display:none">
         <button id="mProfileButton" class="profile-btn" aria-haspopup="true" aria-expanded="false" aria-label="User menu">
-            <img id="mProfileAvatar" src="" alt="Profile" loading="lazy">
+            <div class="profile-avatar-container">
+                <img id="mProfileAvatar" src="" alt="Profile" loading="lazy" style="display:none;">
+                <div id="mProfileInitials" class="profile-initials-circle" style="display:none;"></div>
+            </div>
         </button>
         <div id="mProfileDropdown" class="profile-dropdown" role="menu" style="display:none">
             <a href="/dashboard" role="menuitem">Dashboard</a>

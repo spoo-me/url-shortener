@@ -17,7 +17,10 @@
             <li id="nav-keys" style="display:none"><a href="/dashboard/keys">API Keys</a></li>
             <li id="nav-profile" class="nav-profile" style="display:none">
                 <button id="profileButton" class="profile-btn" aria-haspopup="true" aria-expanded="false" aria-label="User menu">
-                    <img id="profileAvatar" src="" alt="Profile" loading="lazy">
+                    <div class="profile-avatar-container">
+                        <img id="profileAvatar" src="" alt="Profile" loading="lazy" style="display:none;">
+                        <div id="profileInitials" class="profile-initials-circle" style="display:none;"></div>
+                    </div>
                 </button>
                 <div id="profileDropdown" class="profile-dropdown" role="menu" style="display:none">
                     <a href="/dashboard" role="menuitem">Dashboard</a>

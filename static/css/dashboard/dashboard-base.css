@@ -272,6 +272,21 @@ body.dashboard-layout {
     font-weight: 600;
     font-size: 14px;
     flex-shrink: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.profile-initials {
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
 }
 
 .profile-info {

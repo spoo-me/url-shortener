@@ -10,34 +10,46 @@
             <i class="ti ti-layout-sidebar-left-collapse"></i>
         </button>
     </div>
-    
+
     <nav class="sidebar-nav">
-        <a href="/dashboard/links" class="nav-item {% if request.path == '/dashboard/links' %}active{% endif %}" data-tooltip="Links">
+        <a href="/dashboard/links" class="nav-item {% if request.path == '/dashboard/links' %}active{% endif %}"
+            data-tooltip="Links">
             <i class="ti ti-link"></i>
             <span class="nav-text">Links</span>
         </a>
-        
-        <a href="/dashboard/keys" class="nav-item {% if request.path == '/dashboard/keys' %}active{% endif %}" data-tooltip="API Keys">
+
+        <a href="/dashboard/keys" class="nav-item {% if request.path == '/dashboard/keys' %}active{% endif %}"
+            data-tooltip="API Keys">
             <i class="ti ti-key"></i>
             <span class="nav-text">API Keys</span>
         </a>
-        
-        <a href="/dashboard/statistics" class="nav-item {% if request.path == '/dashboard/statistics' %}active{% endif %}" data-tooltip="Statistics">
+
+        <a href="/dashboard/statistics"
+            class="nav-item {% if request.path == '/dashboard/statistics' %}active{% endif %}"
+            data-tooltip="Statistics">
             <i class="ti ti-chart-bar"></i>
             <span class="nav-text">Statistics</span>
         </a>
-        
-        <a href="/dashboard/settings" class="nav-item {% if request.path == '/dashboard/settings' %}active{% endif %}" data-tooltip="Settings">
+
+        <a href="/dashboard/settings" class="nav-item {% if request.path == '/dashboard/settings' %}active{% endif %}"
+            data-tooltip="Settings">
             <i class="ti ti-settings"></i>
             <span class="nav-text">Settings</span>
         </a>
     </nav>
-    
+
     <div class="sidebar-footer">
         <div class="profile-dropdown">
             <button class="profile-button" id="profileButton" aria-label="Profile menu">
                 <div class="profile-avatar">
-                    {{ (user.user_name or user.email)[:2]|upper }}
+                    {% if user.pfp and user.pfp.url %}
+                    <img src="{{ user.pfp.url }}" alt="{{ user.user_name or user.email }}" class="profile-image"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span class="profile-initials" style="display:none;">{{ (user.user_name or user.email)[:2]|upper
+                        }}</span>
+                    {% else %}
+                    <span class="profile-initials">{{ (user.user_name or user.email)[:2]|upper }}</span>
+                    {% endif %}
                 </div>
                 <div class="profile-info">
                     <span class="profile-name">{{ user.user_name or user.email }}</span>
@@ -45,7 +57,7 @@
                 </div>
                 <i class="ti ti-chevron-up profile-chevron"></i>
             </button>
-            
+
             <div class="profile-menu" id="profileMenu">
                 <a href="/dashboard/profile" class="menu-item">
                     <i class="ti ti-user"></i>

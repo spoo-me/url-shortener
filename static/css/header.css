@@ -70,8 +70,23 @@
 .nav-profile { position: relative; display: none; }
 .profile-btn { border: 0; background: transparent; padding: 0; cursor: pointer; line-height: 0; border-radius: 9999px; }
 .profile-btn:hover, .profile-btn:focus { outline: none; box-shadow: none; }
-.profile-btn img { width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); display: block; }
+.profile-avatar-container { width: 36px; height: 36px; position: relative; }
+.profile-btn img { width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); display: block; }
 .profile-btn:hover img { filter: brightness(1.05); }
+.profile-initials-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #2563eb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.profile-btn:hover .profile-initials-circle { filter: brightness(1.05); }
 .profile-dropdown {
     position: absolute;
     right: 0;

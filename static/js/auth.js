@@ -1,52 +1,52 @@
-async function authFetch(input, init){
+async function authFetch(input, init) {
     const opts = init || {};
-    if(!opts.credentials){ opts.credentials = 'include'; }
+    if (!opts.credentials) { opts.credentials = 'include'; }
     let res = await fetch(input, opts);
-    if(res.status !== 401){ return res; }
-    try{
-        const refreshRes = await fetch('/auth/refresh', { method:'POST', credentials:'include' });
-        if(!refreshRes.ok){ return res; }
+    if (res.status !== 401) { return res; }
+    try {
+        const refreshRes = await fetch('/auth/refresh', { method: 'POST', credentials: 'include' });
+        if (!refreshRes.ok) { return res; }
         res = await fetch(input, opts);
         return res;
-    }catch(e){
+    } catch (e) {
         return res;
     }
 }
 
-async function submitAuth(){
+async function submitAuth() {
     const email = document.getElementById('authEmail').value.trim();
     const password = document.getElementById('authPassword').value;
     const user_name_input = document.getElementById('authUserName');
     const user_name = user_name_input ? user_name_input.value.trim() : '';
     const url = (typeof authMode !== 'undefined' && authMode === 'login') ? '/auth/login' : '/auth/register';
     const body = (typeof authMode !== 'undefined' && authMode === 'login') ? { email, password } : { email, password, user_name };
-    try{
-        const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(body) });
+    try {
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(body) });
         const data = await res.json().catch(() => ({}));
-        if(!res.ok){ document.getElementById('authError').innerText = (data && data.error) || 'Something went wrong'; return; }
+        if (!res.ok) { document.getElementById('authError').innerText = (data && data.error) || 'Something went wrong'; return; }
         closeAuthModal();
         window.location.href = '/dashboard';
-    }catch(e){ document.getElementById('authError').innerText = 'Something went wrong'; }
+    } catch (e) { document.getElementById('authError').innerText = 'Something went wrong'; }
 }
 
-async function logout(){
-    try{
-        const res = await fetch('/auth/logout', { method:'POST', credentials:'include' });
+async function logout() {
+    try {
+        const res = await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
         await updateAuthNav();
-        if(res.ok){ window.location.href = '/'; }
-    }catch(e){ await updateAuthNav(); }
+        if (res.ok) { window.location.href = '/'; }
+    } catch (e) { await updateAuthNav(); }
 }
 
-async function updateAuthNav(){
-    try{
-        const res = await authFetch('/auth/me', { credentials:'include' });
+async function updateAuthNav() {
+    try {
+        const res = await authFetch('/auth/me', { credentials: 'include' });
         const loggedIn = res.ok;
         let user = null;
-        if(loggedIn){
+        if (loggedIn) {
             const data = await res.json().catch(() => ({}));
             user = data && data.user ? data.user : null;
         }
-        const show = (id, visible, displayType='contents') => { const el = document.getElementById(id); if(el){ el.style.display = visible ? displayType : 'none'; } };
+        const show = (id, visible, displayType = 'contents') => { const el = document.getElementById(id); if (el) { el.style.display = visible ? displayType : 'none'; } };
         // Desktop
         show('nav-auth', !loggedIn);
         show('nav-profile', loggedIn);
@@ -60,17 +60,108 @@ async function updateAuthNav(){
         show('m-nav-logout', loggedIn);
         show('m-nav-profile', loggedIn, 'block');
 
-        if(user){
+        if (user) {
             const username = (user.user_name && String(user.user_name).trim()) || (user.email ? String(user.email).split('@')[0] : 'user');
-            const avatarUrl = `https://avatar.iran.liara.run/username?username=${encodeURIComponent(username)}`;
-            const img = document.getElementById('profileAvatar'); if(img){ img.src = avatarUrl; img.alt = username; }
-            const mimg = document.getElementById('mProfileAvatar'); if(mimg){ mimg.src = avatarUrl; mimg.alt = username; }
+            
+            // Calculate initials for fallback
+            const getInitials = (name) => {
+                const words = name.split(' ').filter(word => word.length > 0);
+                if (words.length >= 2) {
+                    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+                }
+                return name.substring(0, 2).toUpperCase();
+            };
+            
+            const initials = getInitials(username);
+            
+            // Handle desktop navbar profile avatar
+            const profileContainer = document.querySelector('.navbar .profile-avatar-container');
+            if (profileContainer) {
+                const img = profileContainer.querySelector('img');
+                const initialsDiv = profileContainer.querySelector('#profileInitials');
+                
+                if (img && initialsDiv) {
+                    if (user.pfp && user.pfp.url) {
+                        img.src = user.pfp.url;
+                        img.alt = username;
+                        img.style.display = 'block';
+                        initialsDiv.style.display = 'none';
+                        
+                        // Handle image load failure
+                        img.onerror = function() {
+                            img.style.display = 'none';
+                            initialsDiv.style.display = 'flex';
+                            initialsDiv.textContent = initials;
+                        };
+                    } else {
+                        img.style.display = 'none';
+                        initialsDiv.style.display = 'flex';
+                        initialsDiv.textContent = initials;
+                    }
+                }
+            }
+            
+            // Handle mobile navbar profile avatar
+            const mobileProfileContainer = document.querySelector('.mobile-navbar .profile-avatar-container');
+            if (mobileProfileContainer) {
+                const mimg = mobileProfileContainer.querySelector('img');
+                const minitialsDiv = mobileProfileContainer.querySelector('#profileInitials');
+                
+                if (mimg && minitialsDiv) {
+                    if (user.pfp && user.pfp.url) {
+                        mimg.src = user.pfp.url;
+                        mimg.alt = username;
+                        mimg.style.display = 'block';
+                        minitialsDiv.style.display = 'none';
+                        
+                        // Handle image load failure
+                        mimg.onerror = function() {
+                            mimg.style.display = 'none';
+                            minitialsDiv.style.display = 'flex';
+                            minitialsDiv.textContent = initials;
+                        };
+                    } else {
+                        mimg.style.display = 'none';
+                        minitialsDiv.style.display = 'flex';
+                        minitialsDiv.textContent = initials;
+                    }
+                }
+            }
+
+            // Legacy handling for old profile avatars (in case they still exist)
+            const img = document.getElementById('profileAvatar');
+            if (img) {
+                const avatarUrl = (user.pfp && user.pfp.url)
+                    ? user.pfp.url
+                    : `https://avatar.iran.liara.run/username?username=${encodeURIComponent(username)}`;
+                img.src = avatarUrl;
+                img.alt = username;
+                img.onerror = function () {
+                    if (this.src !== `https://avatar.iran.liara.run/username?username=${encodeURIComponent(username)}`) {
+                        this.src = `https://avatar.iran.liara.run/username?username=${encodeURIComponent(username)}`;
+                    }
+                };
+            }
+
+            const mimg = document.getElementById('mProfileAvatar');
+            if (mimg) {
+                const avatarUrl = (user.pfp && user.pfp.url)
+                    ? user.pfp.url
+                    : `https://avatar.iran.liara.run/username?username=${encodeURIComponent(username)}`;
+                mimg.src = avatarUrl;
+                mimg.alt = username;
+                mimg.onerror = function () {
+                    if (this.src !== `https://avatar.iran.liara.run/username?username=${encodeURIComponent(username)}`) {
+                        this.src = `https://avatar.iran.liara.run/username?username=${encodeURIComponent(username)}`;
+                    }
+                };
+            }
         }
-    }catch(e){ /* default to logged out */ }
+    } catch (e) { /* default to logged out */ }
 }
 
-document.addEventListener('DOMContentLoaded', function(){
-    if(typeof updateAuthNav === 'function'){
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof updateAuthNav === 'function') {
         updateAuthNav();
     }
 });

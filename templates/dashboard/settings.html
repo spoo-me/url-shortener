@@ -10,7 +10,6 @@
     }
 
     .settings-section {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
         border: 1px solid var(--border-color);
         border-radius: var(--radius-md);
         padding: 24px;
@@ -187,6 +186,7 @@
         flex-wrap: wrap;
     }
 
+    /* Set Password Modal Styles - Match dashboard modal patterns */
     .modal {
         display: none;
         position: fixed;
@@ -194,75 +194,351 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        z-index: 1000;
+        z-index: 9999;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal.active {
+        display: flex;
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .modal-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        -webkit-backdrop-filter: blur(10px) saturate(180%) brightness(0.7);
+        backdrop-filter: blur(10px) saturate(180%) brightness(0.7);
+    }
+
+    .modal-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
         padding: 20px;
+        position: relative;
+        z-index: 2;
+        background: rgba(0, 0, 0, 0.7);
+        -webkit-backdrop-filter: blur(10px) saturate(180%) brightness(0.7);
+        backdrop-filter: blur(10px) saturate(180%) brightness(0.7);
+    }
+
+    .modal-container.modal-sm {
+        margin: 0 auto;
     }
 
     .modal-content {
-        background: var(--surface-primary);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        max-width: 400px;
-        margin: 50px auto;
-        padding: 24px;
+        backdrop-filter: blur(60px);
+        background: rgba(15, 20, 35, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+        width: 100%;
+        max-width: 550px;
+        max-height: 90vh;
+        overflow: hidden;
+        transform: scale(0.85) translateY(20px);
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
     }
 
+    .modal.active .modal-content {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+
     .modal-header {
-        margin-bottom: 20px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 20px 21px 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .modal-title-section {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex: 1;
+    }
+
+    .modal-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(37, 99, 235, 0.1));
+        color: var(--accent-primary);
     }
 
     .modal-title {
-        font-size: 18px;
+        font-size: 24px;
         font-weight: 600;
         color: var(--text-primary);
-        margin-bottom: 8px;
+        margin: 0 0 4px 0;
+        line-height: 1.2;
     }
 
     .modal-subtitle {
         font-size: 14px;
         color: var(--text-secondary);
+        margin: 0;
+        line-height: 1.4;
     }
 
-    .form-group {
-        margin-bottom: 16px;
-    }
-
-    .form-label {
-        display: block;
-        font-size: 14px;
-        color: var(--text-primary);
-        margin-bottom: 6px;
-        font-weight: 500;
-    }
-
-    .form-input {
-        width: 100%;
-        padding: 10px 12px;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        color: var(--text-primary);
-        font-size: 14px;
-    }
-
-    .modal-actions {
-        display: flex;
-        gap: 12px;
-        justify-content: flex-end;
-        margin-top: 24px;
-    }
-
-    .close-btn {
-        position: absolute;
-        top: 16px;
-        right: 16px;
+    .modal-close {
         background: none;
         border: none;
         color: var(--text-secondary);
+        font-size: 24px;
         cursor: pointer;
-        font-size: 18px;
+        padding: 8px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+    }
+
+    .modal-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+    }
+
+    .modal-body {
+        padding: 32px;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .modal-body::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .modal-body::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+    }
+
+    .form-grid {
+        display: grid;
+        gap: 24px;
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .field label {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .field input {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 12px 16px;
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: all 0.2s ease;
+        width: 100%;
+        box-sizing: border-box;
+        min-width: 0;
+    }
+
+    .field input:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .field input::placeholder {
+        color: var(--text-secondary);
+    }
+
+    .field-hint {
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.4;
+    }
+
+    .modal-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        padding: 24px 32px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: none;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+        min-height: 36px;
+    }
+
+    .btn i {
+        font-size: 14px;
+    }
+
+    .btn-primary {
+        background: #6366f1;
+        color: white;
+        border-color: #6366f1;
+    }
+
+    .btn-primary:hover {
+        background: #5855eb;
+        border-color: #5855eb;
+    }
+
+    .btn-primary:active {
+        background: #4f46e5;
+        border-color: #4f46e5;
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-secondary);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .btn-settings {
+        background: var(--accent-primary);
+        color: white;
+        padding: 4px 8px;
+        font-size: 12px;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Animations */
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .spinning {
+        animation: spin 1s linear infinite;
+    }
+
+    /* Field Error Styles */
+    .field input.error {
+        border-color: #ef4444 !important;
+        background: rgba(239, 68, 68, 0.05);
+    }
+
+    .field-error {
+        color: #ef4444;
+        font-size: 12px;
+        margin-top: 4px;
+        display: block;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .modal-container {
+            padding: 16px;
+        }
+
+        .modal-content {
+            max-width: none;
+            max-height: 95vh;
+        }
+
+        .modal-header,
+        .modal-body,
+        .modal-footer {
+            padding: 20px;
+        }
+
+        .modal-title-section {
+            gap: 12px;
+        }
+
+        .modal-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+        }
+
+        .modal-footer {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-footer .btn {
+            width: 100%;
+            justify-content: center;
+        }
     }
 </style>
 <meta name="robots" content="noindex">
@@ -316,7 +592,7 @@
                 <span class="badge badge-success">Enabled</span>
                 {% else %}
                 <span class="badge badge-warning">Not Set</span>
-                <button class="btn btn-sm btn-primary" onclick="showSetPasswordModal()">Set Password</button>
+                <button class="btn-settings" onclick="showSetPasswordModal()">Set Password</button>
                 {% endif %}
             </span>
         </div>
@@ -353,13 +629,10 @@
         <div id="oauth-providers-container">
             <!-- OAuth providers will be loaded here -->
         </div>
-        <div class="settings-item">
+        <div id="add-provider-section" class="settings-item">
             <span class="setting-label">Add Provider</span>
             <div class="oauth-buttons">
-                <button class="btn btn-sm btn-outline" onclick="linkGoogleAccount()">
-                    <i class="ti ti-brand-google"></i> Connect Google
-                </button>
-                <!-- Future providers can be added here -->
+                <!-- Provider buttons will be dynamically loaded here -->
             </div>
         </div>
     </div>
@@ -415,35 +688,154 @@
 
 <!-- Set Password Modal -->
 <div id="setPasswordModal" class="modal">
-    <div class="modal-content">
-        <button class="close-btn" onclick="closeModal('setPasswordModal')">&times;</button>
-        <div class="modal-header">
-            <div class="modal-title">Set Password</div>
-            <div class="modal-subtitle">Create a password to enable password-based login</div>
+    <div class="modal-backdrop"></div>
+    <div class="modal-container modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-section">
+                    <div class="modal-icon">
+                        <i class="ti ti-shield-lock"></i>
+                    </div>
+                    <div>
+                        <h2 class="modal-title">Set Password</h2>
+                        <p class="modal-subtitle">Create a password to enable password-based login</p>
+                    </div>
+                </div>
+                <button class="modal-close" type="button" aria-label="Close modal"
+                    onclick="closeModal('setPasswordModal')">
+                    <i class="ti ti-x"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="setPasswordForm">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="newPassword">New Password</label>
+                            <input type="password" id="newPassword" name="password"
+                                placeholder="Enter your new password" minlength="8" required>
+                            <small class="field-hint">Password must be at least 8 characters long</small>
+                        </div>
+                        <div class="field">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <input type="password" id="confirmPassword" placeholder="Confirm your password"
+                                minlength="8" required>
+                            <small class="field-hint">Re-enter your password to confirm</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('setPasswordModal')">
+                    <span>Cancel</span>
+                </button>
+                <button type="submit" class="btn btn-primary" form="setPasswordForm">
+                    <i class="ti ti-shield-check"></i>
+                    <span>Set Password</span>
+                </button>
+            </div>
         </div>
-        <form id="setPasswordForm">
-            <div class="form-group">
-                <label class="form-label" for="newPassword">New Password</label>
-                <input type="password" id="newPassword" name="password" class="form-input"
-                    placeholder="Enter your new password" minlength="8" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="confirmPassword">Confirm Password</label>
-                <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm your password"
-                    minlength="8" required>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-outline" onclick="closeModal('setPasswordModal')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Set Password</button>
-            </div>
-        </form>
     </div>
 </div>
 
 <script>
-    // Load OAuth providers on page load
+    // Load OAuth providers on page load and initialize all event handlers
     document.addEventListener('DOMContentLoaded', function () {
+        // Load OAuth providers
         loadOAuthProviders();
+
+        // Initialize modal event handlers
+        const modal = document.getElementById('setPasswordModal');
+        if (modal) {
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal || e.target.classList.contains('modal-backdrop')) {
+                    closeModal('setPasswordModal');
+                }
+            });
+        }
+
+        // ESC key to close modals
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                const passwordModal = document.getElementById('setPasswordModal');
+                if (passwordModal?.classList.contains('active')) {
+                    closeModal('setPasswordModal');
+                }
+            }
+        });
+
+        // Handle set password form with enhanced validation
+        const setPasswordForm = document.getElementById('setPasswordForm');
+        if (setPasswordForm) {
+            setPasswordForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const password = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                const submitBtn = document.querySelector('button[form="setPasswordForm"][type="submit"]');
+                const originalText = submitBtn ? submitBtn.innerHTML : '';
+
+                // Clear previous errors
+                showFieldError('newPassword', '');
+                showFieldError('confirmPassword', '');
+
+                // Validate password
+                const passwordValidation = validatePassword(password);
+                if (!passwordValidation.valid) {
+                    showFieldError('newPassword', passwordValidation.message);
+                    return;
+                }
+
+                // Check password confirmation
+                if (password !== confirmPassword) {
+                    showFieldError('confirmPassword', 'Passwords do not match');
+                    return;
+                }
+
+                // Show loading state
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="ti ti-loader-2 spinning"></i><span>Setting Password...</span>';
+                }
+
+                try {
+                    const response = await fetch('/auth/set-password', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({ password })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        closeModal('setPasswordModal');
+                        showNotification('success', data.message || 'Password set successfully!');
+                        // Reload page to update UI
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        // Handle specific field errors
+                        if (data.field && data.field === 'password') {
+                            showFieldError('newPassword', data.error);
+                        } else {
+                            showNotification('error', data.error || 'Failed to set password');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error setting password:', error);
+                    showNotification('error', 'Failed to set password. Please try again.');
+                } finally {
+                    // Reset button state
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                }
+            });
+        }
     });
 
     async function loadOAuthProviders() {
@@ -465,7 +857,11 @@
 
     function displayOAuthProviders(providers) {
         const container = document.getElementById('oauth-providers-container');
+        const addProviderButtons = document.querySelector('.oauth-buttons');
         container.innerHTML = '';
+
+        // Get list of connected provider names
+        const connectedProviders = providers.map(p => p.provider.toLowerCase());
 
         if (providers.length === 0) {
             container.innerHTML = `
@@ -474,31 +870,67 @@
                 <span class="setting-value">Connect an OAuth provider to enable easy login</span>
             </div>
         `;
-            return;
+        } else {
+            providers.forEach(provider => {
+                const providerElement = document.createElement('div');
+                providerElement.className = 'oauth-provider';
+
+                const providerIcon = getProviderIcon(provider.provider);
+                const linkedDate = new Date(provider.linked_at).toLocaleDateString();
+
+                providerElement.innerHTML = `
+                <div class="provider-info">
+                    <div class="provider-icon">${providerIcon}</div>
+                    <div class="provider-details">
+                        <div class="provider-name">${provider.provider.charAt(0).toUpperCase() + provider.provider.slice(1)}</div>
+                        <div class="provider-email">${provider.email} • Linked ${linkedDate}</div>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="unlinkProvider('${provider.provider}')">
+                    Disconnect
+                </button>
+            `;
+
+                container.appendChild(providerElement);
+            });
         }
 
-        providers.forEach(provider => {
-            const providerElement = document.createElement('div');
-            providerElement.className = 'oauth-provider';
+        // Update Add Provider section - hide buttons for already connected providers
+        const addProviderSection = document.getElementById('add-provider-section');
+        if (addProviderButtons && addProviderSection) {
+            addProviderButtons.innerHTML = '';
 
-            const providerIcon = getProviderIcon(provider.provider);
-            const linkedDate = new Date(provider.linked_at).toLocaleDateString();
+            // Array of available providers with their details
+            const availableProviders = [
+                {
+                    name: 'google',
+                    displayName: 'Google',
+                    icon: 'ti ti-brand-google',
+                    action: 'linkGoogleAccount()'
+                }
+                // Future providers can be added here
+            ];
 
-            providerElement.innerHTML = `
-            <div class="provider-info">
-                <div class="provider-icon">${providerIcon}</div>
-                <div class="provider-details">
-                    <div class="provider-name">${provider.provider.charAt(0).toUpperCase() + provider.provider.slice(1)}</div>
-                    <div class="provider-email">${provider.email} • Linked ${linkedDate}</div>
-                </div>
-            </div>
-            <button class="btn btn-sm btn-danger" onclick="unlinkProvider('${provider.provider}')">
-                Disconnect
-            </button>
-        `;
+            const unconnectedProviders = availableProviders.filter(
+                provider => !connectedProviders.includes(provider.name)
+            );
 
-            container.appendChild(providerElement);
-        });
+            if (unconnectedProviders.length > 0) {
+                // Show the Add Provider section
+                addProviderSection.style.display = 'flex';
+
+                unconnectedProviders.forEach(provider => {
+                    const button = document.createElement('button');
+                    button.className = 'btn btn-sm btn-outline';
+                    button.onclick = () => eval(provider.action);
+                    button.innerHTML = `<i class="${provider.icon}"></i> Connect ${provider.displayName}`;
+                    addProviderButtons.appendChild(button);
+                });
+            } else {
+                // Hide the entire Add Provider section when all providers are connected
+                addProviderSection.style.display = 'none';
+            }
+        }
     }
 
     function getProviderIcon(provider) {
@@ -545,55 +977,89 @@
     }
 
     function showSetPasswordModal() {
-        document.getElementById('setPasswordModal').style.display = 'block';
+        const modal = document.getElementById('setPasswordModal');
+        if (modal) {
+            modal.classList.add('active');
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            // Focus on the first input
+            setTimeout(() => {
+                const firstInput = modal.querySelector('#newPassword');
+                if (firstInput) firstInput.focus();
+            }, 100);
+        }
     }
 
     function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+
+            // Hide modal after transition
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 400);
+
+            // Reset form if it exists
+            const form = modal.querySelector('form');
+            if (form) form.reset();
+
+            // Clear any error states
+            const errorFields = modal.querySelectorAll('.error');
+            errorFields.forEach(field => field.classList.remove('error'));
+            const errorMessages = modal.querySelectorAll('.field-error');
+            errorMessages.forEach(msg => msg.remove());
+        }
     }
 
-    // Handle set password form
-    document.getElementById('setPasswordForm').addEventListener('submit', async function (e) {
-        e.preventDefault();
-
-        const password = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-
-        if (password !== confirmPassword) {
-            showNotification('error', 'Passwords do not match');
-            return;
-        }
+    // Enhanced form validation functions
+    function validatePassword(password) {
+        if (!password) return { valid: false, message: 'Password is required' };
 
         if (password.length < 8) {
-            showNotification('error', 'Password must be at least 8 characters');
-            return;
+            return { valid: false, message: 'Password must be at least 8 characters long' };
         }
 
-        try {
-            const response = await fetch('/auth/set-password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify({ password })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                closeModal('setPasswordModal');
-                showNotification('success', data.message);
-                // Reload page to update UI
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                showNotification('error', data.error || 'Failed to set password');
-            }
-        } catch (error) {
-            console.error('Error setting password:', error);
-            showNotification('error', 'Failed to set password');
+        if (!/[a-zA-Z]/.test(password)) {
+            return { valid: false, message: 'Password must contain at least one letter' };
         }
-    });
+
+        if (!/\d/.test(password)) {
+            return { valid: false, message: 'Password must contain at least one number' };
+        }
+
+        return { valid: true, message: '' };
+    }
+
+    function showFieldError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+
+        // Remove existing error
+        const existingError = field.parentNode.querySelector('.field-error');
+        if (existingError) existingError.remove();
+
+        if (message) {
+            // Add error styling
+            field.classList.add('error');
+            field.style.borderColor = '#ef4444';
+
+            // Add error message
+            const errorEl = document.createElement('small');
+            errorEl.className = 'field-error';
+            errorEl.style.cssText = 'color: #ef4444; font-size: 12px; margin-top: 4px;';
+            errorEl.textContent = message;
+            field.parentNode.appendChild(errorEl);
+        } else {
+            // Remove error styling
+            field.classList.remove('error');
+            field.style.borderColor = '';
+        }
+    }
+
+
 
     function showNotification(type, message) {
         // Simple notification - you can enhance this
@@ -620,12 +1086,74 @@
         }, 5000);
     }
 
+
+
+    // Enhanced notification system to match dashboard patterns
+    function showNotification(type, message) {
+        // Remove existing notifications
+        const existingNotifications = document.querySelectorAll('.dashboard-notification');
+        existingNotifications.forEach(notification => notification.remove());
+
+        const notification = document.createElement('div');
+        notification.className = 'dashboard-notification';
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            z-index: 99999;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            ${type === 'success'
+                ? 'background: rgba(34, 197, 94, 0.9); border-color: rgba(34, 197, 94, 0.3);'
+                : 'background: rgba(239, 68, 68, 0.9); border-color: rgba(239, 68, 68, 0.3);'
+            }
+        `;
+
+        const icon = document.createElement('i');
+        icon.className = type === 'success' ? 'ti ti-check' : 'ti ti-alert-triangle';
+        icon.style.fontSize = '18px';
+
+        const text = document.createElement('span');
+        text.textContent = message;
+
+        notification.appendChild(icon);
+        notification.appendChild(text);
+        document.body.appendChild(notification);
+
+        // Animate in
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+
+        // Animate out and remove
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 300);
+        }, 4000);
+    }
+
     // Close modal when clicking outside
     window.onclick = function (event) {
         const modals = document.querySelectorAll('.modal');
         modals.forEach(modal => {
             if (event.target === modal) {
-                modal.style.display = 'none';
+                const modalId = modal.id;
+                closeModal(modalId);
             }
         });
     }

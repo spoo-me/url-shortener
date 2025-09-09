@@ -172,6 +172,7 @@ def clear_access_cookie(response):
     )
     return response
 
+
 def requires_auth(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
