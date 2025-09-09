@@ -123,7 +123,7 @@ def set_refresh_cookie(response, token: str):
         value=token,
         httponly=True,
         secure=secure,
-        samesite="Strict",
+        samesite="Lax",
         path="/",
         max_age=refresh_ttl,
     )
@@ -138,28 +138,8 @@ def clear_refresh_cookie(response):
         expires=0,
         httponly=True,
         secure=secure,
-        samesite="Strict",
+        samesite="Lax",
         path="/",
-    )
-    # Also clear any legacy cookie that was scoped to /auth/refresh
-    response.set_cookie(
-        "refresh_token",
-        value="",
-        expires=0,
-        httponly=True,
-        secure=secure,
-        samesite="Strict",
-        path="/auth/refresh",
-    )
-    # Also clear legacy cookie scoped to /auth
-    response.set_cookie(
-        "refresh_token",
-        value="",
-        expires=0,
-        httponly=True,
-        secure=secure,
-        samesite="Strict",
-        path="/auth",
     )
     return response
 
@@ -172,7 +152,7 @@ def set_access_cookie(response, token: str):
         value=token,
         httponly=True,
         secure=secure,
-        samesite="Strict",
+        samesite="Lax",
         path="/",
         max_age=access_ttl,
     )
@@ -187,11 +167,10 @@ def clear_access_cookie(response):
         expires=0,
         httponly=True,
         secure=secure,
-        samesite="Strict",
+        samesite="Lax",
         path="/",
     )
     return response
-
 
 def requires_auth(fn):
     @wraps(fn)

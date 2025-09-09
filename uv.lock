@@ -225,6 +225,18 @@ wheels = [
 ]
 
 [[package]]
+name = "authlib"
+version = "1.6.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cryptography" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5d/c6/d9a9db2e71957827e23a34322bde8091b51cb778dcc38885b84c772a1ba9/authlib-1.6.3.tar.gz", hash = "sha256:9f7a982cc395de719e4c2215c5707e7ea690ecf84f1ab126f28c053f4219e610", size = 160836, upload-time = "2025-08-26T12:13:25.206Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/25/2f/efa9d26dbb612b774990741fd8f13c7cf4cfd085b870e4a5af5c82eaf5f1/authlib-1.6.3-py2.py3-none-any.whl", hash = "sha256:7ea0f082edd95a03b7b72edac65ec7f8f68d703017d7e37573aee4fc603f2a48", size = 240105, upload-time = "2025-08-26T12:13:23.889Z" },
+]
+
+[[package]]
 name = "blinker"
 version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1540,6 +1552,7 @@ version = "1.0.0"
 source = { virtual = "." }
 dependencies = [
     { name = "argon2-cffi" },
+    { name = "authlib" },
     { name = "crawlerdetect" },
     { name = "dicttoxml" },
     { name = "emoji" },
@@ -1575,6 +1588,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "argon2-cffi", specifier = ">=25.1.0" },
+    { name = "authlib", specifier = ">=1.6.3" },
     { name = "crawlerdetect", specifier = ">=0.3.0" },
     { name = "dicttoxml", specifier = ">=1.7.16" },
     { name = "emoji", specifier = ">=2.14.1" },
