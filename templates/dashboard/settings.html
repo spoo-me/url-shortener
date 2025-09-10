@@ -187,6 +187,102 @@
         flex-wrap: wrap;
     }
 
+    /* Profile Picture Selection Styles */
+    .picture-grid {
+        display: flex;
+        gap: 16px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+    }
+
+    .picture-option {
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+    .picture-option:hover:not(.disabled) {
+        transform: scale(1.05);
+    }
+
+    .picture-option.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .picture-option.disabled:hover {
+        transform: none;
+    }
+
+    .picture-preview {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid transparent;
+    }
+
+    .picture-option.selected .picture-preview {
+        border-color: var(--accent-primary);
+    }
+
+    .picture-placeholder {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: #6b7280;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid transparent;
+    }
+
+    .picture-placeholder i {
+        font-size: 24px;
+        color: white;
+    }
+
+    .current-indicator {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 20px;
+        height: 20px;
+        background: var(--accent-primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        border: 2px solid var(--surface-bg);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .coming-soon-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: var(--accent-secondary);
+        color: white;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 8px;
+        font-weight: 500;
+        font-family: monospace;
+    }
+
+    /* Loading animation */
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
     /* Set Password Modal Styles - Match dashboard modal patterns */
     .modal {
         display: none;
@@ -648,6 +744,29 @@
     <div class="settings-section surface">
         <div class="section-header">
             <div class="section-icon">
+                <i class="ti ti-photo"></i>
+            </div>
+            <div>
+                <div class="section-title">Profile Picture</div>
+                <div class="section-description">Choose your profile picture from connected accounts</div>
+            </div>
+        </div>
+        <div id="profile-picture-container">
+            <div class="picture-grid" id="picture-grid">
+                <!-- Profile pictures will be loaded here -->
+            </div>
+            <div style="margin-top: 20px;">
+                <button id="save-picture-btn" class="btn btn-primary" style="display: none;"
+                    onclick="saveSelectedPicture()">
+                    <i class="ti ti-check"></i> Save Picture
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-section surface">
+        <div class="section-header">
+            <div class="section-icon">
                 <i class="ti ti-shield"></i>
             </div>
             <div>
@@ -823,8 +942,9 @@
 <script>
     // Load OAuth providers on page load and initialize all event handlers
     document.addEventListener('DOMContentLoaded', function () {
-        // Load OAuth providers
+        // Load OAuth providers and profile pictures
         loadOAuthProviders();
+        loadProfilePictures();
 
         // Initialize password strength monitoring
         const passwordInput = document.getElementById('newPassword');
@@ -1059,6 +1179,177 @@
 
     function linkDiscordAccount() {
         window.location.href = '/oauth/discord/link';
+    }
+
+    let selectedPictureId = null;
+
+    async function loadProfilePictures() {
+        const grid = document.getElementById('picture-grid');
+        if (!grid) return;
+
+        // Show loading state
+        grid.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);"><i class="ti ti-loader-2" style="font-size: 20px; animation: spin 1s linear infinite;"></i></div>';
+
+        try {
+            const response = await fetch('/dashboard/profile-pictures', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status === 429) {
+                throw new Error('Rate limit exceeded. Please try again later.');
+            }
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.pictures && Array.isArray(data.pictures)) {
+                renderProfilePictures(data.pictures);
+            } else {
+                throw new Error('Invalid response format');
+            }
+        } catch (error) {
+            grid.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                    <i class="ti ti-alert-circle" style="font-size: 20px; color: #ef4444;"></i><br>
+                    <span style="margin-top: 8px; display: block; font-size: 14px;">${error.message}</span>
+                </div>
+            `;
+        }
+    }
+
+    function renderProfilePictures(pictures) {
+        const grid = document.getElementById('picture-grid');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+
+        if (!pictures || pictures.length === 0) {
+            grid.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                    <span style="font-size: 14px;">No pictures available</span>
+                </div>
+            `;
+            return;
+        }
+
+        // Render OAuth provider pictures
+        pictures.forEach(picture => {
+            const option = document.createElement('div');
+            option.className = `picture-option ${picture.is_current ? 'selected' : ''}`;
+            option.dataset.pictureId = picture.id;
+            option.onclick = () => selectPicture(picture.id, option);
+
+            option.innerHTML = `
+                <img src="${picture.url}" alt="Profile" class="picture-preview" loading="lazy">
+                ${picture.is_current ? '<div class="current-indicator"><i class="ti ti-check"></i></div>' : ''}
+            `;
+
+            grid.appendChild(option);
+        });
+
+        // Add custom upload placeholder (frontend-only)
+        const uploadOption = document.createElement('div');
+        uploadOption.className = 'picture-option disabled';
+        uploadOption.innerHTML = `
+            <div class="picture-placeholder"><i class="ti ti-upload"></i></div>
+            <div class="coming-soon-badge">Soon</div>
+        `;
+        grid.appendChild(uploadOption);
+    }
+
+    function selectPicture(pictureId, element) {
+        // Remove previous selection
+        document.querySelectorAll('.picture-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+
+        // Add selection to clicked element
+        element.classList.add('selected');
+        selectedPictureId = pictureId;
+
+        // Show save button
+        const saveBtn = document.getElementById('save-picture-btn');
+        if (saveBtn) {
+            saveBtn.style.display = 'inline-flex';
+        }
+    }
+
+    async function saveSelectedPicture() {
+        if (!selectedPictureId) {
+            showNotification('error', 'Please select a picture first');
+            return;
+        }
+
+        try {
+            const response = await fetch('/dashboard/profile-pictures', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({ picture_id: selectedPictureId })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showNotification('success', data.message);
+                loadProfilePictures();
+                const saveBtn = document.getElementById('save-picture-btn');
+                if (saveBtn) {
+                    saveBtn.style.display = 'none';
+                }
+                selectedPictureId = null;
+
+                // Sync sidebar and navbar avatars
+                updateSidebarAvatar();
+                if (typeof updateAuthNav === 'function') {
+                    updateAuthNav();
+                }
+            } else if (response.status === 429) {
+                showNotification('error', 'Rate limit exceeded. Please wait before trying again.');
+            } else {
+                showNotification('error', data.error || 'Failed to save picture');
+            }
+        } catch (error) {
+            showNotification('error', 'Failed to save picture');
+        }
+    }
+
+    function updateSidebarAvatar() {
+        // Get the currently selected picture URL
+        const selectedOption = document.querySelector('.picture-option.selected img');
+        if (!selectedOption) return;
+
+        const newPictureUrl = selectedOption.src;
+
+        // Update sidebar profile image
+        const sidebarImg = document.querySelector('.profile-avatar .profile-image');
+        const sidebarInitials = document.querySelector('.profile-avatar .profile-initials');
+
+        if (sidebarImg && newPictureUrl) {
+            sidebarImg.src = newPictureUrl;
+            sidebarImg.style.display = 'block';
+            if (sidebarInitials) {
+                sidebarInitials.style.display = 'none';
+            }
+
+            // Handle image load error
+            sidebarImg.onerror = function () {
+                this.style.display = 'none';
+                if (sidebarInitials) {
+                    sidebarInitials.style.display = 'block';
+                }
+            };
+        }
     }
 
     async function unlinkProvider(provider) {
