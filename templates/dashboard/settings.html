@@ -155,12 +155,13 @@
     }
 
     .provider-icon {
-        width: 24px;
-        height: 24px;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
+        font-size: 22px;
+        color: white;
     }
 
     .provider-details {
@@ -1001,6 +1002,12 @@
                     displayName: 'GitHub',
                     icon: 'ti ti-brand-github',
                     action: 'linkGitHubAccount()'
+                },
+                {
+                    name: 'discord',
+                    displayName: 'Discord',
+                    icon: 'ti ti-brand-discord',
+                    action: 'linkDiscordAccount()'
                 }
                 // Future providers can be added here
             ];
@@ -1033,6 +1040,8 @@
                 return '<i class="ti ti-brand-google"></i>';
             case 'github':
                 return '<i class="ti ti-brand-github"></i>';
+            case 'discord':
+                return '<i class="ti ti-brand-discord"></i>';
             case 'microsoft':
                 return '<i class="ti ti-brand-microsoft"></i>';
             default:
@@ -1046,6 +1055,10 @@
 
     function linkGitHubAccount() {
         window.location.href = '/oauth/github/link';
+    }
+
+    function linkDiscordAccount() {
+        window.location.href = '/oauth/discord/link';
     }
 
     async function unlinkProvider(provider) {

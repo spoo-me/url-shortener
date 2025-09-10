@@ -20,6 +20,7 @@ from utils.oauth_utils import (
     verify_oauth_state,
     extract_user_info_from_google,
     extract_user_info_from_github,
+    extract_user_info_from_discord,
     find_user_by_provider,
     create_oauth_user,
     link_provider_to_user,
@@ -472,6 +473,219 @@ def oauth_github_link():
 
     # Redirect to GitHub OAuth
     return github.authorize_redirect(redirect_uri, state=state)
+
+
+@oauth_bp.route("/discord", methods=["GET"])
+@limiter.limit("10/minute")
+def oauth_discord_login():
+    """Initiate Discord OAuth login"""
+    discord = providers.get("discord")
+    if not discord:
+        return jsonify({"error": "Discord OAuth not configured"}), 500
+
+    # Generate state parameter for CSRF protection
+    state = generate_oauth_state(OAuthProviders.DISCORD, "login")
+
+    # Get redirect URI
+    redirect_uri = get_oauth_redirect_url(OAuthProviders.DISCORD)
+
+    # Redirect to Discord OAuth
+    return discord.authorize_redirect(redirect_uri, state=state)
+
+
+@oauth_bp.route("/discord/callback", methods=["GET"])
+@limiter.limit("20/minute")
+def oauth_discord_callback():
+    """Handle Discord OAuth callback"""
+    discord = providers.get("discord")
+    if not discord:
+        return jsonify({"error": "Discord OAuth not configured"}), 500
+
+    # Verify state parameter
+    state = request.args.get("state")
+    if not state:
+        return jsonify({"error": "missing state parameter"}), 400
+
+    is_valid, state_data = verify_oauth_state(state, OAuthProviders.DISCORD)
+    if not is_valid:
+        return jsonify({"error": "invalid state parameter"}), 400
+
+    # Check for error from OAuth provider
+    error = request.args.get("error")
+    if error:
+        error_description = request.args.get(
+            "error_description", "OAuth authorization failed"
+        )
+        return jsonify({"error": f"OAuth error: {error_description}"}), 400
+
+    try:
+        # Exchange authorization code for token
+        token = discord.authorize_access_token()
+
+        # Get user info from Discord
+        resp = discord.get("users/@me", token=token)
+        userinfo = resp.json()
+
+        # Extract standardized user info
+        provider_info = extract_user_info_from_discord(userinfo)
+
+        if not provider_info["email"]:
+            return jsonify({"error": "email not provided by OAuth provider"}), 400
+
+        # Check if this is a linking action
+        action = state_data.get("action", "login")
+
+        if action == "link":
+            # This is an account linking request
+            link_user_id = state_data.get("user_id")
+            if not link_user_id:
+                return jsonify({"error": "invalid linking request"}), 400
+
+            # Verify user exists
+            current_user = get_user_by_id(link_user_id)
+            if not current_user:
+                return jsonify({"error": "user not found"}), 404
+
+            # Check if provider is already linked to this user
+            auth_providers = current_user.get("auth_providers", [])
+            for provider_entry in auth_providers:
+                if provider_entry.get("provider") == OAuthProviders.DISCORD:
+                    return jsonify({"error": "Discord account already linked"}), 409
+
+            # Check if this Discord account is already linked to another user
+            existing_oauth_user = find_user_by_provider(
+                OAuthProviders.DISCORD, provider_info["provider_user_id"]
+            )
+            if existing_oauth_user and str(existing_oauth_user["_id"]) != link_user_id:
+                return jsonify(
+                    {"error": "This Discord account is already linked to another user"}
+                ), 409
+
+            # Link the provider to current user
+            if link_provider_to_user(
+                link_user_id, provider_info, OAuthProviders.DISCORD
+            ):
+                # Generate tokens for the linked user
+                auth_method = OAuthProviders.DISCORD
+                access_token = generate_access_jwt(link_user_id, auth_method)
+                refresh_token = generate_refresh_jwt(link_user_id, auth_method)
+
+                # Set tokens in cookies and redirect
+                resp = redirect("/dashboard")
+                set_refresh_cookie(resp, refresh_token)
+                set_access_cookie(resp, access_token)
+                return resp
+            else:
+                return jsonify({"error": "failed to link Discord account"}), 500
+
+        # Check if user already exists with this OAuth provider
+        existing_oauth_user = find_user_by_provider(
+            OAuthProviders.DISCORD, provider_info["provider_user_id"]
+        )
+
+        if existing_oauth_user:
+            # User exists with this OAuth provider - log them in
+            user_id = str(existing_oauth_user["_id"])
+            update_user_last_login(user_id)
+
+            # Generate tokens
+            auth_method = OAuthProviders.DISCORD
+            access_token = generate_access_jwt(user_id, auth_method)
+            refresh_token = generate_refresh_jwt(user_id, auth_method)
+
+            # Set tokens in cookies and redirect
+            resp = redirect("/dashboard")
+            set_refresh_cookie(resp, refresh_token)
+            set_access_cookie(resp, access_token)
+            return resp
+
+        # Check if user exists with the same email
+        existing_email_user = get_user_by_email(provider_info["email"])
+
+        if existing_email_user:
+            # User exists with same email - check if we can auto-link
+            if can_auto_link_accounts(
+                existing_email_user, provider_info, OAuthProviders.DISCORD
+            ):
+                # Auto-link the accounts
+                user_id = str(existing_email_user["_id"])
+
+                if link_provider_to_user(
+                    user_id, provider_info, OAuthProviders.DISCORD
+                ):
+                    update_user_last_login(user_id)
+
+                    # Generate tokens
+                    auth_method = OAuthProviders.DISCORD
+                    access_token = generate_access_jwt(user_id, auth_method)
+                    refresh_token = generate_refresh_jwt(user_id, auth_method)
+
+                    # Set tokens in cookies and redirect
+                    resp = redirect("/dashboard")
+                    set_refresh_cookie(resp, refresh_token)
+                    set_access_cookie(resp, access_token)
+                    return resp
+                else:
+                    return jsonify({"error": "failed to link accounts"}), 500
+            else:
+                # Cannot auto-link - require manual account linking or different email
+                return jsonify(
+                    {
+                        "error": "email already exists",
+                        "message": "An account with this email already exists. Please log in with your existing method first to link accounts.",
+                    }
+                ), 409
+
+        # Create new user with OAuth
+        user_id = create_oauth_user(provider_info, OAuthProviders.DISCORD)
+
+        if not user_id:
+            return jsonify({"error": "failed to create user"}), 500
+
+        # Generate tokens
+        auth_method = OAuthProviders.DISCORD
+        access_token = generate_access_jwt(user_id, auth_method)
+        refresh_token = generate_refresh_jwt(user_id, auth_method)
+
+        # Set tokens in cookies and redirect
+        resp = redirect("/dashboard")
+        set_refresh_cookie(resp, refresh_token)
+        set_access_cookie(resp, access_token)
+        return resp
+
+    except Exception as e:
+        print(f"Discord OAuth callback error: {e}")
+        return jsonify({"error": "OAuth authentication failed"}), 500
+
+
+@oauth_bp.route("/discord/link", methods=["GET"])
+@requires_auth
+@limiter.limit("5/minute")
+def oauth_discord_link():
+    """Link Discord OAuth to existing account"""
+    discord = providers.get("discord")
+    if not discord:
+        return jsonify({"error": "Discord OAuth not configured"}), 500
+
+    # Check if user already has Discord linked
+    current_user = get_user_by_id(g.user_id)
+    if not current_user:
+        return jsonify({"error": "user not found"}), 404
+
+    auth_providers = current_user.get("auth_providers", [])
+    for provider_entry in auth_providers:
+        if provider_entry.get("provider") == OAuthProviders.DISCORD:
+            return jsonify({"error": "Discord account already linked"}), 409
+
+    # Generate state parameter for CSRF protection with user ID
+    state = generate_oauth_state(OAuthProviders.DISCORD, "link")
+    state += f"&user_id={g.user_id}"  # Add user ID to state for verification
+
+    # Get redirect URI (same as login)
+    redirect_uri = get_oauth_redirect_url(OAuthProviders.DISCORD)
+
+    # Redirect to Discord OAuth
+    return discord.authorize_redirect(redirect_uri, state=state)
 
 
 @oauth_bp.route("/providers", methods=["GET"])

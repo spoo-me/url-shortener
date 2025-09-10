@@ -13,8 +13,8 @@ from utils.url_utils import get_client_ip
 class OAuthProviders:
     GOOGLE = "google"
     GITHUB = "github"
+    DISCORD = "discord"
     # Future providers can be added here
-    # DISCORD = "discord"
 
 
 def init_oauth(app):
@@ -24,6 +24,8 @@ def init_oauth(app):
     google_client_secret = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
     github_client_id = os.getenv("GITHUB_OAUTH_CLIENT_ID")
     github_client_secret = os.getenv("GITHUB_OAUTH_CLIENT_SECRET")
+    discord_client_id = os.getenv("DISCORD_OAUTH_CLIENT_ID")
+    discord_client_secret = os.getenv("DISCORD_OAUTH_CLIENT_SECRET")
 
     oauth = OAuth(app)
     providers = {}
@@ -64,6 +66,25 @@ def init_oauth(app):
             print("[OAuth] GitHub OAuth initialized successfully")
         except Exception as e:
             print(f"[OAuth] Error initializing GitHub OAuth: {e}")
+
+    # Discord OAuth configuration
+    if discord_client_id and discord_client_secret:
+        try:
+            discord = oauth.register(
+                name="discord",
+                client_id=discord_client_id,
+                client_secret=discord_client_secret,
+                access_token_url="https://discord.com/api/oauth2/token",
+                authorize_url="https://discord.com/api/oauth2/authorize",
+                api_base_url="https://discord.com/api/",
+                client_kwargs={
+                    "scope": "identify email",
+                },
+            )
+            providers["discord"] = discord
+            print("[OAuth] Discord OAuth initialized successfully")
+        except Exception as e:
+            print(f"[OAuth] Error initializing Discord OAuth: {e}")
 
     if not providers:
         print(
@@ -199,6 +220,46 @@ def extract_user_info_from_github(
         "family_name": " ".join(userinfo.get("name", "").split(" ")[1:])
         if userinfo.get("name") and " " in userinfo.get("name", "")
         else "",
+    }
+
+
+def extract_user_info_from_discord(userinfo: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract standardized user information from Discord OAuth response
+
+    Args:
+        userinfo: User info from Discord OAuth
+
+    Returns:
+        Standardized user info dict
+    """
+    # Discord provides email directly in the user object when email scope is granted
+    email = userinfo.get("email", "").lower().strip()
+    email_verified = userinfo.get("verified", False)
+
+    # Build full name from global_name (display name) or username
+    # Note: Discord removed discriminators, so we use global_name or username
+    name = (
+        userinfo.get("global_name")
+        or userinfo.get("display_name")
+        or userinfo.get("username", "")
+    )
+
+    # Build avatar URL
+    avatar_hash = userinfo.get("avatar")
+    user_id = userinfo.get("id", "")
+    avatar_url = ""
+    if avatar_hash and user_id:
+        # Discord CDN avatar URL format
+        avatar_url = f"https://cdn.discordapp.com/avatars/{user_id}/{avatar_hash}.png"
+
+    return {
+        "provider_user_id": str(userinfo.get("id", "")),
+        "email": email,
+        "email_verified": email_verified,
+        "name": name,
+        "picture": avatar_url,
+        "given_name": name.split(" ")[0] if name and " " in name else name,
+        "family_name": " ".join(name.split(" ")[1:]) if name and " " in name else "",
     }
 
 
@@ -399,5 +460,7 @@ def get_oauth_redirect_url(provider: str, action: str = "login") -> str:
         return url_for("oauth.oauth_google_callback", _external=True)
     elif provider == OAuthProviders.GITHUB:
         return url_for("oauth.oauth_github_callback", _external=True)
+    elif provider == OAuthProviders.DISCORD:
+        return url_for("oauth.oauth_discord_callback", _external=True)
 
     raise ValueError(f"Unknown OAuth provider: {provider}")
