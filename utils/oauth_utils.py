@@ -1,7 +1,7 @@
 import os
 import secrets
 from datetime import datetime, timezone
-from typing import Dict, Optional, Tuple, Any
+from typing import Dict, Optional, Tuple, Any, List
 
 from authlib.integrations.flask_client import OAuth
 from flask import url_for
@@ -12,8 +12,8 @@ from utils.url_utils import get_client_ip
 
 class OAuthProviders:
     GOOGLE = "google"
+    GITHUB = "github"
     # Future providers can be added here
-    # GITHUB = "github"
     # DISCORD = "discord"
 
 
@@ -22,34 +22,56 @@ def init_oauth(app):
     # Check if OAuth credentials are configured
     google_client_id = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
     google_client_secret = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
-
-    if not google_client_id or not google_client_secret:
-        print(
-            "[OAuth] Warning: Google OAuth credentials not configured. OAuth features will be disabled."
-        )
-        return None, None
+    github_client_id = os.getenv("GITHUB_OAUTH_CLIENT_ID")
+    github_client_secret = os.getenv("GITHUB_OAUTH_CLIENT_SECRET")
 
     oauth = OAuth(app)
+    providers = {}
 
     # Google OAuth configuration
-    try:
-        google = oauth.register(
-            name="google",
-            client_id=google_client_id,
-            client_secret=google_client_secret,
-            server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-            client_kwargs={
-                "scope": "openid email profile",
-                "prompt": "select_account",  # Always show account selector
-            },
-        )
-        print("[OAuth] Google OAuth initialized successfully")
-        return oauth, google
-    except Exception as e:
-        print(f"[OAuth] Error initializing Google OAuth: {e}")
-        return None, None
+    if google_client_id and google_client_secret:
+        try:
+            google = oauth.register(
+                name="google",
+                client_id=google_client_id,
+                client_secret=google_client_secret,
+                server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+                client_kwargs={
+                    "scope": "openid email profile",
+                    "prompt": "select_account",  # Always show account selector
+                },
+            )
+            providers["google"] = google
+            print("[OAuth] Google OAuth initialized successfully")
+        except Exception as e:
+            print(f"[OAuth] Error initializing Google OAuth: {e}")
 
-    return oauth, google
+    # GitHub OAuth configuration
+    if github_client_id and github_client_secret:
+        try:
+            github = oauth.register(
+                name="github",
+                client_id=github_client_id,
+                client_secret=github_client_secret,
+                access_token_url="https://github.com/login/oauth/access_token",
+                authorize_url="https://github.com/login/oauth/authorize",
+                api_base_url="https://api.github.com/",
+                client_kwargs={
+                    "scope": "user:email",
+                },
+            )
+            providers["github"] = github
+            print("[OAuth] GitHub OAuth initialized successfully")
+        except Exception as e:
+            print(f"[OAuth] Error initializing GitHub OAuth: {e}")
+
+    if not providers:
+        print(
+            "[OAuth] Warning: No OAuth credentials configured. OAuth features will be disabled."
+        )
+        return None, {}
+
+    return oauth, providers
 
 
 def generate_oauth_state(provider: str, action: str = "login") -> str:
@@ -135,6 +157,48 @@ def extract_user_info_from_google(userinfo: Dict[str, Any]) -> Dict[str, Any]:
         "picture": userinfo.get("picture", ""),
         "given_name": userinfo.get("given_name", ""),
         "family_name": userinfo.get("family_name", ""),
+    }
+
+
+def extract_user_info_from_github(
+    userinfo: Dict[str, Any], email_data: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """Extract standardized user information from GitHub OAuth response
+
+    Args:
+        userinfo: User info from GitHub OAuth
+        email_data: Email data from GitHub API
+
+    Returns:
+        Standardized user info dict
+    """
+    # Find primary verified email
+    primary_email = None
+    email_verified = False
+
+    for email in email_data:
+        if email.get("primary", False):
+            primary_email = email.get("email", "").lower().strip()
+            email_verified = email.get("verified", False)
+            break
+
+    # Fallback to first email if no primary found
+    if not primary_email and email_data:
+        primary_email = email_data[0].get("email", "").lower().strip()
+        email_verified = email_data[0].get("verified", False)
+
+    return {
+        "provider_user_id": str(userinfo.get("id", "")),
+        "email": primary_email or "",
+        "email_verified": email_verified,
+        "name": userinfo.get("name", "") or userinfo.get("login", ""),
+        "picture": userinfo.get("avatar_url", ""),
+        "given_name": userinfo.get("name", "").split(" ")[0]
+        if userinfo.get("name")
+        else "",
+        "family_name": " ".join(userinfo.get("name", "").split(" ")[1:])
+        if userinfo.get("name") and " " in userinfo.get("name", "")
+        else "",
     }
 
 
@@ -272,13 +336,14 @@ def link_provider_to_user(
 
 
 def can_auto_link_accounts(
-    existing_user: Dict[str, Any], provider_info: Dict[str, Any]
+    existing_user: Dict[str, Any], provider_info: Dict[str, Any], provider: str
 ) -> bool:
     """Determine if we can automatically link accounts based on email verification
 
     Args:
         existing_user: Existing user document
         provider_info: Provider info from OAuth
+        provider: Provider name
 
     Returns:
         True if accounts can be auto-linked
@@ -297,7 +362,7 @@ def can_auto_link_accounts(
     # Check if provider is already linked
     auth_providers = existing_user.get("auth_providers", [])
     for provider_entry in auth_providers:
-        if provider_entry.get("provider") == "google":  # Assuming Google for now
+        if provider_entry.get("provider") == provider:
             return False
 
     return True
@@ -332,5 +397,7 @@ def get_oauth_redirect_url(provider: str, action: str = "login") -> str:
     """
     if provider == OAuthProviders.GOOGLE:
         return url_for("oauth.oauth_google_callback", _external=True)
+    elif provider == OAuthProviders.GITHUB:
+        return url_for("oauth.oauth_github_callback", _external=True)
 
     raise ValueError(f"Unknown OAuth provider: {provider}")

@@ -995,6 +995,12 @@
                     displayName: 'Google',
                     icon: 'ti ti-brand-google',
                     action: 'linkGoogleAccount()'
+                },
+                {
+                    name: 'github',
+                    displayName: 'GitHub',
+                    icon: 'ti ti-brand-github',
+                    action: 'linkGitHubAccount()'
                 }
                 // Future providers can be added here
             ];
@@ -1036,6 +1042,10 @@
 
     function linkGoogleAccount() {
         window.location.href = '/oauth/google/link';
+    }
+
+    function linkGitHubAccount() {
+        window.location.href = '/oauth/github/link';
     }
 
     async function unlinkProvider(provider) {
