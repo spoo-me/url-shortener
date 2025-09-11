@@ -449,6 +449,9 @@ def update_user_last_login(user_id: str) -> None:
 def get_oauth_redirect_url(provider: str, action: str = "login") -> str:
     """Generate OAuth redirect URL for the given provider
 
+    First checks for environment variable {PROVIDER}_OAUTH_REDIRECT_URI,
+    then falls back to dynamic generation using Flask's url_for.
+
     Args:
         provider: OAuth provider name
         action: Action being performed ('login' or 'link')
@@ -456,6 +459,14 @@ def get_oauth_redirect_url(provider: str, action: str = "login") -> str:
     Returns:
         Full redirect URL
     """
+    # Check for environment variable first
+    env_var_name = f"{provider.upper()}_OAUTH_REDIRECT_URI"
+    env_redirect_uri = os.getenv(env_var_name)
+
+    if env_redirect_uri:
+        return env_redirect_uri
+
+    # Fall back to dynamic generation
     if provider == OAuthProviders.GOOGLE:
         return url_for("oauth.oauth_google_callback", _external=True)
     elif provider == OAuthProviders.GITHUB:
