@@ -5,7 +5,7 @@ import re
 from bson import ObjectId
 from utils.url_utils import validate_emoji_alias
 
-load_dotenv(override=True)
+load_dotenv()
 
 MONGO_URI = os.environ["MONGODB_URI"]
 
