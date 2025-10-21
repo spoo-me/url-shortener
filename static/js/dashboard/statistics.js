@@ -304,7 +304,7 @@ class StatisticsDashboard {
                 if (dropdown && dropdown.classList.contains('dropdown-menu')) {
                     const isOpen = dropdown.classList.contains('show');
                     dropdown.classList.toggle('show');
-                    
+
                     // Toggle active class
                     if (isOpen) {
                         autoRefreshBtn.classList.remove('active');
@@ -1654,7 +1654,7 @@ class StatisticsDashboard {
                 }
             }
         };
-        const chart = new Chart(ctx, { type: 'line', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, pointStyle: false, scales: { x: { ticks: { color: '#fff', maxTicksLimit: 8 }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { beginAtZero: true, ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } } }, plugins: { legend: baseLegend, tooltip: baseTooltip } } });
+        const chart = new Chart(ctx, { type: 'line', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, pointStyle: false, scales: { x: { ticks: { color: '#fff', maxTicksLimit: 8 }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { beginAtZero: true, ticks: { color: '#fff', maxTicksLimit: 10 }, grid: { color: 'rgba(255,255,255,0.1)' } } }, plugins: { legend: baseLegend, tooltip: baseTooltip } } });
 
         this.charts.set('timeSeries', chart);
     }

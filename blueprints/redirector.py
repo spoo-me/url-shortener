@@ -41,6 +41,47 @@ tld_no_cache_extract = tldextract.TLDExtract(cache_dir=None)
 url_redirector = Blueprint("url_redirector", __name__)
 
 
+class RedirectorError(Exception):
+    """Base error for redirector responses."""
+
+    status_code = 500
+    default_message = "Internal server error"
+
+    def __init__(self, message: str | None = None):
+        self.message = message or self.default_message
+        super().__init__(self.message)
+
+    def _json_error_response(self, status_code: int, message: str):
+        """Return a standardized JSON error response."""
+        return (
+            jsonify(
+                {
+                    "error_code": str(status_code),
+                    "error_message": message,
+                    "host_url": request.host_url,
+                }
+            ),
+            status_code,
+        )
+
+    def to_response(self):
+        return self._json_error_response(self.status_code, self.message)
+
+
+class BadRequestError(RedirectorError):
+    status_code = 400
+    default_message = "Invalid request"
+
+
+class ForbiddenError(RedirectorError):
+    status_code = 403
+    default_message = "Access denied"
+
+
+class InternalRedirectorError(RedirectorError):
+    status_code = 500
+
+
 @url_redirector.route("/<short_code>", methods=["GET"])
 @limiter.exempt
 def redirect_url(short_code):
@@ -209,18 +250,12 @@ def redirect_url(short_code):
     if request.method in ("HEAD", "OPTIONS"):
         pass  # Do not log click, just proceed to redirect
     else:
-        success = process_url_click(
-            url_data, short_code, schema_type, is_emoji, user_ip, start_time
-        )
-
-        if not success:
-            return jsonify(
-                {
-                    "error_code": "500",
-                    "error_message": "Internal server error",
-                    "host_url": request.host_url,
-                }
-            ), 500
+        try:
+            process_url_click(
+                url_data, short_code, schema_type, is_emoji, user_ip, start_time
+            )
+        except RedirectorError as exc:
+            return exc.to_response()
 
     redirect_response = redirect(url, code=302)
     redirect_response.headers["X-Robots-Tag"] = "noindex, nofollow"
@@ -228,18 +263,25 @@ def redirect_url(short_code):
     return redirect_response
 
 
-def process_url_click(url_data, short_code, schema_type, is_emoji, user_ip, start_time):
+def process_url_click(
+    url_data,
+    short_code,
+    schema_type,
+    is_emoji,
+    user_ip,
+    start_time,
+):
     """Process click tracking and analytics for both v1 and v2 schemas"""
     try:
         if schema_type == "v2":
-            return handle_v2_click(url_data, short_code, user_ip, start_time)
+            handle_v2_click(url_data, short_code, user_ip, start_time)
         else:
-            return handle_legacy_click(
-                url_data, short_code, is_emoji, user_ip, start_time
-            )
+            handle_legacy_click(url_data, short_code, is_emoji, user_ip, start_time)
+    except RedirectorError:
+        raise
     except Exception as e:
         print(f"Error processing click for {short_code}: {e}")
-        return False
+        raise InternalRedirectorError() from e
 
 
 def handle_v2_click(url_data, short_code, user_ip, start_time):
@@ -248,15 +290,20 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
         # Get user agent info
         user_agent = request.headers.get("User-Agent", "")
         if not user_agent:
-            return False
+            raise BadRequestError("Invalid User-Agent")
 
-        ua = parse(user_agent)
+        try:
+            ua = parse(user_agent)
+        except Exception:
+            raise BadRequestError(
+                "An internal error occurred while processing the User-Agent"
+            )
 
-        if not ua.user_agent:
-            return False
+        if not ua or not ua.user_agent or not ua.os:
+            raise BadRequestError("Invalid User-Agent")
 
-        os_name = ua.os.family if ua.os else "Unknown"
-        browser = ua.user_agent.family if ua.user_agent else "Unknown"
+        os_name = ua.os.family
+        browser = ua.user_agent.family
         # device = ua.device.family if ua.device else "Unknown"
 
         referrer = request.headers.get("Referer")
@@ -296,7 +343,7 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
                 "Bot blocked, but redirecting for SEO and meta tags, user_agent:",
                 user_agent,
             )
-            return True
+            return
 
         bot_name = None
         if is_bot:
@@ -336,6 +383,8 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
 
         # Update URLsV2 document atomically with new fields
         update_result = update_url_v2_clicks(url_data["_id"], last_click_time=curr_time)
+        if not update_result.acknowledged:
+            raise InternalRedirectorError("Failed to update click analytics")
         # Check if URL should be expired due to max_clicks
         if url_data.get("max_clicks"):
             expire_result = expire_url_if_max_clicks_reached(
@@ -345,10 +394,12 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
                 # invalidate the cache
                 cq.invalidate_url_cache(short_code)
 
-        return update_result.acknowledged
+        return
+    except RedirectorError:
+        raise
     except Exception as e:
         print(f"Error handling v2 click: {e}")
-        return False
+        raise InternalRedirectorError() from e
 
 
 def handle_legacy_click(url_data, short_code, is_emoji, user_ip, start_time):
@@ -357,11 +408,11 @@ def handle_legacy_click(url_data, short_code, is_emoji, user_ip, start_time):
         # Get user agent info
         user_agent = request.headers.get("User-Agent", "")
         if not user_agent:
-            return False
+            raise BadRequestError("Invalid User-Agent")
 
         ua = parse(user_agent)
         if not ua or not ua.user_agent or not ua.os:
-            return False
+            raise BadRequestError("Invalid User-Agent")
 
         os_name = ua.os.family
         browser = ua.user_agent.family
@@ -398,14 +449,14 @@ def handle_legacy_click(url_data, short_code, is_emoji, user_ip, start_time):
         for bot in BOT_USER_AGENTS:
             if re.search(bot, user_agent, re.IGNORECASE):
                 if url_data.get("block_bots", False):
-                    return False  # Bot blocked
+                    raise ForbiddenError("Access Denied, Bots not allowed")
                 sanitized_bot = re.sub(r"[.$\x00-\x1F\x7F-\x9F]", "_", bot)
                 updates["$inc"][f"bots.{sanitized_bot}"] = 1
                 break
         else:
             if crawler_detect.isCrawler(user_agent):
                 if url_data.get("block_bots", False):
-                    return False  # Bot blocked
+                    raise ForbiddenError("Access Denied, Bots not allowed")
                 updates["$inc"][f"bots.{crawler_detect.getMatches()}"] = 1
 
         # Daily counters
@@ -442,10 +493,12 @@ def handle_legacy_click(url_data, short_code, is_emoji, user_ip, start_time):
         else:
             update_url(short_code, updates)
 
-        return True
+        return
+    except RedirectorError:
+        raise
     except Exception as e:
         print(f"Error handling legacy click: {e}")
-        return False
+        raise InternalRedirectorError() from e
 
 
 @url_redirector.route("/<short_code>/password", methods=["POST"])
