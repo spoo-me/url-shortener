@@ -488,6 +488,17 @@
     backdrop-filter: blur(60px);
     box-shadow: rgba(0, 0, 0, 0.3) 0 20px 40px 0px;
     z-index: 102;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0.15s;
+}
+
+.options-dropdown.show {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0s;
 }
 
 .options-grid {
@@ -976,7 +987,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
     .page-header-content {
         flex-direction: column;
-        gap: 16px;
+        gap: 0;
     }
 
     .page-header-actions {
@@ -989,9 +1000,89 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
         max-width: none;
     }
 
+    /* Mobile Bottom Sheet for Dropdowns */
     .options-dropdown {
-        right: -20px;
-        width: auto;
+        /* Reset desktop positioning */
+        position: fixed !important;
+        top: auto !important;
+        right: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 85vh;
+        margin: 0 !important;
+
+        /* Mobile bottom sheet styling */
+        background: rgba(15, 20, 35, 0.98);
+        backdrop-filter: blur(20px);
+        border-radius: 24px 24px 0 0;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-bottom: none;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+
+        /* Animation - use visibility and opacity for smooth transitions */
+        display: block !important;
+        visibility: hidden;
+        opacity: 0;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            visibility 0s linear 0.3s;
+        z-index: 10000 !important;
+
+        /* Enable scrolling for long content */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .options-dropdown[style*="display: block"],
+    .options-dropdown[style*="display:block"] {
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            visibility 0s linear 0s;
+    }
+
+    /* Backdrop overlay for mobile bottom sheet */
+    .options-dropdown::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 20, 35, 0.95);
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+    .options-dropdown[style*="display: block"]::before,
+    .options-dropdown[style*="display:block"]::before {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Add handle bar at top of bottom sheet */
+    .options-dropdown::after {
+        content: '';
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 36px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+    }
+
+    /* Adjust padding for mobile bottom sheet */
+    .options-dropdown .options-grid {
+        padding: 32px 20px 20px;
     }
 
     /* Fix the container width to viewport */
@@ -1005,6 +1096,8 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
         padding: 0;
         border-radius: 0;
         margin: 0;
+        backdrop-filter: none;
+        /* Remove backdrop-filter to allow fixed positioning */
     }
 
     .toolbar {

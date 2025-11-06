@@ -249,6 +249,10 @@
 	function applyFilters() {
 		state.page = 1;
 		fetchData();
+		// Close the options dropdown with animation
+		if (els.optionsDropdown) {
+			els.optionsDropdown.classList.remove('show');
+		}
 	}
 
 	function resetFilters() {
@@ -277,14 +281,18 @@
 	// options dropdown toggle
 	function toggleOptions() {
 		if (!els.optionsDropdown) return;
-		const isOpen = els.optionsDropdown.style.display !== 'none';
-		els.optionsDropdown.style.display = isOpen ? 'none' : 'block';
+		const isOpen = els.optionsDropdown.classList.contains('show');
+		if (isOpen) {
+			els.optionsDropdown.classList.remove('show');
+		} else {
+			els.optionsDropdown.classList.add('show');
+		}
 	}
 	if (els.optionsBtn) { els.optionsBtn.addEventListener('click', toggleOptions); }
 	window.addEventListener('click', (e) => {
 		if (!els.optionsDropdown) return;
 		if (e.target === els.optionsBtn || els.optionsBtn.contains(e.target)) { return; }
-		if (!els.optionsDropdown.contains(e.target)) { els.optionsDropdown.style.display = 'none'; }
+		if (!els.optionsDropdown.contains(e.target)) { els.optionsDropdown.classList.remove('show'); }
 	});
 
 	// segmented controls behavior

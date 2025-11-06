@@ -147,6 +147,70 @@ const CHART_CONFIGS = {
     }
 };
 
+/**
+ * Close all modals in the statistics dashboard
+ * Ensures only one modal is open at a time
+ * @param {StatisticsDashboard} dashboard - Reference to dashboard instance for filter handling
+ */
+function closeAllModals(dashboard) {
+    // Close filters dropdown
+    const filtersDropdown = document.querySelector('.filters-dropdown');
+    if (filtersDropdown) {
+        filtersDropdown.classList.remove('show');
+        const filtersBtn = document.querySelector('.filters-btn');
+        if (filtersBtn) {
+            filtersBtn.classList.remove('active');
+        }
+    }
+
+    // Close auto-refresh dropdown
+    const autoRefreshBtn = document.querySelector('.auto-refresh-btn');
+    const autoRefreshDropdown = autoRefreshBtn?.nextElementSibling;
+    if (autoRefreshDropdown) {
+        autoRefreshDropdown.classList.remove('show');
+        if (autoRefreshBtn) {
+            autoRefreshBtn.classList.remove('active');
+        }
+    }
+
+    // Note: Cascade dropdowns are intentionally NOT closed here
+    // They are chart-specific controls and should remain independent
+
+    // Close multi-select dropdowns and apply pending changes
+    document.querySelectorAll('.multi-select-dropdown').forEach(dd => {
+        if (dd.classList.contains('show')) {
+            dd.classList.remove('show');
+            const parentWrapper = dd.parentElement;
+            const trigger = parentWrapper.querySelector('.multi-select-trigger');
+            if (trigger) {
+                trigger.classList.remove('active');
+            }
+            parentWrapper.classList.remove('active');
+
+            // Apply filters when dropdown closes if there are pending changes
+            if (dashboard) {
+                const filterType = parentWrapper.dataset.filter;
+                if (dashboard.pendingChanges && dashboard.pendingChanges.has(filterType)) {
+                    dashboard.pendingChanges.delete(filterType);
+                    if (dashboard.filterManager) {
+                        dashboard.filterManager.notifyChange();
+                    }
+                }
+            }
+        }
+    });
+
+    // Close date range picker
+    const dateRangeDropdown = document.getElementById('dateRangeDropdown');
+    if (dateRangeDropdown) {
+        dateRangeDropdown.style.display = 'none';
+        const trigger = document.getElementById('dateRangeTrigger');
+        if (trigger) {
+            trigger.classList.remove('active');
+        }
+    }
+}
+
 class StatisticsDashboard {
     constructor() {
         this.charts = new Map();
@@ -303,12 +367,13 @@ class StatisticsDashboard {
                 const dropdown = autoRefreshBtn.nextElementSibling;
                 if (dropdown && dropdown.classList.contains('dropdown-menu')) {
                     const isOpen = dropdown.classList.contains('show');
-                    dropdown.classList.toggle('show');
+                    
+                    // Close all other modals first
+                    closeAllModals(this);
 
-                    // Toggle active class
-                    if (isOpen) {
-                        autoRefreshBtn.classList.remove('active');
-                    } else {
+                    // Only open if it was previously closed
+                    if (!isOpen) {
+                        dropdown.classList.add('show');
                         autoRefreshBtn.classList.add('active');
                     }
                 }
@@ -347,10 +412,11 @@ class StatisticsDashboard {
 
                 const isOpen = filtersDropdown.classList.contains('show');
 
-                if (isOpen) {
-                    filtersDropdown.classList.remove('show');
-                    filtersBtn.classList.remove('active');
-                } else {
+                // Close all other modals first
+                closeAllModals(this);
+
+                if (!isOpen) {
+                    // Only open if it was previously closed
                     filtersDropdown.classList.add('show');
                     filtersBtn.classList.add('active');
                 }
@@ -650,29 +716,13 @@ class StatisticsDashboard {
                     e.preventDefault();
                     e.stopPropagation();
 
-                    // Close other dropdowns
-                    document.querySelectorAll('.multi-select-dropdown.show').forEach(dd => {
-                        if (dd !== dropdown) {
-                            dd.classList.remove('show');
-                            const parentWrapper = dd.parentElement;
-                            parentWrapper.querySelector('.multi-select-trigger').classList.remove('active');
-                            parentWrapper.classList.remove('active');
-                        }
-                    });
-
-                    // Toggle current dropdown
                     const isOpen = dropdown.classList.contains('show');
-                    if (isOpen) {
-                        dropdown.classList.remove('show');
-                        trigger.classList.remove('active');
-                        wrapper.classList.remove('active');
 
-                        // Apply filters when dropdown closes if there are changes for this category
-                        if (this.pendingChanges.has(filterType)) {
-                            this.pendingChanges.delete(filterType);
-                            this.filterManager.notifyChange();
-                        }
-                    } else {
+                    // Close all other modals (including other multi-select dropdowns)
+                    closeAllModals(this);
+
+                    // Toggle current dropdown - only open if it was previously closed
+                    if (!isOpen) {
                         dropdown.classList.add('show');
                         trigger.classList.add('active');
                         wrapper.classList.add('active');
@@ -943,14 +993,22 @@ class StatisticsDashboard {
 
                 e.stopPropagation();
                 const dropdown = btn.nextElementSibling;
+                const isOpen = dropdown.classList.contains('show');
 
-                // Close other dropdowns
+                // Close all other modals first
+                closeAllModals(this);
+
+                // Close other cascade dropdowns
                 document.querySelectorAll('.cascade-dropdown').forEach(dd => {
                     if (dd !== dropdown) dd.classList.remove('show');
                 });
 
                 // Toggle current dropdown
-                dropdown.classList.toggle('show');
+                if (isOpen) {
+                    dropdown.classList.remove('show');
+                } else {
+                    dropdown.classList.add('show');
+                }
             });
         });
 
@@ -1937,6 +1995,9 @@ function updateKeyChart() {
 document.addEventListener('DOMContentLoaded', () => {
     window.dashboard = new StatisticsDashboard();
 });
+
+// Expose closeAllModals to window for use by other scripts like dateRangePicker.js
+window.closeAllModals = closeAllModals;
 
 // Cleanup on page unload
 window.addEventListener('beforeunload', () => {

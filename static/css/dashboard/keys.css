@@ -938,7 +938,7 @@
 
     .page-header-content {
         flex-direction: column;
-        gap: 16px;
+        gap: 0;
     }
 
     .page-header-actions {

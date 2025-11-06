@@ -66,6 +66,25 @@
     min-width: 700px;
     max-height: 500px;
     overflow: hidden;
+    display: none;
+}
+
+.date-range-dropdown[style*="display: block"],
+.date-range-dropdown[style*="display:block"] {
+    display: block !important;
+    animation: slideDown 0.15s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .dropdown-content {
@@ -101,6 +120,17 @@
 .relative-options {
     max-height: 380px;
     overflow-y: auto;
+
+    /* Hide scrollbar */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.relative-options::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .relative-option {
@@ -279,43 +309,142 @@
     background: rgba(255, 255, 255, 0.3);
 }
 
-/* Animation for dropdown */
-.date-range-dropdown {
-    animation: slideDown 0.2s ease-out;
-    transform-origin: top;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px) scaleY(0.8);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scaleY(1);
-    }
-}
+/* Animation removed - using transition instead */
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+
+    /* Mobile Bottom Sheet for Date Range Picker */
     .date-range-dropdown {
-        min-width: 300px;
+        position: fixed !important;
+        top: auto !important;
+        right: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: unset !important;
+        max-height: 70vh;
+
+        background: linear-gradient(180deg, rgba(20, 25, 40, 0.95), rgba(15, 20, 35, 0.98));
+        backdrop-filter: blur(40px) saturate(150%);
+        -webkit-backdrop-filter: blur(40px) saturate(150%);
+        border-radius: 24px 24px 0 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: none;
+        box-shadow: 0 -10px 50px rgba(0, 0, 0, 0.5),
+            0 -2px 20px rgba(124, 58, 237, 0.1);
+
+        /* Animation for smooth slide-up */
+        display: block !important;
+        visibility: hidden;
+        opacity: 0;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            visibility 0s linear 0.3s;
+        z-index: 10000 !important;
+
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+
+        /* Hide scrollbar */
+        scrollbar-width: none;
+        /* Firefox */
+        -ms-overflow-style: none;
+        /* IE and Edge */
+    }
+
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .date-range-dropdown::-webkit-scrollbar {
+        display: none;
+    }
+
+    .date-range-dropdown[style*="display: block"],
+    .date-range-dropdown[style*="display:block"] {
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            visibility 0s linear 0s;
+    }
+
+    /* Handle bar for bottom sheet */
+    .date-range-dropdown::before {
+        content: '';
+        position: sticky;
+        top: 12px;
         left: 50%;
         transform: translateX(-50%);
+        width: 36px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+        display: block;
+        margin: 0 auto 8px;
+        z-index: 10;
+    }
+
+    /* Backdrop overlay */
+    .date-range-dropdown::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 20, 35, 0.95);
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+    .date-range-dropdown[style*="display: block"]::after,
+    .date-range-dropdown[style*="display:block"]::after {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .content-layout {
+        flex-direction: column;
+        min-height: auto;
+    }
+
+    .relative-section {
+        flex: 1;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        max-height: 300px;
+        overflow-y: auto;
+
+        /* Hide scrollbar in relative section */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .relative-section::-webkit-scrollbar {
+        display: none;
+    }
+
+    .custom-section {
+        flex: 1;
+    }
+
+    /* Hide only history section on mobile */
+    .history-section {
+        display: none !important;
     }
 
     .dropdown-header {
         flex-direction: column;
-        gap: 15px;
+        gap: 12px;
+        padding: 20px 20px 16px;
     }
 
     .custom-inputs {
-        padding: 15px;
-    }
-
-    .history-section {
-        padding: 15px;
+        padding: 20px;
     }
 }
 

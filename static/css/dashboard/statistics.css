@@ -157,14 +157,20 @@
     border-radius: 8px;
     min-width: 80px;
     z-index: 1000;
-    display: none;
+    visibility: hidden;
     box-shadow: rgba(0, 0, 0, 0.3) 0 20px 40px 0px;
     backdrop-filter: blur(16px);
     overflow: hidden;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0.15s;
 }
 
 .auto-refresh-dropdown .dropdown-menu.show {
-    display: block;
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0s;
 }
 
 .auto-refresh-dropdown .dropdown-item {
@@ -264,24 +270,29 @@
     backdrop-filter: blur(16px);
     box-shadow: rgba(0, 0, 0, 0.3) 0 20px 40px 0px;
     z-index: 9999;
-    display: none;
+    visibility: hidden;
     overflow: hidden;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0.15s;
 }
 
 .filters-dropdown.show {
-    display: block;
-    animation: filtersDropdownSlideIn 0.3s ease-out;
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0s;
 }
 
 @keyframes filtersDropdownSlideIn {
     from {
         opacity: 0;
-        transform: translateY(-20px) scale(0.95);
+        transform: translateY(-8px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
     }
 }
 
@@ -573,25 +584,30 @@
     backdrop-filter: blur(20px);
     z-index: 9999;
     max-height: 320px;
-    display: none;
+    visibility: hidden;
     overflow: hidden;
     min-width: 280px;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0.15s;
 }
 
 .multi-select-dropdown.show {
-    display: block;
-    animation: dropdownSlideIn 0.2s ease-out;
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0s;
 }
 
 @keyframes dropdownSlideIn {
     from {
         opacity: 0;
-        transform: translateY(-10px) scaleY(0.8);
+        transform: translateY(-8px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0) scaleY(1);
+        transform: translateY(0);
     }
 }
 
@@ -1089,12 +1105,18 @@
     backdrop-filter: blur(10px);
     z-index: 1000;
     min-width: 180px;
-    display: none;
+    visibility: hidden;
     overflow: hidden;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0.15s;
 }
 
 .cascade-dropdown.show {
-    display: block;
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0s;
 }
 
 .cascade-option {
@@ -1324,19 +1346,27 @@
         flex-direction: column;
         gap: 20px;
         text-align: left;
-        /* Match other pages - left align instead of center */
     }
 
     .page-header-text {
         text-align: left;
-        /* Ensure text is left-aligned on mobile */
+    }
+
+    .controls-bar {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .controls-left {
+        width: 100%;
     }
 
     .controls-actions {
-        justify-content: flex-end;
-        /* Left align instead of center */
+        justify-content: flex-start;
         flex-wrap: wrap;
-        /* Allow wrapping on small screens */
+        gap: 10px;
+        width: 100%;
     }
 
     .summary-stats {
@@ -1349,6 +1379,232 @@
 
     .json-data {
         height: 150px;
+    }
+
+    /* Mobile Bottom Sheet for Filters Dropdown */
+    .filters-dropdown {
+        position: fixed;
+        top: auto;
+        right: 0;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        max-width: 100%;
+        max-height: 85vh;
+
+        background: rgba(15, 20, 35, 0.98);
+        backdrop-filter: blur(20px);
+        border-radius: 24px 24px 0 0;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-bottom: none;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+
+        display: block !important;
+        /* Override desktop display: none */
+        visibility: hidden;
+        opacity: 0;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            visibility 0s linear 0.3s;
+        z-index: 9999;
+
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        animation: none !important;
+        /* Remove desktop animation */
+    }
+
+    .filters-dropdown.show {
+        visibility: visible;
+        opacity: 1;
+        transform: translateY(0);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            visibility 0s linear 0s;
+        animation: none !important;
+        /* Remove desktop animation */
+    }
+
+    /* Backdrop overlay */
+    .filters-dropdown::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 20, 35, 0.95);
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+    .filters-dropdown.show::before {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Handle bar */
+    .filters-dropdown::after {
+        content: '';
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 36px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+        z-index: 1;
+    }
+
+    .filter-types-list,
+    .filter-values-view {
+        padding: 32px 20px 20px;
+        min-height: 300px;
+    }
+
+    /* Mobile Bottom Sheet for Auto-Refresh Dropdown */
+    .auto-refresh-dropdown .dropdown-menu {
+        position: fixed;
+        top: auto;
+        right: 0;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        max-width: 100%;
+        border-radius: 24px 24px 0 0;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+        display: block;
+        visibility: hidden;
+        opacity: 0;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            visibility 0s linear 0.3s;
+        min-width: unset;
+    }
+
+    .auto-refresh-dropdown .dropdown-menu.show {
+        visibility: visible;
+        opacity: 1;
+        transform: translateY(0);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            visibility 0s linear 0s;
+    }
+
+    /* Backdrop for auto-refresh */
+    .auto-refresh-dropdown .dropdown-menu::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 20, 35, 0.95);
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+    .auto-refresh-dropdown .dropdown-menu.show::before {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Handle bar for auto-refresh */
+    .auto-refresh-dropdown .dropdown-menu::after {
+        content: '';
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 36px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+    }
+
+    .auto-refresh-dropdown .dropdown-item {
+        padding: 16px 20px;
+        font-size: 16px;
+    }
+
+    .auto-refresh-dropdown .dropdown-item:first-child {
+        margin-top: 24px;
+    }
+
+    /* Multi-select dropdowns as bottom sheets */
+    .multi-select-dropdown {
+        position: fixed;
+        top: auto;
+        right: 0;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        max-width: 100%;
+        max-height: 85vh;
+        border-radius: 24px 24px 0 0;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+        display: block;
+        visibility: hidden;
+        opacity: 0;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            visibility 0s linear 0.3s;
+        min-width: unset;
+    }
+
+    .multi-select-dropdown.show {
+        visibility: visible;
+        opacity: 1;
+        transform: translateY(0);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            visibility 0s linear 0s;
+    }
+
+    /* Backdrop for multi-select */
+    .multi-select-dropdown::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+    .multi-select-dropdown.show::before {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Handle bar for multi-select */
+    .multi-select-dropdown::after {
+        content: '';
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 36px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+        z-index: 1;
+    }
+
+    .dropdown-header {
+        padding: 32px 20px 16px;
     }
 }
 
@@ -1374,11 +1630,11 @@
     }
 
     .controls-left {
-        justify-content: center;
+        justify-content: start;
     }
 
     .controls-actions {
-        justify-content: center;
+        justify-content: start;
         gap: 10px;
         width: 100%;
     }

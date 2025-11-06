@@ -132,12 +132,15 @@ class DateRangePicker {
         trigger?.addEventListener('click', (e) => {
             e.stopPropagation();
             const isOpen = dropdown.style.display === 'block';
-            dropdown.style.display = isOpen ? 'none' : 'block';
             
-            // Toggle active class
-            if (isOpen) {
-                trigger.classList.remove('active');
-            } else {
+            // Close all other modals if closeAllModals function exists
+            if (typeof window.closeAllModals === 'function') {
+                window.closeAllModals(window.dashboard);
+            }
+            
+            // Only open if it was previously closed
+            if (!isOpen) {
+                dropdown.style.display = 'block';
                 trigger.classList.add('active');
             }
         });
