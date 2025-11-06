@@ -140,7 +140,7 @@ def oauth_google_callback():
                 return jsonify(
                     {
                         "error": "email mismatch",
-                        "message": f"The email associated with this Google account ({provider_info['email']}) does not match your account email ({current_user.get('email', '')}). Please use a Google account with the same email address."
+                        "message": f"The email associated with this Google account ({provider_info['email']}) does not match your account email ({current_user.get('email', '')}). Please use a Google account with the same email address.",
                     }
                 ), 400
 
@@ -364,7 +364,7 @@ def oauth_github_callback():
                 return jsonify(
                     {
                         "error": "email mismatch",
-                        "message": f"The email associated with this GitHub account ({provider_info['email']}) does not match your account email ({current_user.get('email', '')}). Please use a GitHub account with the same email address."
+                        "message": f"The email associated with this GitHub account ({provider_info['email']}) does not match your account email ({current_user.get('email', '')}). Please use a GitHub account with the same email address.",
                     }
                 ), 400
 
@@ -584,7 +584,7 @@ def oauth_discord_callback():
                 return jsonify(
                     {
                         "error": "email mismatch",
-                        "message": f"The email associated with this Discord account ({provider_info['email']}) does not match your account email ({current_user.get('email', '')}). Please use a Discord account with the same email address."
+                        "message": f"The email associated with this Discord account ({provider_info['email']}) does not match your account email ({current_user.get('email', '')}). Please use a Discord account with the same email address.",
                     }
                 ), 400
 
