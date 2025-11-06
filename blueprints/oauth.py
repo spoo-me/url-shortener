@@ -135,6 +135,15 @@ def oauth_google_callback():
                     {"error": "This Google account is already linked to another user"}
                 ), 409
 
+            # Verify that the OAuth email matches the current user's email
+            if current_user.get("email", "").lower() != provider_info["email"].lower():
+                return jsonify(
+                    {
+                        "error": "email mismatch",
+                        "message": f"The email associated with this Google account ({provider_info['email']}) does not match your account email ({current_user.get('email', '')}). Please use a Google account with the same email address."
+                    }
+                ), 400
+
             # Link the provider to current user
             if link_provider_to_user(
                 link_user_id, provider_info, OAuthProviders.GOOGLE
@@ -350,6 +359,15 @@ def oauth_github_callback():
                     {"error": "This GitHub account is already linked to another user"}
                 ), 409
 
+            # Verify that the OAuth email matches the current user's email
+            if current_user.get("email", "").lower() != provider_info["email"].lower():
+                return jsonify(
+                    {
+                        "error": "email mismatch",
+                        "message": f"The email associated with this GitHub account ({provider_info['email']}) does not match your account email ({current_user.get('email', '')}). Please use a GitHub account with the same email address."
+                    }
+                ), 400
+
             # Link the provider to current user
             if link_provider_to_user(
                 link_user_id, provider_info, OAuthProviders.GITHUB
@@ -560,6 +578,15 @@ def oauth_discord_callback():
                 return jsonify(
                     {"error": "This Discord account is already linked to another user"}
                 ), 409
+
+            # Verify that the OAuth email matches the current user's email
+            if current_user.get("email", "").lower() != provider_info["email"].lower():
+                return jsonify(
+                    {
+                        "error": "email mismatch",
+                        "message": f"The email associated with this Discord account ({provider_info['email']}) does not match your account email ({current_user.get('email', '')}). Please use a Discord account with the same email address."
+                    }
+                ), 400
 
             # Link the provider to current user
             if link_provider_to_user(

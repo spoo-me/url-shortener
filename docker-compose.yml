@@ -8,7 +8,9 @@ services:
       MONGO_INITDB_ROOT_USERNAME: mongouser
       MONGO_INITDB_ROOT_PASSWORD: mongouser
     volumes:
+      # Persist MongoDB data and configuration across container restarts
       - mongo-data:/data/db
+      - mongo-config:/data/configdb
 
   redis:
     image: "redis:latest" # reccommended by offical docs
@@ -38,3 +40,4 @@ services:
 
 volumes:
   mongo-data:
+  mongo-config:

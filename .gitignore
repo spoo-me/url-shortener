@@ -184,3 +184,5 @@ todo.md
 # Local API Testings
 k6-tests/
 local_test_db/
+
+.DS_Store
