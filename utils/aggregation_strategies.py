@@ -414,8 +414,8 @@ class ReferrerAggregationStrategy(AggregationStrategy):
         return "referrer"
 
 
-class KeyAggregationStrategy(AggregationStrategy):
-    """Strategy for key-based aggregation (grouping by short codes/aliases)"""
+class ShortCodeAggregationStrategy(AggregationStrategy):
+    """Strategy for short_code-based aggregation (grouping by short codes/aliases)"""
 
     def build_pipeline(self, base_query: Dict[str, Any]) -> List[Dict[str, Any]]:
         return [
@@ -443,7 +443,7 @@ class KeyAggregationStrategy(AggregationStrategy):
 
     @property
     def dimension_name(self) -> str:
-        return "key"
+        return "short_code"
 
 
 class AggregationStrategyFactory:
@@ -457,7 +457,7 @@ class AggregationStrategyFactory:
         "country": CountryAggregationStrategy,
         "city": CityAggregationStrategy,
         "referrer": ReferrerAggregationStrategy,
-        "key": KeyAggregationStrategy,
+        "short_code": ShortCodeAggregationStrategy,
     }
 
     @classmethod

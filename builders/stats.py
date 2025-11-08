@@ -6,7 +6,6 @@ from zoneinfo import ZoneInfo, available_timezones
 
 from utils.mongo_utils import (
     clicks_collection,
-    validate_url_ownership,
     check_url_stats_privacy,
 )
 from utils.aggregation_strategies import AggregationStrategyFactory
@@ -23,8 +22,7 @@ class StatsQueryBuilder:
         self.error: Optional[tuple[Response, int]] = None
 
         # Query parameters
-        self.scope: str = "all"  # "all" | "url" | "anon"
-        self.url_id: Optional[str] = None
+        self.scope: str = "all"  # "all" | "anon"
         self.short_code: Optional[str] = None
         self.start_date: Optional[datetime] = None
         self.end_date: Optional[datetime] = None
@@ -34,7 +32,7 @@ class StatsQueryBuilder:
         self.timezone: str = "UTC"  # IANA timezone for output formatting
 
         # Allowed values
-        self.allowed_scopes = {"all", "url", "anon"}
+        self.allowed_scopes = {"all", "anon"}
         self.allowed_group_by = {
             "time",
             "browser",
@@ -43,12 +41,19 @@ class StatsQueryBuilder:
             "country",
             "city",
             "referrer",
-            "key",
+            "short_code",
         }
         self.allowed_metrics = {"clicks", "unique_clicks"}
         # Allowed dimensions for filtering statistics
         # TODO: "device" is disabled until reliable device detection is implemented
-        self.allowed_filters = {"browser", "os", "country", "city", "referrer", "key"}
+        self.allowed_filters = {
+            "browser",
+            "os",
+            "country",
+            "city",
+            "referrer",
+            "short_code",
+        }
 
     def _fail(self, body: dict, status: int) -> "StatsQueryBuilder":
         self.error = (jsonify(body), status)
@@ -114,20 +119,7 @@ class StatsQueryBuilder:
                 400,
             )
 
-        if self.scope == "url":
-            self.url_id = self.args.get("url_id", "").strip()
-            if not self.url_id:
-                return self._fail({"error": "url_id is required when scope=url"}, 400)
-            if self.owner_id is None:
-                return self._fail(
-                    {"error": "authentication required for scope=url"}, 401
-                )
-
-            # Validate URL ownership - ensure the URL belongs to the authenticated user
-            if not validate_url_ownership(self.url_id, self.owner_id):
-                return self._fail({"error": "url not found or access denied"}, 404)
-
-        elif self.scope == "anon":
+        if self.scope == "anon":
             self.short_code = self.args.get("short_code", "").strip()
             if not self.short_code:
                 return self._fail(
@@ -210,7 +202,21 @@ class StatsQueryBuilder:
         for filter_name in self.allowed_filters:
             filter_value = self.args.get(filter_name)
             if filter_value:
+                # Skip short_code parameter when scope=anon (it's the scope param, not a filter)
+                if filter_name == "short_code" and self.scope == "anon":
+                    continue
                 self.filters[filter_name] = self._parse_comma_separated(filter_value)
+
+        # SECURITY: Prevent filter-based scope bypass
+        # In scope=anon, the short_code is already locked by the scope parameter
+        # Allowing short_code filter would let users bypass privacy checks
+        if self.scope == "anon" and "short_code" in self.filters:
+            return self._fail(
+                {
+                    "error": "short_code filter not allowed with scope=anon - short_code is already specified"
+                },
+                400,
+            )
 
         return self
 
@@ -282,10 +288,6 @@ class StatsQueryBuilder:
                 builder = StatsQueryBuilderFactory.for_user_stats(
                     str(self.owner_id), self.start_date, self.end_date
                 )
-            elif self.scope == "url":
-                builder = StatsQueryBuilderFactory.for_url_stats(
-                    str(self.owner_id), self.url_id, self.start_date, self.end_date
-                )
             elif self.scope == "anon":
                 builder = StatsQueryBuilderFactory.for_anonymous_stats(
                     self.short_code, self.start_date, self.end_date
@@ -352,9 +354,7 @@ class StatsQueryBuilder:
         }
 
         # Add scope-specific metadata
-        if self.scope == "url":
-            response["url_id"] = self.url_id
-        elif self.scope == "anon":
+        if self.scope == "anon":
             response["short_code"] = self.short_code
 
         # Add time range (always present now due to defaults) - converted to user timezone
@@ -391,7 +391,7 @@ class StatsQueryBuilder:
                     # Handle different field names from different strategies
                     if dimension == "time":
                         dimension_value = result.get("date", "unknown")
-                    elif dimension == "key":
+                    elif dimension == "short_code":
                         dimension_value = result.get(
                             "short_code", result.get("alias", "unknown")
                         )
@@ -459,8 +459,8 @@ class StatsQueryBuilder:
         try:
             # Build query
             query = self._build_click_query()
-            if not query and self.scope in ["url", "anon"]:
-                return self._fail({"error": "invalid url_id or short_code"}, 400)
+            if not query and self.scope == "anon":
+                return self._fail({"error": "invalid short_code"}, 400)
 
             # Get summary statistics
             summary = self._get_summary_stats(query)

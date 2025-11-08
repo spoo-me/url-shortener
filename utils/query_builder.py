@@ -16,16 +16,10 @@ class StatsQueryBuilder:
         self,
         owner_id: Optional[str],
         scope: str,
-        url_id: Optional[str] = None,
         short_code: Optional[str] = None,
     ) -> "StatsQueryBuilder":
         """Add scope-based filtering to the query"""
         if scope == "all" and owner_id:
-            self.scope_filters["meta.owner_id"] = (
-                ObjectId(owner_id) if isinstance(owner_id, str) else owner_id
-            )
-        elif scope == "url" and url_id and owner_id:
-            self.scope_filters["meta.url_id"] = ObjectId(url_id)
             self.scope_filters["meta.owner_id"] = (
                 ObjectId(owner_id) if isinstance(owner_id, str) else owner_id
             )
@@ -64,8 +58,13 @@ class StatsQueryBuilder:
 
         # Add dimension filters
         for dimension, values in self.dimension_filters.items():
-            if dimension == "key":
-                # Map "key" filter to the actual field name in MongoDB
+            if dimension == "short_code":
+                # SECURITY: Only apply short_code filter if not already set by scope
+                # This prevents filter-based scope bypass attacks
+                if "meta.short_code" in self.scope_filters:
+                    # Skip - short_code already locked by scope (anon mode)
+                    continue
+                # Map "short_code" filter to the actual field name in MongoDB
                 self.query["meta.short_code"] = {"$in": values}
             elif dimension == "referrer":
                 # Handle special case for "Direct" referrers (null/missing referrer)
@@ -108,20 +107,6 @@ class StatsQueryBuilderFactory:
         return (
             StatsQueryBuilder()
             .with_scope(owner_id, "all")
-            .with_time_range(start_date, end_date)
-        )
-
-    @staticmethod
-    def for_url_stats(
-        owner_id: str,
-        url_id: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-    ) -> StatsQueryBuilder:
-        """Create a query builder for specific URL statistics"""
-        return (
-            StatsQueryBuilder()
-            .with_scope(owner_id, "url", url_id=url_id)
             .with_time_range(start_date, end_date)
         )
 

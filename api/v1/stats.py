@@ -36,28 +36,27 @@ def stats_v1() -> tuple[Response, int]:
 
     ### Required
     - **scope** (string): Statistics scope
-      - `"all"` - All URLs owned by authenticated user
-      - `"url"` - Single URL (requires `url_id` + auth + ownership)
-      - `"anon"` - Anonymous access (requires `short_code` + public stats)
+      - `"all"` - All URLs owned by authenticated user (requires authentication)
+      - `"anon"` - Anonymous access to single URL (requires `short_code` + public stats)
 
     ### Conditional
-    - **url_id** (string): MongoDB ObjectId (required for `scope=url`)
     - **short_code** (string): URL alias (required for `scope=anon`)
+    - Cannot pass `short_code` in filters when scope is `anon`
 
     ### Optional
     - **start_date** (string): ISO 8601 or Unix timestamp (default: 7 days ago)
     - **end_date** (string): ISO 8601 or Unix timestamp (default: now)
     - **timezone** (string): IANA timezone for output formatting (default: "UTC")
       - Examples: "America/New_York", "Europe/London", "Asia/Kolkata"
-      - Affects only output display (summary timestamps, time buckets, metadata)
-      - Does not affect data fetching or aggregation logic
     - **group_by** (string): Comma-separated dimensions (default: "time")
-      - Options: time, browser, os, device, country, city, referrer, key
+      - Options: time, browser, os, device, country, city, referrer, short_code
     - **metrics** (string): Comma-separated metrics (default: "clicks,unique_clicks")
       - Options: clicks, unique_clicks
     - **filters** (JSON string): Dimension filters
-      - Example: `{"browser": ["Chrome", "Firefox"], "country": ["US", "UK"]}`
-    - **browser, os, device, country, referrer** (string): Individual filters
+      - Available dimensions: browser, os, device, country, city, referrer, short_code
+      - Example: `{"browser": ["Chrome", "Firefox"], "short_code": ["abc123", "xyz789"]}`
+    - **browser, os, device, country, referrer, short_code** (string): Individual filters
+      - Example: `?browser=Chrome,Firefox&country=US,CA`
 
     ## Response Format
     ```json

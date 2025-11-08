@@ -1,8 +1,8 @@
 // Statistics Dashboard JavaScript - Using new /api/v1/stats endpoint
 // Phase 1 Refactor: introduce configuration-driven categorical chart builder & shared constants
 
-// Central list of filter types used across UI & API param building (keeps country & key aligned)
-const FILTER_TYPES = ['browser', 'os', 'country', 'city', 'referrer', 'key'];
+// Central list of filter types used across UI & API param building (keeps country & short_code aligned)
+const FILTER_TYPES = ['browser', 'os', 'country', 'city', 'referrer', 'short_code'];
 
 // Top N threshold for categorical charts before grouping remaining into "Others"
 const TOP_N = 7;
@@ -118,11 +118,11 @@ const CHART_CONFIGS = {
         },
         defaultMode: 'compare'
     },
-    key: {
+    short_code: {
         id: 'keyChart',
-        metricBase: 'key',
-        totalKey: 'clicks_by_key',
-        uniqueKey: 'unique_clicks_by_key',
+        metricBase: 'short_code',
+        totalKey: 'clicks_by_short_code',
+        uniqueKey: 'unique_clicks_by_short_code',
         totalLabel: 'Total Clicks',
         uniqueLabel: 'Unique Clicks',
         colors: {
@@ -232,7 +232,7 @@ class StatisticsDashboard {
             country: [],
             city: [],
             referrer: [],
-            key: []
+            short_code: []
         };
         this.pendingChanges = new Set(); // Track which categories have pending changes
         this.currentFilterType = null; // Track which filter type is currently being edited
@@ -295,7 +295,7 @@ class StatisticsDashboard {
      * Process chart data to show only top 7 items and group the rest as "Others"
      * @param {Array} data - Array of data objects with value and label properties
      * @param {string} valueKey - Key for the numeric value (e.g., 'clicks', 'unique_clicks')
-     * @param {string} labelKey - Key for the label (e.g., 'browser', 'city', 'key')
+     * @param {string} labelKey - Key for the label (e.g., 'browser', 'city', 'short_code')
      * @returns {Object} - Processed data with labels and values arrays
      */
     processTopDataWithOthers(data, valueKey, labelKey) {
@@ -367,7 +367,7 @@ class StatisticsDashboard {
                 const dropdown = autoRefreshBtn.nextElementSibling;
                 if (dropdown && dropdown.classList.contains('dropdown-menu')) {
                     const isOpen = dropdown.classList.contains('show');
-                    
+
                     // Close all other modals first
                     closeAllModals(this);
 
@@ -611,6 +611,7 @@ class StatisticsDashboard {
         valuesList.innerHTML = '';
 
         const options = this.availableOptions[filterType] || [];
+
         if (options.length === 0) {
             valuesList.innerHTML = '<div class="empty">No data available</div>';
             return;
@@ -811,12 +812,12 @@ class StatisticsDashboard {
                         code: item[type], // Keep the code for reference
                         count: item.clicks || item.total_clicks || 0
                     };
-                } else if (type === 'key') {
-                    // For keys, handle both "key" and "short_code" fields
-                    const keyValue = item.key || item.short_code || item[type];
+                } else if (type === 'short_code') {
+                    // For short_code, get the short_code field from API response
+                    const shortCodeValue = item.short_code || item[type];
                     return {
-                        value: keyValue,
-                        label: keyValue,
+                        value: shortCodeValue,
+                        label: shortCodeValue,
                         count: item.clicks || item.total_clicks || 0
                     };
                 } else {
@@ -951,7 +952,7 @@ class StatisticsDashboard {
             country: 'countries',
             city: 'cities',
             referrer: 'referrers',
-            key: 'short URLs'
+            short_code: 'short URLs'
         };
 
         if (selectedFilters.length === 0) {
@@ -977,8 +978,6 @@ class StatisticsDashboard {
             trigger.classList.add('active');
         }
     }
-
-
 
     setupCascadeControls() {
         // Handle cascade button clicks
@@ -1216,20 +1215,20 @@ class StatisticsDashboard {
     }
 
     getKeyTableData() {
-        const clicksByKey = this.apiData.metrics?.clicks_by_key || [];
-        const uniqueClicksByKey = this.apiData.metrics?.unique_clicks_by_key || [];
+        const clicksByShortCode = this.apiData.metrics?.clicks_by_short_code || [];
+        const uniqueClicksByShortCode = this.apiData.metrics?.unique_clicks_by_short_code || [];
 
-        // Create a map for quick lookup of unique clicks by key
+        // Create a map for quick lookup of unique clicks by short_code
         const uniqueClicksMap = new Map();
-        uniqueClicksByKey.forEach(item => {
-            uniqueClicksMap.set(item.key, item.unique_clicks || item.value || 0);
+        uniqueClicksByShortCode.forEach(item => {
+            uniqueClicksMap.set(item.short_code, item.unique_clicks || item.value || 0);
         });
 
         // Return ALL data for tables (not limited to top 7)
-        return clicksByKey.map(item => ({
-            label: item.key || 'Unknown',
+        return clicksByShortCode.map(item => ({
+            label: item.short_code || 'Unknown',
             clicks: item.clicks || item.value || 0,
-            unique_clicks: uniqueClicksMap.get(item.key) || 0
+            unique_clicks: uniqueClicksMap.get(item.short_code) || 0
         }));
     }
 
@@ -1438,7 +1437,7 @@ class StatisticsDashboard {
             const { signal } = this.activeRequestController;
             const params = new URLSearchParams({
                 scope: 'all',
-                group_by: 'time,browser,os,country,city,referrer,key',
+                group_by: 'time,browser,os,country,city,referrer,short_code',
                 metrics: 'clicks,unique_clicks'
             });
 
@@ -1543,7 +1542,7 @@ class StatisticsDashboard {
                 case 'os': this.updateOsChart(data); break;
                 case 'referrer': this.updateReferrerChart(data); break;
                 case 'city': this.updateCityChart(data); break;
-                case 'key': this.updateKeyChart(data); break;
+                case 'short_code': this.updateKeyChart(data); break;
             }
         });
         this.updateCountryChart(data);
@@ -1815,7 +1814,7 @@ class StatisticsDashboard {
 
     updateCityChart(data, option = null) { this.updateCategoricalChart('city', data, option); }
 
-    updateKeyChart(data, option = null) { this.updateCategoricalChart('key', data, option); }
+    updateKeyChart(data, option = null) { this.updateCategoricalChart('short_code', data, option); }
 
     formatNumber(num) {
         if (num >= 1000000) {
