@@ -54,7 +54,9 @@ def dashboard_keys():
 
 @dashboard_bp.route("/statistics", methods=["GET"])
 @requires_auth
-@limiter.limit("60 per minute", key_func=rate_limit_key_for_request) # same as authenticated limit in stats API
+@limiter.limit(
+    "60 per minute", key_func=rate_limit_key_for_request
+)  # same as authenticated limit in stats API
 def dashboard_statistics():
     user = get_user_by_id(g.user_id)
     if not user:

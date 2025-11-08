@@ -275,10 +275,10 @@ def resolve_owner_id_from_request():
     """Resolve the authenticated user id from either API key or JWT.
 
     - API key: Authorization: Bearer spoo_<raw>
-      - Validates revocation/expiry and sets g.api_key and request.api_key
-      - Returns ObjectId of user
+        - Validates revocation/expiry and sets g.api_key and request.api_key
+        - Returns ObjectId of user
     - JWT: Authorization: Bearer <jwt> or access_token cookie
-      - Returns ObjectId of user
+        - Returns ObjectId of user
     - Otherwise returns None
     """
     auth_header = request.headers.get("Authorization", "")
