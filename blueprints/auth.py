@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request, g
 
-from .limiter import limiter
+from .limiter import limiter, rate_limit_key_for_request
 from utils.auth_utils import (
     verify_password,
     hash_password,
@@ -93,6 +93,7 @@ def logout():
 
 @auth.route("/auth/me", methods=["GET"])
 @requires_auth
+@limiter.limit("60/minute", key_func=rate_limit_key_for_request)
 def me():
     user_id = g.user_id
     user = get_user_by_id(user_id)

@@ -15,9 +15,7 @@ limiter = Limiter(
 
 @limiter.request_filter
 def ip_whitelist():
-    if request.method == "GET":
-        return True
-
+    """Skip rate limiting for whitelisted IPs"""
     bypasses = ip_bypasses.find()
     bypasses = [doc["_id"] for doc in bypasses]
 

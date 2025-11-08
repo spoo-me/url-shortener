@@ -10,13 +10,14 @@ from utils.mongo_utils import (
     users_collection,
 )
 from utils.auth_utils import get_user_profile
-from blueprints.limiter import limiter
+from blueprints.limiter import limiter, rate_limit_key_for_request
 
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
 
 @dashboard_bp.route("/", methods=["GET"])
+@limiter.limit("60 per minute", key_func=rate_limit_key_for_request)
 @requires_auth
 def dashboard():
     # Redirect to links page as the default dashboard view
@@ -25,6 +26,7 @@ def dashboard():
 
 @dashboard_bp.route("/links", methods=["GET"])
 @requires_auth
+@limiter.limit("60 per minute", key_func=rate_limit_key_for_request)
 def dashboard_links():
     user = get_user_by_id(g.user_id)
     if not user:
@@ -37,6 +39,7 @@ def dashboard_links():
 
 
 @dashboard_bp.route("/keys", methods=["GET"])
+@limiter.limit("60 per minute", key_func=rate_limit_key_for_request)
 @requires_auth
 def dashboard_keys():
     user = get_user_by_id(g.user_id)
@@ -51,6 +54,7 @@ def dashboard_keys():
 
 @dashboard_bp.route("/statistics", methods=["GET"])
 @requires_auth
+@limiter.limit("60 per minute", key_func=rate_limit_key_for_request) # same as authenticated limit in stats API
 def dashboard_statistics():
     user = get_user_by_id(g.user_id)
     if not user:
@@ -64,6 +68,7 @@ def dashboard_statistics():
 
 @dashboard_bp.route("/settings", methods=["GET"])
 @requires_auth
+@limiter.limit("60 per minute", key_func=rate_limit_key_for_request)
 def dashboard_settings():
     user = get_user_by_id(g.user_id)
     if not user:
@@ -76,7 +81,7 @@ def dashboard_settings():
 
 
 @dashboard_bp.route("/profile-pictures", methods=["GET"])
-@limiter.limit("30 per minute")
+@limiter.limit("30 per minute", key_func=rate_limit_key_for_request)
 @requires_auth
 def get_profile_pictures():
     """Get available profile pictures from connected OAuth providers"""
@@ -104,7 +109,7 @@ def get_profile_pictures():
 
 
 @dashboard_bp.route("/profile-pictures", methods=["POST"])
-@limiter.limit("5 per minute")
+@limiter.limit("5 per minute", key_func=rate_limit_key_for_request)
 @requires_auth
 def set_profile_picture():
     """Set user's profile picture from available options"""

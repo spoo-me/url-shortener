@@ -111,6 +111,7 @@ def create_api_key():
 
 
 @api_v1.route("/keys", methods=["GET"])
+@limiter.limit("60 per minute", key_func=rate_limit_key_for_request)
 @requires_auth
 def list_api_keys():
     keys = list_api_keys_by_user(g.user_id)
