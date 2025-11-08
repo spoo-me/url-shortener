@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from utils.analytics_utils import convert_country_name
 from utils.time_bucket_utils import (
     get_optimal_bucket_config,
@@ -38,6 +39,7 @@ class TimeAggregationStrategy(AggregationStrategy):
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
         time_format: Optional[str] = None,
+        timezone: str = "UTC",
     ):
         """
         Initialize time aggregation strategy.
@@ -46,9 +48,11 @@ class TimeAggregationStrategy(AggregationStrategy):
             start_date: Start date for determining optimal bucket strategy
             end_date: End date for determining optimal bucket strategy
             time_format: Manual override for time format (legacy support)
+            timezone: IANA timezone for output formatting (default: UTC)
         """
         self.start_date = start_date
         self.end_date = end_date
+        self.timezone = timezone
 
         # Determine bucket configuration
         if time_format:
@@ -64,14 +68,17 @@ class TimeAggregationStrategy(AggregationStrategy):
         """Build aggregation pipeline with dynamic time bucketing"""
 
         if self.bucket_config:
-            # Use dynamic bucketing with specialized pipeline
-            time_bucket_expr = create_mongo_time_bucket_pipeline(self.bucket_config)
+            # Use dynamic bucketing with specialized pipeline and timezone support
+            time_bucket_expr = create_mongo_time_bucket_pipeline(
+                self.bucket_config, timezone=self.timezone
+            )
         else:
-            # Legacy mode: use simple dateToString
+            # Legacy mode: use simple dateToString with timezone
             time_bucket_expr = {
                 "$dateToString": {
                     "format": self.time_format,
                     "date": "$clicked_at",
+                    "timezone": self.timezone,
                 }
             }
 
@@ -96,6 +103,7 @@ class TimeAggregationStrategy(AggregationStrategy):
             bucket_value = result["_id"]
 
             # Format the time bucket for display if using dynamic bucketing
+            # NOTE: Buckets are already in user's timezone from MongoDB aggregation
             if self.bucket_config:
                 display_value = format_time_bucket_display(
                     bucket_value, self.bucket_config
@@ -116,12 +124,78 @@ class TimeAggregationStrategy(AggregationStrategy):
             )
 
         # Fill missing buckets if using dynamic bucketing and we have date range
+        # NOTE: We need to convert start/end dates to user timezone for proper bucket filling
         if self.bucket_config and self.start_date and self.end_date:
+            # Convert date range to user timezone for bucket generation
+            from zoneinfo import ZoneInfo
+
+            user_tz = ZoneInfo(self.timezone)
+            start_in_tz = self.start_date.astimezone(user_tz)
+            end_in_tz = self.end_date.astimezone(user_tz)
+
             formatted_results = fill_missing_buckets(
-                formatted_results, self.start_date, self.end_date, self.bucket_config
+                formatted_results, start_in_tz, end_in_tz, self.bucket_config
             )
 
         return formatted_results
+
+    def _convert_bucket_to_timezone(self, bucket_str: str) -> str:
+        """Convert UTC bucket timestamp to user's timezone"""
+        if self.timezone == "UTC":
+            return bucket_str  # No conversion needed
+
+        try:
+            user_tz = ZoneInfo(self.timezone)
+
+            # Parse the bucket string based on its format
+            if self.bucket_config:
+                strategy = self.bucket_config.strategy.value
+
+                if "minute" in strategy or "hourly" in strategy:
+                    # Format: "2025-01-01 14:30" or "2025-01-01 14:00"
+                    dt = datetime.strptime(bucket_str, "%Y-%m-%d %H:%M")
+                elif "daily" in strategy:
+                    # Format: "2025-01-01"
+                    dt = datetime.strptime(bucket_str, "%Y-%m-%d")
+                elif "weekly" in strategy:
+                    # Format: "2025-W01" - keep as is for now
+                    return bucket_str
+                elif "monthly" in strategy:
+                    # Format: "2025-01"
+                    dt = datetime.strptime(bucket_str, "%Y-%m")
+                else:
+                    return bucket_str
+            else:
+                # Legacy mode - try common formats
+                try:
+                    dt = datetime.strptime(bucket_str, "%Y-%m-%d %H:%M")
+                except ValueError:
+                    try:
+                        dt = datetime.strptime(bucket_str, "%Y-%m-%d")
+                    except ValueError:
+                        return bucket_str
+
+            # Treat parsed datetime as UTC and convert to user timezone
+            from datetime import timezone as dt_timezone
+
+            dt_utc = dt.replace(tzinfo=dt_timezone.utc)
+            dt_user = dt_utc.astimezone(user_tz)
+
+            # Format back to string in the same format
+            if self.bucket_config:
+                strategy = self.bucket_config.strategy.value
+                if "minute" in strategy or "hourly" in strategy:
+                    return dt_user.strftime("%Y-%m-%d %H:%M")
+                elif "daily" in strategy:
+                    return dt_user.strftime("%Y-%m-%d")
+                elif "monthly" in strategy:
+                    return dt_user.strftime("%Y-%m")
+
+            return dt_user.strftime("%Y-%m-%d %H:%M")
+
+        except Exception as e:
+            print(f"Error converting bucket to timezone: {e}")
+            return bucket_str  # Return original on error
 
     @property
     def dimension_name(self) -> str:
@@ -135,12 +209,14 @@ class TimeAggregationStrategy(AggregationStrategy):
                 "interval_minutes": self.bucket_config.interval_minutes,
                 "mongo_format": self.bucket_config.mongo_format,
                 "display_format": self.bucket_config.display_format,
+                "timezone": self.timezone,
             }
         else:
             return {
                 "strategy": "legacy",
                 "mongo_format": self.time_format,
                 "display_format": self.time_format,
+                "timezone": self.timezone,
             }
 
 

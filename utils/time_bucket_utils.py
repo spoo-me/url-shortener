@@ -132,7 +132,9 @@ def get_optimal_bucket_config(
 
 
 def create_mongo_time_bucket_pipeline(
-    bucket_config: TimeBucketConfig, clicked_at_field: str = "clicked_at"
+    bucket_config: TimeBucketConfig,
+    clicked_at_field: str = "clicked_at",
+    timezone: str = "UTC",
 ) -> Dict[str, Any]:
     """
     Create MongoDB aggregation pipeline stage for time bucketing.
@@ -142,27 +144,53 @@ def create_mongo_time_bucket_pipeline(
     Args:
         bucket_config: The bucket configuration to use
         clicked_at_field: Name of the datetime field in the collection
+        timezone: IANA timezone for bucketing (default: UTC)
 
     Returns:
         Dict containing the MongoDB aggregation stage for time bucketing
     """
     if bucket_config.strategy == TimeBucketStrategy.MINUTE_10:
-        # For 10-minute buckets, we need to round down to the nearest 10 minutes
+        # For 10-minute buckets, extract parts in target timezone, round minutes, then format
         return {
             "$dateToString": {
                 "format": "%Y-%m-%d %H:%M",
                 "date": {
                     "$dateFromParts": {
-                        "year": {"$year": f"${clicked_at_field}"},
-                        "month": {"$month": f"${clicked_at_field}"},
-                        "day": {"$dayOfMonth": f"${clicked_at_field}"},
-                        "hour": {"$hour": f"${clicked_at_field}"},
+                        "year": {
+                            "$year": {
+                                "date": f"${clicked_at_field}",
+                                "timezone": timezone,
+                            }
+                        },
+                        "month": {
+                            "$month": {
+                                "date": f"${clicked_at_field}",
+                                "timezone": timezone,
+                            }
+                        },
+                        "day": {
+                            "$dayOfMonth": {
+                                "date": f"${clicked_at_field}",
+                                "timezone": timezone,
+                            }
+                        },
+                        "hour": {
+                            "$hour": {
+                                "date": f"${clicked_at_field}",
+                                "timezone": timezone,
+                            }
+                        },
                         "minute": {
                             "$multiply": [
                                 {
                                     "$floor": {
                                         "$divide": [
-                                            {"$minute": f"${clicked_at_field}"},
+                                            {
+                                                "$minute": {
+                                                    "date": f"${clicked_at_field}",
+                                                    "timezone": timezone,
+                                                }
+                                            },
                                             10,
                                         ]
                                     }
@@ -170,16 +198,19 @@ def create_mongo_time_bucket_pipeline(
                                 10,
                             ]
                         },
+                        "timezone": timezone,
                     }
                 },
+                "timezone": timezone,
             }
         }
     else:
-        # For other strategies, use standard dateToString
+        # For other strategies, use standard dateToString with timezone
         return {
             "$dateToString": {
                 "format": bucket_config.mongo_format,
                 "date": f"${clicked_at_field}",
+                "timezone": timezone,
             }
         }
 
@@ -372,10 +403,11 @@ def fill_missing_buckets(
     # Generate all expected buckets
     all_buckets = generate_complete_time_buckets(start_date, end_date, bucket_config)
 
-    # Create a lookup map of actual results
+    # Create a lookup map of actual results - use raw_bucket for matching
     actual_map = {}
     for result in actual_results:
-        bucket_key = result.get("date", result.get("raw_bucket", ""))
+        # Use the date field for matching (already formatted)
+        bucket_key = result.get("date", "")
         actual_map[bucket_key] = result
 
     # Fill in complete results
@@ -387,7 +419,7 @@ def fill_missing_buckets(
         else:
             # Fill with zero values
             zero_result = {
-                "date": format_time_bucket_display(bucket, bucket_config),
+                "date": bucket,  # Use the generated bucket directly
                 "total_clicks": 0,
                 "unique_clicks": 0,
                 "bucket_strategy": bucket_config.strategy.value,

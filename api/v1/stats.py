@@ -47,6 +47,10 @@ def stats_v1() -> tuple[Response, int]:
     ### Optional
     - **start_date** (string): ISO 8601 or Unix timestamp (default: 7 days ago)
     - **end_date** (string): ISO 8601 or Unix timestamp (default: now)
+    - **timezone** (string): IANA timezone for output formatting (default: "UTC")
+      - Examples: "America/New_York", "Europe/London", "Asia/Kolkata"
+      - Affects only output display (summary timestamps, time buckets, metadata)
+      - Does not affect data fetching or aggregation logic
     - **group_by** (string): Comma-separated dimensions (default: "time")
       - Options: time, browser, os, device, country, city, referrer, key
     - **metrics** (string): Comma-separated metrics (default: "clicks,unique_clicks")
@@ -59,27 +63,32 @@ def stats_v1() -> tuple[Response, int]:
     ```json
     {
       "scope": "all",
+      "timezone": "America/New_York",
       "group_by": ["time"],
       "time_range": {
-        "start_date": "2025-01-01T00:00:00Z",
-        "end_date": "2025-01-08T00:00:00Z"
+        "start_date": "2024-12-31T19:00:00-05:00",
+        "end_date": "2025-01-07T19:00:00-05:00"
       },
       "summary": {
         "total_clicks": 150,
         "unique_clicks": 89,
-        "first_click": "2025-01-01T10:30:00Z",
-        "last_click": "2025-01-07T18:45:00Z",
+        "first_click": "2025-01-01T05:30:00-05:00",
+        "last_click": "2025-01-07T13:45:00-05:00",
         "avg_redirection_time": 142.35
       },
       "metrics": {
         "clicks_by_time": [
-          {"time": "2025-01-01", "clicks": 25},
-          {"time": "2025-01-02", "clicks": 18}
+          {"time": "2024-12-31", "clicks": 25},
+          {"time": "2025-01-01", "clicks": 18}
         ],
         "unique_clicks_by_time": [
-          {"time": "2025-01-01", "unique_clicks": 20},
-          {"time": "2025-01-02", "unique_clicks": 15}
+          {"time": "2024-12-31", "unique_clicks": 20},
+          {"time": "2025-01-01", "unique_clicks": 15}
         ]
+      },
+      "time_bucket_info": {
+        "strategy": "daily",
+        "timezone": "America/New_York"
       }
     }
     ```
@@ -105,5 +114,6 @@ def stats_v1() -> tuple[Response, int]:
         .parse_filters()
         .parse_group_by()
         .parse_metrics()
+        .parse_timezone()
     )
     return builder.build()

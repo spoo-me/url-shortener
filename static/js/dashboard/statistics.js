@@ -1461,6 +1461,10 @@ class StatisticsDashboard {
             params.append('start_date', startDate.toISOString());
             params.append('end_date', endDate.toISOString());
 
+            // Auto-detect and send user's timezone for output formatting
+            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            params.append('timezone', userTimezone);
+
             // Add active filters to the request
             const activeFilters = this.filterManager.getActiveFilters();
             Object.keys(activeFilters).forEach(filterType => {

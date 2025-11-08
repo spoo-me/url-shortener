@@ -2,6 +2,7 @@ from flask import request, jsonify, Response
 from datetime import datetime, timezone, timedelta
 import json
 from typing import Optional, Any, List, Dict
+from zoneinfo import ZoneInfo, available_timezones
 
 from utils.mongo_utils import (
     clicks_collection,
@@ -30,6 +31,7 @@ class StatsQueryBuilder:
         self.filters: Dict[str, List[str]] = {}
         self.group_by: List[str] = []
         self.metrics: List[str] = ["clicks", "unique_clicks"]
+        self.timezone: str = "UTC"  # IANA timezone for output formatting
 
         # Allowed values
         self.allowed_scopes = {"all", "url", "anon"}
@@ -71,6 +73,28 @@ class StatsQueryBuilder:
         if isinstance(value, list):
             return [str(item).strip() for item in value]
         return [item.strip() for item in str(value).split(",") if item.strip()]
+
+    def _convert_datetime_to_timezone(
+        self, dt: Optional[datetime]
+    ) -> Optional[datetime]:
+        """Convert UTC datetime to user's timezone for output"""
+        if dt is None:
+            return None
+        try:
+            # Ensure datetime is in UTC
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            # Convert to user's timezone
+            user_tz = ZoneInfo(self.timezone)
+            return dt.astimezone(user_tz)
+        except Exception as e:
+            print(f"Timezone conversion error: {e}")
+            return dt  # Return original if conversion fails
+
+    def _format_datetime_in_timezone(self, dt: Optional[datetime]) -> Optional[str]:
+        """Format datetime as ISO string in user's timezone"""
+        converted = self._convert_datetime_to_timezone(dt)
+        return converted.isoformat() if converted else None
 
     def parse_auth_scope(self) -> "StatsQueryBuilder":
         api_key_doc = getattr(request, "api_key", None)
@@ -221,6 +245,35 @@ class StatsQueryBuilder:
 
         return self
 
+    def parse_timezone(self) -> "StatsQueryBuilder":
+        """Parse and validate timezone parameter for output formatting"""
+        timezone_raw = self.args.get("timezone", "UTC").strip()
+
+        # Map of legacy/deprecated timezone names to current IANA names
+        timezone_aliases = {
+            "Asia/Calcutta": "Asia/Kolkata",
+            "Asia/Katmandu": "Asia/Kathmandu",
+            "Asia/Rangoon": "Asia/Yangon",
+            "Asia/Saigon": "Asia/Ho_Chi_Minh",
+            "US/Eastern": "America/New_York",
+            "US/Central": "America/Chicago",
+            "US/Mountain": "America/Denver",
+            "US/Pacific": "America/Los_Angeles",
+        }
+
+        # Check if it's an alias and convert to canonical name
+        if timezone_raw in timezone_aliases:
+            timezone_raw = timezone_aliases[timezone_raw]
+
+        # Validate timezone - fallback to UTC if invalid
+        if timezone_raw not in available_timezones():
+            print(f"Invalid timezone '{timezone_raw}' provided, falling back to UTC")
+            self.timezone = "UTC"
+        else:
+            self.timezone = timezone_raw
+
+        return self
+
     def _build_click_query(self) -> Dict[str, Any]:
         """Build MongoDB query for clicks collection using builder pattern"""
         try:
@@ -271,6 +324,7 @@ class StatsQueryBuilder:
                         group_dimension,
                         start_date=self.start_date,
                         end_date=self.end_date,
+                        timezone=self.timezone,  # Pass timezone for output conversion
                     )
                 else:
                     strategy = AggregationStrategyFactory.get(group_dimension)
@@ -293,6 +347,7 @@ class StatsQueryBuilder:
             "scope": self.scope,
             "filters": self.filters,
             "group_by": self.group_by,
+            "timezone": self.timezone,  # Include timezone in response
             "metrics": {},
         }
 
@@ -302,10 +357,10 @@ class StatsQueryBuilder:
         elif self.scope == "anon":
             response["short_code"] = self.short_code
 
-        # Add time range (always present now due to defaults)
+        # Add time range (always present now due to defaults) - converted to user timezone
         response["time_range"] = {
-            "start_date": self.start_date.isoformat() if self.start_date else None,
-            "end_date": self.end_date.isoformat() if self.end_date else None,
+            "start_date": self._format_datetime_in_timezone(self.start_date),
+            "end_date": self._format_datetime_in_timezone(self.end_date),
         }
 
         # Add time bucketing information if time aggregation is used
@@ -313,7 +368,10 @@ class StatsQueryBuilder:
             try:
                 # Create a temporary strategy to get bucket info
                 time_strategy = AggregationStrategyFactory.get(
-                    "time", start_date=self.start_date, end_date=self.end_date
+                    "time",
+                    start_date=self.start_date,
+                    end_date=self.end_date,
+                    timezone=self.timezone,
                 )
                 if hasattr(time_strategy, "get_bucket_info"):
                     response["time_bucket_info"] = time_strategy.get_bucket_info()
@@ -373,12 +431,12 @@ class StatsQueryBuilder:
                 return {
                     "total_clicks": summary.get("total_clicks", 0),
                     "unique_clicks": summary.get("unique_clicks", 0),
-                    "first_click": summary["first_click"].isoformat()
-                    if summary.get("first_click")
-                    else None,
-                    "last_click": summary["last_click"].isoformat()
-                    if summary.get("last_click")
-                    else None,
+                    "first_click": self._format_datetime_in_timezone(
+                        summary.get("first_click")
+                    ),
+                    "last_click": self._format_datetime_in_timezone(
+                        summary.get("last_click")
+                    ),
                     "avg_redirection_time": round(
                         summary.get("avg_redirection_time", 0), 2
                     ),
