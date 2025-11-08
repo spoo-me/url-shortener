@@ -164,6 +164,9 @@ function openKeySuccessModal(token, tokenPrefix) {
     keyElements.successModal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
+    // Reload keys list to show the new key
+    fetchKeys();
+
     // Auto-copy token to clipboard
     setTimeout(async () => {
         try {
@@ -233,6 +236,12 @@ async function createKey() {
         expires_at: expiresAt || undefined
     };
 
+    // Disable button and show loading state
+    const createBtn = keyElements.createBtn;
+    const originalText = createBtn.innerHTML;
+    createBtn.disabled = true;
+    createBtn.innerHTML = '<i class="ti ti-loader" style="animation: spin 1s linear infinite;"></i> Creating...';
+
     try {
         const res = await authFetch('/api/v1/keys', {
             method: 'POST',
@@ -243,14 +252,33 @@ async function createKey() {
         const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-            customTopNotification('KeyCreateError', data.error || 'Failed to create key', 8, 'error');
+            // Close modal first so notification is visible
+            closeCreateKeyModal();
+
+            // Improved error messages
+            let errorMessage = data.error || 'Failed to create key';
+
+            // Handle specific error cases
+            if (res.status === 429 || errorMessage.toLowerCase().includes('ratelimit')) {
+                errorMessage = 'Rate limit exceeded. You can create up to 5 keys per hour. Please try again later.';
+            } else if (errorMessage.includes('maximum') && errorMessage.includes('active keys')) {
+                errorMessage = 'Maximum active keys limit reached (20). Please delete some unused keys first.';
+            }
+
+            customTopNotification('KeyCreateError', errorMessage, 10, 'error');
             return;
         }
 
         openKeySuccessModal(data.token, data.token_prefix);
 
     } catch (error) {
-        customTopNotification('KeyCreateError', 'Failed to create key', 8, 'error');
+        // Close modal on network error too
+        closeCreateKeyModal();
+        customTopNotification('KeyCreateError', 'Network error. Please try again.', 8, 'error');
+    } finally {
+        // Re-enable button and restore original text
+        createBtn.disabled = false;
+        createBtn.innerHTML = originalText;
     }
 }
 
