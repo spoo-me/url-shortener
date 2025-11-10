@@ -59,7 +59,8 @@
     <script>
         function checkURL() {
             var enteredURL = document.getElementById("short_code").value.trim();
-            var regex = /^[^\!@#\$%\^&\*\(\)_\+\/\<\>\?:"\{\}\|\/~]+$/;
+            var regex = /^[^\!@#\$%\^&\*\(\)\+\/\<\>\?:"\{\}\|\/~]+$/;
+
             if (!regex.test(enteredURL)) {
                 document.querySelector(".buttonIn").classList.add("shake");
                 setTimeout(function () { document.querySelector(".buttonIn").classList.remove("shake"); }, 1000);
