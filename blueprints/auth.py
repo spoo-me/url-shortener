@@ -223,6 +223,7 @@ def set_password():
 def login_redirect():
     """Redirect /login to home page to prevent shortened URL conflicts"""
     from flask import redirect
+
     return redirect("/", code=302)
 
 
@@ -231,4 +232,5 @@ def login_redirect():
 def register_redirect():
     """Redirect /register and /signup to home page to prevent shortened URL conflicts"""
     from flask import redirect
+
     return redirect("/", code=302)
