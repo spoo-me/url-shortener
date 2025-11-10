@@ -258,9 +258,8 @@ def oauth_google_link():
         if provider_entry.get("provider") == OAuthProviders.GOOGLE:
             return jsonify({"error": "Google account already linked"}), 409
 
-    # Generate state parameter for CSRF protection with user ID
-    state = generate_oauth_state(OAuthProviders.GOOGLE, "link")
-    state += f"&user_id={g.user_id}"  # Add user ID to state for verification
+    # Generate state parameter for CSRF protection with user ID embedded securely
+    state = generate_oauth_state(OAuthProviders.GOOGLE, "link", user_id=str(g.user_id))
 
     # Get redirect URI (same as login)
     redirect_uri = get_oauth_redirect_url(OAuthProviders.GOOGLE)
@@ -482,9 +481,8 @@ def oauth_github_link():
         if provider_entry.get("provider") == OAuthProviders.GITHUB:
             return jsonify({"error": "GitHub account already linked"}), 409
 
-    # Generate state parameter for CSRF protection with user ID
-    state = generate_oauth_state(OAuthProviders.GITHUB, "link")
-    state += f"&user_id={g.user_id}"  # Add user ID to state for verification
+    # Generate state parameter for CSRF protection with user ID embedded securely
+    state = generate_oauth_state(OAuthProviders.GITHUB, "link", user_id=str(g.user_id))
 
     # Get redirect URI (same as login)
     redirect_uri = get_oauth_redirect_url(OAuthProviders.GITHUB)
@@ -704,9 +702,8 @@ def oauth_discord_link():
         if provider_entry.get("provider") == OAuthProviders.DISCORD:
             return jsonify({"error": "Discord account already linked"}), 409
 
-    # Generate state parameter for CSRF protection with user ID
-    state = generate_oauth_state(OAuthProviders.DISCORD, "link")
-    state += f"&user_id={g.user_id}"  # Add user ID to state for verification
+    # Generate state parameter for CSRF protection with user ID embedded securely
+    state = generate_oauth_state(OAuthProviders.DISCORD, "link", user_id=str(g.user_id))
 
     # Get redirect URI (same as login)
     redirect_uri = get_oauth_redirect_url(OAuthProviders.DISCORD)

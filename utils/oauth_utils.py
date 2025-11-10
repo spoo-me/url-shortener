@@ -95,12 +95,15 @@ def init_oauth(app):
     return oauth, providers
 
 
-def generate_oauth_state(provider: str, action: str = "login") -> str:
+def generate_oauth_state(
+    provider: str, action: str = "login", user_id: Optional[str] = None
+) -> str:
     """Generate a secure state parameter for OAuth flows
 
     Args:
         provider: OAuth provider name (e.g., 'google')
         action: Action being performed ('login' or 'link')
+        user_id: Optional user ID for account linking (must be inside signed state)
 
     Returns:
         Encoded state string
@@ -112,6 +115,10 @@ def generate_oauth_state(provider: str, action: str = "login") -> str:
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
+    # CRITICAL: Include user_id INSIDE the state before signing to prevent tampering
+    if user_id:
+        state_data["user_id"] = user_id
+
     # For simplicity, we'll use a URL-safe encoding
     # TODO: In production, you should sign this with a secret key for better security
     # Consider using JWT or HMAC signing for the state parameter
@@ -121,6 +128,11 @@ def generate_oauth_state(provider: str, action: str = "login") -> str:
         f"nonce={state_data['nonce']}",
         f"timestamp={state_data['timestamp']}",
     ]
+
+    # Include user_id in the state parts if present
+    if user_id:
+        state_parts.append(f"user_id={user_id}")
+
     return "&".join(state_parts)
 
 

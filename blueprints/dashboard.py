@@ -144,9 +144,11 @@ def set_profile_picture():
                     },
                 )
 
-                if result.modified_count > 0:
-                    return jsonify({"message": "Profile picture updated successfully"})
-                else:
+                # Check if the update was successful (idempotent)
+                if not result.acknowledged:
                     return jsonify({"error": "Failed to update profile picture"}), 500
+                if result.matched_count == 0:
+                    return jsonify({"error": "user not found"}), 404
+                return jsonify({"message": "Profile picture updated successfully"})
 
     return jsonify({"error": "Picture not found"}), 404

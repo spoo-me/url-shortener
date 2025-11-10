@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request, g
+from pymongo.errors import DuplicateKeyError
 
 from .limiter import limiter, rate_limit_key_for_request
 from utils.auth_utils import (
@@ -146,6 +147,9 @@ def register():
     try:
         insert_result = users_collection.insert_one(user_doc)
         user_id = insert_result.inserted_id
+    except DuplicateKeyError:
+        # Race condition: email was registered between our check and insert
+        return jsonify({"error": "email already registered"}), 409
     except Exception:
         return jsonify({"error": "failed to create user"}), 500
 
