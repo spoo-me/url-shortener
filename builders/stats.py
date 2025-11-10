@@ -293,7 +293,7 @@ class StatsQueryBuilder:
                     self.short_code, self.start_date, self.end_date
                 )
             else:
-                return {}
+                return self._fail({"error": "invalid scope"}, 400)
 
             # Add dimension filters
             builder.with_filters(self.filters)
@@ -302,7 +302,7 @@ class StatsQueryBuilder:
 
         except Exception as e:
             print(f"Error building query: {e}")
-            return {}
+            return self._fail({"error": "failed to build query"}, 500)
 
     def _build_aggregation_pipeline(
         self, query: Dict[str, Any]

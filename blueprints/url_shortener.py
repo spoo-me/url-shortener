@@ -277,8 +277,10 @@ def result(short_code):
     else:
         # Try new V2 schema first (aliases >=7 by default but custom may be shorter)
         url_data = get_url_v2_by_alias(short_code)
-        v2 = True
-        if not url_data:
+        if url_data:
+            v2 = True
+        else:
+            # Fall back to legacy schema
             url_data = load_url(short_code)
 
     if url_data:

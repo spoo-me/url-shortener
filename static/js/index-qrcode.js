@@ -1,45 +1,48 @@
-// Get all elements with the "stats-button" class
-const statsButtons = document.querySelectorAll('.stats-button');
+// Reusable handler for copy button clicks
+function handleCopyClick(button) {
+    const url = button.getAttribute('data-url');
 
-// Add click event listener to each stats button
-statsButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        const href = button.parentNode.parentNode.parentNode.querySelector('.short-url a').getAttribute('href');
-        const alias = href.replace(/^\//, '');
-        window.location.href = `/stats/${alias}`;
-    });
+    // Create a temporary input element to copy the URL
+    const tempInput = document.createElement('input');
+    tempInput.value = url;
+    document.body.appendChild(tempInput);
+
+    // Select the URL in the input element
+    tempInput.select();
+    tempInput.setSelectionRange(0, 99999); // For mobile devices
+
+    // Copy the URL to the clipboard
+    document.execCommand('copy');
+
+    // Remove the temporary input element
+    document.body.removeChild(tempInput);
+
+    // Provide visual feedback to indicate successful copying
+    button.innerText = 'Copied!';
+    setTimeout(() => {
+        button.innerText = 'Copy';
+    }, 1000);
+}
+
+// Reusable handler for stats button clicks
+function handleStatsClick(button) {
+    const href = button.parentNode.parentNode.parentNode.querySelector('.short-url a').getAttribute('href');
+    const alias = href.replace(/^\//, '');
+    window.location.href = `/stats/${alias}`;
+}
+
+// Single document-level event delegation for copy and stats buttons
+document.addEventListener('click', (e) => {
+    // Handle copy button clicks
+    if (e.target.classList.contains('copy-button')) {
+        handleCopyClick(e.target);
+    }
+    // Handle stats button clicks
+    else if (e.target.classList.contains('stats-button')) {
+        handleStatsClick(e.target);
+    }
 });
 
-
-const copyButtons = document.querySelectorAll('.copy-button');
-// Add click event listener to each copy button
-copyButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        // Get the URL from the data-url attribute of the button
-        const url = button.getAttribute('data-url');
-
-        // Create a temporary input element to copy the URL
-        const tempInput = document.createElement('input');
-        tempInput.value = url;
-        document.body.appendChild(tempInput);
-
-        // Select the URL in the input element
-        tempInput.select();
-        tempInput.setSelectionRange(0, 99999); // For mobile devices
-
-        // Copy the URL to the clipboard
-        document.execCommand('copy');
-
-        // Remove the temporary input element
-        document.body.removeChild(tempInput);
-
-        // Provide visual feedback to indicate successful copying
-        button.innerText = 'Copied!';
-        setTimeout(() => {
-            button.innerText = 'Copy';
-        }, 1000);
-    });
-});
 // Get all elements with the "qr-code" class
 function renderRecentURLs() {
     const container = document.getElementById('recentURLs');
@@ -75,33 +78,8 @@ function renderRecentURLs() {
         container.appendChild(wrapper);
     });
 
-    // Re-bind copy and stats buttons for newly rendered items
-    const copyButtonsDynamic = container.querySelectorAll('.copy-button');
-    copyButtonsDynamic.forEach(button => {
-        button.addEventListener('click', () => {
-            const url = button.getAttribute('data-url');
-            const tempInput = document.createElement('input');
-            tempInput.value = url;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            tempInput.setSelectionRange(0, 99999);
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-            button.innerText = 'Copied!';
-            setTimeout(() => { button.innerText = 'Copy'; }, 1000);
-        });
-    });
-
-    const statsButtonsDynamic = container.querySelectorAll('.stats-button');
-    statsButtonsDynamic.forEach(button => {
-        button.addEventListener('click', () => {
-            const href = button.parentNode.parentNode.parentNode.querySelector('.short-url a').getAttribute('href');
-            const alias = href.replace(/^\//, '');
-            window.location.href = `/stats/${alias}`;
-        });
-    });
-
     // Generate QR codes for newly rendered items
+    // Note: Event listeners for copy/stats buttons are handled by document-level delegation
     const qrCodeElements = container.querySelectorAll('.qr-code');
     qrCodeElements.forEach(element => {
         const url = element.getAttribute('data-url');

@@ -217,3 +217,18 @@ def set_password():
     except Exception as e:
         print(f"Error setting password: {e}")
         return jsonify({"error": "failed to set password"}), 500
+
+
+@auth.route("/login", methods=["GET"])
+def login_redirect():
+    """Redirect /login to home page to prevent shortened URL conflicts"""
+    from flask import redirect
+    return redirect("/", code=302)
+
+
+@auth.route("/register", methods=["GET"])
+@auth.route("/signup", methods=["GET"])
+def register_redirect():
+    """Redirect /register and /signup to home page to prevent shortened URL conflicts"""
+    from flask import redirect
+    return redirect("/", code=302)

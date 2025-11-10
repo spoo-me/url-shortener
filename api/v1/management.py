@@ -8,6 +8,7 @@ from blueprints.limiter import (
 )
 from utils.mongo_utils import urls_v2_collection
 from builders import UpdateUrlRequestBuilder
+from cache import cache_query as cq
 
 from . import api_v1
 
@@ -88,10 +89,22 @@ def delete_url_v1(url_id: str) -> tuple[Response, int]:
     if builder.error:
         return builder.error
 
+    # Get the alias/short_code before deletion for cache invalidation
+    url_doc = builder.existing_doc
+    short_code = url_doc.get("alias") if url_doc else None
+
     try:
         result = urls_v2_collection.delete_one({"_id": url_oid})
         if result.deleted_count == 0:
             return jsonify({"error": "URL not found"}), 404
+
+        # Invalidate cache after successful deletion
+        if short_code:
+            try:
+                cq.invalidate_url_cache(short_code=short_code)
+            except Exception as e:
+                # Log cache invalidation failure but don't prevent success response
+                print(f"Cache invalidation failed for {short_code}: {e}")
 
         return jsonify({"message": "URL deleted", "id": url_id}), 200
 

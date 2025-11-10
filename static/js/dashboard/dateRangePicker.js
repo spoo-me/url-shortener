@@ -486,6 +486,10 @@ class DateRangePicker {
     setRange(range) {
         this.currentRange = range;
         this.render();
+        // Reattach event listeners after DOM is recreated
+        this.setupEventListeners();
+        // Refresh UI selection state
+        this.updateRelativeSelection();
     }
 }
 

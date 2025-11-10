@@ -880,12 +880,6 @@
     font-size: 16px;
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 /* Animations */
 .fade-in {
     animation: fadeIn 0.3s ease;
@@ -1109,16 +1103,5 @@
 
     .permission-description {
         font-size: 11px;
-    }
-}
-
-/* Loading spinner animation */
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
     }
 }

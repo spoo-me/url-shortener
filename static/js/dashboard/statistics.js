@@ -1622,7 +1622,7 @@ class StatisticsDashboard {
             },
             plugins: {
                 legend: {
-                    labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 },
+                    labels: { color: '#fff', boxWidth: 12, boxHeight: 12, useBorderRadius: true, borderRadius: 2, padding: 20 },
                     position: 'bottom',
                     align: 'start',
                 },
@@ -1697,7 +1697,7 @@ class StatisticsDashboard {
             });
         }
 
-        const baseLegend = { labels: { color: '#fff', boxWidth: 12, boxHeight: 12, padding: 10, useBorderRadius: true, borderRadius: 2, padding: 20 }, position: 'bottom', align: 'start' };
+        const baseLegend = { labels: { color: '#fff', boxWidth: 12, boxHeight: 12, useBorderRadius: true, borderRadius: 2, padding: 20 }, position: 'bottom', align: 'start' };
         const baseTooltip = {
             backgroundColor: 'rgba(0,0,0,0.8)', titleColor: '#ffffff', bodyColor: '#ffffff', callbacks: {
                 title: (context) => {

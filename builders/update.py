@@ -55,15 +55,14 @@ class UpdateUrlRequestBuilder(BaseUrlRequestBuilder):
         return self.validate_long_url()
 
     def validate_alias_custom(self) -> "UpdateUrlRequestBuilder":
-        """Provides custom error message for same alias"""
+        """Provides custom validation for alias updates"""
         if "alias" in self.payload:
             alias_value = self.payload.get("alias")
+            # Treat same alias as no-op (idempotent update)
             if alias_value == self.existing_doc.get("alias"):
-                return self._fail(
-                    {"error": "Alias cannot be the same as the existing alias"}, 400
-                )
+                return self
 
-        # use parent validation logic
+        # use parent validation logic for changed values
         return self.validate_alias()
 
     def parse_status_change(self) -> "UpdateUrlRequestBuilder":

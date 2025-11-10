@@ -550,7 +550,6 @@ body.dashboard-layout {
         left: 0;
         top: 0;
         height: 100vh;
-        width: 280px;
         transform: translateX(-100%);
         transition: transform var(--transition-speed) var(--transition-easing);
         z-index: 160;
