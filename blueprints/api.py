@@ -16,4 +16,4 @@ def api_route():
             self_promo_text="We have moved and revamped the docs to https://docs.spoo.me",
         )
     else:
-        return redirect("https://docs.spoo.me/api"), 301
+        return redirect("https://docs.spoo.me"), 301
