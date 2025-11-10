@@ -89,8 +89,9 @@ body.dashboard-layout {
 }
 
 .brand-logo img {
-    width: 32px;
-    height: 32px;
+    /* width: 32px; */
+    height: 26px;
+    margin-top: 5px;
     flex-shrink: 0;
 }
 
@@ -507,8 +508,8 @@ body.dashboard-layout {
 }
 
 .mobile-brand img {
-    width: 28px;
-    height: 28px;
+    /* width: 28px; */
+    height: 26px;
 }
 
 /* Sidebar Overlay */
