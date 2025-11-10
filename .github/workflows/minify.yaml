@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: check out the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: replace js and css files with minified ones
         uses: nizarmah/auto-minify@v3

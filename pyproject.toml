@@ -36,5 +36,5 @@ dev = [
     "pytest-mock>=3.14.1",
     "requests-mock>=1.12.1",
     "ruff>=0.11.11",
-    "uv>=0.7.8",
+    "uv>=0.9.6",
 ]
