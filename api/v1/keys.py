@@ -43,6 +43,94 @@ def _parse_expires_at(value: Optional[str | int | float]):
 @limiter.limit("5 per hour", key_func=rate_limit_key_for_request)
 @requires_auth
 def create_api_key():
+    """
+    Create a new API key for programmatic access.
+
+    This endpoint allows authenticated users to generate API keys for accessing the
+    spoo.me API programmatically. API keys can be scoped with specific permissions
+    and optionally set to expire after a certain time.
+
+    ## Authentication & Authorization
+    - **JWT Token** (required): Use `Authorization: Bearer <jwt_token>` header
+    - **Rate Limits**: 5 per hour (to prevent abuse)
+    - **Limit**: Maximum 20 active keys per user
+
+    ## Request Body (JSON)
+
+    ### Required
+    - **name** (string): Human-readable name for the key
+      - Cannot be empty or whitespace-only
+      - Used to identify the key in lists
+    - **scopes** (array of strings): Permissions granted to this key
+      - Must be a non-empty array
+      - Available scopes:
+        - `shorten:create` - Create new shortened URLs
+        - `urls:manage` - Update and delete URLs
+        - `urls:read` - List and view URL details
+        - `stats:read` - Access analytics and statistics
+        - `admin:all` - Full administrative access
+
+    ### Optional
+    - **description** (string): Detailed description of the key's purpose
+      - Can be null or empty
+    - **expires_at** (string | integer): When the key should expire
+      - ISO 8601 datetime string or Unix epoch seconds
+      - Must be in the future
+      - Set to null for no expiration
+
+    ## Example Request
+    ```json
+    {
+      "name": "Production API Key",
+      "description": "API key for production deployment",
+      "scopes": ["shorten:create", "urls:read", "stats:read"],
+      "expires_at": "2025-12-31T23:59:59Z"
+    }
+    ```
+
+    ## Response Format
+    ```json
+    {
+      "id": "507f1f77bcf86cd799439011",
+      "name": "Production API Key",
+      "description": "API key for production deployment",
+      "scopes": ["shorten:create", "urls:read", "stats:read"],
+      "created_at": 1704067200,
+      "expires_at": 1735689599,
+      "revoked": false,
+      "token_prefix": "AbCdEfGh",
+      "token": "spoo_AbCdEfGhIjKlMnOpQrStUvWxYzAbCdEfGhIjKlMn"
+    }
+    ```
+
+    ## Response Fields
+    - **token**: The full API key (shown ONLY once at creation)
+      - Format: `spoo_<random_string>`
+      - Store securely - cannot be retrieved later
+      - Use in `Authorization: Bearer <token>` header
+    - **token_prefix**: First 8 characters of the key (for identification)
+    - **id**: Unique identifier for this key
+    - **created_at**: Unix timestamp of creation
+    - **expires_at**: Unix timestamp of expiration (null if none)
+    - **revoked**: Whether the key has been revoked
+
+    ## Error Responses
+    - **400**: Missing/invalid name, empty/invalid scopes, invalid expiration date
+    - **400**: Maximum 20 active keys reached
+    - **401**: Authentication required, invalid JWT token
+    - **429**: Rate limit exceeded (5 per hour)
+    - **500**: Failed to create API key, database error
+
+    ## Important Notes
+    - **One-time display**: The full token is shown ONLY at creation
+    - **Store securely**: Save the token immediately - it cannot be retrieved later
+    - **Token format**: Always starts with `spoo_` prefix
+    - **Security**: Tokens are hashed (SHA-256) before storage
+    - **Key limit**: Users can have maximum 20 active (non-revoked) keys
+
+    Returns:
+        tuple[Response, int]: JSON response with API key data and HTTP status code (201 on success)
+    """
     body = request.get_json(silent=True) or {}
     name = (body.get("name") or "").strip()
     description = (body.get("description") or "").strip() or None
@@ -114,6 +202,78 @@ def create_api_key():
 @limiter.limit("60 per minute", key_func=rate_limit_key_for_request)
 @requires_auth
 def list_api_keys():
+    """
+    List all API keys for the authenticated user.
+
+    This endpoint returns all API keys (both active and revoked) created by the
+    authenticated user. For security, only the token prefix is returned, not the
+    full token value.
+
+    ## Authentication & Authorization
+    - **JWT Token** (required): Use `Authorization: Bearer <jwt_token>` header
+    - **Rate Limits**: 60 per minute
+
+    ## Query Parameters
+    No query parameters required.
+
+    ## Response Format
+    ```json
+    {
+      "keys": [
+        {
+          "id": "507f1f77bcf86cd799439011",
+          "name": "Production API Key",
+          "description": "API key for production deployment",
+          "scopes": ["shorten:create", "urls:read", "stats:read"],
+          "created_at": 1704067200,
+          "expires_at": 1735689599,
+          "revoked": false,
+          "token_prefix": "AbCdEfGh"
+        },
+        {
+          "id": "507f1f77bcf86cd799439012",
+          "name": "Old Testing Key",
+          "description": null,
+          "scopes": ["shorten:create"],
+          "created_at": 1700000000,
+          "expires_at": null,
+          "revoked": true,
+          "token_prefix": "XyZaBcDe"
+        }
+      ]
+    }
+    ```
+
+    ## Response Fields
+    - **keys**: Array of API key objects
+      - **id**: Unique identifier for the key
+      - **name**: Human-readable name
+      - **description**: Optional description (can be null)
+      - **scopes**: Array of permission scopes
+      - **created_at**: Unix timestamp of creation
+      - **expires_at**: Unix timestamp of expiration (null if none)
+      - **revoked**: Boolean indicating if key is revoked
+      - **token_prefix**: First 8 characters (for identification)
+
+    ## Key Status Interpretation
+    - **Active**: `revoked: false` and (`expires_at: null` or `expires_at` in future)
+    - **Revoked**: `revoked: true`
+    - **Expired**: `expires_at` in the past
+
+    ## Error Responses
+    - **401**: Authentication required, invalid JWT token
+    - **429**: Rate limit exceeded
+    - **500**: Database error
+
+    ## Important Notes
+    - **No full tokens**: For security, full tokens are never returned
+    - **All keys shown**: Both active and revoked keys are included
+    - **Token prefix**: Use to identify which key is which
+    - **Security**: Check the `revoked` and `expires_at` fields to verify key status
+
+    Returns:
+        tuple[Response, int]: JSON response with list of API keys and HTTP status code
+    """
     keys = list_api_keys_by_user(g.user_id)
     result = []
     for k in keys:
@@ -139,6 +299,79 @@ def list_api_keys():
 @api_v1.route("/keys/<key_id>", methods=["DELETE"])
 @requires_auth
 def delete_api_key(key_id):
+    """
+    Delete or revoke an API key.
+
+    This endpoint allows users to remove an API key. By default, keys are permanently
+    deleted (hard delete), but you can optionally just revoke them to preserve audit logs.
+
+    ## Authentication & Authorization
+    - **JWT Token** (required): Use `Authorization: Bearer <jwt_token>` header
+    - **Ownership**: Can only delete/revoke your own API keys
+
+    ## URL Parameters
+    - **key_id** (string): MongoDB ObjectId of the API key
+
+    ## Query Parameters
+    - **revoke** (boolean): If "true", revoke instead of delete (default: "false")
+      - `?revoke=true` - Marks key as revoked but keeps record
+      - Default behavior - Permanently deletes the key
+
+    ## Behavior Modes
+
+    ### Hard Delete (Default)
+    ```
+    DELETE /api/v1/keys/507f1f77bcf86cd799439011
+    ```
+    - Permanently removes the key from database
+    - No audit trail preserved
+    - Key ID becomes invalid
+    - Recommended for unused/test keys
+
+    ### Soft Delete (Revoke)
+    ```
+    DELETE /api/v1/keys/507f1f77bcf86cd799439011?revoke=true
+    ```
+    - Marks key as `revoked: true`
+    - Preserves key record for audit purposes
+    - Key still appears in list but cannot be used
+    - Recommended for production keys
+
+    ## Response Format
+    ```json
+    {
+      "success": true,
+      "action": "deleted"
+    }
+    ```
+    or
+    ```json
+    {
+      "success": true,
+      "action": "revoked"
+    }
+    ```
+
+    ## Error Responses
+    - **401**: Authentication required, invalid JWT token
+    - **404**: Key not found, access denied (not your key), invalid key ID
+    - **500**: Database error
+
+    ## Important Notes
+    - **Immediate effect**: Key stops working immediately
+    - **No confirmation**: Action is performed without confirmation prompt
+    - **Irreversible**: Hard deletes cannot be undone
+    - **Ownership**: Can only delete your own keys
+    - **Revoke vs Delete**: Use revoke for audit trails, delete for cleanup
+
+    ## Use Cases
+    - **Delete**: Removing test keys, cleaning up unused keys
+    - **Revoke**: Disabling production keys while preserving history
+    - **Security**: Immediately disable compromised keys
+
+    Returns:
+        tuple[Response, int]: JSON response confirming action and HTTP status code
+    """
     # Default to hard delete for cleaner UX, use ?revoke=true to just revoke
     revoke_only = (request.args.get("revoke") or "false").lower() == "true"
     ok = revoke_api_key_by_id(g.user_id, key_id, hard_delete=not revoke_only)

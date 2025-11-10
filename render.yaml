@@ -15,3 +15,21 @@ services:
         sync: false
       - key: REDIS_URI
         sync: false
+      - key: FLASK_SECRET_KEY
+        sync: false
+      - key: JWT_PRIVATE_KEY
+        sync: false
+      - key: JWT_PUBLIC_KEY
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_OAUTH_CLIENT_ID
+        sync: false
+      - key: GITHUB_OAUTH_CLIENT_SECRET
+        sync: false
+      - key: DISCORD_OAUTH_CLIENT_ID
+        sync: false
+      - key: DISCORD_OAUTH_CLIENT_SECRET
+        sync: false

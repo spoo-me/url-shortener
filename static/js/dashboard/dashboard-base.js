@@ -141,6 +141,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Add keyboard shortcuts
     document.addEventListener('keydown', function (e) {
+        // Ctrl+B (Windows/Linux) or Cmd+B (Mac) to toggle sidebar
+        if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+            e.preventDefault();
+            if (window.innerWidth > 768) {
+                sidebarToggle?.click();
+            } else {
+                toggleMobileSidebar();
+            }
+        }
+
         // Alt + S to toggle sidebar (desktop) or Escape to close mobile sidebar
         if (e.altKey && e.key === 's' && window.innerWidth > 768) {
             e.preventDefault();
