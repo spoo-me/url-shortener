@@ -4,18 +4,21 @@ import os
 import re
 from bson import ObjectId
 from utils.url_utils import validate_emoji_alias
+from utils.logger import get_logger
 
 load_dotenv()
 
+log = get_logger(__name__)
 MONGO_URI = os.environ["MONGODB_URI"]
 
 client = MongoClient(MONGO_URI)
 
 try:
     client.admin.command("ping")
-    print("[MongoDB] Connected successfully")
+    log.info("mongodb_connected")
 except Exception as e:
-    print(f"[MongoDB] Connection failed: {e}")
+    log.error("mongodb_connection_failed", error=str(e), error_type=type(e).__name__)
+    raise
 
 db = client["url-shortener"]
 
@@ -224,17 +227,28 @@ def insert_click_data(click_data):
     try:
         # Ensure proper time-series schema with meta field
         if "meta" not in click_data:
-            print("[MongoDB] Warning: click_data missing 'meta' field")
+            log.warning(
+                "click_data_missing_meta_field",
+                has_clicked_at="clicked_at" in click_data,
+            )
             return False
 
         if "clicked_at" not in click_data:
-            print("[MongoDB] Warning: click_data missing 'clicked_at' field")
+            log.warning(
+                "click_data_missing_clicked_at_field", has_meta="meta" in click_data
+            )
             return False
 
         clicks_collection.insert_one(click_data)
         return True
     except Exception as e:
-        print(f"[MongoDB] Error inserting click data: {e}")
+        log.error(
+            "click_data_insert_failed",
+            error=str(e),
+            error_type=type(e).__name__,
+            has_meta="meta" in click_data if click_data else False,
+            has_clicked_at="clicked_at" in click_data if click_data else False,
+        )
         return False
 
 

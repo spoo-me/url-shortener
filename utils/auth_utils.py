@@ -9,9 +9,11 @@ import jwt
 from argon2 import PasswordHasher
 from bson import ObjectId
 from utils.mongo_utils import find_api_key_by_hash
+from utils.logger import get_logger
 
 
 password_hasher = PasswordHasher()
+log = get_logger(__name__)
 
 
 @lru_cache(maxsize=1)
@@ -291,6 +293,39 @@ def resolve_owner_id_from_request():
             token_hash = hashlib.sha256(raw.encode("utf-8")).hexdigest()
             key_doc = find_api_key_by_hash(token_hash)
             now = datetime.now(timezone.utc)
+
+            # Check if key exists
+            if not key_doc:
+                log.warning(
+                    "api_key_invalid",
+                    key_prefix=raw[:8] if len(raw) >= 8 else "short",
+                    reason="not_found",
+                )
+                return None
+
+            # Check if key is revoked
+            if key_doc.get("revoked", False):
+                log.warning(
+                    "api_key_invalid",
+                    key_prefix=key_doc.get("token_prefix", "unknown"),
+                    key_id=str(key_doc.get("_id")),
+                    user_id=str(key_doc.get("user_id")),
+                    reason="revoked",
+                )
+                return None
+
+            # Check if key is expired
+            if key_doc.get("expires_at") and key_doc["expires_at"] <= now:
+                log.warning(
+                    "api_key_invalid",
+                    key_prefix=key_doc.get("token_prefix", "unknown"),
+                    key_id=str(key_doc.get("_id")),
+                    user_id=str(key_doc.get("user_id")),
+                    reason="expired",
+                    expired_at=key_doc["expires_at"].isoformat(),
+                )
+                return None
+
             if (
                 key_doc
                 and not key_doc.get("revoked", False)

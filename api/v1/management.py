@@ -7,10 +7,13 @@ from blueprints.limiter import (
     rate_limit_key_for_request,
 )
 from utils.mongo_utils import urls_v2_collection
+from utils.logger import get_logger
 from builders import UpdateUrlRequestBuilder
 from cache import cache_query as cq
 
 from . import api_v1
+
+log = get_logger(__name__)
 
 
 @api_v1.route("/urls/<url_id>", methods=["PATCH"])
@@ -285,15 +288,34 @@ def delete_url_v1(url_id: str) -> tuple[Response, int]:
         if result.deleted_count == 0:
             return jsonify({"error": "URL not found"}), 404
 
+        log.info(
+            "url_deleted",
+            url_id=url_id,
+            alias=short_code,
+            owner_id=str(builder.owner_id) if builder.owner_id else None,
+        )
+
         # Invalidate cache after successful deletion
         if short_code:
             try:
                 cq.invalidate_url_cache(short_code=short_code)
             except Exception as e:
-                # Log cache invalidation failure but don't prevent success response
-                print(f"Cache invalidation failed for {short_code}: {e}")
+                log.error(
+                    "cache_invalidation_failed",
+                    short_code=short_code,
+                    reason="post_deletion",
+                    error=str(e),
+                    error_type=type(e).__name__,
+                )
 
         return jsonify({"message": "URL deleted", "id": url_id}), 200
 
-    except Exception:
+    except Exception as e:
+        log.error(
+            "url_deletion_failed",
+            url_id=url_id,
+            alias=short_code,
+            error=str(e),
+            error_type=type(e).__name__,
+        )
         return jsonify({"error": "Database error"}), 500

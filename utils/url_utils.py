@@ -99,27 +99,14 @@ def validate_expiration_time(expiration_time):
         expiration_time = datetime.fromisoformat(expiration_time)
         # Check if it's timezone aware
         if expiration_time.tzinfo is None:
-            print("timezone not aware")
             return False
         else:
-            print("timezone aware")
-            print("Expiration Time in GMT: ", expiration_time.astimezone(timezone.utc))
-            print(expiration_time.tzinfo)
             # Convert to GMT if it's timezone aware
             expiration_time = expiration_time.astimezone(timezone.utc)
         if expiration_time < datetime.now(timezone.utc) + timedelta(minutes=3):
-            print(expiration_time, datetime.now(timezone.utc) + timedelta(minutes=3))
-            print("EXPIRATION TIME IN GMT: ", expiration_time)
-            print("CURRENT TIME IN GMT: ", datetime.now(timezone.utc))
-            print(
-                "CURRENT TIME IN GMT + 5: ",
-                datetime.now(timezone.utc) + timedelta(minutes=4.5),
-            )
-            print("less than 5 minutes")
             return False
         return True
-    except Exception as e:
-        print(e)
+    except Exception:
         return False
 
 

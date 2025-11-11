@@ -3,7 +3,10 @@ from typing import Optional
 from dataclasses import dataclass
 from .base_cache import BaseCache
 from redis.exceptions import RedisError
+from utils.logger import get_logger
 import warnings
+
+log = get_logger(__name__)
 
 
 @dataclass
@@ -48,7 +51,14 @@ class UrlCache(BaseCache):
             key = f"url_cache:{short_code}"
             self.r.set(key, json.dumps(url_cache_data.__dict__), ex=self.ttl_seconds)
         except RedisError as e:
-            print(f"[UrlCache] Redis SET error: {e}")
+            log.error(
+                "cache_error",
+                operation="set",
+                key=short_code,
+                cache_type="url",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
 
     def get_url_cache_data(self, short_code: str) -> Optional[UrlCacheData]:
         """Get URL data using the new cache schema"""
@@ -62,7 +72,14 @@ class UrlCache(BaseCache):
             data = json.loads(raw)
             return UrlCacheData(**data)
         except (RedisError, json.JSONDecodeError, TypeError) as e:
-            print(f"[UrlCache] Redis GET error: {e}")
+            log.error(
+                "cache_error",
+                operation="get",
+                key=short_code,
+                cache_type="url",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
             return None
 
     def invalidate_url_cache(self, short_code: str) -> None:
@@ -72,8 +89,18 @@ class UrlCache(BaseCache):
         try:
             key = f"url_cache:{short_code}"
             self.r.delete(key)
+            log.info(
+                "cache_invalidated", short_code=short_code, reason="manual_invalidation"
+            )
         except RedisError as e:
-            print(f"[UrlCache] Redis DELETE error: {e}")
+            log.error(
+                "cache_error",
+                operation="delete",
+                key=short_code,
+                cache_type="url",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
 
     def set_url_data(self, short_code: str, url_data: UrlData) -> None:
         warnings.warn(
@@ -87,7 +114,14 @@ class UrlCache(BaseCache):
             key = f"meta:{short_code}"
             self.r.set(key, json.dumps(url_data.__dict__), ex=self.ttl_seconds)
         except RedisError as e:
-            print(f"[UrlCache] Redis SET error: {e}")
+            log.error(
+                "cache_error",
+                operation="set_deprecated",
+                key=short_code,
+                cache_type="url",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
 
     def get_url_data(self, short_code: str) -> Optional[UrlData]:
         warnings.warn(
@@ -105,5 +139,12 @@ class UrlCache(BaseCache):
             data = json.loads(raw)
             return UrlData(**data)
         except (RedisError, json.JSONDecodeError, TypeError) as e:
-            print(f"[UrlCache] Redis GET error: {e}")
+            log.error(
+                "cache_error",
+                operation="get_deprecated",
+                key=short_code,
+                cache_type="url",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
             return None

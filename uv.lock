@@ -2022,6 +2022,7 @@ dependencies = [
     { name = "redis" },
     { name = "requests" },
     { name = "sentry-sdk", extra = ["flask"] },
+    { name = "structlog" },
     { name = "tldextract" },
     { name = "ua-parser", extra = ["regex"] },
     { name = "validators" },
@@ -2042,7 +2043,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "argon2-cffi", specifier = ">=25.1.0" },
-    { name = "authlib", specifier = ">=1.6.3" },
+    { name = "authlib", specifier = ">=1.6.5" },
     { name = "crawlerdetect", specifier = ">=0.3.0" },
     { name = "dicttoxml", specifier = ">=1.7.16" },
     { name = "emoji", specifier = ">=2.14.1" },
@@ -2060,6 +2061,7 @@ requires-dist = [
     { name = "redis", specifier = ">=6.2.0" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "sentry-sdk", extras = ["flask"], specifier = ">=2.44.0" },
+    { name = "structlog", specifier = ">=25.5.0" },
     { name = "tldextract", specifier = ">=5.3.0" },
     { name = "ua-parser", extras = ["regex"], specifier = ">=1.0.1" },
     { name = "validators", specifier = ">=0.35.0" },
@@ -2074,6 +2076,18 @@ dev = [
     { name = "requests-mock", specifier = ">=1.12.1" },
     { name = "ruff", specifier = ">=0.11.11" },
     { name = "uv", specifier = ">=0.9.6" },
+]
+
+[[package]]
+name = "structlog"
+version = "25.5.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ef/52/9ba0f43b686e7f3ddfeaa78ac3af750292662284b3661e91ad5494f21dbc/structlog-25.5.0.tar.gz", hash = "sha256:098522a3bebed9153d4570c6d0288abf80a031dfdb2048d59a49e9dc2190fc98", size = 1460830, upload-time = "2025-10-27T08:28:23.028Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a8/45/a132b9074aa18e799b891b91ad72133c98d8042c70f6240e4c5f9dabee2f/structlog-25.5.0-py3-none-any.whl", hash = "sha256:a8453e9b9e636ec59bd9e79bbd4a72f025981b3ba0f5837aebf48f02f37a7f9f", size = 72510, upload-time = "2025-10-27T08:28:21.535Z" },
 ]
 
 [[package]]

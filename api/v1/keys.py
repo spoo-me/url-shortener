@@ -5,6 +5,7 @@ import hashlib
 from typing import Optional
 
 from utils.auth_utils import requires_auth
+from utils.logger import get_logger
 from bson import ObjectId
 from utils.mongo_utils import (
     insert_api_key,
@@ -14,6 +15,8 @@ from utils.mongo_utils import (
 from blueprints.limiter import limiter, rate_limit_key_for_request
 
 from . import api_v1
+
+log = get_logger(__name__)
 
 
 ALLOWED_SCOPES = {
@@ -178,7 +181,22 @@ def create_api_key():
 
     key_id = insert_api_key(doc)
     if not key_id:
+        log.error(
+            "api_key_creation_failed",
+            user_id=str(g.user_id),
+            scopes=scopes,
+            error="database_error",
+        )
         return jsonify({"error": "failed to create api key"}), 500
+
+    log.info(
+        "api_key_created",
+        user_id=str(g.user_id),
+        key_id=str(key_id),
+        key_prefix=token_prefix,
+        scopes=scopes,
+        expires_at=expires_at.isoformat() if expires_at else None,
+    )
 
     return (
         jsonify(
@@ -376,7 +394,21 @@ def delete_api_key(key_id):
     revoke_only = (request.args.get("revoke") or "false").lower() == "true"
     ok = revoke_api_key_by_id(g.user_id, key_id, hard_delete=not revoke_only)
     if not ok:
+        log.warning(
+            "api_key_deletion_failed",
+            user_id=str(g.user_id),
+            key_id=key_id,
+            action="revoke" if revoke_only else "delete",
+            reason="not_found_or_access_denied",
+        )
         return jsonify({"error": "key not found or access denied"}), 404
 
     action = "revoked" if revoke_only else "deleted"
+    log.info(
+        "api_key_revoked" if revoke_only else "api_key_deleted",
+        user_id=str(g.user_id),
+        key_id=key_id,
+        action=action,
+    )
+
     return jsonify({"success": True, "action": action})

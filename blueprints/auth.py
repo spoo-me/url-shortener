@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
 
-from flask import Blueprint, jsonify, request, g
+from flask import Blueprint, jsonify, request, g, redirect
 from pymongo.errors import DuplicateKeyError
 
 from .limiter import limiter, rate_limit_key_for_request
+from utils.logger import get_logger
 from utils.auth_utils import (
     verify_password,
     hash_password,
@@ -28,6 +29,7 @@ import jwt
 from bson import ObjectId
 
 auth = Blueprint("auth", __name__)
+log = get_logger(__name__)
 
 
 @auth.route("/auth/login", methods=["POST"])
@@ -43,13 +45,20 @@ def login():
     user = get_user_by_email(email)
     if not user or not user.get("password_hash"):
         # Do not reveal which part failed
+        log.warning(
+            "login_failed", reason="invalid_credentials", email_exists=bool(user)
+        )
         return jsonify({"error": "invalid credentials"}), 401
 
     if not verify_password(password, user["password_hash"]):
+        log.warning("login_failed", reason="invalid_password", user_id=str(user["_id"]))
         return jsonify({"error": "invalid credentials"}), 401
 
     access_token = generate_access_jwt(str(user["_id"]))
     refresh_token = generate_refresh_jwt(str(user["_id"]))
+
+    log.info("login_success", user_id=str(user["_id"]), auth_method="password")
+
     resp = jsonify({"access_token": access_token, "user": get_user_profile(user)})
     set_refresh_cookie(resp, refresh_token)
     set_access_cookie(resp, access_token)
@@ -72,20 +81,28 @@ def refresh():
         new_access_token = generate_access_jwt(user_id)
         new_refresh_token = generate_refresh_jwt(user_id)
 
+        log.info("token_refreshed", user_id=user_id)
+
         resp = jsonify({"access_token": new_access_token})
         set_refresh_cookie(resp, new_refresh_token)
         set_access_cookie(resp, new_access_token)
         return resp, 200
 
-    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError) as e:
+        log.warning("token_refresh_failed", reason="expired_or_invalid", error=str(e))
         return jsonify({"error": "invalid or expired refresh token"}), 401
-    except Exception:
+    except Exception as e:
+        log.error("token_refresh_error", error=str(e), error_type=type(e).__name__)
         return jsonify({"error": "refresh token verification failed"}), 401
 
 
 @auth.route("/auth/logout", methods=["POST"])
 @limiter.limit("60/hour")
 def logout():
+    user_id = getattr(g, "user_id", None)
+    if user_id:
+        log.info("logout", user_id=str(user_id))
+
     resp = jsonify({"success": True})
     clear_refresh_cookie(resp)
     clear_access_cookie(resp)
@@ -127,6 +144,7 @@ def register():
     # Check existing user
     existing = get_user_by_email(email)
     if existing:
+        log.warning("registration_failed", reason="email_exists")
         return jsonify({"error": "email already registered"}), 409
 
     password_hash = hash_password(password)
@@ -149,13 +167,23 @@ def register():
         user_id = insert_result.inserted_id
     except DuplicateKeyError:
         # Race condition: email was registered between our check and insert
+        log.warning("registration_failed", reason="race_condition_duplicate")
         return jsonify({"error": "email already registered"}), 409
-    except Exception:
+    except Exception as e:
+        log.error("registration_failed", reason="database_error", error=str(e))
         return jsonify({"error": "failed to create user"}), 500
 
     # Issue tokens just like login
     access_token = generate_access_jwt(str(user_id))
     refresh_token = generate_refresh_jwt(str(user_id))
+
+    log.info(
+        "user_registered",
+        user_id=str(user_id),
+        auth_method="password",
+        has_username=bool(user_name),
+    )
+
     resp = jsonify(
         {
             "access_token": access_token,
@@ -210,20 +238,25 @@ def set_password():
         )
 
         if result.modified_count > 0:
+            log.info("password_set", user_id=g.user_id)
             return jsonify({"success": True, "message": "password set successfully"})
         else:
+            log.error("password_set_failed", user_id=g.user_id, reason="no_update")
             return jsonify({"error": "failed to set password"}), 500
 
     except Exception as e:
-        print(f"Error setting password: {e}")
+        log.error(
+            "password_set_failed",
+            user_id=g.user_id,
+            error=str(e),
+            error_type=type(e).__name__,
+        )
         return jsonify({"error": "failed to set password"}), 500
 
 
 @auth.route("/login", methods=["GET"])
 def login_redirect():
     """Redirect /login to home page to prevent shortened URL conflicts"""
-    from flask import redirect
-
     return redirect("/", code=302)
 
 
@@ -231,6 +264,4 @@ def login_redirect():
 @auth.route("/signup", methods=["GET"])
 def register_redirect():
     """Redirect /register and /signup to home page to prevent shortened URL conflicts"""
-    from flask import redirect
-
     return redirect("/", code=302)

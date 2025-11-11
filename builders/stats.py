@@ -11,6 +11,9 @@ from utils.mongo_utils import (
 from utils.aggregation_strategies import AggregationStrategyFactory
 from utils.query_builder import StatsQueryBuilderFactory
 from utils.stats_utils import format_stats_response_with_metadata, validate_date_range
+from utils.logger import get_logger, should_sample
+
+log = get_logger(__name__)
 
 
 class StatsQueryBuilder:
@@ -93,7 +96,12 @@ class StatsQueryBuilder:
             user_tz = ZoneInfo(self.timezone)
             return dt.astimezone(user_tz)
         except Exception as e:
-            print(f"Timezone conversion error: {e}")
+            log.warning(
+                "timezone_conversion_failed",
+                timezone=self.timezone,
+                error=str(e),
+                error_type=type(e).__name__,
+            )
             return dt  # Return original if conversion fails
 
     def _format_datetime_in_timezone(self, dt: Optional[datetime]) -> Optional[str]:
@@ -106,6 +114,12 @@ class StatsQueryBuilder:
         if api_key_doc is not None:
             scopes = set(api_key_doc.get("scopes", []))
             if "admin:all" not in scopes and "stats:read" not in scopes:
+                log.warning(
+                    "stats_access_denied",
+                    reason="missing_scope",
+                    required_scope="stats:read",
+                    api_key_scopes=list(scopes),
+                )
                 return self._fail(
                     {"error": "api key lacks required scope: stats:read"}, 403
                 )
@@ -134,6 +148,11 @@ class StatsQueryBuilder:
             # If stats are private, only allow access if user owns the URL
             if privacy_info["private"]:
                 if self.owner_id is None:
+                    log.warning(
+                        "stats_access_denied",
+                        reason="unauthenticated_private_stats",
+                        short_code=self.short_code,
+                    )
                     return self._fail(
                         {
                             "error": "this URL has private statistics - authentication required"
@@ -143,12 +162,24 @@ class StatsQueryBuilder:
 
                 # Check if authenticated user owns this URL
                 if privacy_info["owner_id"] != str(self.owner_id):
+                    log.warning(
+                        "stats_access_denied",
+                        reason="not_owner",
+                        short_code=self.short_code,
+                        requesting_user=str(self.owner_id),
+                        owner_user=privacy_info["owner_id"],
+                    )
                     return self._fail(
                         {"error": "access denied - private statistics"}, 403
                     )
 
         elif self.scope == "all":
             if self.owner_id is None:
+                log.warning(
+                    "stats_access_denied",
+                    reason="unauthenticated_scope_all",
+                    scope="all",
+                )
                 return self._fail(
                     {"error": "authentication required for scope=all"}, 401
                 )
@@ -181,6 +212,12 @@ class StatsQueryBuilder:
         # Validate date range
         validation = validate_date_range(self.start_date, self.end_date)
         if not validation["is_valid"]:
+            log.info(
+                "stats_date_range_invalid",
+                start_date=self.start_date.isoformat() if self.start_date else None,
+                end_date=self.end_date.isoformat() if self.end_date else None,
+                error=validation["error"],
+            )
             return self._fail({"error": validation["error"]}, 400)
 
         return self
@@ -211,6 +248,12 @@ class StatsQueryBuilder:
         # In scope=anon, the short_code is already locked by the scope parameter
         # Allowing short_code filter would let users bypass privacy checks
         if self.scope == "anon" and "short_code" in self.filters:
+            log.warning(
+                "stats_scope_bypass_attempt",
+                short_code=self.short_code,
+                attempted_filter=self.filters.get("short_code"),
+                user_id=str(self.owner_id) if self.owner_id else None,
+            )
             return self._fail(
                 {
                     "error": "short_code filter not allowed with scope=anon - short_code is already specified"
@@ -273,7 +316,9 @@ class StatsQueryBuilder:
 
         # Validate timezone - fallback to UTC if invalid
         if timezone_raw not in available_timezones():
-            print(f"Invalid timezone '{timezone_raw}' provided, falling back to UTC")
+            log.warning(
+                "invalid_timezone_provided", timezone=timezone_raw, fallback="UTC"
+            )
             self.timezone = "UTC"
         else:
             self.timezone = timezone_raw
@@ -301,7 +346,12 @@ class StatsQueryBuilder:
             return builder.build()
 
         except Exception as e:
-            print(f"Error building query: {e}")
+            log.error(
+                "stats_query_build_failed",
+                scope=self.scope,
+                error=str(e),
+                error_type=type(e).__name__,
+            )
             return self._fail({"error": "failed to build query"}, 500)
 
     def _build_aggregation_pipeline(
@@ -336,7 +386,12 @@ class StatsQueryBuilder:
                 formatted_results = strategy.format_results(raw_results)
                 results[group_dimension] = formatted_results
             except Exception as e:
-                print(f"Error executing {group_dimension} aggregation: {e}")
+                log.error(
+                    "stats_aggregation_failed",
+                    dimension=group_dimension,
+                    error=str(e),
+                    error_type=type(e).__name__,
+                )
                 results[group_dimension] = []
 
         return results
@@ -376,7 +431,9 @@ class StatsQueryBuilder:
                 if hasattr(time_strategy, "get_bucket_info"):
                     response["time_bucket_info"] = time_strategy.get_bucket_info()
             except Exception as e:
-                print(f"Error getting bucket info: {e}")
+                log.warning(
+                    "time_bucket_info_failed", error=str(e), error_type=type(e).__name__
+                )
                 # Continue without bucket info if there's an error
 
         # Add aggregation results for each dimension
@@ -456,6 +513,10 @@ class StatsQueryBuilder:
         if self.error is not None:
             return self.error
 
+        import time
+
+        start_time = time.time()
+
         try:
             # Build query
             query = self._build_click_query()
@@ -475,8 +536,31 @@ class StatsQueryBuilder:
             # Enhance response with metadata and computed metrics
             enhanced_response = format_stats_response_with_metadata(response)
 
+            # Sample logging (20%)
+            if should_sample("stats_query"):
+                duration_ms = int((time.time() - start_time) * 1000)
+                log.info(
+                    "stats_query",
+                    scope=self.scope,
+                    short_code=self.short_code if self.scope == "anon" else None,
+                    group_by=self.group_by,
+                    metrics=self.metrics,
+                    start_date=self.start_date.isoformat() if self.start_date else None,
+                    end_date=self.end_date.isoformat() if self.end_date else None,
+                    filter_count=len(self.filters),
+                    total_clicks=summary.get("total_clicks", 0),
+                    unique_clicks=summary.get("unique_clicks", 0),
+                    duration_ms=duration_ms,
+                    slow_query=duration_ms > 5000,
+                )
+
             return jsonify(enhanced_response), 200
 
         except Exception as e:
-            print(f"Stats query error: {e}")
+            log.error(
+                "stats_query_failed",
+                scope=self.scope,
+                error=str(e),
+                error_type=type(e).__name__,
+            )
             return jsonify({"error": "database error"}), 500

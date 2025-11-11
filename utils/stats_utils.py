@@ -259,7 +259,6 @@ def validate_date_range(
         return {"is_valid": False, "error": "start_date cannot be in the future"}
 
     if end_date and end_date.replace(microsecond=0) > now.replace(microsecond=0):
-        print(end_date, now)
         return {"is_valid": False, "error": "end_date cannot be in the future"}
 
     return {"is_valid": True}

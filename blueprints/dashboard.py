@@ -11,6 +11,9 @@ from utils.mongo_utils import (
 )
 from utils.auth_utils import get_user_profile
 from blueprints.limiter import limiter, rate_limit_key_for_request
+from utils.logger import get_logger
+
+log = get_logger(__name__)
 
 
 dashboard_bp = Blueprint("dashboard", __name__)
@@ -30,6 +33,7 @@ def dashboard():
 def dashboard_links():
     user = get_user_by_id(g.user_id)
     if not user:
+        log.error("dashboard_user_not_found", user_id=str(g.user_id), page="links")
         return jsonify({"error": "user not found"}), 404
     return render_template(
         "dashboard/links.html",
@@ -44,6 +48,7 @@ def dashboard_links():
 def dashboard_keys():
     user = get_user_by_id(g.user_id)
     if not user:
+        log.error("dashboard_user_not_found", user_id=str(g.user_id), page="keys")
         return jsonify({"error": "user not found"}), 404
     return render_template(
         "dashboard/keys.html",
@@ -60,6 +65,7 @@ def dashboard_keys():
 def dashboard_statistics():
     user = get_user_by_id(g.user_id)
     if not user:
+        log.error("dashboard_user_not_found", user_id=str(g.user_id), page="statistics")
         return jsonify({"error": "user not found"}), 404
     return render_template(
         "dashboard/statistics.html",
@@ -74,6 +80,7 @@ def dashboard_statistics():
 def dashboard_settings():
     user = get_user_by_id(g.user_id)
     if not user:
+        log.error("dashboard_user_not_found", user_id=str(g.user_id), page="settings")
         return jsonify({"error": "user not found"}), 404
     return render_template(
         "dashboard/settings.html",
@@ -88,6 +95,7 @@ def dashboard_settings():
 def dashboard_billing():
     user = get_user_by_id(g.user_id)
     if not user:
+        log.error("dashboard_user_not_found", user_id=str(g.user_id), page="billing")
         return jsonify({"error": "user not found"}), 404
     return render_template(
         "dashboard/billing.html",
@@ -103,6 +111,9 @@ def get_profile_pictures():
     """Get available profile pictures from connected OAuth providers"""
     user = get_user_by_id(g.user_id)
     if not user:
+        log.error(
+            "dashboard_user_not_found", user_id=str(g.user_id), page="profile_pictures"
+        )
         return jsonify({"error": "user not found"}), 404
 
     pictures = []
@@ -131,11 +142,21 @@ def set_profile_picture():
     """Set user's profile picture from available options"""
     data = request.get_json()
     if not data or "picture_id" not in data:
+        log.info(
+            "profile_picture_update_failed",
+            user_id=str(g.user_id),
+            reason="missing_picture_id",
+        )
         return jsonify({"error": "picture_id is required"}), 400
 
     picture_id = data["picture_id"]
     user = get_user_by_id(g.user_id)
     if not user:
+        log.error(
+            "dashboard_user_not_found",
+            user_id=str(g.user_id),
+            page="profile_pictures_update",
+        )
         return jsonify({"error": "user not found"}), 404
 
     # Find the picture from OAuth providers
@@ -160,9 +181,34 @@ def set_profile_picture():
 
                 # Check if the update was successful (idempotent)
                 if not result.acknowledged:
+                    log.error(
+                        "profile_picture_update_failed",
+                        user_id=str(g.user_id),
+                        reason="update_not_acknowledged",
+                        picture_id=picture_id,
+                    )
                     return jsonify({"error": "Failed to update profile picture"}), 500
                 if result.matched_count == 0:
+                    log.error(
+                        "profile_picture_update_failed",
+                        user_id=str(g.user_id),
+                        reason="user_not_found",
+                        picture_id=picture_id,
+                    )
                     return jsonify({"error": "user not found"}), 404
+
+                log.info(
+                    "profile_picture_updated",
+                    user_id=str(g.user_id),
+                    source=provider.get("provider"),
+                    picture_id=picture_id,
+                )
                 return jsonify({"message": "Profile picture updated successfully"})
 
+    log.warning(
+        "profile_picture_update_failed",
+        user_id=str(g.user_id),
+        reason="picture_not_found",
+        picture_id=picture_id,
+    )
     return jsonify({"error": "Picture not found"}), 404

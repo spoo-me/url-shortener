@@ -2,8 +2,11 @@ import requests
 from datetime import datetime, timezone
 import os
 from dotenv import load_dotenv
+from utils.logger import get_logger
 
 load_dotenv()
+
+log = get_logger(__name__)
 
 CONTACT_WEBHOOK = os.environ["CONTACT_WEBHOOK"]
 URL_REPORT_WEBHOOK = os.environ["URL_REPORT_WEBHOOK"]
@@ -13,18 +16,34 @@ hcaptcha_secret = os.environ.get("HCAPTCHA_SECRET")
 def verify_hcaptcha(token):
     hcaptcha_verify_url = "https://hcaptcha.com/siteverify"
 
-    response = requests.post(
-        hcaptcha_verify_url,
-        data={
-            "response": token,
-            "secret": hcaptcha_secret,
-        },
-    )
+    try:
+        response = requests.post(
+            hcaptcha_verify_url,
+            data={
+                "response": token,
+                "secret": hcaptcha_secret,
+            },
+            timeout=5,
+        )
 
-    if response.status_code == 200:
-        data = response.json()
-        return data["success"]
-    else:
+        if response.status_code == 200:
+            data = response.json()
+            success = data.get("success", False)
+            if not success:
+                log.warning(
+                    "hcaptcha_verification_failed",
+                    error_codes=data.get("error-codes", []),
+                )
+            return success
+        else:
+            log.error(
+                "hcaptcha_api_error",
+                status_code=response.status_code,
+                response_text=response.text[:200],
+            )
+            return False
+    except requests.exceptions.RequestException as e:
+        log.error("hcaptcha_request_failed", error=str(e), error_type=type(e).__name__)
         return False
 
 
@@ -49,7 +68,22 @@ def send_report(webhook_uri, short_code, reason, ip_address, host_uri):
         ]
     }
 
-    requests.post(webhook_uri, json=data)
+    try:
+        response = requests.post(webhook_uri, json=data, timeout=5)
+        if response.status_code not in (200, 204):
+            log.warning(
+                "report_webhook_failed",
+                short_code=short_code,
+                status_code=response.status_code,
+                response_text=response.text[:200],
+            )
+    except requests.exceptions.RequestException as e:
+        log.error(
+            "report_webhook_request_failed",
+            short_code=short_code,
+            error=str(e),
+            error_type=type(e).__name__,
+        )
 
 
 def send_contact_message(webhook_uri, email, message):
@@ -71,4 +105,19 @@ def send_contact_message(webhook_uri, email, message):
         ]
     }
 
-    requests.post(webhook_uri, json=data)
+    try:
+        response = requests.post(webhook_uri, json=data, timeout=5)
+        if response.status_code not in (200, 204):
+            log.warning(
+                "contact_webhook_failed",
+                email=email,
+                status_code=response.status_code,
+                response_text=response.text[:200],
+            )
+    except requests.exceptions.RequestException as e:
+        log.error(
+            "contact_webhook_request_failed",
+            email=email,
+            error=str(e),
+            error_type=type(e).__name__,
+        )

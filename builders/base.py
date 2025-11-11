@@ -14,6 +14,9 @@ from utils.mongo_utils import (
     validate_blocked_url,
 )
 from utils.auth_utils import hash_password, resolve_owner_id_from_request
+from utils.logger import get_logger
+
+log = get_logger(__name__)
 
 
 class BaseUrlRequestBuilder:
@@ -46,6 +49,12 @@ class BaseUrlRequestBuilder:
                 scope in scopes for scope in required_scopes
             ):
                 scope_list = ", ".join(required_scopes)
+                log.warning(
+                    "url_request_access_denied",
+                    reason="missing_scope",
+                    required_scopes=list(required_scopes),
+                    api_key_scopes=list(scopes),
+                )
                 return self._fail(
                     {"error": f"api key lacks required scope: {scope_list}"}, 403
                 )
@@ -56,6 +65,12 @@ class BaseUrlRequestBuilder:
         if not self.long_url:
             return self._fail({"error": "long_url is required"}, 400)
         if not validate_url(self.long_url):
+            log.info(
+                "url_validation_failed",
+                reason="invalid_url_format",
+                url_length=len(self.long_url),
+                url_preview=self.long_url[:100],  # Truncate for logging
+            )
             return self._fail(
                 {
                     "error": "Invalid URL. URL must include a valid protocol and follow RFC patterns.",
@@ -64,6 +79,11 @@ class BaseUrlRequestBuilder:
                 400,
             )
         if not validate_blocked_url(self.long_url):
+            log.warning(
+                "blocked_url_attempt",
+                url=self.long_url[:100],  # Truncate for logging
+                owner_id=str(self.owner_id) if self.owner_id else None,
+            )
             return self._fail({"error": "Blocked URL"}, 403)
         return self
 
@@ -71,9 +91,20 @@ class BaseUrlRequestBuilder:
         custom_alias = self.payload.get("alias")
         if custom_alias:
             if not validate_alias(custom_alias):
+                log.info(
+                    "alias_validation_failed",
+                    reason="invalid_format",
+                    alias=custom_alias[:50],  # Truncate for logging
+                    alias_length=len(custom_alias),
+                )
                 return self._fail({"error": "Invalid alias", "field": "alias"}, 400)
             alias = custom_alias[:16]
             if check_if_v2_alias_exists(alias) or check_if_slug_exists(alias):
+                log.info(
+                    "alias_conflict",
+                    alias=alias,
+                    owner_id=str(self.owner_id) if self.owner_id else None,
+                )
                 return self._fail(
                     {"error": "Alias already exists", "field": "alias"}, 409
                 )
@@ -86,6 +117,7 @@ class BaseUrlRequestBuilder:
             self.password_hash = None
             return self
         if not validate_password(password):
+            log.info("password_validation_failed", password_length=len(password))
             return self._fail(
                 {
                     "error": "Invalid password: must be >=8 chars, contain a letter, a number and one of '@' or '.' without consecutive specials.",
@@ -113,7 +145,12 @@ class BaseUrlRequestBuilder:
             max_clicks = int(max_clicks)
             if max_clicks <= 0:
                 raise ValueError()
-        except Exception:
+        except Exception as e:
+            log.info(
+                "max_clicks_validation_failed",
+                max_clicks_raw=self.payload.get("max_clicks"),
+                error=str(e),
+            )
             return self._fail({"error": "max_clicks must be a positive integer"}, 400)
         self.max_clicks = max_clicks
         return self
@@ -131,7 +168,13 @@ class BaseUrlRequestBuilder:
                 if dt.tzinfo is None:
                     dt = dt.replace(tzinfo=timezone.utc)
                 self.expire_ts = int(dt.timestamp())
-        except Exception:
+        except Exception as e:
+            log.info(
+                "expire_after_validation_failed",
+                expire_after_raw=str(self.payload.get("expire_after"))[:50],
+                error=str(e),
+                error_type=type(e).__name__,
+            )
             return self._fail(
                 {"error": "expire_after must be ISO8601 or epoch seconds"}, 400
             )

@@ -8,6 +8,9 @@ from flask import url_for
 
 from utils.mongo_utils import users_collection
 from utils.url_utils import get_client_ip
+from utils.logger import get_logger
+
+log = get_logger(__name__)
 
 
 class OAuthProviders:
@@ -44,9 +47,14 @@ def init_oauth(app):
                 },
             )
             providers["google"] = google
-            print("[OAuth] Google OAuth initialized successfully")
+            log.info("oauth_provider_initialized", provider="google")
         except Exception as e:
-            print(f"[OAuth] Error initializing Google OAuth: {e}")
+            log.error(
+                "oauth_provider_init_failed",
+                provider="google",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
 
     # GitHub OAuth configuration
     if github_client_id and github_client_secret:
@@ -63,9 +71,14 @@ def init_oauth(app):
                 },
             )
             providers["github"] = github
-            print("[OAuth] GitHub OAuth initialized successfully")
+            log.info("oauth_provider_initialized", provider="github")
         except Exception as e:
-            print(f"[OAuth] Error initializing GitHub OAuth: {e}")
+            log.error(
+                "oauth_provider_init_failed",
+                provider="github",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
 
     # Discord OAuth configuration
     if discord_client_id and discord_client_secret:
@@ -82,14 +95,17 @@ def init_oauth(app):
                 },
             )
             providers["discord"] = discord
-            print("[OAuth] Discord OAuth initialized successfully")
+            log.info("oauth_provider_initialized", provider="discord")
         except Exception as e:
-            print(f"[OAuth] Error initializing Discord OAuth: {e}")
+            log.error(
+                "oauth_provider_init_failed",
+                provider="discord",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
 
     if not providers:
-        print(
-            "[OAuth] Warning: No OAuth credentials configured. OAuth features will be disabled."
-        )
+        log.warning("oauth_no_providers_configured")
         return None, {}
 
     return oauth, providers
@@ -348,7 +364,13 @@ def create_oauth_user(provider_info: Dict[str, Any], provider: str) -> Optional[
         result = users_collection.insert_one(user_doc)
         return str(result.inserted_id)
     except Exception as e:
-        print(f"Error creating OAuth user: {e}")
+        log.error(
+            "oauth_user_creation_failed",
+            provider_id=provider_info.get("provider_user_id"),
+            provider=provider_info.get("provider"),
+            error=str(e),
+            error_type=type(e).__name__,
+        )
         return None
 
 
@@ -404,7 +426,13 @@ def link_provider_to_user(
 
         return result.modified_count > 0
     except Exception as e:
-        print(f"Error linking provider to user: {e}")
+        log.error(
+            "oauth_provider_link_failed",
+            user_id=user_id,
+            provider=provider,
+            error=str(e),
+            error_type=type(e).__name__,
+        )
         return False
 
 
@@ -455,7 +483,12 @@ def update_user_last_login(user_id: str) -> None:
             {"$set": {"last_login_at": datetime.now(timezone.utc)}},
         )
     except Exception as e:
-        print(f"Error updating last login: {e}")
+        log.error(
+            "oauth_last_login_update_failed",
+            user_id=user_id,
+            error=str(e),
+            error_type=type(e).__name__,
+        )
 
 
 def get_oauth_redirect_url(provider: str, action: str = "login") -> str:

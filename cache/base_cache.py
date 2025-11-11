@@ -1,6 +1,9 @@
 from typing import Optional
 from redis import Redis
 from .redis_client import get_redis
+from utils.logger import get_logger
+
+log = get_logger(__name__)
 
 
 class BaseCache:
@@ -8,7 +11,9 @@ class BaseCache:
         try:
             self.r: Optional[Redis] = get_redis()
         except Exception as e:
-            print(f"[BaseCache] Could not initialize Redis: {e}")
+            log.error(
+                "redis_initialization_failed", error=str(e), error_type=type(e).__name__
+            )
             self.r = None
 
     def get(self, key: str):

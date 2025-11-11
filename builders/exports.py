@@ -8,8 +8,12 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 from dicttoxml import dicttoxml
 from flask import send_file
+import time
 
 from .stats import StatsQueryBuilder
+from utils.logger import get_logger, should_sample
+
+log = get_logger(__name__)
 
 
 class ExportBuilder:
@@ -90,7 +94,9 @@ class ExportBuilder:
             # Extract JSON data from response
             self.stats_data = response.get_json()
         except Exception as e:
-            print(f"Error fetching stats for export: {e}")
+            log.error(
+                "export_stats_fetch_failed", error=str(e), error_type=type(e).__name__
+            )
             return self._fail({"error": "failed to fetch statistics"}, 500)
 
         return self
@@ -298,17 +304,47 @@ class ExportBuilder:
         if self.error:
             return self.error
 
+        start_time = time.time()
+
         try:
             if self.format == "csv":
-                return self._export_to_csv(), 200
+                response = self._export_to_csv(), 200
             elif self.format == "xlsx":
-                return self._export_to_xlsx(), 200
+                response = self._export_to_xlsx(), 200
             elif self.format == "json":
-                return self._export_to_json(), 200
+                response = self._export_to_json(), 200
             elif self.format == "xml":
-                return self._export_to_xml(), 200
+                response = self._export_to_xml(), 200
             else:
                 return self._fail({"error": "unsupported format"}, 400)
+
+            # Sample logging (80%)
+            if should_sample("stats_export"):
+                duration_ms = int((time.time() - start_time) * 1000)
+                # Get export size metrics
+                total_clicks = self.stats_data.get("summary", {}).get("total_clicks", 0)
+                metrics_count = len(self.stats_data.get("metrics", {}))
+
+                log.info(
+                    "stats_export",
+                    format=self.format,
+                    scope=self.stats_builder.scope,
+                    short_code=self.stats_builder.short_code
+                    if self.stats_builder.scope == "anon"
+                    else None,
+                    total_clicks=total_clicks,
+                    metrics_count=metrics_count,
+                    duration_ms=duration_ms,
+                    large_export=total_clicks > 10000,
+                )
+
+            return response
         except Exception as e:
-            print(f"Export generation error: {e}")
+            log.error(
+                "stats_export_failed",
+                format=self.format,
+                scope=self.stats_builder.scope,
+                error=str(e),
+                error_type=type(e).__name__,
+            )
             return jsonify({"error": "failed to generate export"}), 500

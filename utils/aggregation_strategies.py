@@ -10,6 +10,10 @@ from utils.time_bucket_utils import (
     fill_missing_buckets,
 )
 
+import logging
+
+log = logging.getLogger(__name__)
+
 
 class AggregationStrategy(ABC):
     """Abstract base class for aggregation strategies"""
@@ -194,7 +198,13 @@ class TimeAggregationStrategy(AggregationStrategy):
             return dt_user.strftime("%Y-%m-%d %H:%M")
 
         except Exception as e:
-            print(f"Error converting bucket to timezone: {e}")
+            log.error(
+                "time_bucket_timezone_conversion_failed",
+                bucket=bucket_str,
+                timezone=self.timezone,
+                error=str(e),
+                error_type=type(e).__name__,
+            )
             return bucket_str  # Return original on error
 
     @property

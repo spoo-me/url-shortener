@@ -3,9 +3,12 @@ from bson import ObjectId
 from typing import Optional
 
 from utils.mongo_utils import urls_v2_collection
+from utils.logger import get_logger
 from cache import cache_query as cq
 
 from .base import BaseUrlRequestBuilder
+
+log = get_logger(__name__)
 
 
 class UpdateUrlRequestBuilder(BaseUrlRequestBuilder):
@@ -154,10 +157,25 @@ class UpdateUrlRequestBuilder(BaseUrlRequestBuilder):
             if result.matched_count == 0:
                 return jsonify({"error": "URL not found"}), 404
 
+            log.info(
+                "url_updated",
+                url_id=self.url_id,
+                alias=self.existing_doc.get("alias"),
+                owner_id=str(self.owner_id) if self.owner_id else None,
+                fields_changed=list(update_ops.keys()),
+            )
+
             # invalidate the cache for the URL; for consistent cache state
             cq.invalidate_url_cache(short_code=self.existing_doc.get("alias"))
 
-        except Exception:
+        except Exception as e:
+            log.error(
+                "url_update_failed",
+                url_id=self.url_id,
+                alias=self.existing_doc.get("alias") if self.existing_doc else None,
+                error=str(e),
+                error_type=type(e).__name__,
+            )
             return jsonify({"error": "Database error"}), 500
 
         # Return updated document info

@@ -5,8 +5,11 @@ from utils.url_utils import (
     get_client_ip,
 )
 from utils.mongo_utils import check_if_v2_alias_exists
+from utils.logger import get_logger
 
 from .base import BaseUrlRequestBuilder
+
+log = get_logger(__name__)
 
 
 class ShortenRequestBuilder(BaseUrlRequestBuilder):
@@ -53,7 +56,28 @@ class ShortenRequestBuilder(BaseUrlRequestBuilder):
 
         try:
             collection.insert_one(doc)
-        except Exception:
+
+            log.info(
+                "url_created",
+                alias=self.alias,
+                long_url=self.long_url,
+                owner_id=str(self.owner_id) if self.owner_id else None,
+                schema="v2",
+                has_password=bool(self.password_hash),
+                max_clicks=self.max_clicks,
+                block_bots=self.block_bots,
+                has_expiration=bool(self.expire_ts),
+                private_stats=self.private_stats,
+            )
+        except Exception as e:
+            log.error(
+                "url_creation_failed",
+                reason="database_error",
+                alias=self.alias,
+                schema="v2",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
             return jsonify({"error": "database error"}), 500
 
         body = {

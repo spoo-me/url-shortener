@@ -3,8 +3,12 @@ from datetime import datetime, timezone
 import json
 import re
 from typing import Optional, Any
+import time
 
 from utils.mongo_utils import urls_v2_collection
+from utils.logger import get_logger, should_sample
+
+log = get_logger(__name__)
 
 
 class UrlListQueryBuilder:
@@ -74,6 +78,12 @@ class UrlListQueryBuilder:
                 and "urls:manage" not in scopes
                 and "urls:read" not in scopes
             ):
+                log.warning(
+                    "url_list_access_denied",
+                    reason="missing_scope",
+                    required_scopes=["urls:manage", "urls:read"],
+                    api_key_scopes=list(scopes),
+                )
                 return self._fail(
                     {"error": "api key lacks required scope: urls:manage"}, 403
                 )
@@ -83,11 +93,25 @@ class UrlListQueryBuilder:
         try:
             self.page = int(self.args.get("page", 1))
             self.page_size = int(self.args.get("pageSize", 20))
-        except Exception:
+        except Exception as e:
+            log.info(
+                "url_list_pagination_invalid",
+                page_raw=self.args.get("page"),
+                pageSize_raw=self.args.get("pageSize"),
+                error=str(e),
+            )
             return self._fail({"error": "page and pageSize must be integers"}, 400)
         if self.page < 1:
+            log.info(
+                "url_list_pagination_invalid", page=self.page, reason="page_less_than_1"
+            )
             return self._fail({"error": "page must be >= 1", "field": "page"}, 400)
         if self.page_size < 1 or self.page_size > 100:
+            log.info(
+                "url_list_pagination_invalid",
+                pageSize=self.page_size,
+                reason="pageSize_out_of_range",
+            )
             return self._fail(
                 {"error": "pageSize must be between 1 and 100", "field": "pageSize"},
                 400,
@@ -109,11 +133,22 @@ class UrlListQueryBuilder:
             try:
                 self.filters = json.loads(filter_raw)
                 if not isinstance(self.filters, dict):
+                    log.info(
+                        "url_list_filter_invalid",
+                        reason="not_dict",
+                        filter_type=type(self.filters).__name__,
+                    )
                     return self._fail(
                         {"error": "filter must be a JSON object", "field": "filter"},
                         400,
                     )
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as e:
+                log.info(
+                    "url_list_filter_invalid",
+                    reason="json_decode_error",
+                    error=str(e),
+                    filter_raw=filter_raw[:100],  # Truncate for logging
+                )
                 return self._fail(
                     {"error": "filter must be valid JSON", "field": "filter"}, 400
                 )
@@ -169,7 +204,12 @@ class UrlListQueryBuilder:
             try:
                 pattern = re.compile(re.escape(search_term), re.IGNORECASE)
                 self.query["$or"] = [{"alias": pattern}, {"long_url": pattern}]
-            except re.error:
+            except re.error as e:
+                log.warning(
+                    "url_list_search_invalid",
+                    search_term=search_term[:100],  # Truncate for logging
+                    error=str(e),
+                )
                 return self._fail(
                     {"error": "invalid search pattern", "field": "filter.search"},
                     400,
@@ -181,6 +221,8 @@ class UrlListQueryBuilder:
     def build(self) -> tuple[Response, int]:
         if self.error is not None:
             return self.error
+
+        start_time = time.time()
 
         skip = (self.page - 1) * self.page_size
         limit = self.page_size
@@ -194,7 +236,15 @@ class UrlListQueryBuilder:
                 .limit(limit)
             )
             docs = list(cursor)
-        except Exception:
+        except Exception as e:
+            log.error(
+                "url_list_query_failed",
+                owner_id=str(self.owner_id),
+                page=self.page,
+                page_size=self.page_size,
+                error=str(e),
+                error_type=type(e).__name__,
+            )
             return jsonify({"error": "database error"}), 500
 
         items = []
@@ -252,4 +302,23 @@ class UrlListQueryBuilder:
             "sortBy": self.sort_field,
             "sortOrder": "descending" if self.sort_order == -1 else "ascending",
         }
+
+        # Sample logging (20%)
+        if should_sample("url_list_query"):
+            duration_ms = int((time.time() - start_time) * 1000)
+            log.info(
+                "url_list_query",
+                owner_id=str(self.owner_id),
+                page=self.page,
+                page_size=self.page_size,
+                total=total,
+                results=len(items),
+                sort_by=self.sort_field,
+                sort_order="desc" if self.sort_order == -1 else "asc",
+                has_filters=len(self.filters) > 0,
+                filter_count=len(self.filters),
+                duration_ms=duration_ms,
+                slow_query=duration_ms > 3000,
+            )
+
         return jsonify(body), 200

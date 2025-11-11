@@ -23,10 +23,13 @@ from utils.mongo_utils import (
     insert_click_data,
 )
 from utils.auth_utils import verify_password
+from utils.logger import get_logger, hash_ip, should_sample
 from cache import cache_query as cq
 from cache.cache_url import UrlCacheData
 
 from .limiter import limiter
+
+log = get_logger(__name__)
 
 from ua_parser import parse
 from datetime import datetime, timezone
@@ -125,6 +128,7 @@ def redirect_url(short_code):
         is_emoji = schema_type == "emoji"
 
         if not url_data:
+            log.warning("url_not_found", short_code=short_code)
             return (
                 render_template(
                     "error.html",
@@ -238,6 +242,7 @@ def redirect_url(short_code):
             password_valid = password == url_data["password"]
 
         if not password_valid:
+            log.info("password_required", short_code=short_code, schema=schema_type)
             return (
                 render_template(
                     "password.html", short_code=short_code, host_url=request.host_url
@@ -255,7 +260,31 @@ def redirect_url(short_code):
                 url_data, short_code, schema_type, is_emoji, user_ip, start_time
             )
         except RedirectorError as exc:
+            log.error(
+                "click_processing_failed",
+                short_code=short_code,
+                schema=schema_type,
+                error=exc.message,
+                error_type=type(exc).__name__,
+            )
             return exc.to_response()
+
+    # Sample redirect events (5% sampling)
+    if should_sample("url_redirect"):
+        redirect_ms = int((time.perf_counter() - start_time) * 1000)
+        user_agent = request.headers.get("User-Agent", "")
+        is_bot = crawler_detect.isCrawler(user_agent) or any(
+            re.search(bot, user_agent, re.IGNORECASE) for bot in BOT_USER_AGENTS
+        )
+
+        log.info(
+            "url_redirect",
+            short_code=short_code,
+            schema=schema_type,
+            redirect_ms=redirect_ms,
+            is_bot=is_bot,
+            ip_hash=hash_ip(user_ip),
+        )
 
     redirect_response = redirect(url, code=302)
     redirect_response.headers["X-Robots-Tag"] = "noindex, nofollow"
@@ -337,14 +366,6 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
             re.search(bot, user_agent, re.IGNORECASE) for bot in BOT_USER_AGENTS
         )
 
-        if url_data.get("block_bots", False) and is_bot:
-            # Dont log the click, but do redirect for SEO and meta tags
-            print(
-                "Bot blocked, but redirecting for SEO and meta tags, user_agent:",
-                user_agent,
-            )
-            return
-
         bot_name = None
         if is_bot:
             # Try to identify specific bot
@@ -355,6 +376,16 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
                     if re.search(bot, user_agent, re.IGNORECASE):
                         bot_name = bot
                         break
+
+        if url_data.get("block_bots", False) and is_bot:
+            # Dont log the click, but do redirect for SEO and meta tags
+            log.info(
+                "bot_blocked",
+                short_code=short_code,
+                bot_name=bot_name if bot_name else "generic",
+                schema="v2",
+            )
+            return
 
         # Prepare click data for time-series collection following agreed schema
         curr_time = datetime.now(timezone.utc)
@@ -391,6 +422,13 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
                 url_data["_id"], url_data["max_clicks"]
             )
             if expire_result.modified_count > 0:
+                log.info(
+                    "url_expired",
+                    url_id=str(url_data["_id"]),
+                    short_code=short_code,
+                    reason="max_clicks_reached",
+                    max_clicks=url_data["max_clicks"],
+                )
                 # invalidate the cache
                 cq.invalidate_url_cache(short_code)
 
@@ -398,7 +436,13 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
     except RedirectorError:
         raise
     except Exception as e:
-        print(f"Error handling v2 click: {e}")
+        log.error(
+            "click_processing_failed",
+            short_code=short_code,
+            schema="v2",
+            error=str(e),
+            error_type=type(e).__name__,
+        )
         raise InternalRedirectorError() from e
 
 
@@ -449,6 +493,9 @@ def handle_legacy_click(url_data, short_code, is_emoji, user_ip, start_time):
         for bot in BOT_USER_AGENTS:
             if re.search(bot, user_agent, re.IGNORECASE):
                 if url_data.get("block_bots", False):
+                    log.info(
+                        "bot_blocked", short_code=short_code, bot_name=bot, schema="v1"
+                    )
                     raise ForbiddenError("Access Denied, Bots not allowed")
                 sanitized_bot = re.sub(r"[.$\x00-\x1F\x7F-\x9F]", "_", bot)
                 updates["$inc"][f"bots.{sanitized_bot}"] = 1
@@ -456,6 +503,12 @@ def handle_legacy_click(url_data, short_code, is_emoji, user_ip, start_time):
         else:
             if crawler_detect.isCrawler(user_agent):
                 if url_data.get("block_bots", False):
+                    log.info(
+                        "bot_blocked",
+                        short_code=short_code,
+                        bot_name=crawler_detect.getMatches(),
+                        schema="v1",
+                    )
                     raise ForbiddenError("Access Denied, Bots not allowed")
                 updates["$inc"][f"bots.{crawler_detect.getMatches()}"] = 1
 
@@ -497,7 +550,13 @@ def handle_legacy_click(url_data, short_code, is_emoji, user_ip, start_time):
     except RedirectorError:
         raise
     except Exception as e:
-        print(f"Error handling legacy click: {e}")
+        log.error(
+            "click_processing_failed",
+            short_code=short_code,
+            schema="v1",
+            error=str(e),
+            error_type=type(e).__name__,
+        )
         raise InternalRedirectorError() from e
 
 
@@ -529,6 +588,9 @@ def check_password(short_code):
                 return redirect(f"{request.host_url}{short_code}?password={password}")
             else:
                 # Show error message for incorrect password
+                log.warning(
+                    "password_incorrect", short_code=short_code, schema=schema_type
+                )
                 return render_template(
                     "password.html",
                     short_code=short_code,

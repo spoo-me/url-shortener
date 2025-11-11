@@ -2,6 +2,10 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime
 from bson import ObjectId
 
+from utils.logger import get_logger
+
+log = get_logger(__name__)
+
 
 class StatsQueryBuilder:
     """Builder pattern for constructing MongoDB queries for statistics"""
@@ -63,6 +67,12 @@ class StatsQueryBuilder:
                 # This prevents filter-based scope bypass attacks
                 if "meta.short_code" in self.scope_filters:
                     # Skip - short_code already locked by scope (anon mode)
+                    log.warning(
+                        "query_builder_scope_bypass_prevented",
+                        dimension="short_code",
+                        locked_short_code=self.scope_filters.get("meta.short_code"),
+                        attempted_values=values,
+                    )
                     continue
                 # Map "short_code" filter to the actual field name in MongoDB
                 self.query["meta.short_code"] = {"$in": values}

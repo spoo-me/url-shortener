@@ -27,6 +27,7 @@ from utils.mongo_utils import (
     get_url_v2_by_alias,
 )
 from utils.general import is_positive_integer, humanize_number
+from utils.logger import get_logger
 from .limiter import limiter
 from cache import dual_cache
 
@@ -36,6 +37,7 @@ import tldextract
 from crawlerdetect import CrawlerDetect
 
 url_shortener = Blueprint("url_shortener", __name__)
+log = get_logger(__name__)
 
 crawler_detect = CrawlerDetect()
 tld_no_cache_extract = tldextract.TLDExtract(cache_dir=None)
@@ -101,6 +103,9 @@ def shorten_url():
         short_code = alias[:16]
 
     if alias and check_if_slug_exists(alias[:16]):
+        log.warning(
+            "url_creation_failed", reason="alias_exists", alias=alias[:16], schema="v1"
+        )
         if request.headers.get("Accept") == "application/json":
             return (
                 jsonify(
@@ -164,6 +169,17 @@ def shorten_url():
 
     insert_url(short_code, data)
 
+    log.info(
+        "url_created",
+        alias=short_code,
+        long_url=url,
+        owner_id=None,
+        schema="v1",
+        has_password=bool(password),
+        max_clicks=max_clicks if max_clicks else None,
+        block_bots=bool(block_bots),
+    )
+
     response_data = {
         "short_url": f"{request.host_url}{short_code}",
         "domain": request.host,
@@ -195,6 +211,12 @@ def emoji():
             return jsonify({"EmojiError": "Invalid emoji"}), 400
 
         if check_if_emoji_alias_exists(emojies):
+            log.warning(
+                "url_creation_failed",
+                reason="emoji_alias_exists",
+                alias=emojies,
+                schema="v1_emoji",
+            )
             return jsonify({"EmojiError": "Emoji already exists"}), 400
     else:
         while True:
@@ -252,6 +274,17 @@ def emoji():
         data["block-bots"] = True
 
     insert_emoji_url(emojies, data)
+
+    log.info(
+        "url_created",
+        alias=emojies,
+        long_url=url,
+        owner_id=None,
+        schema="v1_emoji",
+        has_password=bool(password),
+        max_clicks=max_clicks if max_clicks else None,
+        block_bots=bool(block_bots),
+    )
 
     response_data = {
         "short_url": f"{request.host_url}{emojies}",

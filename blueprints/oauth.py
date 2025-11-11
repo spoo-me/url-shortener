@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request, g, redirect
 
 from .limiter import limiter
+from utils.logger import get_logger
 from utils.auth_utils import (
     generate_access_jwt,
     generate_refresh_jwt,
@@ -32,7 +33,7 @@ from utils.oauth_utils import (
 
 
 oauth_bp = Blueprint("oauth", __name__)
-
+log = get_logger(__name__)
 
 # Initialize OAuth - this needs to be done at the app level
 oauth = None
@@ -52,6 +53,7 @@ def oauth_google_login():
     """Initiate Google OAuth login"""
     google = providers.get("google")
     if not google:
+        log.error("oauth_provider_not_configured", provider="google")
         return jsonify({"error": "Google OAuth not configured"}), 500
 
     # Generate state parameter for CSRF protection
@@ -70,15 +72,18 @@ def oauth_google_callback():
     """Handle Google OAuth callback"""
     google = providers.get("google")
     if not google:
+        log.error("oauth_provider_not_configured", provider="google")
         return jsonify({"error": "Google OAuth not configured"}), 500
 
     # Verify state parameter
     state = request.args.get("state")
     if not state:
+        log.warning("oauth_state_missing", provider="google")
         return jsonify({"error": "missing state parameter"}), 400
 
     is_valid, state_data = verify_oauth_state(state, OAuthProviders.GOOGLE)
     if not is_valid:
+        log.warning("oauth_state_invalid", provider="google")
         return jsonify({"error": "invalid state parameter"}), 400
 
     # Check for error from OAuth provider
@@ -86,6 +91,12 @@ def oauth_google_callback():
     if error:
         error_description = request.args.get(
             "error_description", "OAuth authorization failed"
+        )
+        log.warning(
+            "oauth_provider_error",
+            provider="google",
+            error=error,
+            description=error_description,
         )
         return jsonify({"error": f"OAuth error: {error_description}"}), 400
 
@@ -137,6 +148,12 @@ def oauth_google_callback():
 
             # Verify that the OAuth email matches the current user's email
             if current_user.get("email", "").lower() != provider_info["email"].lower():
+                log.warning(
+                    "oauth_email_mismatch",
+                    user_id=link_user_id,
+                    provider="google",
+                    reason="linking_attempt",
+                )
                 return jsonify(
                     {
                         "error": "email mismatch",
@@ -148,6 +165,10 @@ def oauth_google_callback():
             if link_provider_to_user(
                 link_user_id, provider_info, OAuthProviders.GOOGLE
             ):
+                log.info(
+                    "oauth_account_linked", user_id=link_user_id, provider="google"
+                )
+
                 # Generate tokens for the linked user
                 auth_method = OAuthProviders.GOOGLE
                 access_token = generate_access_jwt(link_user_id, auth_method)
@@ -159,6 +180,12 @@ def oauth_google_callback():
                 set_access_cookie(resp, access_token)
                 return resp
             else:
+                log.error(
+                    "oauth_linking_failed",
+                    user_id=link_user_id,
+                    provider="google",
+                    reason="database_error",
+                )
                 return jsonify({"error": "failed to link Google account"}), 500
 
         # Check if user already exists with this OAuth provider
@@ -170,6 +197,13 @@ def oauth_google_callback():
             # User exists with this OAuth provider - log them in
             user_id = str(existing_oauth_user["_id"])
             update_user_last_login(user_id)
+
+            log.info(
+                "oauth_login_success",
+                user_id=user_id,
+                provider="google",
+                action="login",
+            )
 
             # Generate tokens
             auth_method = OAuthProviders.GOOGLE
@@ -196,6 +230,8 @@ def oauth_google_callback():
                 if link_provider_to_user(user_id, provider_info, OAuthProviders.GOOGLE):
                     update_user_last_login(user_id)
 
+                    log.info("oauth_auto_linked", user_id=user_id, provider="google")
+
                     # Generate tokens
                     auth_method = OAuthProviders.GOOGLE
                     access_token = generate_access_jwt(user_id, auth_method)
@@ -207,6 +243,9 @@ def oauth_google_callback():
                     set_access_cookie(resp, access_token)
                     return resp
                 else:
+                    log.error(
+                        "oauth_auto_link_failed", user_id=user_id, provider="google"
+                    )
                     return jsonify({"error": "failed to link accounts"}), 500
             else:
                 # Cannot auto-link - require manual account linking or different email
@@ -221,7 +260,10 @@ def oauth_google_callback():
         user_id = create_oauth_user(provider_info, OAuthProviders.GOOGLE)
 
         if not user_id:
+            log.error("oauth_user_creation_failed", provider="google")
             return jsonify({"error": "failed to create user"}), 500
+
+        log.info("user_registered", user_id=user_id, auth_method="google_oauth")
 
         # Generate tokens
         auth_method = OAuthProviders.GOOGLE
@@ -235,7 +277,12 @@ def oauth_google_callback():
         return resp
 
     except Exception as e:
-        print(f"OAuth callback error: {e}")
+        log.error(
+            "oauth_callback_failed",
+            provider="google",
+            error=str(e),
+            error_type=type(e).__name__,
+        )
         return jsonify({"error": "OAuth authentication failed"}), 500
 
 
@@ -246,6 +293,7 @@ def oauth_google_link():
     """Link Google OAuth to existing account"""
     google = providers.get("google")
     if not google:
+        log.error("oauth_provider_not_configured", provider="google")
         return jsonify({"error": "Google OAuth not configured"}), 500
 
     # Check if user already has Google linked
@@ -274,6 +322,7 @@ def oauth_github_login():
     """Initiate GitHub OAuth login"""
     github = providers.get("github")
     if not github:
+        log.error("oauth_provider_not_configured", provider="github")
         return jsonify({"error": "GitHub OAuth not configured"}), 500
 
     # Generate state parameter for CSRF protection
@@ -292,15 +341,18 @@ def oauth_github_callback():
     """Handle GitHub OAuth callback"""
     github = providers.get("github")
     if not github:
+        log.error("oauth_provider_not_configured", provider="github")
         return jsonify({"error": "GitHub OAuth not configured"}), 500
 
     # Verify state parameter
     state = request.args.get("state")
     if not state:
+        log.warning("oauth_state_missing", provider="github")
         return jsonify({"error": "missing state parameter"}), 400
 
     is_valid, state_data = verify_oauth_state(state, OAuthProviders.GITHUB)
     if not is_valid:
+        log.warning("oauth_state_invalid", provider="github")
         return jsonify({"error": "invalid state parameter"}), 400
 
     # Check for error from OAuth provider
@@ -308,6 +360,12 @@ def oauth_github_callback():
     if error:
         error_description = request.args.get(
             "error_description", "OAuth authorization failed"
+        )
+        log.warning(
+            "oauth_provider_error",
+            provider="github",
+            error=error,
+            description=error_description,
         )
         return jsonify({"error": f"OAuth error: {error_description}"}), 400
 
@@ -360,6 +418,12 @@ def oauth_github_callback():
 
             # Verify that the OAuth email matches the current user's email
             if current_user.get("email", "").lower() != provider_info["email"].lower():
+                log.warning(
+                    "oauth_email_mismatch",
+                    user_id=link_user_id,
+                    provider="github",
+                    reason="linking_attempt",
+                )
                 return jsonify(
                     {
                         "error": "email mismatch",
@@ -371,6 +435,10 @@ def oauth_github_callback():
             if link_provider_to_user(
                 link_user_id, provider_info, OAuthProviders.GITHUB
             ):
+                log.info(
+                    "oauth_account_linked", user_id=link_user_id, provider="github"
+                )
+
                 # Generate tokens for the linked user
                 auth_method = OAuthProviders.GITHUB
                 access_token = generate_access_jwt(link_user_id, auth_method)
@@ -382,6 +450,12 @@ def oauth_github_callback():
                 set_access_cookie(resp, access_token)
                 return resp
             else:
+                log.error(
+                    "oauth_linking_failed",
+                    user_id=link_user_id,
+                    provider="github",
+                    reason="database_error",
+                )
                 return jsonify({"error": "failed to link GitHub account"}), 500
 
         # Check if user already exists with this OAuth provider
@@ -393,6 +467,13 @@ def oauth_github_callback():
             # User exists with this OAuth provider - log them in
             user_id = str(existing_oauth_user["_id"])
             update_user_last_login(user_id)
+
+            log.info(
+                "oauth_login_success",
+                user_id=user_id,
+                provider="github",
+                action="login",
+            )
 
             # Generate tokens
             auth_method = OAuthProviders.GITHUB
@@ -419,6 +500,8 @@ def oauth_github_callback():
                 if link_provider_to_user(user_id, provider_info, OAuthProviders.GITHUB):
                     update_user_last_login(user_id)
 
+                    log.info("oauth_auto_linked", user_id=user_id, provider="github")
+
                     # Generate tokens
                     auth_method = OAuthProviders.GITHUB
                     access_token = generate_access_jwt(user_id, auth_method)
@@ -430,6 +513,9 @@ def oauth_github_callback():
                     set_access_cookie(resp, access_token)
                     return resp
                 else:
+                    log.error(
+                        "oauth_auto_link_failed", user_id=user_id, provider="github"
+                    )
                     return jsonify({"error": "failed to link accounts"}), 500
             else:
                 # Cannot auto-link - require manual account linking or different email
@@ -444,7 +530,10 @@ def oauth_github_callback():
         user_id = create_oauth_user(provider_info, OAuthProviders.GITHUB)
 
         if not user_id:
+            log.error("oauth_user_creation_failed", provider="github")
             return jsonify({"error": "failed to create user"}), 500
+
+        log.info("user_registered", user_id=user_id, auth_method="github_oauth")
 
         # Generate tokens
         auth_method = OAuthProviders.GITHUB
@@ -458,7 +547,12 @@ def oauth_github_callback():
         return resp
 
     except Exception as e:
-        print(f"GitHub OAuth callback error: {e}")
+        log.error(
+            "oauth_callback_failed",
+            provider="github",
+            error=str(e),
+            error_type=type(e).__name__,
+        )
         return jsonify({"error": "OAuth authentication failed"}), 500
 
 
@@ -469,6 +563,7 @@ def oauth_github_link():
     """Link GitHub OAuth to existing account"""
     github = providers.get("github")
     if not github:
+        log.error("oauth_provider_not_configured", provider="github")
         return jsonify({"error": "GitHub OAuth not configured"}), 500
 
     # Check if user already has GitHub linked
@@ -497,6 +592,7 @@ def oauth_discord_login():
     """Initiate Discord OAuth login"""
     discord = providers.get("discord")
     if not discord:
+        log.error("oauth_provider_not_configured", provider="discord")
         return jsonify({"error": "Discord OAuth not configured"}), 500
 
     # Generate state parameter for CSRF protection
@@ -515,15 +611,18 @@ def oauth_discord_callback():
     """Handle Discord OAuth callback"""
     discord = providers.get("discord")
     if not discord:
+        log.error("oauth_provider_not_configured", provider="discord")
         return jsonify({"error": "Discord OAuth not configured"}), 500
 
     # Verify state parameter
     state = request.args.get("state")
     if not state:
+        log.warning("oauth_state_missing", provider="discord")
         return jsonify({"error": "missing state parameter"}), 400
 
     is_valid, state_data = verify_oauth_state(state, OAuthProviders.DISCORD)
     if not is_valid:
+        log.warning("oauth_state_invalid", provider="discord")
         return jsonify({"error": "invalid state parameter"}), 400
 
     # Check for error from OAuth provider
@@ -531,6 +630,12 @@ def oauth_discord_callback():
     if error:
         error_description = request.args.get(
             "error_description", "OAuth authorization failed"
+        )
+        log.warning(
+            "oauth_provider_error",
+            provider="discord",
+            error=error,
+            description=error_description,
         )
         return jsonify({"error": f"OAuth error: {error_description}"}), 400
 
@@ -579,6 +684,12 @@ def oauth_discord_callback():
 
             # Verify that the OAuth email matches the current user's email
             if current_user.get("email", "").lower() != provider_info["email"].lower():
+                log.warning(
+                    "oauth_email_mismatch",
+                    user_id=link_user_id,
+                    provider="discord",
+                    reason="linking_attempt",
+                )
                 return jsonify(
                     {
                         "error": "email mismatch",
@@ -590,6 +701,10 @@ def oauth_discord_callback():
             if link_provider_to_user(
                 link_user_id, provider_info, OAuthProviders.DISCORD
             ):
+                log.info(
+                    "oauth_account_linked", user_id=link_user_id, provider="discord"
+                )
+
                 # Generate tokens for the linked user
                 auth_method = OAuthProviders.DISCORD
                 access_token = generate_access_jwt(link_user_id, auth_method)
@@ -601,6 +716,12 @@ def oauth_discord_callback():
                 set_access_cookie(resp, access_token)
                 return resp
             else:
+                log.error(
+                    "oauth_linking_failed",
+                    user_id=link_user_id,
+                    provider="discord",
+                    reason="database_error",
+                )
                 return jsonify({"error": "failed to link Discord account"}), 500
 
         # Check if user already exists with this OAuth provider
@@ -612,6 +733,13 @@ def oauth_discord_callback():
             # User exists with this OAuth provider - log them in
             user_id = str(existing_oauth_user["_id"])
             update_user_last_login(user_id)
+
+            log.info(
+                "oauth_login_success",
+                user_id=user_id,
+                provider="discord",
+                action="login",
+            )
 
             # Generate tokens
             auth_method = OAuthProviders.DISCORD
@@ -640,6 +768,8 @@ def oauth_discord_callback():
                 ):
                     update_user_last_login(user_id)
 
+                    log.info("oauth_auto_linked", user_id=user_id, provider="discord")
+
                     # Generate tokens
                     auth_method = OAuthProviders.DISCORD
                     access_token = generate_access_jwt(user_id, auth_method)
@@ -651,6 +781,9 @@ def oauth_discord_callback():
                     set_access_cookie(resp, access_token)
                     return resp
                 else:
+                    log.error(
+                        "oauth_auto_link_failed", user_id=user_id, provider="discord"
+                    )
                     return jsonify({"error": "failed to link accounts"}), 500
             else:
                 # Cannot auto-link - require manual account linking or different email
@@ -665,7 +798,10 @@ def oauth_discord_callback():
         user_id = create_oauth_user(provider_info, OAuthProviders.DISCORD)
 
         if not user_id:
+            log.error("oauth_user_creation_failed", provider="discord")
             return jsonify({"error": "failed to create user"}), 500
+
+        log.info("user_registered", user_id=user_id, auth_method="discord_oauth")
 
         # Generate tokens
         auth_method = OAuthProviders.DISCORD
@@ -679,7 +815,12 @@ def oauth_discord_callback():
         return resp
 
     except Exception as e:
-        print(f"Discord OAuth callback error: {e}")
+        log.error(
+            "oauth_callback_failed",
+            provider="discord",
+            error=str(e),
+            error_type=type(e).__name__,
+        )
         return jsonify({"error": "OAuth authentication failed"}), 500
 
 
@@ -690,6 +831,7 @@ def oauth_discord_link():
     """Link Discord OAuth to existing account"""
     discord = providers.get("discord")
     if not discord:
+        log.error("oauth_provider_not_configured", provider="discord")
         return jsonify({"error": "Discord OAuth not configured"}), 500
 
     # Check if user already has Discord linked
@@ -779,12 +921,20 @@ def unlink_oauth_provider(provider):
         )
 
         if result.modified_count > 0:
+            log.info("oauth_provider_unlinked", user_id=g.user_id, provider=provider)
             return jsonify(
                 {"success": True, "message": f"{provider} unlinked successfully"}
             )
         else:
+            log.warning("oauth_unlink_not_found", user_id=g.user_id, provider=provider)
             return jsonify({"error": "provider not found or already unlinked"}), 404
 
     except Exception as e:
-        print(f"Error unlinking provider: {e}")
+        log.error(
+            "oauth_unlink_failed",
+            user_id=g.user_id,
+            provider=provider,
+            error=str(e),
+            error_type=type(e).__name__,
+        )
         return jsonify({"error": "failed to unlink provider"}), 500
