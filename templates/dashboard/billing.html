@@ -1,0 +1,110 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Billing | Dashboard | spoo.me{% endblock %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/billing.css') }}?v=1">
+<meta name="robots" content="noindex">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <div class="page-header-text">
+            <h1 class="page-title">Billing & Plans</h1>
+            <p class="page-subtitle">Manage your subscription and billing information</p>
+        </div>
+    </div>
+</div>
+
+<div class="billing-container">
+    <!-- Current Plan Card -->
+    <div class="current-plan-card surface">
+        <div class="plan-header">
+            <div class="plan-info">
+                <h2 class="plan-name">{{ user.plan|capitalize }} Plan</h2>
+                <p class="plan-description">Your current subscription plan</p>
+            </div>
+            <div class="plan-badge">
+                <span class="badge badge-active">
+                    <i class="ti ti-circle-check"></i> Active
+                </span>
+            </div>
+        </div>
+        
+        <div class="plan-details">
+            <div class="detail-item">
+                <i class="ti ti-calendar"></i>
+                <div class="detail-content">
+                    <span class="detail-label">Billing Cycle</span>
+                    <span class="detail-value">Free Forever</span>
+                </div>
+            </div>
+            <div class="detail-item">
+                <i class="ti ti-credit-card"></i>
+                <div class="detail-content">
+                    <span class="detail-label">Payment Method</span>
+                    <span class="detail-value">No payment required</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="plan-features">
+            <h3 class="features-title">What's Included</h3>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <i class="ti ti-link"></i>
+                    <div class="feature-content">
+                        <span class="feature-title">Unlimited Links</span>
+                        <span class="feature-desc">Create as many short links as you need</span>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <i class="ti ti-chart-bar"></i>
+                    <div class="feature-content">
+                        <span class="feature-title">Analytics</span>
+                        <span class="feature-desc">Track clicks and basic statistics</span>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <i class="ti ti-tag"></i>
+                    <div class="feature-content">
+                        <span class="feature-title">Custom Aliases</span>
+                        <span class="feature-desc">Create memorable short URLs</span>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <i class="ti ti-lock"></i>
+                    <div class="feature-content">
+                        <span class="feature-title">Password Protection</span>
+                        <span class="feature-desc">Secure your links with passwords</span>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <i class="ti ti-clock"></i>
+                    <div class="feature-content">
+                        <span class="feature-title">Expiration Control</span>
+                        <span class="feature-desc">Set expiration dates for your links</span>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <i class="ti ti-api"></i>
+                    <div class="feature-content">
+                        <span class="feature-title">API Access</span>
+                        <span class="feature-desc">Integrate with our REST API</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any interactive functionality here if needed
+        console.log('Billing page loaded');
+    });
+</script>
+{% endblock %}

@@ -82,6 +82,20 @@ def dashboard_settings():
     )
 
 
+@dashboard_bp.route("/billing", methods=["GET"])
+@requires_auth
+@limiter.limit("60 per minute", key_func=rate_limit_key_for_request)
+def dashboard_billing():
+    user = get_user_by_id(g.user_id)
+    if not user:
+        return jsonify({"error": "user not found"}), 404
+    return render_template(
+        "dashboard/billing.html",
+        host_url=request.host_url,
+        user=get_user_profile(user),
+    )
+
+
 @dashboard_bp.route("/profile-pictures", methods=["GET"])
 @limiter.limit("30 per minute", key_func=rate_limit_key_for_request)
 @requires_auth
