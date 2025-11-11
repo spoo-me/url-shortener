@@ -24,6 +24,8 @@ from utils.mongo_utils import (
     check_if_emoji_alias_exists,
     validate_blocked_url,
     urls_collection,
+    urls_v2_collection,
+    clicks_collection,
     get_url_v2_by_alias,
 )
 from utils.general import is_positive_integer, humanize_number
@@ -35,6 +37,7 @@ from datetime import datetime
 from urllib.parse import unquote
 import tldextract
 from crawlerdetect import CrawlerDetect
+import time
 
 url_shortener = Blueprint("url_shortener", __name__)
 log = get_logger(__name__)
@@ -340,7 +343,7 @@ def result(short_code):
         )
 
 
-METRIC_PIPELINE = [
+METRIC_PIPELINE_V1 = [
     {
         "$group": {
             "_id": None,
@@ -355,12 +358,42 @@ METRIC_PIPELINE = [
 @limiter.exempt
 def metric():
     def query():
-        result = urls_collection.aggregate(METRIC_PIPELINE).next()
-        del result["_id"]
-        result["total-clicks-raw"] = result["total-clicks"]
-        result["total-shortlinks-raw"] = result["total-shortlinks"]
-        result["total-clicks"] = humanize_number(result["total-clicks"])
-        result["total-shortlinks"] = humanize_number(result["total-shortlinks"])
+        start_time = time.time()
+
+        # Get counts from v1 urls collection (legacy)
+        v1_result = urls_collection.aggregate(METRIC_PIPELINE_V1).next()
+        v1_shortlinks = v1_result.get("total-shortlinks", 0)
+        v1_clicks = v1_result.get("total-clicks", 0)
+
+        # Get document count from v2 urls collection
+        v2_shortlinks = urls_v2_collection.count_documents({})
+
+        # Get document count from clicks time-series collection
+        total_clicks_from_ts = clicks_collection.count_documents({})
+
+        # Combine results
+        total_shortlinks = v1_shortlinks + v2_shortlinks
+        total_clicks = v1_clicks + total_clicks_from_ts
+
+        result = {
+            "total-shortlinks-raw": total_shortlinks,
+            "total-clicks-raw": total_clicks,
+            "total-shortlinks": humanize_number(total_shortlinks),
+            "total-clicks": humanize_number(total_clicks),
+        }
+
+        elapsed_time = time.time() - start_time
+        log.info(
+            "metrics_query_completed",
+            total_shortlinks=total_shortlinks,
+            total_clicks=total_clicks,
+            v1_shortlinks=v1_shortlinks,
+            v2_shortlinks=v2_shortlinks,
+            v1_clicks=v1_clicks,
+            ts_clicks=total_clicks_from_ts,
+            elapsed_ms=round(elapsed_time * 1000, 2),
+        )
+
         return result
 
     return jsonify(dual_cache.get_or_set("metrics", query))
