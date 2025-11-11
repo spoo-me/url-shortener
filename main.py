@@ -9,6 +9,7 @@ from flask import (
     request,
 )
 from flask_cors import CORS
+import sentry_sdk
 
 from blueprints.api import api
 from blueprints.contact import contact
@@ -36,6 +37,16 @@ limiter.init_app(app)
 
 # Initialize OAuth
 init_oauth_for_app(app)
+
+if os.getenv("SENTRY_DSN"):
+    sentry_sdk.init(
+        dsn=os.getenv("SENTRY_DSN"),
+        send_default_pii=True,
+        traces_sample_rate=1.0,
+        enable_logs=True,
+        profile_session_sample_rate=1.0,
+        profile_lifecycle="trace",
+    )
 
 ensure_indexes()
 
