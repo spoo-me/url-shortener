@@ -13,7 +13,6 @@ import os
 import sys
 import hashlib
 import logging
-from typing import Any, Dict
 
 import structlog
 from structlog.types import EventDict, Processor
@@ -204,13 +203,12 @@ def configure_sentry_logging() -> None:
         return
 
     try:
-        import sentry_sdk
         from sentry_sdk.integrations.logging import LoggingIntegration
 
         # Sentry logging integration
         # INFO+ logs become breadcrumbs (context)
         # ERROR+ logs become Sentry events
-        sentry_logging = LoggingIntegration(
+        sentry_logging = LoggingIntegration(  # noqa F841
             level=logging.INFO,  # Capture INFO and above as breadcrumbs
             event_level=logging.ERROR,  # Send ERROR and above as events
         )

@@ -10,7 +10,6 @@ Provides:
 
 import time
 import uuid
-from functools import wraps
 from typing import Optional
 
 import structlog

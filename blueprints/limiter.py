@@ -1,8 +1,7 @@
 from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from utils.mongo_utils import MONGO_URI, ip_bypasses
 from utils.url_utils import get_client_ip
-from utils.logger import get_logger, hash_ip
+from utils.logger import get_logger
 from flask import request
 from utils.auth_utils import resolve_owner_id_from_request
 

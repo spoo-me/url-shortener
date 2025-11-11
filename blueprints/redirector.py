@@ -1,5 +1,11 @@
 import time
 from bson import ObjectId
+from ua_parser import parse
+from datetime import datetime, timezone
+from urllib.parse import unquote
+import re
+import tldextract
+from crawlerdetect import CrawlerDetect
 from flask import (
     Blueprint,
     request,
@@ -30,13 +36,6 @@ from cache.cache_url import UrlCacheData
 from .limiter import limiter
 
 log = get_logger(__name__)
-
-from ua_parser import parse
-from datetime import datetime, timezone
-from urllib.parse import unquote
-import re
-import tldextract
-from crawlerdetect import CrawlerDetect
 
 crawler_detect = CrawlerDetect()
 tld_no_cache_extract = tldextract.TLDExtract(cache_dir=None)
