@@ -100,6 +100,93 @@
     background-color: rgba(255, 255, 255, 0.1);
 }
 
+.export-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.75);
+    padding: 8px 12px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-height: 36px;
+}
+
+.export-btn-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.export-btn:hover {
+    color: rgba(255, 255, 255, 0.95);
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.export-btn.active {
+    background: rgba(124, 58, 237, 0.15);
+    border-color: rgba(124, 58, 237, 0.4);
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* Export Dropdown Menu */
+.export-dropdown-menu {
+    position: absolute;
+    background: rgba(15, 20, 35, 0.98);
+    backdrop-filter: blur(20px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    padding: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    min-width: 200px;
+    top: calc(100% + 8px);
+    left: -20px;
+}
+
+.export-dropdown-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.export-menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.85);
+    background: transparent;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.export-menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.export-menu-item i {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+
+
 .separator {
     width: 1px;
     height: 18px;
@@ -1342,6 +1429,10 @@
         padding: 0 10px;
     }
 
+    .summary-stats {
+        flex-direction: column;
+    }
+
     .page-header-content {
         flex-direction: column;
         gap: 20px;
@@ -1365,20 +1456,6 @@
     .controls-actions {
         justify-content: flex-start;
         flex-wrap: wrap;
-        gap: 10px;
-        width: 100%;
-    }
-
-    .summary-stats {
-        flex-direction: column;
-    }
-
-    .chart-controls {
-        justify-content: center;
-    }
-
-    .json-data {
-        height: 150px;
     }
 
     /* Mobile Bottom Sheet for Filters Dropdown */

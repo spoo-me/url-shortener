@@ -152,6 +152,30 @@
         </div>
         <div class="controls-actions">
             <div id="dateRangeContainer"></div>
+            <div class="export-btn-wrapper">
+                <button class="export-btn" type="button" title="Export">
+                    <i class="ti ti-download"></i>
+                </button>
+                <!-- Export Dropdown Menu -->
+                <div class="export-dropdown-menu" id="exportDropdownMenu">
+                    <button class="export-menu-item" data-format="json">
+                        <i class="ti ti-file-type-json"></i>
+                        <span>Export as JSON</span>
+                    </button>
+                    <button class="export-menu-item" data-format="csv">
+                        <i class="ti ti-file-type-csv"></i>
+                        <span>Export as CSV</span>
+                    </button>
+                    <button class="export-menu-item" data-format="xlsx">
+                        <i class="ti ti-file-type-xls"></i>
+                        <span>Export as Excel</span>
+                    </button>
+                    <button class="export-menu-item" data-format="xml">
+                        <i class="ti ti-file-type-xml"></i>
+                        <span>Export as XML</span>
+                    </button>
+                </div>
+            </div>
             <div class="refresh-control">
                 <button class="refresh-btn" type="button" title="Refresh">
                     <i class="ti ti-refresh"></i>

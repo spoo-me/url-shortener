@@ -173,6 +173,16 @@ function closeAllModals(dashboard) {
         }
     }
 
+    // Close export dropdown
+    const exportDropdownMenu = document.getElementById('exportDropdownMenu');
+    if (exportDropdownMenu) {
+        exportDropdownMenu.classList.remove('active');
+        const exportBtn = document.querySelector('.export-btn');
+        if (exportBtn) {
+            exportBtn.classList.remove('active');
+        }
+    }
+
     // Note: Cascade dropdowns are intentionally NOT closed here
     // They are chart-specific controls and should remain independent
 
@@ -1997,6 +2007,9 @@ function updateKeyChart() {
 // Initialize dashboard when page loads
 document.addEventListener('DOMContentLoaded', () => {
     window.dashboard = new StatisticsDashboard();
+    
+    // Setup export functionality
+    setupExportFunctionality(window.dashboard);
 });
 
 // Expose closeAllModals to window for use by other scripts like dateRangePicker.js
@@ -2136,4 +2149,127 @@ class FilterManager {
 
         return hasFilters;
     }
+}
+
+// ============================================================================
+// Export Functionality
+// ============================================================================
+
+function setupExportFunctionality(dashboard) {
+    const exportBtn = document.querySelector('.export-btn');
+    const exportDropdownMenu = document.getElementById('exportDropdownMenu');
+
+    // Toggle export dropdown
+    exportBtn?.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const isOpen = exportDropdownMenu.classList.contains('active');
+
+        // Close all other modals first
+        closeAllModals(dashboard);
+
+        if (!isOpen) {
+            // Only open if it was previously closed
+            exportDropdownMenu.classList.add('active');
+            exportBtn.classList.add('active');
+        }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.export-btn-wrapper')) {
+            exportDropdownMenu?.classList.remove('active');
+            exportBtn?.classList.remove('active');
+        }
+    });
+
+    // Handle export button clicks
+    function handleExport(format) {
+        // Build export URL with current filters and parameters (same as loadDashboardData)
+        const params = new URLSearchParams({
+            scope: 'all',
+            format: format
+        });
+
+        // Add date range
+        let startDate, endDate;
+        if (dashboard.startDate && dashboard.endDate) {
+            startDate = new Date(dashboard.startDate);
+            endDate = new Date(dashboard.endDate);
+        } else {
+            const currentRange = dashboard.dateRangePicker.getCurrentRange();
+            startDate = new Date(currentRange.start);
+            endDate = new Date(currentRange.end);
+        }
+        params.append('start_date', startDate.toISOString());
+        params.append('end_date', endDate.toISOString());
+
+        // Add timezone
+        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        params.append('timezone', userTimezone);
+
+        // Add grouping and metrics
+        params.append('group_by', 'time,browser,os,country,city,referrer,short_code');
+        params.append('metrics', 'clicks,unique_clicks');
+
+        // Add active filters
+        const activeFilters = dashboard.filterManager.getActiveFilters();
+        Object.keys(activeFilters).forEach(filterType => {
+            const values = activeFilters[filterType];
+            if (values && values.length > 0) {
+                params.append(filterType, values.join(','));
+            }
+        });
+        
+        const exportUrl = `/api/v1/export?${params.toString()}`;
+        
+        // Initiate download
+        fetch(exportUrl, {
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Export failed');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            
+            const fileExtension = format === 'csv' ? 'zip' : format;
+            const timestamp = new Date().toISOString().split('T')[0];
+            link.href = url;
+            link.download = `spoo-me-stats-${timestamp}.${fileExtension}`;
+            document.body.appendChild(link);
+            
+            link.click();
+            
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            // Close menus
+            exportDropdownMenu?.classList.remove('active');
+            exportBtn?.classList.remove('active');
+        })
+        .catch(error => {
+            console.error('Export error:', error);
+            alert('Failed to export data. Please try again.');
+        });
+    }
+
+    // Add click handlers for all export menu items
+    document.querySelectorAll('.export-menu-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const format = this.getAttribute('data-format');
+            if (format) {
+                handleExport(format);
+            }
+        });
+    });
 }
