@@ -10,6 +10,7 @@ from .create import ShortenRequestBuilder
 from .update import UpdateUrlRequestBuilder
 from .query import UrlListQueryBuilder
 from .stats import StatsQueryBuilder
+from .exports import ExportBuilder
 
 __all__ = [
     "BaseUrlRequestBuilder",
@@ -17,4 +18,5 @@ __all__ = [
     "UpdateUrlRequestBuilder",
     "UrlListQueryBuilder",
     "StatsQueryBuilder",
+    "ExportBuilder",
 ]
