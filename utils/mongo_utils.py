@@ -30,6 +30,7 @@ emoji_urls_collection = db["emojis"]
 ip_bypasses = db["ip-exceptions"]
 users_collection = db["users"]
 api_keys_collection = db["api-keys"]
+verification_tokens_collection = db["verification-tokens"]
 
 
 def load_url(id, projection=None):
@@ -450,5 +451,82 @@ def ensure_indexes():
         api_keys_collection.create_index(
             [("expires_at", ASCENDING)], expireAfterSeconds=0
         )
+
+        # verification tokens indexes
+        verification_tokens_collection.create_index([("user_id", ASCENDING)])
+        verification_tokens_collection.create_index([("token_hash", ASCENDING)])
+        verification_tokens_collection.create_index([("token_type", ASCENDING)])
+        # TTL index: auto-delete expired tokens
+        verification_tokens_collection.create_index(
+            [("expires_at", ASCENDING)], expireAfterSeconds=0
+        )
     except Exception:
         pass
+
+
+# ===== Verification Tokens helpers =====
+
+
+def create_verification_token(token_data: dict):
+    """Create a new verification token"""
+    try:
+        result = verification_tokens_collection.insert_one(token_data)
+        return result.inserted_id
+    except Exception:
+        return None
+
+
+def get_verification_token(token_hash: str, token_type: str, projection=None):
+    """Get a verification token by hash and type"""
+    try:
+        return verification_tokens_collection.find_one(
+            {"token_hash": token_hash, "token_type": token_type, "used_at": None},
+            projection,
+        )
+    except Exception:
+        return None
+
+
+def mark_token_as_used(token_id):
+    """Mark a verification token as used"""
+    try:
+        from datetime import datetime, timezone
+
+        result = verification_tokens_collection.update_one(
+            {"_id": token_id}, {"$set": {"used_at": datetime.now(timezone.utc)}}
+        )
+        return result.modified_count > 0
+    except Exception:
+        return False
+
+
+def delete_user_tokens(user_id, token_type: str = None):
+    """Delete all tokens for a user, optionally filtered by type"""
+    try:
+        uid = ObjectId(user_id) if not isinstance(user_id, ObjectId) else user_id
+        query = {"user_id": uid}
+        if token_type:
+            query["token_type"] = token_type
+        result = verification_tokens_collection.delete_many(query)
+        return result.deleted_count
+    except Exception:
+        return 0
+
+
+def count_recent_tokens(user_id, token_type: str, minutes: int = 60):
+    """Count tokens created in the last N minutes for rate limiting"""
+    try:
+        from datetime import datetime, timezone, timedelta
+
+        uid = ObjectId(user_id) if not isinstance(user_id, ObjectId) else user_id
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=minutes)
+        count = verification_tokens_collection.count_documents(
+            {
+                "user_id": uid,
+                "token_type": token_type,
+                "created_at": {"$gte": cutoff},
+            }
+        )
+        return count
+    except Exception:
+        return 0

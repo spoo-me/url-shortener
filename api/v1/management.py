@@ -54,11 +54,11 @@ def update_url_v1(url_id: str) -> tuple[Response, int]:
       - Must be unique (returns 409 if taken)
       - Cannot change to existing alias
     - **password** (string | null): Update or remove password
-      - Minimum 4 characters to set
+      - Atleast 8 characters long, must contain a letter and a number and a special character either '@' or '.' and cannot be consecutive
       - Set to `null` or empty string to remove
     - **max_clicks** (integer | null): Update or remove click limit
       - Must be positive integer to set
-      - Set to `null` or 0 to remove limit
+      - Set to `null` to remove limit
     - **expire_after** (integer | null): Update or remove expiration
       - Unix epoch seconds (must be in future)
       - Set to `null` to remove expiration

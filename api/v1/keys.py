@@ -121,6 +121,7 @@ def create_api_key():
     - **400**: Missing/invalid name, empty/invalid scopes, invalid expiration date
     - **400**: Maximum 20 active keys reached
     - **401**: Authentication required, invalid JWT token
+    - **403**: Email verification required
     - **429**: Rate limit exceeded (5 per hour)
     - **500**: Failed to create API key, database error
 
@@ -134,6 +135,24 @@ def create_api_key():
     Returns:
         tuple[Response, int]: JSON response with API key data and HTTP status code (201 on success)
     """
+    # Check email verification for API key creation
+    if not g.jwt_claims.get("email_verified", False):
+        log.warning(
+            "api_key_creation_blocked",
+            reason="email_not_verified",
+            user_id=str(g.user_id),
+        )
+        return (
+            jsonify(
+                {
+                    "error": "Email verification required",
+                    "code": "EMAIL_NOT_VERIFIED",
+                    "message": "You must verify your email address before creating API keys. Check your inbox for the verification code.",
+                }
+            ),
+            403,
+        )
+
     body = request.get_json(silent=True) or {}
     name = (body.get("name") or "").strip()
     description = (body.get("description") or "").strip() or None

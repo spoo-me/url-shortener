@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from flask import Blueprint, jsonify, request, g, redirect
+from flask import Blueprint, jsonify, request, g, redirect, render_template
 from pymongo.errors import DuplicateKeyError
 
 from .limiter import limiter, rate_limit_key_for_request
@@ -25,6 +25,15 @@ from utils.mongo_utils import (
 )
 from utils.url_utils import get_client_ip
 from utils.auth_utils import get_user_profile
+from utils.verification_utils import (
+    create_email_verification_otp,
+    create_password_reset_otp,
+    verify_otp,
+    is_rate_limited,
+    TOKEN_TYPE_EMAIL_VERIFY,
+    TOKEN_TYPE_PASSWORD_RESET,
+)
+from utils.email_service import email_service
 import jwt
 from bson import ObjectId
 
@@ -54,8 +63,9 @@ def login():
         log.warning("login_failed", reason="invalid_password", user_id=str(user["_id"]))
         return jsonify({"error": "invalid credentials"}), 401
 
-    access_token = generate_access_jwt(str(user["_id"]))
-    refresh_token = generate_refresh_jwt(str(user["_id"]))
+    email_verified = user.get("email_verified", False)
+    access_token = generate_access_jwt(str(user["_id"]), email_verified)
+    refresh_token = generate_refresh_jwt(str(user["_id"]), email_verified)
 
     log.info("login_success", user_id=str(user["_id"]), auth_method="password")
 
@@ -173,9 +183,9 @@ def register():
         log.error("registration_failed", reason="database_error", error=str(e))
         return jsonify({"error": "failed to create user"}), 500
 
-    # Issue tokens just like login
-    access_token = generate_access_jwt(str(user_id))
-    refresh_token = generate_refresh_jwt(str(user_id))
+    # Issue tokens for authentication (but user still needs to verify email)
+    access_token = generate_access_jwt(str(user_id), email_verified=False)
+    refresh_token = generate_refresh_jwt(str(user_id), email_verified=False)
 
     log.info(
         "user_registered",
@@ -184,10 +194,28 @@ def register():
         has_username=bool(user_name),
     )
 
+    # Send verification email automatically
+    verification_sent = False
+    try:
+        success, otp_code, error = create_email_verification_otp(str(user_id), email)
+        if success and otp_code:
+            email_service.send_verification_email(email, user_name, otp_code)
+            verification_sent = True
+            log.info("registration_verification_email_sent", user_id=str(user_id))
+    except Exception as e:
+        # Don't fail registration if email sending fails
+        log.error(
+            "registration_verification_email_failed",
+            user_id=str(user_id),
+            error=str(e),
+        )
+
     resp = jsonify(
         {
             "access_token": access_token,
             "user": get_user_profile({"_id": user_id, **user_doc}),
+            "requires_verification": True,
+            "verification_sent": verification_sent,
         }
     )
     set_refresh_cookie(resp, refresh_token)
@@ -265,3 +293,303 @@ def login_redirect():
 def register_redirect():
     """Redirect /register and /signup to home page to prevent shortened URL conflicts"""
     return redirect("/", code=302)
+
+
+@auth.route("/auth/verify", methods=["GET"])
+@requires_auth
+@limiter.limit("60/minute", key_func=rate_limit_key_for_request)
+def verify_page():
+    """Email verification page"""
+    user = get_user_by_id(g.user_id)
+    if not user:
+        return jsonify({"error": "user not found"}), 404
+
+    # Redirect to dashboard if already verified
+    if user.get("email_verified", False):
+        return redirect("/dashboard")
+
+    return render_template("verify.html", email=user.get("email"))
+
+
+@auth.route("/auth/send-verification", methods=["POST"])
+@requires_auth
+@limiter.limit("3/hour", key_func=rate_limit_key_for_request)
+def send_verification_email():
+    """Send email verification OTP to authenticated user"""
+    user = get_user_by_id(g.user_id)
+    if not user:
+        return jsonify({"error": "user not found"}), 404
+
+    if user.get("email_verified", False):
+        return jsonify({"error": "email already verified"}), 400
+
+    # Check rate limiting
+    if is_rate_limited(g.user_id, TOKEN_TYPE_EMAIL_VERIFY):
+        log.warning("verification_rate_limited", user_id=g.user_id)
+        return (
+            jsonify(
+                {
+                    "error": "too many requests",
+                    "message": "Please wait before requesting another verification email",
+                }
+            ),
+            429,
+        )
+
+    # Create OTP
+    success, otp_code, error = create_email_verification_otp(g.user_id, user["email"])
+
+    if not success:
+        return jsonify({"error": error or "failed to create verification code"}), 500
+
+    # Send email
+    email_sent = email_service.send_verification_email(
+        user["email"], user.get("user_name"), otp_code
+    )
+
+    if not email_sent:
+        log.error("verification_email_send_failed", user_id=g.user_id)
+        return jsonify({"error": "failed to send verification email"}), 500
+
+    log.info("verification_email_sent", user_id=g.user_id, email=user["email"])
+
+    return jsonify(
+        {
+            "success": True,
+            "message": "verification code sent to your email",
+            "expires_in": 600,
+        }
+    )
+
+
+@auth.route("/auth/verify-email", methods=["POST"])
+@requires_auth
+@limiter.limit("10/hour", key_func=rate_limit_key_for_request)
+def verify_email():
+    """Verify email using OTP code"""
+    user = get_user_by_id(g.user_id)
+    if not user:
+        return jsonify({"error": "user not found"}), 404
+
+    if user.get("email_verified", False):
+        return jsonify({"error": "email already verified"}), 400
+
+    body = request.get_json(silent=True) or {}
+    otp_code = (body.get("code") or "").strip()
+
+    if not otp_code:
+        return jsonify({"error": "verification code is required"}), 400
+
+    # Verify OTP
+    success, error = verify_otp(g.user_id, otp_code, TOKEN_TYPE_EMAIL_VERIFY)
+
+    if not success:
+        log.warning("email_verification_failed", user_id=g.user_id, error=error)
+        return jsonify({"error": error or "invalid verification code"}), 400
+
+    # Update user's email_verified status
+    try:
+        result = users_collection.update_one(
+            {"_id": ObjectId(g.user_id)},
+            {
+                "$set": {
+                    "email_verified": True,
+                    "updated_at": datetime.now(timezone.utc),
+                }
+            },
+        )
+
+        if result.modified_count > 0:
+            log.info("email_verified_success", user_id=g.user_id)
+
+            # Issue new JWT tokens with email_verified=True
+            new_access_token = generate_access_jwt(g.user_id, email_verified=True)
+            new_refresh_token = generate_refresh_jwt(g.user_id, email_verified=True)
+
+            # Send welcome email
+            email_service.send_welcome_email(user["email"], user.get("user_name"))
+
+            resp = jsonify(
+                {
+                    "success": True,
+                    "message": "email verified successfully",
+                    "email_verified": True,
+                }
+            )
+            set_refresh_cookie(resp, new_refresh_token)
+            set_access_cookie(resp, new_access_token)
+            return resp
+        else:
+            log.error("email_verification_update_failed", user_id=g.user_id)
+            return jsonify({"error": "failed to update verification status"}), 500
+
+    except Exception as e:
+        log.error(
+            "email_verification_error",
+            user_id=g.user_id,
+            error=str(e),
+            error_type=type(e).__name__,
+        )
+        return jsonify({"error": "failed to verify email"}), 500
+
+
+@auth.route("/auth/request-password-reset", methods=["POST"])
+@limiter.limit("3/hour")
+def request_password_reset():
+    """Request password reset OTP"""
+    body = request.get_json(silent=True) or {}
+    email = (body.get("email") or "").strip().lower()
+
+    if not email:
+        return jsonify({"error": "email is required"}), 400
+
+    # Find user by email
+    user = get_user_by_email(email)
+
+    # Always return success to prevent email enumeration
+    if not user:
+        log.warning("password_reset_requested_nonexistent", email=email)
+        return jsonify(
+            {
+                "success": True,
+                "message": "if the email exists, a reset code has been sent",
+            }
+        )
+
+    # Check if user has a password set
+    if not user.get("password_set", False):
+        log.warning("password_reset_no_password", user_id=str(user["_id"]))
+        # Still return success for security
+        return jsonify(
+            {
+                "success": True,
+                "message": "if the email exists, a reset code has been sent",
+            }
+        )
+
+    user_id = str(user["_id"])
+
+    # Check rate limiting
+    if is_rate_limited(user_id, TOKEN_TYPE_PASSWORD_RESET):
+        log.warning("password_reset_rate_limited", user_id=user_id)
+        # Don't reveal rate limiting for security
+        return jsonify(
+            {
+                "success": True,
+                "message": "if the email exists, a reset code has been sent",
+            }
+        )
+
+    # Create OTP
+    success, otp_code, error = create_password_reset_otp(user_id, email)
+
+    if not success:
+        log.error("password_reset_otp_creation_failed", user_id=user_id, error=error)
+        # Still return success for security
+        return jsonify(
+            {
+                "success": True,
+                "message": "if the email exists, a reset code has been sent",
+            }
+        )
+
+    # Send email
+    email_sent = email_service.send_password_reset_email(
+        email, user.get("user_name"), otp_code
+    )
+
+    if not email_sent:
+        log.error("password_reset_email_send_failed", user_id=user_id)
+        # Still return success for security
+        return jsonify(
+            {
+                "success": True,
+                "message": "if the email exists, a reset code has been sent",
+            }
+        )
+
+    log.info("password_reset_email_sent", user_id=user_id)
+
+    return jsonify(
+        {
+            "success": True,
+            "message": "if the email exists, a reset code has been sent",
+            "expires_in": 600,
+        }
+    )
+
+
+@auth.route("/auth/reset-password", methods=["POST"])
+@limiter.limit("5/hour")
+def reset_password():
+    """Reset password using OTP code"""
+    body = request.get_json(silent=True) or {}
+    email = (body.get("email") or "").strip().lower()
+    otp_code = (body.get("code") or "").strip()
+    new_password = body.get("password") or ""
+
+    if not email or not otp_code or not new_password:
+        return (
+            jsonify({"error": "email, code, and password are required"}),
+            400,
+        )
+
+    # Find user
+    user = get_user_by_email(email)
+    if not user:
+        return jsonify({"error": "invalid email or code"}), 400
+
+    user_id = str(user["_id"])
+
+    # Validate new password
+    is_valid, missing_requirements = validate_password(new_password)
+    if not is_valid:
+        return jsonify(
+            {
+                "error": "password does not meet requirements",
+                "missing_requirements": missing_requirements,
+            }
+        ), 400
+
+    # Verify OTP
+    success, error = verify_otp(user_id, otp_code, TOKEN_TYPE_PASSWORD_RESET)
+
+    if not success:
+        log.warning("password_reset_verification_failed", user_id=user_id, error=error)
+        return jsonify({"error": error or "invalid or expired code"}), 400
+
+    # Update password
+    try:
+        password_hash = hash_password(new_password)
+
+        result = users_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {
+                "$set": {
+                    "password_hash": password_hash,
+                    "password_set": True,
+                    "updated_at": datetime.now(timezone.utc),
+                }
+            },
+        )
+
+        if result.modified_count > 0:
+            log.info("password_reset_success", user_id=user_id)
+            return jsonify(
+                {
+                    "success": True,
+                    "message": "password reset successfully",
+                }
+            )
+        else:
+            log.error("password_reset_update_failed", user_id=user_id)
+            return jsonify({"error": "failed to reset password"}), 500
+
+    except Exception as e:
+        log.error(
+            "password_reset_error",
+            user_id=user_id,
+            error=str(e),
+            error_type=type(e).__name__,
+        )
+        return jsonify({"error": "failed to reset password"}), 500

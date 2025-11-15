@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request, g, redirect
 
 from .limiter import limiter
 from utils.logger import get_logger
+from utils.email_service import email_service
 from utils.auth_utils import (
     generate_access_jwt,
     generate_refresh_jwt,
@@ -264,6 +265,11 @@ def oauth_google_callback():
             return jsonify({"error": "failed to create user"}), 500
 
         log.info("user_registered", user_id=user_id, auth_method="google_oauth")
+
+        # Send welcome email
+        email_service.send_welcome_email(
+            provider_info["email"], provider_info.get("name")
+        )
 
         # Generate tokens
         auth_method = OAuthProviders.GOOGLE
@@ -535,6 +541,11 @@ def oauth_github_callback():
 
         log.info("user_registered", user_id=user_id, auth_method="github_oauth")
 
+        # Send welcome email
+        email_service.send_welcome_email(
+            provider_info["email"], provider_info.get("name")
+        )
+
         # Generate tokens
         auth_method = OAuthProviders.GITHUB
         access_token = generate_access_jwt(user_id, auth_method)
@@ -802,6 +813,11 @@ def oauth_discord_callback():
             return jsonify({"error": "failed to create user"}), 500
 
         log.info("user_registered", user_id=user_id, auth_method="discord_oauth")
+
+        # Send welcome email
+        email_service.send_welcome_email(
+            provider_info["email"], provider_info.get("name")
+        )
 
         # Generate tokens
         auth_method = OAuthProviders.DISCORD

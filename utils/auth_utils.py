@@ -60,7 +60,9 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
         return False
 
 
-def generate_access_jwt(user_id: str, auth_method: str = "pwd") -> str:
+def generate_access_jwt(
+    user_id: str, email_verified: bool = False, auth_method: str = "pwd"
+) -> str:
     issuer, audience, access_ttl, _ = _jwt_settings()
     private_key, _ = _jwt_keys()
     algorithm = "RS256" if _use_rs256() else "HS256"
@@ -72,6 +74,7 @@ def generate_access_jwt(user_id: str, auth_method: str = "pwd") -> str:
         "iat": int(now.timestamp()),
         "exp": int((now + timedelta(seconds=access_ttl)).timestamp()),
         "amr": [auth_method],  # Authentication Methods References
+        "email_verified": email_verified,  # Email verification status
     }
     return jwt.encode(claims, private_key, algorithm=algorithm)
 
@@ -85,7 +88,9 @@ def verify_access_jwt(token: str):
     )
 
 
-def generate_refresh_jwt(user_id: str, auth_method: str = "pwd") -> str:
+def generate_refresh_jwt(
+    user_id: str, email_verified: bool = False, auth_method: str = "pwd"
+) -> str:
     """Generate a stateless refresh JWT token."""
     issuer, audience, _, refresh_ttl = _jwt_settings()
     private_key, _ = _jwt_keys()
@@ -99,6 +104,7 @@ def generate_refresh_jwt(user_id: str, auth_method: str = "pwd") -> str:
         "exp": int((now + timedelta(seconds=refresh_ttl)).timestamp()),
         "type": "refresh",
         "amr": [auth_method],  # Authentication Methods References
+        "email_verified": email_verified,  # Email verification status
     }
     return jwt.encode(claims, private_key, algorithm=algorithm)
 
@@ -192,10 +198,19 @@ def requires_auth(fn):
                 try:
                     refresh_claims = verify_refresh_jwt(refresh_token)
                     user_id = refresh_claims.get("sub")
-                    new_access_token = generate_access_jwt(user_id)
-                    new_refresh_token = generate_refresh_jwt(user_id)
+
+                    from utils.mongo_utils import get_user_by_id
+
+                    # Fetch fresh email_verified status from DB
+                    user = get_user_by_id(user_id, projection={"email_verified": 1})
+                    email_verified = (
+                        user.get("email_verified", False) if user else False
+                    )
+
+                    new_access_token = generate_access_jwt(user_id, email_verified)
+                    new_refresh_token = generate_refresh_jwt(user_id, email_verified)
                     g.user_id = user_id
-                    g.jwt_claims = None
+                    g.jwt_claims = {"email_verified": email_verified}
                     resp = fn(*args, **kwargs)
                     resp = make_response(resp)
                     set_refresh_cookie(resp, new_refresh_token)
@@ -224,13 +239,19 @@ def requires_auth(fn):
                 refresh_claims = verify_refresh_jwt(refresh_token)
                 user_id = refresh_claims.get("sub")
 
-                # Generate new tokens (token rotation)
-                new_access_token = generate_access_jwt(user_id)
-                new_refresh_token = generate_refresh_jwt(user_id)
+                # Fetch fresh email_verified status from DB
+                from utils.mongo_utils import get_user_by_id
+
+                user = get_user_by_id(user_id, projection={"email_verified": 1})
+                email_verified = user.get("email_verified", False) if user else False
+
+                # Generate new tokens (token rotation) with fresh verification status
+                new_access_token = generate_access_jwt(user_id, email_verified)
+                new_refresh_token = generate_refresh_jwt(user_id, email_verified)
 
                 # Set user context for the request
                 g.user_id = user_id
-                g.jwt_claims = None
+                g.jwt_claims = {"email_verified": email_verified}
 
                 # Call the view and attach new cookies to response
                 resp = fn(*args, **kwargs)
@@ -273,14 +294,18 @@ def _handle_auth_failure(error_msg: str):
         )
 
 
-def resolve_owner_id_from_request():
+def resolve_owner_id_from_request(require_verified: bool = False):
     """Resolve the authenticated user id from either API key or JWT.
+
+    Args:
+        require_verified: If True, sets g.verification_error for unverified users
+                         and returns None (treated as anonymous)
 
     - API key: Authorization: Bearer spoo_<raw>
         - Validates revocation/expiry and sets g.api_key and request.api_key
         - Returns ObjectId of user
     - JWT: Authorization: Bearer <jwt> or access_token cookie
-        - Returns ObjectId of user
+        - Returns ObjectId of user (if require_verified=True, checks email_verified)
     - Otherwise returns None
     """
     auth_header = request.headers.get("Authorization", "")
@@ -355,6 +380,25 @@ def resolve_owner_id_from_request():
         try:
             claims = verify_access_jwt(token)
             user_id = claims.get("sub")
+
+            # Check email verification if required
+            if require_verified and not claims.get("email_verified", False):
+                log.warning(
+                    "resource_creation_blocked",
+                    reason="email_not_verified",
+                    user_id=user_id,
+                )
+                # Store error in g so builder can access it
+                try:
+                    g.verification_error = {
+                        "error": "Email verification required",
+                        "code": "EMAIL_NOT_VERIFIED",
+                        "message": "You must verify your email address before creating resources. Check your inbox for the verification code.",
+                    }
+                except Exception:
+                    pass
+                return None
+
             return ObjectId(user_id)
         except Exception:
             pass

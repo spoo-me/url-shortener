@@ -1,4 +1,4 @@
-from flask import request, jsonify, Response
+from flask import request, jsonify, Response, g
 from datetime import datetime, timezone
 from bson import ObjectId
 from typing import Optional
@@ -26,8 +26,13 @@ class BaseUrlRequestBuilder:
         self.payload = payload
         self.error: Optional[tuple[Response, int]] = None
         self.now = datetime.now(timezone.utc)
-        self.owner_id = resolve_owner_id_from_request()
+        self.owner_id = resolve_owner_id_from_request(require_verified=True)
         self.api_key_doc = getattr(request, "api_key", None)
+
+        # Check if verification error was set
+        verification_error = getattr(g, "verification_error", None)
+        if verification_error:
+            self.error = (jsonify(verification_error), 403)
 
         # Common fields
         self.long_url: Optional[str] = None
