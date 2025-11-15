@@ -12,10 +12,11 @@ from utils.logger import get_logger
 log = get_logger(__name__)
 
 # Initialize Jinja2 environment for email templates
-TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates", "emails")
+TEMPLATE_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "templates", "emails"
+)
 jinja_env = Environment(
-    loader=FileSystemLoader(TEMPLATE_DIR),
-    autoescape=select_autoescape(['html', 'xml'])
+    loader=FileSystemLoader(TEMPLATE_DIR), autoescape=select_autoescape(["html", "xml"])
 )
 
 # ZeptoMail Configuration
@@ -155,11 +156,9 @@ class ZeptoMailService:
         subject = f"Verify your email - {APP_NAME}"
 
         # Render template
-        template = jinja_env.get_template('verification.html')
+        template = jinja_env.get_template("verification.html")
         html_body = template.render(
-            otp_code=otp_code,
-            user_name=user_name,
-            app_url=APP_URL
+            otp_code=otp_code, user_name=user_name, app_url=APP_URL
         )
 
         text_body = f"""
@@ -199,11 +198,9 @@ Need help? Contact us at support@spoo.me
         subject = "Reset your password - spoo.me"
 
         # Render template
-        template = jinja_env.get_template('password_reset.html')
+        template = jinja_env.get_template("password_reset.html")
         html_body = template.render(
-            otp_code=otp_code,
-            user_name=user_name,
-            app_url=APP_URL
+            otp_code=otp_code, user_name=user_name, app_url=APP_URL
         )
 
         text_body = f"""
@@ -240,11 +237,8 @@ Need help? Contact us at support@spoo.me
         subject = "Welcome to spoo.me! 🎉"
 
         # Render template
-        template = jinja_env.get_template('welcome.html')
-        html_body = template.render(
-            user_name=user_name,
-            app_url=APP_URL
-        )
+        template = jinja_env.get_template("welcome.html")
+        html_body = template.render(user_name=user_name, app_url=APP_URL)
 
         text_body = f"""
 Welcome to spoo.me{f", {user_name}" if user_name else ""}! 🎉
