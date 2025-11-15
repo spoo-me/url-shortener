@@ -1,32 +1,32 @@
 @import url('https://fonts.googleapis.com/css2?family=Allerta+Stencil&display=swap');
 
 .navbar {
-    background-color: rgba(255, 255, 255, 0.05);
-    padding: 7px 16px;
+    background-color: rgba(255, 255, 255, 0.04);
+    padding: 6px 12px;
     text-align: right;
-    border-radius: 4px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     position: sticky;
-    z-index: 9999999999999999999;
+    z-index: 9999;
     top: 0;
     backdrop-filter: blur(20px);
     display: flex;
     flex-direction: row;
     font-family: 'Allerta Stencil', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    transition: margin 0.2s cubic-bezier(0.8, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     align-items: center;
+    gap: 20px;
 }
 
 .navbar.scrolled {
     position: fixed;
-    width: 100%; /* Fallback for Firefox */
-    width: -webkit-fill-available;
-    margin: 10px;
-    border-radius: 10px;
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 0px 4px 0px, rgba(0, 0, 0, 0.06) 0px 5px 20px 5px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    backdrop-filter: saturate(1.5) blur(12px);
+    width: calc(100% - 40px);
+    margin: 12px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: saturate(1.4) blur(16px);
+    background-color: rgba(255, 255, 255, 0.06);
 }
 
 .navbar ul {
@@ -34,36 +34,166 @@
     margin: 0;
     padding: 0;
     height: 100%;
-    justify-content: space-around;
+    justify-content: flex-end;
     display: flex;
     align-items: center;
+    gap: 8px;
+    outline: none;
 }
 
 .navbar .links {
-    padding: 0px 10px;
+    padding: 0;
     width: -webkit-fill-available;
     width: 100%;
 }
 
-.navbar li { display: inline-flex; align-items: center; }
-
-.navbar a {
-    color: #fff;
-    text-decoration: none;
-    font-size: 16px;
-    padding: 5px;
-    transition: all 0.1s ease-in;
-    letter-spacing: 0.8px;
+.navbar li { 
+    display: inline-flex; 
+    align-items: center;
 }
 
-.navbar a:hover { text-decoration: none; text-shadow: 0 0 5px #fff, 0 0 15px #fff, 0 0 20px #fff, 0 0 40px #fff, 0 0 25px #fff, 0 0 1px #fff, 0 0 2px #fff; }
+.navbar a {
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-size: 15px;
+    padding: 8px 14px;
+    transition: all 0.2s ease;
+    letter-spacing: 0.5px;
+    border-radius: 6px;
+}
+
+.navbar a:hover {
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.95);
+}
 
 .navbar a.active {
-    font-weight: bold;
+    color: #fff;
+}
+
+.navbar-logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+.navbar-logo-link:hover {
+    opacity: 0.85;
+}
+
+.navbar-logo-link:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.3);
+    outline-offset: 4px;
+    border-radius: 4px;
 }
 
 .navbar-image {
-    height: 28px;
+    height: 32px;
+}
+
+/* Navigation groups */
+.nav-group-primary,
+.nav-group-secondary,
+.nav-group-auth {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Divider */
+.nav-divider {
+    width: 1px;
+    height: 20px;
+    background-color: rgba(255, 255, 255, 0.15);
+    margin: 0 8px;
+}
+
+/* External link icon */
+.external-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.external-link svg {
+    opacity: 0.7;
+    transition: all 0.2s ease;
+}
+
+.external-link:hover svg {
+    opacity: 1;
+    transform: translate(1px, -1px);
+}
+
+/* GitHub badge */
+.github-badge {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0;
+    padding: 0 !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.github-badge:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+.github-icon {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.github-icon svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+.github-divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.github-stars {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+}
+
+.star-icon {
+    width: 14px;
+    height: 14px;
+    color: #fbbf24;
+}
+
+/* Sign in button */
+.nav-signin-btn {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #fff !important;
+    padding: 7px 16px !important;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.nav-signin-btn:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    transform: translateY(-1px);
 }
 
 /* Profile menu */

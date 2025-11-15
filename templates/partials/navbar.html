@@ -1,25 +1,53 @@
 <div class="navbar">
-    <img class="navbar-image" src="{{ url_for('static', filename='images/logo-text-dark.png') }}" alt="Spoo.me Banner Image"
-        loading="lazy">
+    <a href="/" class="navbar-logo-link">
+        <img class="navbar-image" src="{{ url_for('static', filename='images/logo-text-dark.png') }}" alt="Spoo.me" loading="lazy">
+    </a>
     <div class="links">
         <ul>
-            <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Shorten</a></li>
-            <li><a href="/api" class="{% if request.path.startswith('/api') %}active{% endif %}">API</a></li>
-            <li><a href="/stats" class="{% if request.path.startswith('/stats') %}active{% endif %}">Stats</a></li>
-            <li><a href="/report" class="{% if request.path.startswith('/report') %}active{% endif %}">Report URL</a>
+            <li class="nav-group-primary">
+                <a href="/" class="{% if request.path == '/' %}active{% endif %}">Shorten</a>
             </li>
-            <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a></li>
+            <li class="nav-group-primary">
+                <a href="/api" class="{% if request.path.startswith('/api') %}active{% endif %}">API</a>
+            </li>
+            <li class="nav-group-primary">
+                <a href="/stats" class="{% if request.path.startswith('/stats') %}active{% endif %}">Stats</a>
+            </li>
+            <li class="nav-divider"></li>
+            <li class="nav-group-secondary">
+                <a href="/report" class="{% if request.path.startswith('/report') %}active{% endif %}">Report</a>
+            </li>
             {% if request.path.startswith('/contact') %}
-            <li><a href="/contact" class="active">Contact</a></li>
+            <li class="nav-group-secondary"><a href="/contact" class="active">Contact</a></li>
             {% else %}
-            <li onclick="showContactModal();"><a href="#">Contact</a></li>
+            <li class="nav-group-secondary" onclick="showContactModal();"><a href="#">Contact</a></li>
             {% endif %}
-            <li id="nav-auth"><a href="#" onclick="openAuthModal();return false;">Sign in</a></li>
-            <li id="nav-dashboard" style="display:none"><a href="/dashboard">Dashboard</a></li>
-            <li id="nav-keys" style="display:none"><a href="/dashboard/keys">API Keys</a></li>
+            <li class="nav-group-secondary">
+                <a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank" class="github-badge">
+                    <span class="github-icon">
+                        <svg fill="currentColor" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                    </span>
+                    <span class="github-divider"></span>
+                    <span class="github-stars">
+                        <svg class="star-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <span id="github-star-count">170</span>
+                    </span>
+                </a>
+            </li>
+            <li class="nav-divider"></li>
+            <li id="nav-auth" class="nav-group-auth">
+                <a href="#" class="nav-signin-btn" onclick="openAuthModal();return false;">Sign in</a>
+            </li>
+            <li id="nav-dashboard" class="nav-group-auth" style="display:none">
+                <a href="/dashboard">Dashboard</a>
+            </li>
+            <li id="nav-keys" class="nav-group-auth" style="display:none">
+                <a href="/dashboard/keys">Keys</a>
+            </li>
             <li id="nav-profile" class="nav-profile" style="display:none">
-                <button id="profileButton" class="profile-btn" aria-haspopup="true" aria-expanded="false"
-                    aria-label="User menu">
+                <button id="profileButton" class="profile-btn" aria-haspopup="true" aria-expanded="false" aria-label="User menu">
                     <div class="profile-avatar-container">
                         <img id="profileAvatar" src="" alt="Profile" loading="lazy" style="display:none;">
                         <div id="profileInitials" class="profile-initials-circle" style="display:none;"></div>
