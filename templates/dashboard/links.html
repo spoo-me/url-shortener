@@ -1187,6 +1187,18 @@
     }
 
     function handleApiError(result) {
+        // Handle email verification error specifically
+        if (result.code === 'EMAIL_NOT_VERIFIED') {
+            if (typeof showVerificationModal === 'function') {
+                showVerificationModal('create short URLs');
+            } else {
+                if (typeof showNotification === 'function') {
+                    showNotification(result.message || 'Email verification required', 'error');
+                }
+            }
+            return;
+        }
+        
         // Handle field-specific errors
         if (result.field) {
             const fieldMap = {

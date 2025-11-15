@@ -255,6 +255,14 @@ async function createKey() {
             // Close modal first so notification is visible
             closeCreateKeyModal();
 
+            // Check for email verification error
+            if (data.code === 'EMAIL_NOT_VERIFIED') {
+                if (typeof showVerificationModal === 'function') {
+                    showVerificationModal('create API keys');
+                }
+                return;
+            }
+
             // Improved error messages
             let errorMessage = data.error || 'Failed to create key';
 
