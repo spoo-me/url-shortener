@@ -42,7 +42,7 @@ def shorten_v1() -> tuple[Response, int]:
 
     ### Optional
     - **alias** (string): Custom short code/alias for the URL
-        - 3-50 characters
+        - 16 characters max, auto truncated if longer
         - Alphanumeric, hyphens, and underscores only
         - Must be unique (returns 409 if taken)
         - Auto-generated if not provided

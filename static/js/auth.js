@@ -323,7 +323,7 @@ async function updateAuthNav() {
         show('nav-dashboard', false);
         show('nav-keys', false);
         // Mobile
-        show('m-nav-auth', !loggedIn);
+        show('m-nav-auth-btn', !loggedIn, 'block');
         show('m-nav-dashboard', loggedIn);
         show('m-nav-keys', loggedIn);
         show('m-nav-logout', loggedIn);

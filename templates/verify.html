@@ -214,6 +214,7 @@
         <div class="verify-header">
             <h1>Verify Your Email</h1>
             <p>We've sent a 6-digit code to<br><span class="email">{{ email }}</span></p>
+            <p style="font-size: 13px; color: rgba(255, 255, 255, 0.6); margin-top: 12px;">📬 Don't forget to check your spam or junk folder</p>
         </div>
 
         <div id="errorMessage" class="error-message"></div>
@@ -240,6 +241,7 @@
 
         <div class="resend-section">
             <p>Didn't receive the code?</p>
+            <p style="font-size: 13px; color: rgba(255, 255, 255, 0.5); margin: 8px 0;">Check your spam folder before resending</p>
             <button class="resend-btn" id="resendBtn" onclick="resendCode()">Resend Code</button>
             <div class="timer" id="timer"></div>
         </div>

@@ -27,7 +27,7 @@
 
 {% block content %}
     <h1 style="font-weight: bold;">Report URL</h1>
-    <form action="/report" method="post" onsubmit="return validateMessage();">
+    <form id="reportForm" action="/report" method="post" onsubmit="return validateMessage();">
         <p id="url-error"></p>
         {% if error %}<script>customTopNotification("Error", "{{ error }}", 10, "error");</script>{% endif %}
         {% if success %}<script>customTopNotification("Success", "{{ success }}", 10, "success");</script>{% endif %}
@@ -45,7 +45,7 @@
     <script>
         function onSubmit(token) {
             if (!validateMessage()) { return; }
-            document.getElementsByTagName('form')[0].submit();
+            document.getElementById('reportForm').submit();
         }
         function validateMessage() {
             var message = document.getElementById('message').value;

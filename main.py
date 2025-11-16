@@ -50,11 +50,19 @@ setup_logging_middleware(app)
 if os.getenv("SENTRY_DSN"):
     sentry_sdk.init(
         dsn=os.getenv("SENTRY_DSN"),
-        send_default_pii=True,
-        traces_sample_rate=1.0,
+        send_default_pii=os.getenv("SENTRY_SEND_PII", "false").lower() == "true",
+        traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
         enable_logs=True,
-        profile_session_sample_rate=1.0,
+        profile_session_sample_rate=float(
+            os.getenv("SENTRY_PROFILE_SAMPLE_RATE", "0.05")
+        ),
         profile_lifecycle="trace",
+    )
+    log.info(
+        "sentry_initialized",
+        pii=os.getenv("SENTRY_SEND_PII", "false").lower() == "true",
+        traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+        profile_sample_rate=float(os.getenv("SENTRY_PROFILE_SAMPLE_RATE", "0.05")),
     )
 
 ensure_indexes()

@@ -361,7 +361,8 @@ def metric():
         start_time = time.time()
 
         # Get counts from v1 urls collection (legacy)
-        v1_result = urls_collection.aggregate(METRIC_PIPELINE_V1).next()
+        v1_cursor = urls_collection.aggregate(METRIC_PIPELINE_V1)
+        v1_result = next(v1_cursor, {})
         v1_shortlinks = v1_result.get("total-shortlinks", 0)
         v1_clicks = v1_result.get("total-clicks", 0)
 

@@ -87,9 +87,13 @@ def refresh():
         refresh_claims = verify_refresh_jwt(refresh_token)
         user_id = refresh_claims.get("sub")
 
+        # Fetch fresh email_verified status from DB
+        user = get_user_by_id(user_id)
+        email_verified = user.get("email_verified", False) if user else False
+
         # Generate new tokens (token rotation for security)
-        new_access_token = generate_access_jwt(user_id)
-        new_refresh_token = generate_refresh_jwt(user_id)
+        new_access_token = generate_access_jwt(user_id, email_verified)
+        new_refresh_token = generate_refresh_jwt(user_id, email_verified)
 
         log.info("token_refreshed", user_id=user_id)
 

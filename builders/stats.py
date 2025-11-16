@@ -352,7 +352,8 @@ class StatsQueryBuilder:
                 error=str(e),
                 error_type=type(e).__name__,
             )
-            return self._fail({"error": "failed to build query"}, 500)
+            self._fail({"error": "failed to build query"}, 500)
+            return None
 
     def _build_aggregation_pipeline(
         self, query: Dict[str, Any]
@@ -520,6 +521,8 @@ class StatsQueryBuilder:
         try:
             # Build query
             query = self._build_click_query()
+            if self.error is not None:
+                return self.error
             if not query and self.scope == "anon":
                 return self._fail({"error": "invalid short_code"}, 400)
 

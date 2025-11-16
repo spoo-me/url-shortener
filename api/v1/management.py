@@ -49,7 +49,7 @@ def update_url_v1(url_id: str) -> tuple[Response, int]:
       - Must start with http:// or https://
       - Maximum length: 2048 characters
     - **alias** (string): New custom short code
-      - 3-50 characters
+      - 16 characters max, auto truncated if longer
       - Alphanumeric, hyphens, and underscores only
       - Must be unique (returns 409 if taken)
       - Cannot change to existing alias

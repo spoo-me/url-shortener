@@ -172,8 +172,8 @@ def oauth_google_callback():
 
                 # Generate tokens for the linked user
                 auth_method = OAuthProviders.GOOGLE
-                access_token = generate_access_jwt(link_user_id, auth_method)
-                refresh_token = generate_refresh_jwt(link_user_id, auth_method)
+                access_token = generate_access_jwt(link_user_id, True, auth_method)
+                refresh_token = generate_refresh_jwt(link_user_id, True, auth_method)
 
                 # Set tokens in cookies and redirect
                 resp = redirect("/dashboard")
@@ -208,8 +208,8 @@ def oauth_google_callback():
 
             # Generate tokens
             auth_method = OAuthProviders.GOOGLE
-            access_token = generate_access_jwt(user_id, auth_method)
-            refresh_token = generate_refresh_jwt(user_id, auth_method)
+            access_token = generate_access_jwt(user_id, True, auth_method)
+            refresh_token = generate_refresh_jwt(user_id, True, auth_method)
 
             # Set tokens in cookies and redirect
             resp = redirect("/dashboard")
@@ -235,8 +235,8 @@ def oauth_google_callback():
 
                     # Generate tokens
                     auth_method = OAuthProviders.GOOGLE
-                    access_token = generate_access_jwt(user_id, auth_method)
-                    refresh_token = generate_refresh_jwt(user_id, auth_method)
+                    access_token = generate_access_jwt(user_id, True, auth_method)
+                    refresh_token = generate_refresh_jwt(user_id, True, auth_method)
 
                     # Set tokens in cookies and redirect
                     resp = redirect("/dashboard")
@@ -273,8 +273,8 @@ def oauth_google_callback():
 
         # Generate tokens
         auth_method = OAuthProviders.GOOGLE
-        access_token = generate_access_jwt(user_id, auth_method)
-        refresh_token = generate_refresh_jwt(user_id, auth_method)
+        access_token = generate_access_jwt(user_id, True, auth_method)
+        refresh_token = generate_refresh_jwt(user_id, True, auth_method)
 
         # Set tokens in cookies and redirect
         resp = redirect("/dashboard")
@@ -447,8 +447,8 @@ def oauth_github_callback():
 
                 # Generate tokens for the linked user
                 auth_method = OAuthProviders.GITHUB
-                access_token = generate_access_jwt(link_user_id, auth_method)
-                refresh_token = generate_refresh_jwt(link_user_id, auth_method)
+                access_token = generate_access_jwt(link_user_id, True, auth_method)
+                refresh_token = generate_refresh_jwt(link_user_id, True, auth_method)
 
                 # Set tokens in cookies and redirect
                 resp = redirect("/dashboard")
@@ -483,8 +483,8 @@ def oauth_github_callback():
 
             # Generate tokens
             auth_method = OAuthProviders.GITHUB
-            access_token = generate_access_jwt(user_id, auth_method)
-            refresh_token = generate_refresh_jwt(user_id, auth_method)
+            access_token = generate_access_jwt(user_id, True, auth_method)
+            refresh_token = generate_refresh_jwt(user_id, True, auth_method)
 
             # Set tokens in cookies and redirect
             resp = redirect("/dashboard")
@@ -510,8 +510,8 @@ def oauth_github_callback():
 
                     # Generate tokens
                     auth_method = OAuthProviders.GITHUB
-                    access_token = generate_access_jwt(user_id, auth_method)
-                    refresh_token = generate_refresh_jwt(user_id, auth_method)
+                    access_token = generate_access_jwt(user_id, True, auth_method)
+                    refresh_token = generate_refresh_jwt(user_id, True, auth_method)
 
                     # Set tokens in cookies and redirect
                     resp = redirect("/dashboard")
@@ -548,8 +548,8 @@ def oauth_github_callback():
 
         # Generate tokens
         auth_method = OAuthProviders.GITHUB
-        access_token = generate_access_jwt(user_id, auth_method)
-        refresh_token = generate_refresh_jwt(user_id, auth_method)
+        access_token = generate_access_jwt(user_id, True, auth_method)
+        refresh_token = generate_refresh_jwt(user_id, True, auth_method)
 
         # Set tokens in cookies and redirect
         resp = redirect("/dashboard")
@@ -718,8 +718,8 @@ def oauth_discord_callback():
 
                 # Generate tokens for the linked user
                 auth_method = OAuthProviders.DISCORD
-                access_token = generate_access_jwt(link_user_id, auth_method)
-                refresh_token = generate_refresh_jwt(link_user_id, auth_method)
+                access_token = generate_access_jwt(link_user_id, True, auth_method)
+                refresh_token = generate_refresh_jwt(link_user_id, True, auth_method)
 
                 # Set tokens in cookies and redirect
                 resp = redirect("/dashboard")
@@ -754,8 +754,8 @@ def oauth_discord_callback():
 
             # Generate tokens
             auth_method = OAuthProviders.DISCORD
-            access_token = generate_access_jwt(user_id, auth_method)
-            refresh_token = generate_refresh_jwt(user_id, auth_method)
+            access_token = generate_access_jwt(user_id, True, auth_method)
+            refresh_token = generate_refresh_jwt(user_id, True, auth_method)
 
             # Set tokens in cookies and redirect
             resp = redirect("/dashboard")
@@ -783,8 +783,8 @@ def oauth_discord_callback():
 
                     # Generate tokens
                     auth_method = OAuthProviders.DISCORD
-                    access_token = generate_access_jwt(user_id, auth_method)
-                    refresh_token = generate_refresh_jwt(user_id, auth_method)
+                    access_token = generate_access_jwt(user_id, True, auth_method)
+                    refresh_token = generate_refresh_jwt(user_id, True, auth_method)
 
                     # Set tokens in cookies and redirect
                     resp = redirect("/dashboard")
@@ -821,8 +821,8 @@ def oauth_discord_callback():
 
         # Generate tokens
         auth_method = OAuthProviders.DISCORD
-        access_token = generate_access_jwt(user_id, auth_method)
-        refresh_token = generate_refresh_jwt(user_id, auth_method)
+        access_token = generate_access_jwt(user_id, True, auth_method)
+        refresh_token = generate_refresh_jwt(user_id, True, auth_method)
 
         # Set tokens in cookies and redirect
         resp = redirect("/dashboard")

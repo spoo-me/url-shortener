@@ -154,8 +154,8 @@ def create_api_key():
         )
 
     body = request.get_json(silent=True) or {}
-    name = (body.get("name") or "").strip()
-    description = (body.get("description") or "").strip() or None
+    name = str(body.get("name") or "").strip()
+    description = str(body.get("description") or "").strip() or None
     scopes = body.get("scopes") or []
     expires_at_raw = body.get("expires_at")
 

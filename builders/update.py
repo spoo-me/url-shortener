@@ -59,11 +59,13 @@ class UpdateUrlRequestBuilder(BaseUrlRequestBuilder):
 
     def validate_alias_custom(self) -> "UpdateUrlRequestBuilder":
         """Provides custom validation for alias updates"""
-        if "alias" in self.payload:
-            alias_value = self.payload.get("alias")
-            # Treat same alias as no-op (idempotent update)
-            if alias_value == self.existing_doc.get("alias"):
-                return self
+        if "alias" not in self.payload:
+            return self.validate_alias()
+
+        alias_value = self.payload.get("alias")
+        # Treat same alias as no-op (idempotent update)
+        if self.existing_doc and alias_value == self.existing_doc.get("alias"):
+            return self
 
         # use parent validation logic for changed values
         return self.validate_alias()

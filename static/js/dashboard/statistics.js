@@ -1587,7 +1587,7 @@ class StatisticsDashboard {
         const mode = option || cascadeVal || cfg.defaultMode;
 
         const datasets = [];
-        let labelsRef; // labels chosen (mirrors prior implementation behaviour)
+        let labelsRef = []; // labels chosen (mirrors prior implementation behaviour)
 
         // Helper to push dataset
         const pushDs = (label, values, color) => {
@@ -1603,17 +1603,36 @@ class StatisticsDashboard {
 
         if (mode === 'total' || mode === 'compare') {
             const processed = this.processTopDataWithOthers(totalArr, 'clicks', cfg.metricBase);
+            labelsRef = processed.labels;
             pushDs(cfg.totalLabel, processed.values, cfg.colors.total);
-            if (!labelsRef) labelsRef = processed.labels;
         }
         if (mode === 'unique' || mode === 'compare') {
-            const processedUnique = this.processTopDataWithOthers(uniqueArr, 'unique_clicks', cfg.metricBase);
-            pushDs(cfg.uniqueLabel, processedUnique.values, cfg.colors.unique);
-            if (!labelsRef && mode === 'unique') labelsRef = processedUnique.labels; // In unique-only mode labels come from unique dataset
+            if (labelsRef.length === 0) {
+                const processedUnique = this.processTopDataWithOthers(uniqueArr, 'unique_clicks', cfg.metricBase);
+                labelsRef = processedUnique.labels;
+                pushDs(cfg.uniqueLabel, processedUnique.values, cfg.colors.unique);
+            } else {
+                const aggregated = new Map();
+                uniqueArr.forEach(item => {
+                    const key = item[cfg.metricBase] ?? 'Unknown';
+                    const value = item.unique_clicks ?? item.value ?? 0;
+                    aggregated.set(key, (aggregated.get(key) ?? 0) + value);
+                });
+                const alignedValues = labelsRef.map(label => {
+                    if (label === 'Others') {
+                        let remainder = 0;
+                        aggregated.forEach((val, key) => {
+                            if (!labelsRef.includes(key)) {
+                                remainder += val;
+                            }
+                        });
+                        return remainder;
+                    }
+                    return aggregated.get(label) ?? 0;
+                });
+                pushDs(cfg.uniqueLabel, alignedValues, cfg.colors.unique);
+            }
         }
-
-        // Fallback if no labels (empty data)
-        labelsRef = labelsRef || [];
 
         const chartOptions = {
             responsive: true,

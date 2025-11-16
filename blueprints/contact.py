@@ -6,7 +6,7 @@ from utils.contact_utils import (
     CONTACT_WEBHOOK,
     URL_REPORT_WEBHOOK,
 )
-from utils.mongo_utils import check_if_slug_exists
+from utils.mongo_utils import check_if_slug_exists, check_if_v2_alias_exists
 from utils.url_utils import get_client_ip
 from utils.logger import get_logger
 from .limiter import limiter
@@ -93,9 +93,10 @@ def contact_route():
 @limiter.limit("3/minute")
 def report():
     if request.method == "POST":
-        short_code = request.values.get("short_code")
-        reason = request.values.get("reason")
-        hcaptcha_token = request.values.get("h-captcha-response")
+        # Only read from form data (POST), not query parameters
+        short_code = request.form.get("short_code")
+        reason = request.form.get("reason")
+        hcaptcha_token = request.form.get("h-captcha-response")
 
         if not hcaptcha_token:
             return (
@@ -132,7 +133,11 @@ def report():
             )
 
         short_code = short_code.split("/")[-1]
-        if not check_if_slug_exists(short_code):
+        
+        # Check both v1 (urls) and v2 (urlsV2) collections
+        url_exists = check_if_slug_exists(short_code) or check_if_v2_alias_exists(short_code)
+        
+        if not url_exists:
             return (
                 render_template(
                     "report.html",

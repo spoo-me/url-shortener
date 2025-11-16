@@ -226,7 +226,7 @@ Open your browser and go to `http://localhost:8000` to access the **spoo.me** UR
 <h6 align="center">
 <img src="https://spoo.me/static/images/favicon.png" height=30 title="Spoo.me Copyright">
 <br>
-© spoo.me . 2024
+© spoo.me . 2025
 
 All Rights Reserved</h6>
 

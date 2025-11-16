@@ -4,6 +4,7 @@ from utils.url_utils import get_client_ip
 from utils.logger import get_logger
 from flask import request
 from utils.auth_utils import resolve_owner_id_from_request
+import hashlib
 
 log = get_logger(__name__)
 
@@ -51,5 +52,6 @@ def rate_limit_key_for_request() -> str:
     if auth_header.lower().startswith("bearer "):
         token = auth_header.split(" ", 1)[1].strip()
         if token.startswith("spoo_"):
-            return f"apikey:{token[:20]}"
+            token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()[:16]
+            return f"apikey:{token_hash}"
     return get_client_ip()
