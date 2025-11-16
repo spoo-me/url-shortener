@@ -220,6 +220,28 @@
         color: #6d28d9;
     }
 
+    /* Legal notice */
+    #authModal .legal-notice {
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.5);
+        text-align: center;
+        margin: 30px 0 0 0;
+        padding: 0;
+        line-height: 1.5;
+    }
+
+    #authModal .legal-notice a {
+        color: #7c3aed;
+        text-decoration: none;
+        transition: color 0.2s ease;
+        font-size: 10px;
+    }
+
+    #authModal .legal-notice a:hover {
+        color: #6d28d9;
+        text-decoration: underline;
+    }
+
     /* Error message */
     #authModal .auth-error {
         display: none;
@@ -417,6 +439,10 @@
                     <span id="toggleText">Already have an account?</span>
                     <button type="button" onclick="toggleAuthMode()" id="toggleBtn">Login</button>
                 </div>
+
+                <div id="legalNotice" class="legal-notice" style="display: none;">
+                    By continuing, you agree to our <a href="/terms-of-service" target="_blank">Terms of Service</a> and <a href="/privacy-policy" target="_blank">Privacy Policy</a>
+                </div>
             </div>
         </div>
     </div>
@@ -455,6 +481,12 @@
             document.getElementById('primaryBtn').innerHTML = `<span>${isRegister ? 'Register' : 'Continue'}</span>`;
             document.getElementById('toggleText').textContent = isRegister ? 'Already have an account?' : "Don't have an account?";
             document.getElementById('toggleBtn').textContent = isRegister ? 'Login' : 'Sign up';
+
+            // Show/hide legal notice
+            const legalNotice = document.getElementById('legalNotice');
+            if (legalNotice) {
+                legalNotice.style.display = isRegister ? 'block' : 'none';
+            }
 
             // Show/hide password strength indicator and requirements
             const strengthContainer = document.getElementById('passwordStrengthContainer');
