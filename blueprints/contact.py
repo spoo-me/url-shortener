@@ -133,10 +133,12 @@ def report():
             )
 
         short_code = short_code.split("/")[-1]
-        
+
         # Check both v1 (urls) and v2 (urlsV2) collections
-        url_exists = check_if_slug_exists(short_code) or check_if_v2_alias_exists(short_code)
-        
+        url_exists = check_if_slug_exists(short_code) or check_if_v2_alias_exists(
+            short_code
+        )
+
         if not url_exists:
             return (
                 render_template(
