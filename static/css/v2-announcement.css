@@ -304,13 +304,6 @@
     /* margin-bottom: 18px; */
 }
 
-.v2-emoji-container img {
-    width: 100%;
-    height: auto;
-    display: block;
-    filter: drop-shadow(0 18px 30px rgba(10, 7, 26, 0.45));
-}
-
 .v2-emoji-plain {
     /* fully remove any background/shadow for plain emoji instances */
     background: none !important;
@@ -325,6 +318,30 @@
 .v2-emoji-plain img {
     filter: none !important;
     width: 150px !important;
+}
+
+.v2-emoji-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 18px 30px rgba(10, 7, 26, 0.45));
+}
+
+/* feature slide emojis: same style as welcome, slightly smaller */
+.v2-emoji-feature {
+    background: none !important;
+    box-shadow: none !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    margin-bottom: 10px;
+}
+
+.v2-emoji-feature img {
+    width: 110px;
+    height: auto;
+    filter: none;
 }
 
 .v2-emoji-container {
