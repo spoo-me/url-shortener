@@ -3,19 +3,61 @@
 {% block title %}Privacy Policy - spoo.me{% endblock %}
 
 {% block content %}
-    <span><img class="emoji"
+    <span><img alt="Locked emoji" class="emoji"
             src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Locked/Flat/locked_flat.svg"></span>
     <h1 id="contributing-guidelines">Privacy Policy</h1>
     <br>
 
     <p>At Spoo.me, accessible from <a href="https://spoo.me">https://spoo.me</a>, one of our main priorities is the
-        privacy of our visitors. This
-        Privacy Policy document contains types of information that is collected and recorded by Spoo.me and how we
-        use
-        it.</p>
+        privacy of our visitors. This Privacy Policy document contains types of information that is collected and 
+        recorded by Spoo.me and how we use it.</p>
 
     <p>If you have additional questions or require more information about our Privacy Policy, do not hesitate to
-        contact us.</p>
+        contact us at <a href="mailto:support@spoo.me">support@spoo.me</a>.</p>
+
+    <br>
+
+    <h2>Information We Collect</h2>
+
+    <br>
+
+    <h3>Account Information</h3>
+
+    <p>When you create an account on Spoo.me, we collect:</p>
+    <ul>
+        <li><strong>Email address:</strong> Used for account creation, verification, and communication</li>
+        <li><strong>Display name:</strong> Your chosen username for the platform</li>
+        <li><strong>Password:</strong> Stored as a secure hash (we never store plain text passwords)</li>
+        <li><strong>Profile picture:</strong> If provided through OAuth authentication</li>
+    </ul>
+
+    <h3>Authentication Data</h3>
+
+    <p>We offer multiple authentication methods:</p>
+    <ul>
+        <li><strong>Email/Password Authentication:</strong> We store your email and password hash securely</li>
+        <li><strong>OAuth Authentication:</strong> When you sign in with Google, GitHub, or Discord, we receive your email address, display name, and profile picture from these providers. We do not receive or store your passwords for these services</li>
+        <li><strong>Session Cookies:</strong> Authentication cookies are used to maintain your logged-in session</li>
+        <li><strong>Email Verification:</strong> We send verification codes to confirm your email address</li>
+    </ul>
+
+    <h3>User-Generated Content</h3>
+
+    <p>When you use our services, we store:</p>
+    <ul>
+        <li><strong>Shortened URLs:</strong> The URLs you create, including custom aliases and target destinations</li>
+        <li><strong>API Keys:</strong> Keys you generate for programmatic access to our API</li>
+        <li><strong>URL Metadata:</strong> Creation dates, expiration settings, and password protection preferences</li>
+    </ul>
+
+    <h3>Usage Data and Analytics</h3>
+
+    <p>We collect data about how you interact with our services:</p>
+    <ul>
+        <li><strong>Click Analytics:</strong> Anonymized data about clicks on your shortened URLs, including geographic location, device type, and referrer information</li>
+        <li><strong>API Usage:</strong> Request logs for API calls made with your API keys</li>
+        <li><strong>Service Usage:</strong> Feature usage patterns to improve our platform</li>
+    </ul>
 
     <br>
 
@@ -24,16 +66,15 @@
     <br>
 
     <p>Spoo.me follows a standard procedure of using log files. These files log visitors when they visit websites.
-        All
-        hosting companies do this and a part of hosting services' analytics. The information collected by log files
-        include internet protocol (IP) addresses, browser type, Internet Service Provider (ISP), date and time
-        stamp, referring/exit pages, and possibly the number of clicks. These are not linked to any information that
-        is personally identifiable. The purpose of the information is for analyzing trends, administering the site,
-        tracking users' movement on the website, and gathering demographic information.</p>
+        The information collected by log files includes internet protocol (IP) addresses, browser type, Internet 
+        Service Provider (ISP), date and time stamp, referring/exit pages, and possibly the number of clicks. These 
+        are not linked to any information that is personally identifiable except when you are logged in to your account. 
+        The purpose of the information is for analyzing trends, administering the site, tracking users' movement on 
+        the website, and gathering demographic information.</p>
 
-    <p>When you visit a short URL on Spoo.me, we collect your IP address. This data is anonymized and we do not
-        associate it with any login information or personally identifiable information. We use this anonymized data
-        to analyze trends and improve our service.</p>
+    <p>When you visit a short URL on Spoo.me, we collect your IP address. For anonymous visitors, this data is 
+        anonymized. For logged-in users, we may associate this data with your account to provide analytics for 
+        your shortened URLs.</p>
 
     <br>
 
@@ -42,10 +83,72 @@
     <br>
 
     <p>Like any other website, Spoo.me uses 'cookies'. These cookies are used to store information including
-        visitors'
-        preferences, and the pages on the website that the visitor accessed or visited. The information is used to
-        optimize the users' experience by customizing our web page content based on visitors' browser type and/or
-        other information.</p>
+        visitors' preferences, and the pages on the website that the visitor accessed or visited. The information is 
+        used to optimize the users' experience by customizing our web page content based on visitors' browser type 
+        and/or other information.</p>
+
+    <h3>Authentication Cookies</h3>
+
+    <p>When you log in to your account, we use the following cookies:</p>
+    <ul>
+        <li><strong>Access Token:</strong> A short-lived cookie that maintains your logged-in session (typically expires after 15 minutes)</li>
+        <li><strong>Refresh Token:</strong> A longer-lived cookie that allows automatic session renewal (typically expires after 7 days)</li>
+        <li><strong>Session Cookie:</strong> Used to maintain your login state across page visits</li>
+    </ul>
+
+    <p>These cookies are essential for the authentication functionality and cannot be disabled if you wish to use 
+        account features. You can delete these cookies by logging out or clearing your browser cookies, which will 
+        sign you out of your account.</p>
+
+    <br>
+
+    <h2>How We Use Your Information</h2>
+
+    <br>
+
+    <p>We use the collected information for the following purposes:</p>
+    <ul>
+        <li><strong>Account Management:</strong> To create, maintain, and secure your account</li>
+        <li><strong>Service Provision:</strong> To provide URL shortening services and API access</li>
+        <li><strong>Analytics:</strong> To provide you with statistics about your shortened URLs</li>
+        <li><strong>Communication:</strong> To send important service updates, security alerts, and email verification</li>
+        <li><strong>Security:</strong> To detect and prevent fraud, abuse, and unauthorized access</li>
+        <li><strong>Service Improvement:</strong> To understand usage patterns and improve our platform</li>
+        <li><strong>Legal Compliance:</strong> To comply with applicable laws and regulations</li>
+    </ul>
+
+    <br>
+
+    <h2>Data Sharing and Third Parties</h2>
+
+    <br>
+
+    <h3>OAuth Providers</h3>
+
+    <p>When you authenticate using OAuth (Google, GitHub, or Discord), we receive limited information from these 
+        providers as per their privacy policies:</p>
+    <ul>
+        <li><strong>Google:</strong> Email address, profile name, and profile picture</li>
+        <li><strong>GitHub:</strong> Email address, username, and profile picture</li>
+        <li><strong>Discord:</strong> Email address, username, and profile picture</li>
+    </ul>
+
+    <p>We do not share your Spoo.me account data back with these OAuth providers beyond what is required for 
+        authentication. Please review the privacy policies of these services:
+        <a href="https://policies.google.com/privacy">Google Privacy Policy</a>,
+        <a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement">GitHub Privacy Policy</a>,
+        <a href="https://discord.com/privacy">Discord Privacy Policy</a>.</p>
+
+    <h3>Third-Party Services We Use</h3>
+
+    <p>We use the following third-party services that may collect data:</p>
+    <ul>
+        <li><strong>hCaptcha:</strong> Used for spam and abuse prevention. See <a href="https://www.hcaptcha.com/privacy">hCaptcha Privacy Policy</a></li>
+        <li><strong>Microsoft Clarity:</strong> Used for analytics and user experience insights. See <a href="https://privacy.microsoft.com/en-us/privacystatement">Microsoft Privacy Policy</a></li>
+        <li><strong>Vercel Analytics:</strong> Used for web analytics. See <a href="https://vercel.com/legal/privacy-policy">Vercel Privacy Policy</a></li>
+    </ul>
+
+    <p>We do not sell your personal data to third parties.</p>
 
     <br>
 
@@ -68,6 +171,114 @@
 
     <br>
 
+    <h2>Data Security</h2>
+
+    <br>
+
+    <p>We take the security of your personal information seriously and implement appropriate technical and 
+        organizational measures:</p>
+    <ul>
+        <li><strong>Password Security:</strong> All passwords are hashed using industry-standard bcrypt algorithm before storage</li>
+        <li><strong>Encryption:</strong> Data transmission is encrypted using HTTPS/TLS</li>
+        <li><strong>Access Controls:</strong> Strict access controls limit who can access user data</li>
+        <li><strong>Regular Security Audits:</strong> We regularly review our security practices</li>
+        <li><strong>Secure Database:</strong> User data is stored in secure, access-controlled databases</li>
+    </ul>
+
+    <p>However, no method of transmission over the Internet or electronic storage is 100% secure. While we strive 
+        to use commercially acceptable means to protect your personal information, we cannot guarantee its absolute 
+        security.</p>
+
+    <br>
+
+    <h2>Data Retention</h2>
+
+    <br>
+
+    <p>We retain your personal information for as long as necessary to provide our services and comply with legal 
+        obligations:</p>
+    <ul>
+        <li><strong>Account Data:</strong> Retained while your account is active and for a reasonable period after account deletion for backup and legal purposes</li>
+        <li><strong>Shortened URLs:</strong> Retained indefinitely unless you delete them or they expire based on your settings</li>
+        <li><strong>Analytics Data:</strong> Anonymized click data is retained to provide historical statistics</li>
+        <li><strong>Log Files:</strong> Server logs are typically retained for 90 days for security and debugging purposes</li>
+        <li><strong>Deleted Accounts:</strong> When you delete your account, we remove your personal information within 30 days, though some data may be retained in backups for up to 90 days</li>
+    </ul>
+
+    <br>
+
+    <h2>Your Rights (GDPR & CCPA Compliance)</h2>
+
+    <br>
+
+    <p>Depending on your location, you may have certain rights regarding your personal information:</p>
+
+    <h3>Rights for EU Users (GDPR)</h3>
+    <ul>
+        <li><strong>Right to Access:</strong> You can request a copy of all personal data we hold about you</li>
+        <li><strong>Right to Rectification:</strong> You can update or correct inaccurate personal information</li>
+        <li><strong>Right to Erasure ("Right to be Forgotten"):</strong> You can request deletion of your personal data</li>
+        <li><strong>Right to Data Portability:</strong> You can request your data in a machine-readable format</li>
+        <li><strong>Right to Restrict Processing:</strong> You can request we limit how we use your data</li>
+        <li><strong>Right to Object:</strong> You can object to certain types of processing</li>
+        <li><strong>Right to Withdraw Consent:</strong> You can withdraw consent for data processing at any time</li>
+    </ul>
+
+    <h3>Rights for California Users (CCPA)</h3>
+    <ul>
+        <li><strong>Right to Know:</strong> You can request information about the personal data we collect and how we use it</li>
+        <li><strong>Right to Delete:</strong> You can request deletion of your personal information</li>
+        <li><strong>Right to Opt-Out:</strong> You can opt-out of the sale of personal information (note: we do not sell personal information)</li>
+        <li><strong>Right to Non-Discrimination:</strong> We will not discriminate against you for exercising your privacy rights</li>
+    </ul>
+
+    <h3>How to Exercise Your Rights</h3>
+    <p>To exercise any of these rights, you can:</p>
+    <ul>
+        <li>Access your account settings to update or delete your information</li>
+        <li>Export your data through your dashboard</li>
+        <li>Contact us at <a href="mailto:support@spoo.me">support@spoo.me</a> with your request</li>
+    </ul>
+
+    <p>We will respond to your request within 30 days. We may need to verify your identity before processing certain requests.</p>
+
+    <h3>Lawful Basis for Processing (GDPR)</h3>
+    <p>We process your personal data based on the following lawful bases:</p>
+    <ul>
+        <li><strong>Consent:</strong> You provide consent when creating an account and accepting this policy</li>
+        <li><strong>Contract:</strong> Processing is necessary to provide the services you requested</li>
+        <li><strong>Legitimate Interests:</strong> We have legitimate interests in preventing fraud and improving our services</li>
+        <li><strong>Legal Obligation:</strong> We may process data to comply with legal requirements</li>
+    </ul>
+
+    <br>
+
+    <h2>International Data Transfers</h2>
+
+    <br>
+
+    <p>Spoo.me is operated from servers that may be located in different countries. By using our service, you 
+        acknowledge that your information may be transferred to and processed in countries other than your country 
+        of residence. We ensure appropriate safeguards are in place for such transfers in compliance with applicable 
+        data protection laws.</p>
+
+    <br>
+
+    <h2>Email Verification and Communications</h2>
+
+    <br>
+
+    <p>When you create an account, we send a verification email to confirm your email address. We may also send you:</p>
+    <ul>
+        <li>Security alerts and notifications</li>
+        <li>Important service updates</li>
+        <li>Responses to your support requests</li>
+    </ul>
+
+    <p>We do not send marketing emails. All communications are service-related and essential for account operation.</p>
+
+    <br>
+
     <h2>Third Party Privacy Policies</h2>
 
     <br>
@@ -76,13 +287,10 @@
         consult
         the respective Privacy Policies of these third-party ad servers for more detailed information. It may
         include
-        their practices and instructions about how to opt-out of certain options. You may find a complete list of
-        these Privacy Policies and their links here: Privacy Policy Links.</p>
+        their practices and instructions about how to opt-out of certain options.</p>
 
     <p>You can choose to disable cookies through your individual browser options. To know more detailed information
-        about cookie management with specific web browsers, it can be found at the browsers' respective websites.
-        What
-        Are Cookies?</p>
+        about cookie management with specific web browsers, it can be found at the browsers' respective websites.</p>
 
     <br>
 
@@ -108,9 +316,10 @@
 
     <br>
 
-    <p>We do not collect personal data such as email addresses from our users. The only information we collect is
-        the anonymized data mentioned in the "Log Files" and "Analytics" sections of this policy. We value your
-        privacy and strive to collect the minimum amount of data necessary to provide our services.</p>
+    <p>We collect personal data necessary to provide our services, including email addresses for account creation, 
+        authentication, and communication. All personal data is handled in accordance with this Privacy Policy and 
+        applicable data protection laws including GDPR and CCPA. We value your privacy and implement appropriate 
+        security measures to protect your personal information.</p>
 
     <br>
 
@@ -126,6 +335,26 @@
         you think that your child provided this kind of information on our website, we strongly encourage you to
         contact us immediately and we will do our best efforts to promptly remove such information from our records.
     </p>
+
+    <p>To create an account, users must be at least 13 years of age. By creating an account, you confirm that you 
+        meet this age requirement.</p>
+
+    <br>
+
+    <h2>Changes to This Privacy Policy</h2>
+
+    <br>
+
+    <p>We may update this Privacy Policy from time to time to reflect changes in our practices or for legal, 
+        operational, or regulatory reasons. When we make material changes, we will notify you by:</p>
+    <ul>
+        <li>Updating the "Last Updated" date at the bottom of this policy</li>
+        <li>Sending an email notification to registered users (for significant changes)</li>
+        <li>Displaying a notice on our website</li>
+    </ul>
+
+    <p>Your continued use of our services after any changes constitutes acceptance of the updated Privacy Policy. 
+        We encourage you to review this policy periodically.</p>
 
     <br>
 
@@ -144,7 +373,19 @@
 
     <br>
 
-    <p>By using our website, you hereby consent to our Privacy Policy and agree to its Terms and Conditions.</p>
+    <p>By using our website, you hereby consent to our Privacy Policy and agree to its Terms and Conditions. When 
+        you create an account, you explicitly consent to the collection and processing of your personal data as 
+        described in this policy.</p>
+
+    <br>
+
+    <h2>Data Protection Officer</h2>
+
+    <br>
+
+    <p>For questions or concerns regarding data protection and privacy, you can contact our team at 
+        <a href="mailto:support@spoo.me">support@spoo.me</a>. We are committed to addressing your privacy concerns 
+        and ensuring compliance with applicable data protection regulations.</p>
 
     <br>
 
@@ -152,9 +393,8 @@
 
     <br>
 
-    <p>This Privacy Policy was <b>last updated on Monday, March 11th, 2024</b>. If there will be any update,
-        amendment, or
-        changes to our Privacy Policy then these will be posted on this page.</p>
+    <p>This Privacy Policy was <b>last updated on Saturday, November 16th, 2025</b>. If there will be any update,
+        amendment, or changes to our Privacy Policy then these will be posted on this page.</p>
 
     <br>
 
@@ -162,7 +402,14 @@
 
     <br>
 
-    <p>If you have any questions about this Privacy Policy, you can contact us: <a
-            href="mailto:support@spoo.me">support@spoo.me</a></p>
+    <p>If you have any questions about this Privacy Policy, wish to exercise your data rights, or have concerns 
+        about how we handle your personal information, you can contact us:</p>
+    <ul>
+        <li>Email: <a href="mailto:support@spoo.me">support@spoo.me</a></li>
+        <li>For GDPR-related requests: Please specify "GDPR Request" in your subject line</li>
+        <li>For CCPA-related requests: Please specify "CCPA Request" in your subject line</li>
+    </ul>
+
+    <p>We will respond to your inquiry within 30 days.</p>
 
 {% endblock %}

@@ -1,15 +1,43 @@
-version: "3"
 services:
-  flask:
+  db:
+    image: "mongo:latest"
+    container_name: spoo_mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongouser
+      MONGO_INITDB_ROOT_PASSWORD: mongouser
+    volumes:
+      # Persist MongoDB data and configuration across container restarts
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
+
+  redis:
+    image: "redis:latest" # reccommended by offical docs
+    container_name: spoo_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  app:
     build: .
+    container_name: spoo_app
+    command: /app/.venv/bin/uv run main.py
+    volumes:
+      # This mount enables hot reloading for your application code
+      - .:/app
+      # This mount masks the host's .venv from overwriting the container's .venv
+      - /app/.venv
     ports:
       - "8000:8000"
     depends_on:
-      - mongo
-    env_file:
-      - .env
+      - db
+      - redis
+    env_file: .env
+    environment:
+      - MONGODB_URI=mongodb://mongouser:mongouser@db:27017
+      - REDIS_URI=redis://redis:6379/0
 
-  mongo:
-    image: "mongo:latest"
-    ports:
-      - "27017:27017"
+volumes:
+  mongo-data:
+  mongo-config:

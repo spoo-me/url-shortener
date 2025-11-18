@@ -15,13 +15,15 @@
     Desktop App Developer: ivirius
     Github: @IviriusMain
 
+    Rust SDK Developer: redninja
+    Github: @rdni
+
 /* THANKS */
     Flask
     Python
 
 /* SITE */
-    Last updated: 2024-03-11
+    Last updated: 2025-11-06
     Language: English
     Standards: HTML5, CSS3
-    Components: Bootstrap
     IDE: Visual Studio Code

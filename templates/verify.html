@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email - Spoo.me</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}" />
+    <style>
+        body {
+            background: radial-gradient(1000px 600px at -10% -10%, rgba(124, 58, 237, 0.18), transparent 60%), radial-gradient(900px 600px at 110% 0%, rgba(37, 99, 235, 0.16), transparent 60%), linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+            background-color: #090d1a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .verify-container {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgb(255, 255, 255, 0.10);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .verify-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .verify-container h1 {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .verify-container p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+
+        .verify-header .email {
+            color: #7c3aed;
+            font-weight: 600;
+        }
+
+        .code-input-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 32px 0;
+        }
+
+        .code-input {
+            width: 56px;
+            height: 64px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .code-input:focus {
+            border-color: #7c3aed;
+            background: rgba(124, 58, 237, 0.1);
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15);
+        }
+
+        .code-input:disabled {
+            background: rgba(255, 255, 255, 0.02);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #86efac;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .verify-btn {
+            width: 100%;
+            padding: 16px;
+            background: #7c3aed;
+            color: white;
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 24px;
+        }
+
+        .verify-btn:hover:not(:disabled) {
+            background: #6d28d9;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+        }
+
+        .verify-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: rgba(124, 58, 237, 0.4);
+        }
+
+        .resend-section {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .resend-section p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            margin: 0 0 12px 0;
+        }
+
+        .resend-btn {
+            background: none;
+            border: none;
+            color: #7c3aed;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .resend-btn:hover:not(:disabled) {
+            color: #6d28d9;
+        }
+
+        .resend-btn:disabled {
+            color: rgba(124, 58, 237, 0.5);
+            cursor: not-allowed;
+            text-decoration: none;
+            opacity: 0.5;
+        }
+
+        .timer {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .logout-link {
+            margin-top: 32px;
+            margin-bottom: 5px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logout-link a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .logout-link a:hover {
+            color: #7c3aed;
+        }
+
+        @media (max-width: 600px) {
+            .verify-container {
+                padding: 32px 24px;
+                margin: 0 20px;
+            }
+
+            .code-input {
+                width: 42px;
+                height: 50px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="verify-container">
+        <div class="verify-header">
+            <h1>Verify Your Email</h1>
+            <p>We've sent a 6-digit code to<br><span class="email">{{ email }}</span></p>
+            <p style="font-size: 13px; color: rgba(255, 255, 255, 0.6); margin-top: 12px;">📬 Don't forget to check your spam or junk folder</p>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+
+        <form id="verifyForm" onsubmit="event.preventDefault(); verifyCode();">
+            <div class="code-input-group">
+                <input type="text" class="code-input" maxlength="1" id="code1" oninput="handleInput(this, 1)"
+                    onkeydown="handleKeyDown(event, 1)" autocomplete="off" autofocus>
+                <input type="text" class="code-input" maxlength="1" id="code2" oninput="handleInput(this, 2)"
+                    onkeydown="handleKeyDown(event, 2)" autocomplete="off">
+                <input type="text" class="code-input" maxlength="1" id="code3" oninput="handleInput(this, 3)"
+                    onkeydown="handleKeyDown(event, 3)" autocomplete="off">
+                <input type="text" class="code-input" maxlength="1" id="code4" oninput="handleInput(this, 4)"
+                    onkeydown="handleKeyDown(event, 4)" autocomplete="off">
+                <input type="text" class="code-input" maxlength="1" id="code5" oninput="handleInput(this, 5)"
+                    onkeydown="handleKeyDown(event, 5)" autocomplete="off">
+                <input type="text" class="code-input" maxlength="1" id="code6" oninput="handleInput(this, 6)"
+                    onkeydown="handleKeyDown(event, 6)" autocomplete="off">
+            </div>
+
+            <button type="submit" class="verify-btn" id="verifyBtn">Verify Email</button>
+        </form>
+
+        <div class="resend-section">
+            <p>Didn't receive the code?</p>
+            <p style="font-size: 13px; color: rgba(255, 255, 255, 0.5); margin: 8px 0;">Check your spam folder before resending</p>
+            <button class="resend-btn" id="resendBtn" onclick="resendCode()">Resend Code</button>
+            <div class="timer" id="timer"></div>
+        </div>
+
+        <div class="logout-link">
+            <a href="#" onclick="logout(); return false;">Not you? Sign out</a>
+        </div>
+    </div>
+
+    <script>
+        let resendTimer = null;
+        let resendSeconds = 0;
+
+        function handleInput(input, position) {
+            // Only allow numbers
+            input.value = input.value.replace(/[^0-9]/g, '');
+
+            // Move to next input if value entered
+            if (input.value.length === 1 && position < 6) {
+                document.getElementById(`code${position + 1}`).focus();
+            }
+
+            // Auto-submit when all 6 digits are entered
+            if (position === 6 && input.value.length === 1) {
+                verifyCode();
+            }
+        }
+
+        function handleKeyDown(event, position) {
+            // Handle backspace
+            if (event.key === 'Backspace') {
+                const input = document.getElementById(`code${position}`);
+                if (input.value.length === 0 && position > 1) {
+                    event.preventDefault();
+                    const prevInput = document.getElementById(`code${position - 1}`);
+                    prevInput.value = '';
+                    prevInput.focus();
+                }
+            }
+
+            // Handle paste
+            if (event.ctrlKey && event.key === 'v' || event.metaKey && event.key === 'v') {
+                event.preventDefault();
+                navigator.clipboard.readText().then(text => {
+                    const digits = text.replace(/[^0-9]/g, '').substring(0, 6);
+                    for (let i = 0; i < digits.length; i++) {
+                        document.getElementById(`code${i + 1}`).value = digits[i];
+                    }
+                    if (digits.length === 6) {
+                        verifyCode();
+                    }
+                });
+            }
+        }
+
+        function getCode() {
+            let code = '';
+            for (let i = 1; i <= 6; i++) {
+                code += document.getElementById(`code${i}`).value;
+            }
+            return code;
+        }
+
+        function clearCode() {
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById(`code${i}`).value = '';
+            }
+            document.getElementById('code1').focus();
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            const successEl = document.getElementById('successMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            successEl.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const errorEl = document.getElementById('errorMessage');
+            const successEl = document.getElementById('successMessage');
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+            errorEl.style.display = 'none';
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function setLoading(loading) {
+            const btn = document.getElementById('verifyBtn');
+            const inputs = document.querySelectorAll('.code-input');
+
+            btn.disabled = loading;
+            btn.textContent = loading ? 'Verifying...' : 'Verify Email';
+
+            inputs.forEach(input => {
+                input.disabled = loading;
+            });
+        }
+
+        async function verifyCode() {
+            const code = getCode();
+
+            if (code.length !== 6) {
+                showError('Please enter the complete 6-digit code');
+                return;
+            }
+
+            hideMessages();
+            setLoading(true);
+
+            try {
+                const res = await fetch('/auth/verify-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ code })
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok) {
+                    showSuccess('✓ Email verified successfully! Redirecting...');
+                    setTimeout(() => {
+                        // Force reload to get fresh verification status
+                        window.location.href = '/dashboard?verified=true';
+                    }, 1500);
+                } else {
+                    showError(data.error || 'Invalid or expired code');
+                    clearCode();
+                    setLoading(false);
+                }
+            } catch (e) {
+                showError('Something went wrong. Please try again.');
+                setLoading(false);
+            }
+        }
+
+        async function resendCode() {
+            const btn = document.getElementById('resendBtn');
+            if (btn.disabled) return;
+
+            btn.disabled = true;
+            hideMessages();
+
+            try {
+                const res = await fetch('/auth/send-verification', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok) {
+                    showSuccess('New code sent! Check your email.');
+                    clearCode();
+                    startResendTimer(60); // 60 seconds cooldown
+                } else if (res.status === 429) {
+                    showError('Please wait before requesting another code');
+                    startResendTimer(180); // 3 minutes for rate limit
+                } else {
+                    showError(data.error || 'Failed to send code');
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                showError('Failed to send code. Please try again.');
+                btn.disabled = false;
+            }
+        }
+
+        function startResendTimer(seconds) {
+            resendSeconds = seconds;
+            const btn = document.getElementById('resendBtn');
+            const timer = document.getElementById('timer');
+
+            btn.disabled = true;
+
+            if (resendTimer) clearInterval(resendTimer);
+
+            resendTimer = setInterval(() => {
+                resendSeconds--;
+                timer.textContent = `Wait ${resendSeconds}s before resending`;
+
+                if (resendSeconds <= 0) {
+                    clearInterval(resendTimer);
+                    btn.disabled = false;
+                    timer.textContent = '';
+                }
+            }, 1000);
+
+            timer.textContent = `Wait ${resendSeconds}s before resending`;
+        }
+
+        async function logout() {
+            try {
+                await fetch('/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                window.location.href = '/';
+            } catch (e) {
+                window.location.href = '/';
+            }
+        }
+
+        // Paste handler for entire form
+        document.addEventListener('paste', (e) => {
+            const text = e.clipboardData.getData('text');
+            const digits = text.replace(/[^0-9]/g, '').substring(0, 6);
+
+            if (digits.length > 0) {
+                e.preventDefault();
+                for (let i = 0; i < digits.length; i++) {
+                    const input = document.getElementById(`code${i + 1}`);
+                    if (input) input.value = digits[i];
+                }
+
+                if (digits.length === 6) {
+                    setTimeout(() => verifyCode(), 100);
+                } else if (digits.length < 6) {
+                    document.getElementById(`code${digits.length + 1}`)?.focus();
+                }
+            }
+        });
+
+        // Start initial cooldown (30 seconds after page load)
+        startResendTimer(30);
+    </script>
+</body>
+
+</html>

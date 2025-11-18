@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard | spoo.me{% endblock %}</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nata+Sans:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- Base styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/dashboard-base.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/customNotification.css') }}?v=5">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+
+    <!-- Tippy.js for tooltips -->
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+
+
+    <!-- Sentry session replays -->
+    <script src="https://js.sentry-cdn.com/846878c0ca155c98146ef71f12143e3e.min.js" crossorigin="anonymous"></script>
+
+    {% block head_css %}{% endblock %}
+</head>
+
+<body class="dashboard-layout">
+    <div class="dashboard-wrapper">
+        <!-- Mobile Header with Hamburger Menu -->
+        <header class="mobile-header">
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu">
+                <i class="ti ti-menu-2"></i>
+            </button>
+            <a href="/" class="mobile-brand">
+                <img src="{{ url_for('static', filename='images/logo-text-dark.png') }}" alt="spoo.me" class="w-8 h-8">
+                <!-- <span>spoo.me</span> -->
+            </a>
+        </header>
+
+        {% include 'dashboard/partials/sidebar.html' %}
+
+        <main class="dashboard-main">
+            {% include 'dashboard/partials/verification_banner.html' %}
+            <div class="dashboard-content">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Base scripts -->
+    <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
+    <script src="{{ url_for('static', filename='js/dashboard/dashboard-base.js') }}?v=1"></script>
+
+    <!-- Auth utilities -->
+    <script>
+        // Pass JWT claims to frontend
+        const g = {
+            jwt_claims: {
+                email_verified: {{ g.jwt_claims.get('email_verified', false)|tojson }}
+            }
+        };
+
+        async function authFetch(url, options = {}) {
+            const defaultOptions = {
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            };
+            const response = await fetch(url, { ...defaultOptions, ...options });
+            if (response.status === 401) {
+                window.location.href = '/';
+            }
+            return response;
+        }
+
+        async function logout() {
+            const res = await authFetch('/auth/logout', { method: 'POST' });
+            if (res.ok) {
+                window.location.href = '/';
+            }
+        }
+    </script>
+
+    <!-- Verification check -->
+    <script src="{{ url_for('static', filename='js/verification-check.js') }}"></script>
+
+    <!-- Check for verification success -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('verified') === 'true') {
+                // Show success notification
+                if (typeof showNotification === 'function') {
+                    showNotification('🎉 Email verified successfully! You can now create URLs and API keys.', 'success');
+                }
+                // Clean up URL
+                const cleanUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+            }
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

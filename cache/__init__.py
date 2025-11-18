@@ -7,4 +7,4 @@ from .dual_cache import DualCache
 from .cache_url import UrlCache
 
 cache_query = UrlCache(ttl_seconds=300)
-dual_cache = DualCache(primary_ttl=300, stale_ttl=1800, lock_ttl=30)
+dual_cache = DualCache(primary_ttl=10 * 60, stale_ttl=60 * 60, lock_ttl=60)

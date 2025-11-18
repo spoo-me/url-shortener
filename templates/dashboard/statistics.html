@@ -1,0 +1,566 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Statistics Dashboard{% endblock %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/statistics.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/dateRangePicker.css') }}">
+<!-- <link rel="stylesheet" type="text/css" -->
+    <!-- href="https://cdn.jsdelivr.net/gh/spoo-me/url-shortener/static/css/anychart-ui.min.css" /> -->
+<link rel="stylesheet" type="text/css"
+    href="{{ url_for('static', filename='css/anychart-ui.min.css') }}" />
+<link rel="stylesheet" type="text/css"
+    href="https://cdn.anychart.com/releases/8.12.1/fonts/css/anychart-font.min.css" />
+{% endblock %}
+
+{% block content %}
+<div class="statistics-dashboard">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-content">
+            <div class="page-header-text">
+                <h1 class="page-title">Analytics</h1>
+                <p class="page-subtitle">Monitor your link performance and user engagement metrics.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+        <div class="controls-left">
+            <div class="filters-dropdown-container">
+                <button class="filters-btn" type="button">
+                    <i class="ti ti-filter"></i>
+                    <span class="filters-text">Filters</span>
+                    <span class="active-filters-count" style="display: none;">0</span>
+                    <i class="ti ti-chevron-down filters-chevron"></i>
+                </button>
+
+                <!-- Floating Filters Dropdown -->
+                <div class="filters-dropdown">
+                    <!-- Main Filter Types List -->
+                    <div class="filter-types-list">
+                        <div class="filter-type-item" data-filter="browser">
+                            <div class="filter-type-content">
+                                <div class="filter-type-info">
+                                    <i class="ti ti-browser"></i>
+                                    <span class="filter-type-label">Browsers</span>
+                                </div>
+                                <div class="filter-type-status">
+                                    <span class="filter-count">All</span>
+                                    <i class="ti ti-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="filter-type-item" data-filter="os">
+                            <div class="filter-type-content">
+                                <div class="filter-type-info">
+                                    <i class="ti ti-device-desktop"></i>
+                                    <span class="filter-type-label">Operating Systems</span>
+                                </div>
+                                <div class="filter-type-status">
+                                    <span class="filter-count">All</span>
+                                    <i class="ti ti-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Device filter disabled - reliable device detection not available yet -->
+
+                        <div class="filter-type-item" data-filter="country">
+                            <div class="filter-type-content">
+                                <div class="filter-type-info">
+                                    <i class="ti ti-world"></i>
+                                    <span class="filter-type-label">Countries</span>
+                                </div>
+                                <div class="filter-type-status">
+                                    <span class="filter-count">All</span>
+                                    <i class="ti ti-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="filter-type-item" data-filter="city">
+                            <div class="filter-type-content">
+                                <div class="filter-type-info">
+                                    <i class="ti ti-building"></i>
+                                    <span class="filter-type-label">Cities</span>
+                                </div>
+                                <div class="filter-type-status">
+                                    <span class="filter-count">All</span>
+                                    <i class="ti ti-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="filter-type-item" data-filter="referrer">
+                            <div class="filter-type-content">
+                                <div class="filter-type-info">
+                                    <i class="ti ti-external-link"></i>
+                                    <span class="filter-type-label">Referrers</span>
+                                </div>
+                                <div class="filter-type-status">
+                                    <span class="filter-count">All</span>
+                                    <i class="ti ti-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="filter-type-item" data-filter="short_code">
+                            <div class="filter-type-content">
+                                <div class="filter-type-info">
+                                    <i class="ti ti-key"></i>
+                                    <span class="filter-type-label">Short URLs</span>
+                                </div>
+                                <div class="filter-type-status">
+                                    <span class="filter-count">All</span>
+                                    <i class="ti ti-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="filter-type-item clear-all-item">
+                            <div class="filter-type-content">
+                                <div class="filter-type-info">
+                                    <i class="ti ti-x"></i>
+                                    <span class="filter-type-label">Clear All Filters</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Values View -->
+                    <div class="filter-values-view" style="display: none;">
+                        <div class="filter-values-top">
+                            <button class="back-btn" type="button">
+                                <i class="ti ti-arrow-left"></i>
+                            </button>
+                            <div class="filter-values-search">
+                                <i class="ti ti-search"></i>
+                                <input type="text" placeholder="Search..." class="values-search-input">
+                            </div>
+                        </div>
+
+                        <div class="filter-values-list">
+                            <!-- Values will be populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="controls-actions">
+            <div id="dateRangeContainer"></div>
+            <div class="export-btn-wrapper">
+                <button class="export-btn" type="button" title="Export">
+                    <i class="ti ti-download"></i>
+                </button>
+                <!-- Export Dropdown Menu -->
+                <div class="export-dropdown-menu" id="exportDropdownMenu">
+                    <button class="export-menu-item" data-format="json">
+                        <i class="ti ti-file-type-json"></i>
+                        <span>Export as JSON</span>
+                    </button>
+                    <button class="export-menu-item" data-format="csv">
+                        <i class="ti ti-file-type-csv"></i>
+                        <span>Export as CSV</span>
+                    </button>
+                    <button class="export-menu-item" data-format="xlsx">
+                        <i class="ti ti-file-type-xls"></i>
+                        <span>Export as Excel</span>
+                    </button>
+                    <button class="export-menu-item" data-format="xml">
+                        <i class="ti ti-file-type-xml"></i>
+                        <span>Export as XML</span>
+                    </button>
+                </div>
+            </div>
+            <div class="refresh-control">
+                <button class="refresh-btn" type="button" title="Refresh">
+                    <i class="ti ti-refresh"></i>
+                </button>
+                <div class="separator"></div>
+                <div class="auto-refresh-dropdown">
+                    <button class="auto-refresh-btn" type="button">
+                        Off <i class="ti ti-chevron-down"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item" data-interval="0">
+                            Off
+                        </div>
+                        <div class="dropdown-item" data-interval="60">
+                            1m
+                        </div>
+                        <div class="dropdown-item" data-interval="300">
+                            5m
+                        </div>
+                        <div class="dropdown-item" data-interval="900">
+                            15m
+                        </div>
+                        <div class="dropdown-item" data-interval="1800">
+                            30m
+                        </div>
+                        <div class="dropdown-item" data-interval="3600">
+                            1h
+                        </div>
+                        <div class="dropdown-item" data-interval="7200">
+                            2h
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Stats Row -->
+    <div class="main-stats-container">
+        <div class="card-parent clicks-counter-parent">
+            <div class="clicks-counter-section">
+                <div class="chart-header">
+                    <h2>Clicks Over Time</h2>
+                    <div class="chart-actions">
+                        <button class="table-view-btn" data-chart="timeSeriesChart" title="Table View">
+                            <i class="ti ti-table"></i>
+                        </button>
+                        <div class="cascade-select" data-chart="timeSeriesChart">
+                            <button class="cascade-btn active" data-value="compare" title="Compare Both">
+                                <i class="ti ti-switch-3"></i>
+                            </button>
+                            <div class="cascade-dropdown">
+                                <button class="cascade-option" data-value="total">
+                                    <i class="ti ti-chart-line"></i>
+                                    <span>Total Clicks</span>
+                                </button>
+                                <button class="cascade-option" data-value="unique">
+                                    <i class="ti ti-users"></i>
+                                    <span>Unique Clicks</span>
+                                </button>
+                                <button class="cascade-option active" data-value="compare">
+                                    <i class="ti ti-switch-3"></i>
+                                    <span>Compare Both</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="timeSeriesChart" class="stats-chart"></canvas>
+                    <div class="stats-table" id="timeSeriesTable" style="display: none;">
+                        <div class="table-header">
+                            <div class="header-cell col-date">Date</div>
+                            <div class="header-cell col-clicks">Total Clicks</div>
+                            <div class="header-cell col-unique">Unique Clicks</div>
+                        </div>
+                        <div class="table-body" id="timeSeriesTableBody"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-stats">
+            <div class="card-parent">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalClicks">0</div>
+                    <div class="stat-label">Total Clicks</div>
+                </div>
+            </div>
+            <div class="card-parent">
+                <div class="stat-card">
+                    <div class="stat-value" id="uniqueClicks">0</div>
+                    <div class="stat-label">Unique Visitors</div>
+                </div>
+            </div>
+            <div class="card-parent">
+                <div class="stat-card">
+                    <div class="stat-value" id="clickRate">0%</div>
+                    <div class="stat-label">Unique Rate</div>
+                </div>
+            </div>
+            <div class="card-parent">
+                <div class="stat-card">
+                    <div class="stat-value" id="redirectionTime">0</div>
+                    <div class="stat-label">Avg Redirection Time</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Container - Row 1: Short URLs and Referrers -->
+    <div class="charts-container">
+        <div class="card-parent chart-section-parent">
+            <div class="chart-section key-data">
+                <div class="chart-header">
+                    <h2>Short URLs</h2>
+                    <div class="chart-actions">
+                        <button class="table-view-btn" data-chart="keyChart" title="Table View">
+                            <i class="ti ti-table"></i>
+                        </button>
+                        <div class="cascade-select" data-chart="keyChart">
+                            <button class="cascade-btn active" data-value="compare" title="Compare Both">
+                                <i class="ti ti-switch-3"></i>
+                            </button>
+                            <div class="cascade-dropdown">
+                                <button class="cascade-option" data-value="total">
+                                    <i class="ti ti-chart-bar"></i>
+                                    <span>Total Clicks</span>
+                                </button>
+                                <button class="cascade-option" data-value="unique">
+                                    <i class="ti ti-users"></i>
+                                    <span>Unique Clicks</span>
+                                </button>
+                                <button class="cascade-option active" data-value="compare">
+                                    <i class="ti ti-switch-3"></i>
+                                    <span>Compare Both</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="keyChart" class="stats-chart"></canvas>
+                    <div class="stats-table" id="keyTable" style="display: none;">
+                        <div class="table-header">
+                            <div class="header-cell col-key">Key</div>
+                            <div class="header-cell col-clicks">Total Clicks</div>
+                            <div class="header-cell col-unique">Unique Clicks</div>
+                        </div>
+                        <div class="table-body" id="keyTableBody"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-parent chart-section-parent">
+            <div class="chart-section referrer-data">
+                <div class="chart-header">
+                    <h2>Referrers</h2>
+                    <div class="chart-actions">
+                        <button class="table-view-btn" data-chart="referrerChart" title="Table View">
+                            <i class="ti ti-table"></i>
+                        </button>
+                        <div class="cascade-select" data-chart="referrerChart">
+                            <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
+                                <i class="ti ti-switch-3"></i>
+                            </button>
+                            <div class="cascade-dropdown">
+                                <button class="cascade-option" data-value="total">
+                                    <i class="ti ti-chart-bar"></i>
+                                    <span>Total Clicks</span>
+                                </button>
+                                <button class="cascade-option" data-value="unique">
+                                    <i class="ti ti-users"></i>
+                                    <span>Unique Clicks</span>
+                                </button>
+                                <button class="cascade-option active" data-value="compare">
+                                    <i class="ti ti-switch-3"></i>
+                                    <span>Total vs Unique</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="referrerChart" class="stats-chart"></canvas>
+                    <div class="stats-table" id="referrerTable" style="display: none;">
+                        <div class="table-header">
+                            <div class="header-cell col-referrer">Host</div>
+                            <div class="header-cell col-clicks">Total Clicks</div>
+                            <div class="header-cell col-unique">Unique Clicks</div>
+                        </div>
+                        <div class="table-body" id="referrerTableBody"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Container - Row 2: Browsers and Platforms -->
+    <div class="charts-container">
+        <div class="card-parent chart-section-parent">
+            <div class="chart-section browsers-data">
+                <div class="chart-header">
+                    <h2>Browsers</h2>
+                    <div class="chart-actions">
+                        <button class="table-view-btn" data-chart="browserChart" title="Table View">
+                            <i class="ti ti-table"></i>
+                        </button>
+                        <div class="cascade-select" data-chart="browserChart">
+                            <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
+                                <i class="ti ti-switch-3"></i>
+                            </button>
+                            <div class="cascade-dropdown">
+                                <button class="cascade-option" data-value="total">
+                                    <i class="ti ti-chart-bar"></i>
+                                    <span>Total Clicks</span>
+                                </button>
+                                <button class="cascade-option" data-value="unique">
+                                    <i class="ti ti-users"></i>
+                                    <span>Unique Clicks</span>
+                                </button>
+                                <button class="cascade-option active" data-value="compare">
+                                    <i class="ti ti-switch-3"></i>
+                                    <span>Total vs Unique</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="browserChart" class="stats-chart"></canvas>
+                    <div class="stats-table" id="browserTable" style="display: none;">
+                        <div class="table-header">
+                            <div class="header-cell col-browser">Name</div>
+                            <div class="header-cell col-clicks">Total Clicks</div>
+                            <div class="header-cell col-unique">Unique Clicks</div>
+                        </div>
+                        <div class="table-body" id="browserTableBody"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-parent chart-section-parent">
+            <div class="chart-section os-data">
+                <div class="chart-header">
+                    <h2>Platforms</h2>
+                    <div class="chart-actions">
+                        <button class="table-view-btn" data-chart="osChart" title="Table View">
+                            <i class="ti ti-table"></i>
+                        </button>
+                        <div class="cascade-select" data-chart="osChart">
+                            <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
+                                <i class="ti ti-switch-3"></i>
+                            </button>
+                            <div class="cascade-dropdown">
+                                <button class="cascade-option" data-value="total">
+                                    <i class="ti ti-chart-bar"></i>
+                                    <span>Total Clicks</span>
+                                </button>
+                                <button class="cascade-option" data-value="unique">
+                                    <i class="ti ti-users"></i>
+                                    <span>Unique Clicks</span>
+                                </button>
+                                <button class="cascade-option active" data-value="compare">
+                                    <i class="ti ti-switch-3"></i>
+                                    <span>Total vs Unique</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="osChart" class="stats-chart"></canvas>
+                    <div class="stats-table" id="osTable" style="display: none;">
+                        <div class="table-header">
+                            <div class="header-cell col-platform">Name</div>
+                            <div class="header-cell col-clicks">Total Clicks</div>
+                            <div class="header-cell col-unique">Unique Clicks</div>
+                        </div>
+                        <div class="table-body" id="osTableBody"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Container - Row 3: Cities and Countries -->
+    <div class="charts-container">
+        <div class="card-parent chart-section-parent">
+            <div class="chart-section city-data">
+                <div class="chart-header">
+                    <h2>Cities</h2>
+                    <div class="chart-actions">
+                        <button class="table-view-btn" data-chart="cityChart" title="Table View">
+                            <i class="ti ti-table"></i>
+                        </button>
+                        <div class="cascade-select" data-chart="cityChart">
+                            <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
+                                <i class="ti ti-switch-3"></i>
+                            </button>
+                            <div class="cascade-dropdown">
+                                <button class="cascade-option" data-value="total">
+                                    <i class="ti ti-chart-bar"></i>
+                                    <span>Total Clicks</span>
+                                </button>
+                                <button class="cascade-option" data-value="unique">
+                                    <i class="ti ti-users"></i>
+                                    <span>Unique Clicks</span>
+                                </button>
+                                <button class="cascade-option active" data-value="compare">
+                                    <i class="ti ti-switch-3"></i>
+                                    <span>Total vs Unique</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="cityChart" class="stats-chart"></canvas>
+                    <div class="stats-table" id="cityTable" style="display: none;">
+                        <div class="table-header">
+                            <div class="header-cell col-city">Name</div>
+                            <div class="header-cell col-clicks">Total Clicks</div>
+                            <div class="header-cell col-unique">Unique Clicks</div>
+                        </div>
+                        <div class="table-body" id="cityTableBody"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-parent chart-section-parent">
+            <div class="chart-section country-data">
+                <div class="chart-header">
+                    <h2>Countries</h2>
+                    <div class="chart-actions">
+                        <button class="table-view-btn" data-chart="countryChart" title="Table View">
+                            <i class="ti ti-table"></i>
+                        </button>
+                        <div class="cascade-select" data-chart="countryChart">
+                            <button class="cascade-btn active" data-value="total" title="Total Clicks">
+                                <i class="ti ti-chart-bar"></i>
+                            </button>
+                            <div class="cascade-dropdown">
+                                <button class="cascade-option active" data-value="total">
+                                    <i class="ti ti-chart-bar"></i>
+                                    <span>Total Clicks</span>
+                                </button>
+                                <button class="cascade-option" data-value="unique">
+                                    <i class="ti ti-users"></i>
+                                    <span>Unique Clicks</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container" id="country-container">
+                    <div id="countryChart" class="stats-chart"></div>
+                    <div class="stats-table" id="countryTable" style="display: none;">
+                        <div class="table-header">
+                            <div class="header-cell col-country">Name</div>
+                            <div class="header-cell col-clicks">Total Clicks</div>
+                            <div class="header-cell col-unique">Unique Clicks</div>
+                        </div>
+                        <div class="table-body" id="countryTableBody"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/relativeTime.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-core.min.js"></script>
+<script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-map.min.js"></script>
+<script src="https://cdn.anychart.com/releases/8.12.1/geodata/custom/world/world.js"></script>
+<script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-data-adapter.min.js"></script>
+<script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-exports.min.js"></script>
+<script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-ui.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard/dateRangePicker.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard/statistics.js') }}?v=3"></script>
+{% endblock %}

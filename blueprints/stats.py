@@ -23,10 +23,13 @@ from utils.export_utils import (
 )
 from utils.pipeline_utils import get_stats_pipeline
 from .limiter import limiter
+from utils.logger import get_logger
 
 from datetime import datetime, timezone
 from urllib.parse import unquote
 import json
+
+log = get_logger(__name__)
 
 stats = Blueprint("stats", __name__)
 
@@ -55,6 +58,7 @@ def stats_route():
             url_data = load_url(short_code, projection={"password": 1})
 
         if not url_data:
+            log.info("legacy_stats_not_found", short_code=short_code)
             return render_template(
                 "stats.html",
                 error="Invalid Short Code, short code does not exist!",
@@ -65,6 +69,7 @@ def stats_route():
         url_data["password"] = url_data.get("password", None)
 
         if not password and url_data["password"] is not None:
+            log.info("legacy_stats_password_required", short_code=short_code)
             return render_template(
                 "stats.html",
                 password_error=f"{request.host_url}{short_code} is a password protected Url, please enter the password to continue.",
@@ -73,6 +78,7 @@ def stats_route():
             )
 
         if url_data["password"] is not None and url_data["password"] != password:
+            log.warning("legacy_stats_password_incorrect", short_code=short_code)
             return render_template(
                 "stats.html",
                 password_error="Invalid Password! please enter the correct password to continue.",
@@ -101,6 +107,9 @@ def analytics(short_code):
         url_data = aggregate_url(pipeline)
 
     if not url_data:
+        log.info(
+            "legacy_analytics_not_found", short_code=short_code, method=request.method
+        )
         if request.method == "GET":
             return (
                 render_template(
@@ -116,6 +125,12 @@ def analytics(short_code):
 
     if url_data["password"] is not None:
         if password != url_data["password"]:
+            log.warning(
+                "legacy_analytics_password_incorrect",
+                short_code=short_code,
+                method=request.method,
+                password_provided=bool(password),
+            )
             if request.method == "POST":
                 return (
                     jsonify(
@@ -156,7 +171,11 @@ def analytics(short_code):
     if url_data["expiration-time"] is not None:
         expiration_time = convert_to_gmt(url_data["expiration-time"])
         if not expiration_time:
-            print("Expiration time is not timezone aware")
+            log.warning(
+                "expiration_time_not_timezone_aware",
+                short_code=short_code,
+                expiration_time=url_data["expiration-time"],
+            )
         elif expiration_time <= datetime.now(timezone.utc):
             url_data["expired"] = True
 
@@ -213,6 +232,12 @@ def export(short_code, format):
     pipeline = get_stats_pipeline(short_code)
 
     if format not in ["csv", "json", "xlsx", "xml"]:
+        log.info(
+            "legacy_export_invalid_format",
+            short_code=short_code,
+            format=format,
+            method=request.method,
+        )
         if request.method == "GET":
             return (
                 render_template(
@@ -239,6 +264,12 @@ def export(short_code, format):
         url_data = aggregate_url(pipeline)
 
     if not url_data:
+        log.info(
+            "legacy_export_not_found",
+            short_code=short_code,
+            format=format,
+            method=request.method,
+        )
         if request.method == "GET":
             return (
                 render_template(
@@ -254,6 +285,13 @@ def export(short_code, format):
 
     if url_data["password"] is not None:
         if password != url_data["password"]:
+            log.warning(
+                "legacy_export_password_incorrect",
+                short_code=short_code,
+                format=format,
+                method=request.method,
+                password_provided=bool(password),
+            )
             if request.method == "POST":
                 return (
                     jsonify(
@@ -285,7 +323,12 @@ def export(short_code, format):
     if url_data["expiration-time"] is not None:
         expiration_time = convert_to_gmt(url_data["expiration-time"])
         if not expiration_time:
-            print("Expiration time is not timezone aware")
+            log.warning(
+                "expiration_time_not_timezone_aware",
+                short_code=short_code,
+                format=format,
+                expiration_time=url_data["expiration-time"],
+            )
         elif expiration_time <= datetime.now(timezone.utc):
             url_data["expired"] = True
 

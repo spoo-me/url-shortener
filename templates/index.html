@@ -1,8 +1,8 @@
-<!DOCTYPE html>
-<html lang="en-US">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
+{% block title %}spoo.me URL Shortener{% endblock %}
+
+{% block meta %}
     <script type="text/javascript">
         (function (c, l, a, r, i, t, y) {
             c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
@@ -10,138 +10,35 @@
             y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
         })(window, document, "clarity", "script", "k9zlm89vrc");
     </script>
-
-    <title>spoo.me URL Shortener</title>
-    <link rel="icon" type="image/png" href="https://spoo.me/static/images/favicon.png">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="spoo.me is a free and easy-to-use URL shortener that lets you create short links for any website. You can even choose your own alias, set a password, and limit the number of clicks.">
+    <meta name="description" content="spoo.me is a free and easy-to-use URL shortener that lets you create short links for any website. You can even choose your own alias, set a password, and limit the number of clicks.">
     <link rel="canonical" href="https://spoo.me">
-
-    <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="Shorten Your URLs, Not Your Possiblities | spoo.me">
     <meta property="og:site_name" content="Shorten Your URLs, Not Your Possiblities | spoo.me">
-    <meta property="og:description"
-        content="spoo.me is a free and easy-to-use URL shortener that lets you create short links for any website.">
+    <meta property="og:description" content="spoo.me is a free and easy-to-use URL shortener that lets you create short links for any website.">
     <meta property="og:image:url" content="https://spoo.me/static/images/banner.webp">
     <meta property="og:url" content="https://spoo.me">
     <meta property="og:type" content="website">
-
-    <!-- Twitter Card Meta Tags -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://spoo.me/" />
     <meta property="twitter:title" content="spoo.me URL Shortener" />
-    <meta property="twitter:description"
-        content="spoo.me is a free and easy-to-use URL shortener that lets you create short links for any website. You can even choose your own alias, set a password, and limit the number of clicks." />
+    <meta property="twitter:description" content="spoo.me is a free and easy-to-use URL shortener that lets you create short links for any website. You can even choose your own alias, set a password, and limit the number of clicks." />
     <meta property="twitter:image" content="https://spoo.me/static/images/banner.webp" />
-
     <meta property="twitter:domain" content="https://spoo.me">
-
     <meta content="#adb1ff" name="theme-color">
     <meta name="moz-appearance" content="#adb1ff">
     <meta content="#adb1ff" name="msapplication-TileColor">
+{% endblock %}
 
+{% block head_css %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=8">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=3">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/self-promo.css') }}?v=2">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=3">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=8">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/customNotification.css') }}?v=4">
-
     <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Allerta+Stencil&display=swap" rel="preload">
-</head>
+{% endblock %}
 
-<body>
-    {% if self_promo %}
-        <div class="self-promo">
-            <div class="self-promo-inner"><a href="{{ self_promo_uri }}" target="_blank" rel="noopener">🥳
-                    {{ self_promo_text }}</a></div>
-            <button id="close-button" class="self-promo-close"><img width="20" height="20"
-                    src="https://img.icons8.com/metro/30/ffffff/delete-sign.png" alt="delete-sign" /></button>
-        </div>
-    {% endif %}
-
-    <div class="navbar">
-        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image"
-            loading="lazy">
-        <div class="links">
-            <ul>
-                <li><a href="#" class="active">Shorten</a></li>
-                <li><a href="/api">API</a></li>
-                <li><a href="/stats">Stats</a></li>
-                <li><a href="/report">Report URL</a></li>
-                <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
-                </li>
-                <li onclick="showContactModal();"><a href="#">Contact</a></li>
-            </ul>
-        </div>
-    </div>
-
-    <div class="mobile-navbar">
-        <div class="mobile-logo">
-            <a href="#"><img class="mobile-logo-image" src="https://spoo.me/static/images/text.png"
-                    alt="Spoo.me Banner Image"></a>
-        </div>
-        <button type="button" class="burger" title="Menu">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-        <ul class="mobile-menu">
-            <li><a href="#" class="active">Shorten</a></li>
-            <li><a href="/api">API</a></li>
-            <li><a href="/stats">Stats</a></li>
-            <li><a href="/report">Report URL</a></li>
-            <li><a href="https://github.com/spoo-me/url-shortener" rel="noopener" target="_blank">Open-Source ↗</a>
-            </li>
-            <li onclick="showContactModal();">Contact</li>
-        </ul>
-    </div>
-
-    <div id="modalPopup" class="modal">
-        <div class="modal-content">
-            <h2 class="modal-header">Contact Us</h2>
-            <div class="button-container">
-                <button class="contact-button" onclick="openContactLink('/contact');"><img
-                        src="https://img.icons8.com/ios-filled/100/ffffff/pencil--v1.png" alt="Contact Form Symbol"
-                        loading="lazy">
-                    <p>Contact Form</p>
-                </button>
-                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
-                        src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png" alt="Discord Logo"
-                        loading="lazy">
-                    <p>Discord</p>
-                </button>
-                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img
-                        src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo"
-                        loading="lazy">
-                    <p>Twitter</p>
-                </button>
-                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img
-                        src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo"
-                        loading="lazy">
-                    <p>Instagram</p>
-                </button>
-                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img
-                        src="https://img.icons8.com/pastel-glyph/100/ffffff/new-post--v1.png" alt="Email Icon"
-                        loading="lazy">
-                    <p>Email</p>
-                </button>
-                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img
-                        src="https://img.icons8.com/material-sharp/100/ffffff/github.png" alt="Github Logo"
-                        loading="lazy">
-                    <p>Github</p>
-                </button>
-            </div>
-        </div>
-    </div>
-
+{% block content %}
     <div class="form-section">
         <form action="/" method="POST" onsubmit="return validateURL() && validatePassword();">
             <h1>
@@ -198,26 +95,7 @@
             </div>
         </form>
 
-        {% if recentURLs %}
-        <div id="recentURLs"> {% for url in recentURLs %} <div class="url-container">
-                <div class="section-1">
-                    <div class="left-section">
-                        <span class="short-url">
-                            <a href="/{{ url}}" target="_blank">{{ host_url }}{{ url }}</a>
-                        </span>
-                    </div>
-                    <div class="right-section">
-                        <div class="qr-code" data-url="{{ host_url }}{{ url }}"></div>
-                    </div>
-                </div>
-                <div class="section-2">
-                    <div class="button-container">
-                        <button class="copy-button" data-url="{{ host_url }}{{ url }}">Copy</button>
-                        <button class="stats-button">Stats</button>
-                    </div>
-                </div>
-            </div> {% endfor %} </div>
-        {% endif %}
+        <div id="recentURLs"></div>
     </div>
 
     <div class="metrics-section">
@@ -244,34 +122,11 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
-    <div id="producthunt">
-        <a href="https://www.producthunt.com/posts/spoo-me-url-shortener?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-spoo&#0045;me&#0045;url&#0045;shortener"
-            target="_blank" rel="noopener"><img
-                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=431671&theme=dark"
-                alt="Spoo&#0046;me&#0032;Url&#0032;Shortener - Shorten&#0032;Your&#0032;URLs&#0044;&#0032;Not&#0032;Your&#0032;Possibilities&#0046; | Product Hunt"
-                style="width: 200px; height: 40px;" width="200" height="40" loading="lazy" /></a>
-    </div>
-
+{% block scripts %}
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-
     <script src="{{ url_for('static', filename='js/index-qrcode.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/index-validate.js') }}?v=1" defer=""></script>
-    <script src="{{ url_for('static', filename='js/index-script.js') }}?v=5" defer=""></script>
-    <script src="{{ url_for('static', filename='js/contacts-popup.js') }}?v=1" defer=""></script>
-    <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer=""></script>
-    <script src="{{ url_for('static', filename='js/self-promo.js') }}" defer=""></script>
-
-    <script>
-        window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/speed-insights/script.js"></script>
-
-    <script>
-        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/insights/script.js"></script>
-
-</body>
-
-</html>
+    <script src="{{ url_for('static', filename='js/index-validate.js') }}?v=1" defer></script>
+    <script src="{{ url_for('static', filename='js/index-script.js') }}?v=5" defer></script>
+{% endblock %}

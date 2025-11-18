@@ -47,13 +47,14 @@ label[for=max-clicks] {
 }
 
 .alias-time-container .child {
-    width: 100%; /* FireFox Fallback */
-    width: -webkit-fill-available;
+    width: -webkit-fill-available; /* FireFox Fallback */
+    width: 100%;
 }
 
 input[type="text"],
 input[type="password"],
-input[type="number"] {
+input[type="number"],
+input[type="email"] {
     width: 100%;
     padding: 15px;
     border-radius: 20px;
@@ -397,25 +398,6 @@ a:hover {
     color: #f9e2af;
 }
 
-
-#producthunt {
-    position: fixed;
-    z-index: 888888;
-    text-align: left;
-    padding: 20px;
-    left: 0;
-    bottom: 0;
-    transition: all 0.3s ease-in-out;
-}
-
-#producthunt img {
-    transition: all 0.3s ease-in-out;
-}
-
-#producthunt img:hover {
-    transform: scale(1.1);
-}
-
 .checkbox-wrapper-4 * {
     box-sizing: border-box;
 }
@@ -506,6 +488,7 @@ label.cbx {
     width: 0;
     height: 0;
     pointer-events: none;
+    -webkit-user-select: none;
     user-select: none;
 }
 
@@ -544,10 +527,6 @@ label.cbx {
     .url-container {
         margin-left: 6%;
         margin-right: 6%;
-    }
-
-    #producthunt img:hover {
-        transform: none;
     }
 }
 
@@ -600,10 +579,6 @@ label.cbx {
 
     .metrics h4 {
         font-size: 15px;
-    }
-
-    #producthunt {
-        display: none;
     }
 }
 

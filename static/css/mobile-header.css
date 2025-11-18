@@ -1,113 +1,270 @@
 @import url('https://fonts.googleapis.com/css2?family=Allerta+Stencil&display=swap');
 
 .mobile-navbar {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 0;
     position: sticky;
-    z-index: 9999999999999999999;
+    z-index: 9999;
     top: 0;
     left: 0;
     right: 0;
-    box-shadow: 0px 1px 6px rgba(0, 0, 0, 0.2);
     width: 100%;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(20px);
     color: white;
     margin: 0;
     font-family: "Allerta Stencil", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    transition: margin 0.2s cubic-bezier(0.8, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .mobile-navbar.scrolled {
     position: fixed;
-    width: -webkit-fill-available;
-    margin: 10px;
-    border-radius: 10px;
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 0px 4px 0px, rgba(0, 0, 0, 0.06) 0px 5px 20px 5px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    backdrop-filter: saturate(1.5) blur(12px);
+    width: calc(100% - 24px);
+    margin: 12px;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: saturate(1.4) blur(16px);
+    background-color: rgba(255, 255, 255, 0.06);
 }
 
+.mobile-header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    position: relative;
+}
 
 .mobile-logo {
-    padding: 9px 5px 6px 35px;
-}
-
-.mobile-logo-image {
-    height: 25px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: 0;
 }
 
 .mobile-logo a {
+    display: flex;
+    align-items: center;
     text-decoration: none;
-    color: #333;
-    font-size: 1em;
+    transition: opacity 0.2s ease;
 }
 
+.mobile-logo a:hover {
+    opacity: 0.85;
+}
+
+.mobile-logo-image {
+    height: 28px;
+}
+
+/* Mobile right section */
+.mobile-right-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Mobile sign in button */
+.mobile-auth-btn {
+    display: flex;
+    align-items: center;
+}
+
+.mobile-signin-btn {
+    display: inline-block;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.mobile-signin-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+    text-decoration: none !important;
+}
+
+/* Burger icon */
 button.burger {
-    position: absolute;
-    left: 0;
-    top: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
     border: 0;
     background: transparent;
-    padding: 8px 15px;
+    padding: 8px;
     cursor: pointer;
     outline: none;
+    width: 40px;
+    height: 40px;
 }
 
 button.burger span {
     display: block;
-    width: 4px;
-    height: 4px;
-    background: #fff;
-    margin: 3px 0;
-    border-radius: 4px;
-    transition: all .4s ease-in-out;
+    width: 20px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 2px;
+    transition: all 0.3s ease;
 }
 
-button.burger:focus span:first-child {
-    transform-origin: 2px 9px;
-    transform: rotate(-90deg);
+button.burger[aria-expanded="true"] span:first-child {
+    transform: translateY(6px) rotate(45deg);
 }
 
-button.burger:focus span:last-child {
-    transform-origin: 2px -5px;
-    transform: rotate(-90deg);
+button.burger[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
 }
 
-button.burger:focus+ul {
-    max-height: 500px;
+button.burger[aria-expanded="true"] span:last-child {
+    transform: translateY(-6px) rotate(-45deg);
 }
 
+/* Mobile menu */
 ul.mobile-menu {
     list-style: none;
     padding: 0;
     margin: 0;
     overflow: hidden;
     max-height: 0;
-    transition: all 0.6s ease-in-out;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(255, 255, 255, 0.02);
 }
 
-ul.mobile-menu>li {
+.mobile-navbar.menu-open ul.mobile-menu {
+    max-height: 600px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+ul.mobile-menu > li {
     display: block;
-    padding: 10px 15px 12px;
+    padding: 0;
+    transition: background 0.2s ease;
+}
+
+ul.mobile-menu > li > a {
+    display: block;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.75);
+    padding: 14px 20px;
+    font-size: 15px;
+    letter-spacing: 0.5px;
     transition: all 0.2s ease;
 }
 
-ul.mobile-menu>li>a {
-    display: block;
-    text-decoration: none;
-    color: white;
+ul.mobile-menu > li > a.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
 }
 
-ul.mobile-menu>li>a:hover {
+ul.mobile-menu > li > a:hover {
     text-decoration: none;
+    color: #fff;
 }
 
-ul.mobile-menu>li:hover {
-    /* background: linear-gradient(141deg, #48ded4 0%, #a026bf 51%, #e82c75 75%);*/
-    background: rgba(255, 255, 255, 0.125);
+ul.mobile-menu > li:hover {
+    background: rgba(255, 255, 255, 0.08);
     cursor: pointer;
+}
+
+.menu-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 8px 20px;
+}
+
+.external-link {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+}
+
+.external-link svg {
+    opacity: 0.6;
+    height: 14px !important;
+    width: 14px !important;
+}
+
+.menu-signin {
+    color: #fff !important;
+    font-weight: 500;
+}
+
+/* Mobile profile menu */
+.mobile-profile { 
+    display: flex; 
+    align-items: center; 
+}
+.mobile-profile .profile-btn { 
+    border: 0; 
+    background: transparent; 
+    padding: 0; 
+    line-height: 0; 
+    border-radius: 50%;
+    cursor: pointer;
+}
+.mobile-profile .profile-avatar-container { 
+    width: 36px; 
+    height: 36px; 
+    position: relative; 
+}
+.mobile-profile .profile-btn img { 
+    width: 36px; 
+    height: 36px; 
+    border-radius: 50%; 
+    border: 1px solid rgba(255,255,255,0.2); 
+    display: block; 
+}
+.mobile-profile .profile-initials-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #2563eb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.mobile-profile .profile-dropdown { 
+    position: absolute; 
+    right: 0; 
+    top: calc(100% + 8px); 
+    min-width: 180px; 
+    background: rgba(13,17,35,0.96); 
+    border: 1px solid rgba(255,255,255,0.12); 
+    border-radius: 10px; 
+    padding: 8px; 
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35); 
+    backdrop-filter: blur(12px); 
+    z-index: 1000; 
+}
+.mobile-profile .profile-dropdown a,
+.mobile-profile .profile-dropdown button { 
+    display: block; 
+    width: 100%; 
+    text-align: left; 
+    color: #fff; 
+    text-decoration: none; 
+    padding: 8px 10px; 
+    background: transparent; 
+    border: 0; 
+    border-radius: 8px; 
+    font-size: 14px; 
+    cursor: pointer; 
+}
+.mobile-profile .profile-dropdown a:hover,
+.mobile-profile .profile-dropdown button:hover { 
+    background: rgba(255,255,255,0.08); 
 }
 
 

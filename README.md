@@ -21,7 +21,7 @@
 
 # ⚡ Introduction
 
-**spoo.me** is a free, open-source service for shortening URLs. It offers URL statistics, a free API, and customization options. You can create custom `slugs`, add `password protection`, and manage `link lifespans`.
+**spoo.me** is a free, open-source service for shortening URLs. It offers comprehensive URL statistics, a free API, and extensive customization options. You can create and manage your URLs, generate API keys, create custom `slugs`, add `password protection`, and manage `link lifespans`.
 
 # 🔥 Features
 
@@ -29,13 +29,15 @@
 - `Emoji Slugs` - Use emojis as slugs for your URLs 😃
 - `Password Protection` - Protect your URLs with a password 🔒
 - `Link Max Clicks` - Set a maximum number of clicks for your URLs 📈
-- `URL Statistics` - View detailed statistics for your URLs 📊
+- `URL Statistics` - View detailed statistics for your URLs with advanced analytics 📊
 - `BOT Tracking` - Track bot clicks on your URLs 🤖
 - `API` - A free and open-sourced API for URL shortening and statistics 🛠️
 - `Export Click Data` - Export click data as a CSV, JSON, XLSX, or XML file 📤
+- `Dashboard` - Manage all your URLs and view analytics in one place 📱
+- `API Keys` - Generate API keys for programmatic access with rate limiting 🔑
 - `Open Source` - spoo.me is open-sourced and free to use 📖
 - `Absolutely Free` - No hidden costs, no premium plans, no limitations 💸
-- `No Registration` - No need to register an account to use spoo.me 📝
+- `No Registration Required` - Create short URLs without an account 📝
 - `Self Hosting` - You can host spoo.me on your own server 🏠
 
 # 📌 Endpoints
@@ -107,11 +109,30 @@ mv .env.example .env
 MONGODB_URI=<your_MONGODB_URI>
 CONTACT_WEBHOOK=<valid_webhook_URI>
 URL_REPORT_WEBHOOK=<valid_webhook_URI>
+
+# OAuth Configuration (Optional - for social login features)
+GOOGLE_CLIENT_ID=<your_google_client_id>
+GOOGLE_CLIENT_SECRET=<your_google_client_secret>
+GITHUB_CLIENT_ID=<your_github_client_id>
+GITHUB_CLIENT_SECRET=<your_github_client_secret>
+DISCORD_CLIENT_ID=<your_discord_client_id>
+DISCORD_CLIENT_SECRET=<your_discord_client_secret>
+
+# JWT Secret Keys (Required for authentication)
+JWT_SECRET_KEY=<your_jwt_secret_key>
+JWT_REFRESH_SECRET_KEY=<your_jwt_refresh_secret_key>
+
+# Email Configuration (Optional - for email verification)
+ZOHO_MAIL_USERNAME=<your_email_address>
+ZOHO_MAIL_PASSWORD=<your_email_password>
 ```
 
 > [!NOTE]
-> With this method, you can either use a cloud service like [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) to store the data remotely or you can use a local MongoDB instance.
-> If you want to use a local MongoDB instance, your MongoDB URI would be `mongodb://localhost:27017/`.
+> - OAuth credentials are optional. Users can still register with email/password if OAuth is not configured.
+> - JWT secret keys should be long, random strings. You can generate them using `openssl rand -hex 32`.
+> - Email configuration is optional but recommended for email verification features.
+> - With this method, you can either use a cloud service like [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) to store the data remotely or you can use a local MongoDB instance.
+> - If you want to use a local MongoDB instance, your MongoDB URI would be `mongodb://localhost:27017/`.
 
 ### 🚀 Starting the server
 
@@ -165,10 +186,29 @@ mv .env.example .env
 MONGODB_URI=<your_MONGODB_URI>
 CONTACT_WEBHOOK=<valid_webhook_URI>
 URL_REPORT_WEBHOOK=<valid_webhook_URI>
+
+# OAuth Configuration (Optional - for social login features)
+GOOGLE_CLIENT_ID=<your_google_client_id>
+GOOGLE_CLIENT_SECRET=<your_google_client_secret>
+GITHUB_CLIENT_ID=<your_github_client_id>
+GITHUB_CLIENT_SECRET=<your_github_client_secret>
+DISCORD_CLIENT_ID=<your_discord_client_id>
+DISCORD_CLIENT_SECRET=<your_discord_client_secret>
+
+# JWT Secret Keys (Required for authentication)
+JWT_SECRET_KEY=<your_jwt_secret_key>
+JWT_REFRESH_SECRET_KEY=<your_jwt_refresh_secret_key>
+
+# Email Configuration (Optional - for email verification)
+ZOHO_MAIL_USERNAME=<your_email_address>
+ZOHO_MAIL_PASSWORD=<your_email_password>
 ```
 
 > [!NOTE]
-> If you installed MongoDB locally, your MongoDB URI would be `mongodb://localhost:27017/` or if you are using MongoDB Atlas, you can find your MongoDB URI in the **Connect** tab of your cluster.
+> - OAuth credentials are optional. Users can still register with email/password if OAuth is not configured.
+> - JWT secret keys should be long, random strings. You can generate them using `openssl rand -hex 32`.
+> - Email configuration is optional but recommended for email verification features.
+> - If you installed MongoDB locally, your MongoDB URI would be `mongodb://localhost:27017/` or if you are using MongoDB Atlas, you can find your MongoDB URI in the **Connect** tab of your cluster.
 
 ### 🚀 Starting the server
 
@@ -226,7 +266,7 @@ Open your browser and go to `http://localhost:8000` to access the **spoo.me** UR
 <h6 align="center">
 <img src="https://spoo.me/static/images/favicon.png" height=30 title="Spoo.me Copyright">
 <br>
-© spoo.me . 2024
+© spoo.me . 2025
 
 All Rights Reserved</h6>
 

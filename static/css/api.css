@@ -40,6 +40,8 @@ body {
     color: rgb(212, 212, 212);
 }
 
+/* Auth modal styles were moved to static/css/auth.css */
+
 .emoji {
     width: 8.5rem;
     height: 8.5rem;

@@ -3,6 +3,9 @@ import threading
 import time
 from typing import Callable, Any, Optional
 from .base_cache import BaseCache
+from utils.logger import get_logger
+
+log = get_logger(__name__)
 
 
 class DualCache(BaseCache):
@@ -72,4 +75,9 @@ class DualCache(BaseCache):
             self.set(f"{base_key}:live", serialized, self.primary_ttl)
             self.set(f"{base_key}:stale", serialized, self.stale_ttl)
         except Exception as e:
-            print(f"[SmartCache] Refresh error for {base_key}: {e}")
+            log.error(
+                "cache_refresh_failed",
+                base_key=base_key,
+                error=str(e),
+                error_type=type(e).__name__,
+            )

@@ -167,3 +167,16 @@ Snipcart
 Missinglettr Bot
 Readable
 MainWP
+python
+spider
+bot
+crawler
+http
+fetch
+curl
+wget
+node
+ruby
+Bluesky
+Zapier
+Discordbot

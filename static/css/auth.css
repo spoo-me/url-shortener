@@ -1,0 +1,110 @@
+/* Auth modal dedicated styles */
+#authModal.modal {
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+#authModal .modal-content {
+    width: 100%;
+    max-width: 460px;
+    margin: 70px 20px;
+    padding: 24px 22px;
+    border-radius: 14px;
+    background: rgba(15, 18, 37, 0.95);
+    border: 1px solid #2a2e52;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+}
+
+#authModal h2 {
+    margin: 12px 0;
+    color: #e9e9ff;
+    font-size: 28px;
+    text-align: center;
+}
+
+#authModal label {
+    display: block;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    color: #c7c9ff;
+}
+
+#authModal input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #2a2e52;
+    border-radius: 10px;
+    background: #0b0e20;
+    color: #fff;
+    backdrop-filter: none;
+}
+
+/* Unify placeholder styling across email, password, and text inputs in the auth modal */
+#authModal input::placeholder,
+#authModal input::-webkit-input-placeholder,
+#authModal input::-moz-placeholder,
+#authModal input:-ms-input-placeholder,
+#authModal input::-ms-input-placeholder {
+    color: rgba(255, 255, 255, 0.6);
+    opacity: 1;
+}
+
+#authModal .actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+    align-items: center;
+    justify-content: center;
+}
+
+#authModal .primary {
+    padding: 12px 16px;
+    background: #5865f2;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+#authModal .secondary {
+    padding: 10px 14px;
+    background: transparent;
+    color: #c7c9ff;
+    border: 1px solid #2a2e52;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+#authModal .toggle {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+#authModal .toggle button {
+    background: none;
+    border: none;
+    color: #8aa0ff;
+    cursor: pointer;
+    display: inline;
+    width: auto;
+    max-width: none;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    text-decoration: underline;
+    font: inherit;
+}
+#authError { color: #ff7b7b; text-align: center; }
+
+@media screen and (max-width: 600px){
+    #authModal .modal-content { margin: 20px; padding: 20px; }
+}
+
+
