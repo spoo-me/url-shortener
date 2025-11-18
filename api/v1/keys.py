@@ -34,7 +34,10 @@ def _parse_expires_at(value: Optional[str | int | float]):
     try:
         if isinstance(value, (int, float)):
             return datetime.fromtimestamp(int(value), tz=timezone.utc)
-        dt = datetime.fromisoformat(str(value))
+        raw = str(value)
+        if raw.endswith("Z"):
+            raw = raw[:-1] + "+00:00"
+        dt = datetime.fromisoformat(raw)
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
         return dt.astimezone(timezone.utc)
@@ -224,8 +227,24 @@ def create_api_key():
                 "name": name,
                 "description": description,
                 "scopes": scopes,
-                "created_at": int(doc["created_at"].timestamp()),
-                "expires_at": int(expires_at.timestamp()) if expires_at else None,
+                "created_at": int(
+                    (
+                        doc["created_at"].replace(tzinfo=timezone.utc)
+                        if doc["created_at"] and doc["created_at"].tzinfo is None
+                        else doc["created_at"]
+                    ).timestamp()
+                ),
+                "expires_at": (
+                    int(
+                        (
+                            expires_at.replace(tzinfo=timezone.utc)
+                            if expires_at and expires_at.tzinfo is None
+                            else expires_at
+                        ).timestamp()
+                    )
+                    if expires_at
+                    else None
+                ),
                 "revoked": False,
                 "token_prefix": token_prefix,
                 "token": f"spoo_{raw}",
@@ -320,12 +339,30 @@ def list_api_keys():
                 "name": k.get("name"),
                 "description": k.get("description"),
                 "scopes": k.get("scopes", []),
-                "created_at": int(k.get("created_at").timestamp())
-                if k.get("created_at")
-                else None,
-                "expires_at": int(k.get("expires_at").timestamp())
-                if k.get("expires_at")
-                else None,
+                "created_at": (
+                    int(
+                        (
+                            k.get("created_at").replace(tzinfo=timezone.utc)
+                            if k.get("created_at")
+                            and k.get("created_at").tzinfo is None
+                            else k.get("created_at")
+                        ).timestamp()
+                    )
+                    if k.get("created_at")
+                    else None
+                ),
+                "expires_at": (
+                    int(
+                        (
+                            k.get("expires_at").replace(tzinfo=timezone.utc)
+                            if k.get("expires_at")
+                            and k.get("expires_at").tzinfo is None
+                            else k.get("expires_at")
+                        ).timestamp()
+                    )
+                    if k.get("expires_at")
+                    else None
+                ),
                 "revoked": bool(k.get("revoked", False)),
                 "token_prefix": k.get("token_prefix"),
             }

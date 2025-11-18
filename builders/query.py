@@ -249,14 +249,16 @@ class UrlListQueryBuilder:
 
         items = []
         for d in docs:
-            created_at_iso = (
-                d["created_at"]
-                .astimezone(timezone.utc)
-                .isoformat()
-                .replace("+00:00", "Z")
-                if d.get("created_at")
-                else None
-            )
+            created_at_iso = None
+            created_at_dt = d.get("created_at")
+            if created_at_dt:
+                if created_at_dt.tzinfo is None:
+                    created_at_dt = created_at_dt.replace(tzinfo=timezone.utc)
+                created_at_iso = (
+                    created_at_dt.astimezone(timezone.utc)
+                    .isoformat()
+                    .replace("+00:00", "Z")
+                )
             expire_after_ts = (
                 int(d["expire_after"])
                 if isinstance(d.get("expire_after"), (int, float))

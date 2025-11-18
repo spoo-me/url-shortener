@@ -68,7 +68,10 @@ class StatsQueryBuilder:
         try:
             if isinstance(value, (int, float)):
                 return datetime.fromtimestamp(int(value), tz=timezone.utc)
-            dt = datetime.fromisoformat(str(value))
+            raw = str(value)
+            if raw.endswith("Z"):
+                raw = raw[:-1] + "+00:00"
+            dt = datetime.fromisoformat(raw)
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=timezone.utc)
             return dt.astimezone(timezone.utc)

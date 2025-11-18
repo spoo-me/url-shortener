@@ -87,9 +87,17 @@ def refresh():
         refresh_claims = verify_refresh_jwt(refresh_token)
         user_id = refresh_claims.get("sub")
 
-        # Fetch fresh email_verified status from DB
+        # Fetch user and ensure they still exist and are active
         user = get_user_by_id(user_id)
-        email_verified = user.get("email_verified", False) if user else False
+        if not user or user.get("status") != "ACTIVE":
+            log.warning(
+                "token_refresh_failed",
+                reason="user_not_found_or_inactive",
+                user_id=user_id,
+            )
+            return jsonify({"error": "invalid or expired refresh token"}), 401
+
+        email_verified = user.get("email_verified", False)
 
         # Generate new tokens (token rotation for security)
         new_access_token = generate_access_jwt(user_id, email_verified)
@@ -104,7 +112,10 @@ def refresh():
 
     except (jwt.ExpiredSignatureError, jwt.InvalidTokenError) as e:
         log.warning("token_refresh_failed", reason="expired_or_invalid", error=str(e))
-        return jsonify({"error": "invalid or expired refresh token"}), 401
+        resp = jsonify({"error": "invalid or expired refresh token"})
+        clear_refresh_cookie(resp)
+        clear_access_cookie(resp)
+        return resp, 401
     except Exception as e:
         log.error("token_refresh_error", error=str(e), error_type=type(e).__name__)
         return jsonify({"error": "refresh token verification failed"}), 401
@@ -410,8 +421,16 @@ def verify_email():
             new_access_token = generate_access_jwt(g.user_id, email_verified=True)
             new_refresh_token = generate_refresh_jwt(g.user_id, email_verified=True)
 
-            # Send welcome email
-            email_service.send_welcome_email(user["email"], user.get("user_name"))
+            # Best-effort welcome email; don't fail verification if this breaks
+            try:
+                email_service.send_welcome_email(user["email"], user.get("user_name"))
+            except Exception as mail_exc:
+                log.error(
+                    "welcome_email_send_failed",
+                    user_id=g.user_id,
+                    error=str(mail_exc),
+                    error_type=type(mail_exc).__name__,
+                )
 
             resp = jsonify(
                 {
