@@ -10,6 +10,7 @@ class V2Announcement {
         this.prefersReducedMotion = (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) || false;
         this.confettiPromise = null;
         this.confettiInstance = null;
+        this.preloadedPreviewImages = new Set();
         this.init();
     }
 
@@ -127,6 +128,8 @@ class V2Announcement {
             
             // Show first step
             this.showStep(1);
+            // Preload preview images used in feature tooltips
+            this.preloadPreviewImages();
             // start auto-advance timer and progress animation
             this.startSlideTimer();
             
@@ -135,6 +138,20 @@ class V2Announcement {
                 this.fireConfetti();
             }, 400);
         }
+    }
+
+    preloadPreviewImages() {
+        if (this.prefersReducedMotion) return;
+
+        const items = document.querySelectorAll('.v2-feature-highlight-item[data-preview-url], .v2-preview-tooltip[data-preview-url]');
+        items.forEach((el) => {
+            const url = el.getAttribute('data-preview-url');
+            if (!url || this.preloadedPreviewImages.has(url)) return;
+
+            const img = new Image();
+            img.src = url;
+            this.preloadedPreviewImages.add(url);
+        });
     }
 
     setupPreviewTooltips() {
