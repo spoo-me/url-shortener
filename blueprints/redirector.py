@@ -266,7 +266,20 @@ def redirect_url(short_code):
                 error=exc.message,
                 error_type=type(exc).__name__,
             )
-            return exc.to_response()
+            # Allow redirects for bad request errors (e.g. invalid User-Agent)
+            # but do not collect analytics. Other redirector errors should
+            # still result in an error response.
+            if isinstance(exc, BadRequestError):
+                log.info(
+                    "redirect_skipping_analytics",
+                    short_code=short_code,
+                    schema=schema_type,
+                    reason=exc.message,
+                )
+                # continue to perform the redirect (do not return an error)
+                pass
+            else:
+                return exc.to_response()
 
     # Sample redirect events (5% sampling)
     if should_sample("url_redirect"):
