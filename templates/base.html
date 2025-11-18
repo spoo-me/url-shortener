@@ -16,9 +16,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=9">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=1">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/self-promo.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/v2-announcement.css') }}?v=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
 
     <!-- Sentry session replays -->
     <script src="https://js.sentry-cdn.com/846878c0ca155c98146ef71f12143e3e.min.js" crossorigin="anonymous"></script>
+    
+    <!-- Confetti for v2 announcement -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
 
     {% block head_css %}{% endblock %}
 </head>
@@ -30,6 +35,7 @@
     {% include 'partials/mobile_navbar.html' %}
     {% include 'partials/contact_modal.html' %}
     {% include 'partials/auth_modal.html' %}
+    {% include 'partials/v2_announcement.html' %}
 
     {% block pre_body %}{% endblock %}
 
@@ -41,6 +47,7 @@
     <script src="{{ url_for('static', filename='js/header.js') }}?v=1" defer></script>
     <script src="{{ url_for('static', filename='js/self-promo.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/auth.js') }}?v=1" defer></script>
+    <script src="{{ url_for('static', filename='js/v2-announcement.js') }}?v=1" defer></script>
 
     <script>
         window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };

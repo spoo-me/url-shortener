@@ -398,25 +398,6 @@ a:hover {
     color: #f9e2af;
 }
 
-
-#producthunt {
-    position: fixed;
-    z-index: 888888;
-    text-align: left;
-    padding: 20px;
-    left: 0;
-    bottom: 0;
-    transition: all 0.3s ease-in-out;
-}
-
-#producthunt img {
-    transition: all 0.3s ease-in-out;
-}
-
-#producthunt img:hover {
-    transform: scale(1.1);
-}
-
 .checkbox-wrapper-4 * {
     box-sizing: border-box;
 }
@@ -547,10 +528,6 @@ label.cbx {
         margin-left: 6%;
         margin-right: 6%;
     }
-
-    #producthunt img:hover {
-        transform: none;
-    }
 }
 
 @media screen and (max-width: 900px) {
@@ -602,10 +579,6 @@ label.cbx {
 
     .metrics h4 {
         font-size: 15px;
-    }
-
-    #producthunt {
-        display: none;
     }
 }
 

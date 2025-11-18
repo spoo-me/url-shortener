@@ -1,0 +1,207 @@
+<!-- V2 Announcement Badge -->
+<div id="v2-badge" class="v2-badge" style="display: none;">
+    <span class="v2-badge-icon">✨</span>
+    <span>v2 is here!</span>
+</div>
+
+<!-- V2 Announcement Modal -->
+<div id="v2-modal-overlay" class="v2-modal-overlay">
+    <div class="v2-modal">
+        <button class="v2-nav-arrow v2-prev-btn" aria-label="Previous slide">
+            <i class="ti ti-arrow-left"></i>
+        </button>
+        <button class="v2-nav-arrow v2-next-btn" aria-label="Next slide">
+            <i class="ti ti-arrow-right"></i>
+        </button>
+
+        <div class="v2-modal-content-wrapper">
+        <!-- Step 1: Welcome -->
+        <div id="v2-step-1" class="v2-modal-content active">
+            <div class="v2-emoji-container v2-emoji-plain">
+                <img src="{{ url_for('static', filename='images/party_popper_3D.png') }}" alt="Party popper celebrating v2 launch" width="120" height="120">
+            </div>
+            <h1 class="v2-title">Welcome to v2!</h1>
+            <p class="v2-subtitle">
+                We've completely rebuilt spoo.me from the ground up with powerful new features designed to give you more control than ever before.
+            </p>
+            <button class="v2-button v2-button-primary v2-next-btn">
+                <span>Show me what's new</span>
+                <i class="ti ti-sparkles"></i>
+            </button>
+        </div>
+
+        <!-- Step 2: Login System & Dashboard -->
+        <div id="v2-step-2" class="v2-modal-content">
+            <div class="v2-feature-page">
+                <div class="v2-preview-tooltip" data-preview-url="{{ url_for('static', filename='images/banner-rounded.png') }}"></div>
+                <div class="v2-feature-icon-large">
+                    <i class="ti ti-login"></i>
+                </div>
+                <h2 class="v2-feature-title">Login System & Dashboard</h2>
+                <p class="v2-feature-description">
+                    Create your account and manage all your shortened URLs in one beautiful, intuitive dashboard.
+                </p>
+                <div class="v2-feature-highlights">
+                    <div class="v2-feature-highlight-item" data-preview-url="{{ url_for('static', filename='images/signin_demo.jpeg') }}">
+                        <i class="ti ti-check"></i>
+                        <span>Secure authentication with email/password</span>
+                    </div>
+                    <div class="v2-feature-highlight-item" data-preview-url="{{ url_for('static', filename='images/signin_demo.jpeg') }}">
+                        <i class="ti ti-check"></i>
+                        <span>OAuth login with Google, GitHub & Discord</span>
+                    </div>
+                    <div class="v2-feature-highlight-item" data-preview-url="{{ url_for('static', filename='images/dashboard_demo.jpeg') }}">
+                        <i class="ti ti-check"></i>
+                        <span>Centralized dashboard for all your links</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Link Management -->
+        <div id="v2-step-3" class="v2-modal-content">
+            <div class="v2-feature-page">
+                <div class="v2-preview-tooltip"></div>
+                <div class="v2-feature-icon-large">
+                    <i class="ti ti-link"></i>
+                </div>
+                <h2 class="v2-feature-title">Advanced Link Management</h2>
+                <p class="v2-feature-description">
+                    Take full control of your links with powerful editing and management capabilities.
+                </p>
+                <div class="v2-feature-highlights">
+                    <div class="v2-feature-highlight-item" data-preview-url="{{ url_for('static', filename='images/edit_url_demo.jpeg') }}">
+                        <i class="ti ti-check"></i>
+                        <span>Edit destination URLs anytime</span>
+                    </div>
+                    <div class="v2-feature-highlight-item" data-preview-url="{{ url_for('static', filename='images/pause_demo.jpeg') }}">
+                        <i class="ti ti-check"></i>
+                        <span>Pause or activate links on demand</span>
+                    </div>
+                    <div class="v2-feature-highlight-item" data-preview-url="{{ url_for('static', filename='images/max_clicks_demo.jpeg') }}">
+                        <i class="ti ti-check"></i>
+                        <span>Update passwords and max clicks</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: API Keys -->
+        <div id="v2-step-4" class="v2-modal-content">
+            <div class="v2-feature-page">
+                <div class="v2-preview-tooltip"></div>
+                <div class="v2-feature-icon-large">
+                    <i class="ti ti-key"></i>
+                </div>
+                <h2 class="v2-feature-title">API Keys & Security</h2>
+                <p class="v2-feature-description">
+                    Generate secure API keys with customizable access levels for programmatic access.
+                </p>
+                <div class="v2-feature-highlights">
+                    <div class="v2-feature-highlight-item" data-preview-url="{{ url_for('static', filename='images/api_keys_demo.jpeg') }}">
+                        <i class="ti ti-check"></i>
+                        <span>Multiple API keys per account</span>
+                    </div>
+                    <div class="v2-feature-highlight-item" data-preview-url="{{ url_for('static', filename='images/api_permissions_demo.jpeg') }}">
+                        <i class="ti ti-check"></i>
+                        <span>Granular permission controls</span>
+                    </div>
+                    <div class="v2-feature-highlight-item" data-preview-url="{{ url_for('static', filename='images/api_keys_demo.jpeg') }}">
+                        <i class="ti ti-check"></i>
+                        <span>Easy key rotation and revocation</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5: Enhanced Analytics -->
+        <div id="v2-step-5" class="v2-modal-content">
+            <div class="v2-feature-page">
+                <div class="v2-preview-tooltip"></div>
+                <div class="v2-feature-icon-large">
+                    <i class="ti ti-chart-bar"></i>
+                </div>
+                <h2 class="v2-feature-title">Enhanced Analytics</h2>
+                <p class="v2-feature-description">
+                    Get deep insights into your link performance with our completely revamped analytics dashboard.
+                </p>
+                <div class="v2-feature-highlights">
+                    <div class="v2-feature-highlight-item" data-preview-url="{{ url_for('static', filename='images/time_filter_demo.jpeg') }}">
+                        <i class="ti ti-check"></i>
+                        <span>Time-based filtering & date ranges</span>
+                    </div>
+                    <div class="v2-feature-highlight-item" data-preview-url="{{ url_for('static', filename='images/stats_demo.jpeg') }}">
+                        <i class="ti ti-check"></i>
+                        <span>Browser, OS & device breakdowns</span>
+                    </div>
+                    <div class="v2-feature-highlight-item" data-preview-url="{{ url_for('static', filename='images/geo_stats_demo.jpeg') }}">
+                        <i class="ti ti-check"></i>
+                        <span>Geographic location insights</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 6: API Platform -->
+        <div id="v2-step-6" class="v2-modal-content">
+            <div class="v2-feature-page">
+                <div class="v2-preview-tooltip"></div>
+                <div class="v2-feature-icon-large">
+                    <i class="ti ti-api"></i>
+                </div>
+                <h2 class="v2-feature-title">Next-Gen API Platform</h2>
+                <p class="v2-feature-description">
+                    Meet API v1, redesigned for builders with clearer observability, and a dedicated developer experience.
+                </p>
+                <div class="v2-feature-highlights">
+                    <div class="v2-feature-highlight-item" data-preview-url="{{ url_for('static', filename='images/api_demo.jpeg') }}">
+                        <i class="ti ti-check"></i>
+                        <span>60 req/sec burst + larger daily quotas per key</span>
+                    </div>
+                    <div class="v2-feature-highlight-item" data-preview-url="{{ url_for('static', filename='images/stats_api_demo.jpeg') }}">
+                        <i class="ti ti-check"></i>
+                        <span>Unified endpoints for shorten, edit, stats & exports</span>
+                    </div>
+                    <div class="v2-feature-highlight-item" data-preview-url="{{ url_for('static', filename='images/api_key_api_demo.jpeg') }}">
+                        <i class="ti ti-check"></i>
+                        <span>Fine-grained environment keys</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 7: CTA (renumbered after removing Performance slide) -->
+        <div id="v2-step-7" class="v2-modal-content">
+            <div class="v2-emoji-container v2-emoji-plain">
+                <img src="{{ url_for('static', filename='images/rocket_3D.png') }}" alt="Rocket launching to represent getting started" width="120" height="120">
+            </div>
+            <h2 class="v2-title" style="font-size: 40px;">Ready to Get Started?</h2>
+            <p class="v2-subtitle">
+                Sign up now to unlock all these powerful features and take complete control of your shortened links!
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 14px; align-items: center; margin-top: 20px;">
+                <button id="v2-login-btn" class="v2-button v2-button-primary">
+                    <i class="ti ti-login"></i>
+                    <span>Sign Up / Login</span>
+                </button>
+                <button id="v2-guest-btn" class="v2-button v2-button-ghost">
+                    Continue as guest
+                </button>
+            </div>
+        </div>
+        </div>
+
+        <div class="v2-modal-footer">
+            <div class="v2-progress-dots">
+                <span class="v2-progress-dot active"></span>
+                <span class="v2-progress-dot"></span>
+                <span class="v2-progress-dot"></span>
+                <span class="v2-progress-dot"></span>
+                <span class="v2-progress-dot"></span>
+                <span class="v2-progress-dot"></span>
+                <span class="v2-progress-dot"></span>
+            </div>
+        </div>
+    </div>
+</div>
