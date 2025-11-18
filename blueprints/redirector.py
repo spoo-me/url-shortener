@@ -259,7 +259,7 @@ def redirect_url(short_code):
                 url_data, short_code, schema_type, is_emoji, user_ip, start_time
             )
         except RedirectorError as exc:
-            log.error(
+            log.warning(
                 "click_processing_failed",
                 short_code=short_code,
                 schema=schema_type,
