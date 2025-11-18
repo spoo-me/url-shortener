@@ -18,10 +18,13 @@ async function fetchGitHubStars() {
             const data = await response.json();
             const stars = data.stargazers_count;
             const formatted = stars >= 1000 ? (stars / 1000).toFixed(1) + 'k' : stars;
-            document.getElementById('github-star-count').textContent = formatted;
+            const starEl = document.getElementById('github-star-count');
+            if (starEl) {
+                starEl.textContent = formatted;
+            }
         }
     } catch (error) {
-        console.log('GitHub API unavailable, using fallback');
+        // swallow errors silently (do not log)
     }
 }
 
@@ -65,7 +68,6 @@ function setupMobileMenu() {
 
 // Profile dropdown toggles
 document.addEventListener('DOMContentLoaded', function(){
-    fetchGitHubStars();
     setupMobileMenu();
     
     function setupProfileMenu(buttonId, dropdownId){
@@ -86,4 +88,48 @@ document.addEventListener('DOMContentLoaded', function(){
     }
     setupProfileMenu('profileButton','profileDropdown');
     setupProfileMenu('mProfileButton','mProfileDropdown');
+    // Fetch GitHub stars after UI initialization so failures don't interfere
+    // with profile/menu setup.
+    fetchGitHubStars();
+    // Add delegated handlers so profile buttons still work if elements are
+    // replaced or re-rendered later (avoids relying on attached listeners).
+    try {
+        document.addEventListener('click', function (e) {
+            // Desktop
+            const btn = document.getElementById('profileButton');
+            const dd = document.getElementById('profileDropdown');
+            if (btn && dd) {
+                if (btn.contains(e.target)) {
+                    e.stopPropagation();
+                    const open = dd.style.display === 'block';
+                    dd.style.display = open ? 'none' : 'block';
+                    btn.setAttribute('aria-expanded', String(!open));
+                    return;
+                }
+                if (!dd.contains(e.target)) {
+                    dd.style.display = 'none';
+                    btn.setAttribute('aria-expanded', 'false');
+                }
+            }
+
+            // Mobile
+            const mBtn = document.getElementById('mProfileButton');
+            const mDd = document.getElementById('mProfileDropdown');
+            if (mBtn && mDd) {
+                if (mBtn.contains(e.target)) {
+                    e.stopPropagation();
+                    const open = mDd.style.display === 'block';
+                    mDd.style.display = open ? 'none' : 'block';
+                    mBtn.setAttribute('aria-expanded', String(!open));
+                    return;
+                }
+                if (!mDd.contains(e.target)) {
+                    mDd.style.display = 'none';
+                    mBtn.setAttribute('aria-expanded', 'false');
+                }
+            }
+        });
+    } catch (e) {
+        // swallow errors silently (do not log)
+    }
 });
