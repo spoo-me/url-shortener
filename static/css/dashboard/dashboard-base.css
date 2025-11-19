@@ -152,6 +152,13 @@ body.dashboard-layout {
     overflow-y: auto;
 }
 
+.sidebar-bottom-links {
+    padding: 0 12px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
 .nav-item {
     display: flex;
     align-items: center;
@@ -254,12 +261,16 @@ body.dashboard-layout {
     border-radius: var(--radius-md);
     color: var(--text-primary);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.2s, border-color 0.2s, gap 0.2s;
 }
 
 .profile-button:hover {
     background: var(--hover-bg);
     border-color: rgba(255, 255, 255, 0.2);
+}
+
+.collapsed .profile-button {
+    gap: 0;
 }
 
 .profile-avatar {
@@ -292,14 +303,18 @@ body.dashboard-layout {
 
 .profile-info {
     flex: 1;
+    min-width: 0;
     text-align: left;
     overflow: hidden;
-    transition: opacity var(--transition-speed) var(--transition-easing);
+    white-space: nowrap;
+    transition: opacity var(--transition-speed) var(--transition-easing), flex var(--transition-speed) var(--transition-easing);
 }
 
 .collapsed .profile-info {
     opacity: 0;
+    flex: 0;
     width: 0;
+    margin: 0;
 }
 
 .profile-name {
@@ -315,16 +330,22 @@ body.dashboard-layout {
     display: block;
     font-size: 12px;
     color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .profile-chevron {
-    transition: transform var(--transition-speed) var(--transition-easing), opacity var(--transition-speed) var(--transition-easing);
+    transition: transform var(--transition-speed) var(--transition-easing), opacity var(--transition-speed) var(--transition-easing), width var(--transition-speed) var(--transition-easing);
     color: var(--text-secondary);
     font-size: 18px;
+    width: 18px;
+    overflow: hidden;
 }
 
 .collapsed .profile-chevron {
     opacity: 0;
+    width: 0;
 }
 
 .profile-menu {

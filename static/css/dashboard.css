@@ -125,9 +125,16 @@ body {
 }
 
 .sidebar-footer {
-	margin-top: auto;
 	padding-top: 10px;
 	border-top: 1px solid var(--border);
+}
+
+.sidebar-bottom-links {
+	margin-top: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 8px 0;
 }
 
 .content {
