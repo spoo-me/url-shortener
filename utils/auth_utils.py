@@ -340,21 +340,28 @@ def resolve_owner_id_from_request(require_verified: bool = False):
                 return None
 
             # Check if key is expired
-            if key_doc.get("expires_at") and key_doc["expires_at"] <= now:
-                log.warning(
-                    "api_key_invalid",
-                    key_prefix=key_doc.get("token_prefix", "unknown"),
-                    key_id=str(key_doc.get("_id")),
-                    user_id=str(key_doc.get("user_id")),
-                    reason="expired",
-                    expired_at=key_doc["expires_at"].isoformat(),
-                )
-                return None
+            expires_at = key_doc.get("expires_at")
+            if expires_at:
+                # Ensure timezone-aware for comparison
+                if expires_at.tzinfo is None:
+                    expires_at = expires_at.replace(tzinfo=timezone.utc)
 
+                if expires_at <= now:
+                    log.warning(
+                        "api_key_invalid",
+                        key_prefix=key_doc.get("token_prefix", "unknown"),
+                        key_id=str(key_doc.get("_id")),
+                        user_id=str(key_doc.get("user_id")),
+                        reason="expired",
+                        expired_at=expires_at.isoformat(),
+                    )
+                    return None
+
+            # Check if key is valid (not revoked and not expired)
             if (
                 key_doc
                 and not key_doc.get("revoked", False)
-                and (not key_doc.get("expires_at") or key_doc["expires_at"] > now)
+                and (not expires_at or expires_at > now)
             ):
                 # Attach scopes for downstream checks
                 try:

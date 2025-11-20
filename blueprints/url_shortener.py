@@ -38,6 +38,7 @@ from urllib.parse import unquote
 import tldextract
 from crawlerdetect import CrawlerDetect
 import time
+import requests
 
 url_shortener = Blueprint("url_shortener", __name__)
 log = get_logger(__name__)
@@ -376,11 +377,23 @@ def metric():
         total_shortlinks = v1_shortlinks + v2_shortlinks
         total_clicks = v1_clicks + total_clicks_from_ts
 
+        # Fetch GitHub stars
+        github_stars = 0
+        try:
+            response = requests.get(
+                "https://api.github.com/repos/spoo-me/url-shortener", timeout=5
+            )
+            if response.status_code == 200:
+                github_stars = response.json().get("stargazers_count", 0)
+        except Exception as e:
+            log.warning("github_stars_fetch_failed", error=str(e))
+
         result = {
             "total-shortlinks-raw": total_shortlinks,
             "total-clicks-raw": total_clicks,
             "total-shortlinks": humanize_number(total_shortlinks),
             "total-clicks": humanize_number(total_clicks),
+            "github-stars": github_stars,
         }
 
         elapsed_time = time.time() - start_time
@@ -392,6 +405,7 @@ def metric():
             v2_shortlinks=v2_shortlinks,
             v1_clicks=v1_clicks,
             ts_clicks=total_clicks_from_ts,
+            github_stars=github_stars,
             elapsed_ms=round(elapsed_time * 1000, 2),
         )
 

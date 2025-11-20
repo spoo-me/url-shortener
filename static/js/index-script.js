@@ -21,18 +21,10 @@ function get_metrics() {
         .then(data => {
             document.querySelector('#total-urls').textContent = data["total-shortlinks"];
             document.querySelector('#total-clicks').textContent = data["total-clicks"];
-        });
-
-    fetch('https://discord.com/api/guilds/1192388005206433892/widget.json')
-        .then(response => response.json())
-        .then(data => {
-            document.querySelector('#discord-online').textContent = data["presence_count"]+"+";
-        });
-
-    fetch('https://api.github.com/repos/spoo-me/url-shortener')
-        .then(response => response.json())
-        .then(data => {
-            document.querySelector('#github-stars').textContent = data["stargazers_count"];
+            document.querySelector('#github-stars').textContent = data["github-stars"];
+        })
+        .catch(err => {
+            console.warn('Failed to load metrics:', err);
         });
 }
 
