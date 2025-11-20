@@ -1,98 +1,18 @@
-// Reusable handler for copy button clicks
-function handleCopyClick(button) {
-    const url = button.getAttribute('data-url');
-
-    // Create a temporary input element to copy the URL
-    const tempInput = document.createElement('input');
-    tempInput.value = url;
-    document.body.appendChild(tempInput);
-
-    // Select the URL in the input element
-    tempInput.select();
-    tempInput.setSelectionRange(0, 99999); // For mobile devices
-
-    // Copy the URL to the clipboard
-    document.execCommand('copy');
-
-    // Remove the temporary input element
-    document.body.removeChild(tempInput);
-
-    // Provide visual feedback to indicate successful copying
-    button.innerText = 'Copied!';
-    setTimeout(() => {
-        button.innerText = 'Copy';
-    }, 1000);
-}
-
-// Reusable handler for stats button clicks
-function handleStatsClick(button) {
-    const href = button.parentNode.parentNode.parentNode.querySelector('.short-url a').getAttribute('href');
-    const alias = href.replace(/^\//, '');
-    window.location.href = `/stats/${alias}`;
-}
-
-// Single document-level event delegation for copy and stats buttons
-document.addEventListener('click', (e) => {
-    // Handle copy button clicks
-    if (e.target.classList.contains('copy-button')) {
-        handleCopyClick(e.target);
-    }
-    // Handle stats button clicks
-    else if (e.target.classList.contains('stats-button')) {
-        handleStatsClick(e.target);
-    }
-});
-
-// Get all elements with the "qr-code" class
-function renderRecentURLs() {
-    const container = document.getElementById('recentURLs');
-    if (!container) return;
-
-    let list = [];
-    try { list = JSON.parse(localStorage.getItem('recentURLs')) || []; } catch (_) { list = []; }
-    container.innerHTML = '';
-
-    list.forEach((alias) => {
-        const shortUrl = `${window.location.origin}/${alias}`;
-
-        const wrapper = document.createElement('div');
-        wrapper.className = 'url-container';
-        wrapper.innerHTML = `
+function handleCopyClick(a){const b=a.getAttribute("data-url"),c=document.createElement("input");c.value=b,document.body.appendChild(c),c.select(),c.setSelectionRange(0,99999),document.execCommand("copy"),document.body.removeChild(c),a.innerText="Copied!",setTimeout(()=>{a.innerText="Copy"},1e3)}function handleStatsClick(a){const b=a.parentNode.parentNode.parentNode.querySelector(".short-url a").getAttribute("href"),c=b.replace(/^\//,"");window.location.href=`/stats/${c}`}document.addEventListener("click",a=>{a.target.classList.contains("copy-button")?handleCopyClick(a.target):a.target.classList.contains("stats-button")&&handleStatsClick(a.target)});function renderRecentURLs(){const a=document.getElementById("recentURLs");if(!a)return;let b=[];try{b=JSON.parse(localStorage.getItem("recentURLs"))||[]}catch(a){b=[]}a.innerHTML="",b.forEach(b=>{const c=`${window.location.origin}/${b}`,d=document.createElement("div");d.className="url-container",d.innerHTML=`
             <div class="section-1">
                 <div class="left-section">
                     <span class="short-url">
-                        <a href="/${alias}" target="_blank">${shortUrl}</a>
+                        <a href="/${b}" target="_blank">${c}</a>
                     </span>
                 </div>
                 <div class="right-section">
-                    <div class="qr-code" data-url="${shortUrl}"></div>
+                    <div class="qr-code" data-url="${c}"></div>
                 </div>
             </div>
             <div class="section-2">
                 <div class="button-container">
-                    <button class="copy-button" data-url="${shortUrl}">Copy</button>
+                    <button class="copy-button" data-url="${c}">Copy</button>
                     <button class="stats-button">Stats</button>
                 </div>
             </div>
-        `;
-        container.appendChild(wrapper);
-    });
-
-    // Generate QR codes for newly rendered items
-    // Note: Event listeners for copy/stats buttons are handled by document-level delegation
-    const qrCodeElements = container.querySelectorAll('.qr-code');
-    qrCodeElements.forEach(element => {
-        const url = element.getAttribute('data-url');
-        const qrcode = new QRCode(element, {
-            text: url,
-            width: 40,
-            height: 40,
-            correctLevel: QRCode.CorrectLevel.L,
-            margin: 0,
-            colorDark: '#000000',
-            colorLight: '#ffffff',
-        });
-    });
-}
-
-document.addEventListener('DOMContentLoaded', renderRecentURLs);
+        `,a.appendChild(d)});const c=a.querySelectorAll(".qr-code");c.forEach(a=>{const b=a.getAttribute("data-url"),c=new QRCode(a,{text:b,width:40,height:40,correctLevel:QRCode.CorrectLevel.L,margin:0,colorDark:"#000000",colorLight:"#ffffff"})})}document.addEventListener("DOMContentLoaded",renderRecentURLs);

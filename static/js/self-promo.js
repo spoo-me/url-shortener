@@ -1,12 +1,1 @@
-const closeButton = document.querySelector('.self-promo-close');
-
-if (closeButton) {
-    closeButton.addEventListener('click', closeSelfPromo);
-}
-
-function closeSelfPromo() {
-    const promo = document.querySelector('.self-promo');
-    if (promo) {
-        promo.classList.add('hidden');
-    }
-}
+const closeButton=document.querySelector(".self-promo-close");closeButton&&closeButton.addEventListener("click",closeSelfPromo);function closeSelfPromo(){const a=document.querySelector(".self-promo");a&&a.classList.add("hidden")}
