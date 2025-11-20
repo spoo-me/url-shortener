@@ -4,8 +4,8 @@ class V2Announcement {
         this.currentStep = 1;
         this.totalSteps = 7; // Welcome + 5 features + API + CTA (removed Performance slide)
         this.modalShown = false;
-        this.autoShowDelay = 30000; // 30 seconds
-        this.autoAdvanceInterval = 15000; // 15 seconds per slide
+        this.autoShowDelay = 10000; // 10 seconds
+        this.autoAdvanceInterval = 8000; // 8 seconds per slide
         this.slideTimer = null;
         this.prefersReducedMotion = (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) || false;
         this.confettiPromise = null;
@@ -15,25 +15,30 @@ class V2Announcement {
     }
 
     init() {
-        // Check if user has already seen the announcement
-        if (localStorage.getItem('v2_announcement_seen') === 'true') {
-            return;
+        const start = () => {
+            // Show badge
+            this.showBadge();
+
+            // Auto-show modal after delay (only if no other modals are open)
+            setTimeout(() => {
+                if (!this.modalShown && !this.isAnyModalOpen()) {
+                    this.openModal();
+                }
+            }, this.autoShowDelay);
+
+            // Setup event listeners
+            this.setupEventListeners();
+            // Setup preview tooltips
+            this.setupPreviewTooltips();
+        };
+
+        if (window.authCheckComplete) {
+            if (!window.isLoggedIn) start();
+        } else {
+            document.addEventListener('auth:init', (e) => {
+                if (!e.detail.loggedIn) start();
+            });
         }
-
-        // Show badge
-        this.showBadge();
-
-        // Auto-show modal after delay
-        setTimeout(() => {
-            if (!this.modalShown) {
-                this.openModal();
-            }
-        }, this.autoShowDelay);
-
-        // Setup event listeners
-        this.setupEventListeners();
-        // Setup preview tooltips
-        this.setupPreviewTooltips();
     }
 
     showBadge() {
@@ -41,6 +46,27 @@ class V2Announcement {
         if (badge) {
             badge.style.display = 'flex';
         }
+    }
+
+    isAnyModalOpen() {
+        // Check if auth modal is open
+        const authModal = document.getElementById('authModal');
+        if (authModal && authModal.style.display === 'flex') {
+            return true;
+        }
+
+        // Check if landing edit modal is open
+        if (typeof isLandingEditModalOpen === 'function' && isLandingEditModalOpen()) {
+            return true;
+        }
+
+        // Check for any active modal class
+        const activeModals = document.querySelectorAll('.modal.active');
+        if (activeModals.length > 0) {
+            return true;
+        }
+
+        return false;
     }
 
     setupEventListeners() {
@@ -63,7 +89,7 @@ class V2Announcement {
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
             if (!this.modalShown) return;
-            
+
             if (e.key === 'Escape') {
                 this.closeModal();
             } else if (e.key === 'ArrowRight') {
@@ -119,20 +145,20 @@ class V2Announcement {
 
     openModal() {
         if (this.modalShown) return;
-        
+
         this.modalShown = true;
         const overlay = document.getElementById('v2-modal-overlay');
         if (overlay) {
             overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
-            
+
             // Show first step
             this.showStep(1);
             // Preload preview images used in feature tooltips
             this.preloadPreviewImages();
             // start auto-advance timer and progress animation
             this.startSlideTimer();
-            
+
             // Trigger confetti after a short delay
             setTimeout(() => {
                 this.fireConfetti();
@@ -298,10 +324,10 @@ class V2Announcement {
         if (overlay) {
             overlay.classList.remove('active');
             document.body.style.overflow = '';
-            
+
             // Mark as seen
             localStorage.setItem('v2_announcement_seen', 'true');
-            
+
             // Hide badge
             const badge = document.getElementById('v2-badge');
             if (badge) {
@@ -385,13 +411,13 @@ class V2Announcement {
                 spread: 26,
                 startVelocity: 55,
             });
-            
+
             setTimeout(() => {
                 fire(0.2, {
                     spread: 60,
                 });
             }, 100);
-            
+
             setTimeout(() => {
                 fire(0.35, {
                     spread: 100,
@@ -399,7 +425,7 @@ class V2Announcement {
                     scalar: 0.8
                 });
             }, 200);
-            
+
             setTimeout(() => {
                 fire(0.1, {
                     spread: 120,
@@ -408,7 +434,7 @@ class V2Announcement {
                     scalar: 1.2
                 });
             }, 300);
-            
+
             setTimeout(() => {
                 fire(0.1, {
                     spread: 120,

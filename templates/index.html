@@ -33,12 +33,15 @@
 {% endblock %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=8">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=9">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/customNotification.css') }}?v=4">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/landing-edit-modal.css') }}">
 <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Allerta+Stencil&display=swap" rel="preload">
+<link href="https://fonts.googleapis.com/css2?family=Nata+Sans:wght@100..900&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
@@ -113,11 +116,14 @@
         </div>
     </div>
 </div>
+
+<!-- Landing Edit Modal -->
+{% include 'partials/landing_edit_modal.html' %}
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-<script src="{{ url_for('static', filename='js/index-qrcode.js') }}"></script>
+<script src="{{ url_for('static', filename='js/landing-edit-modal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/index-recent-links.js') }}"></script>
 <script src="{{ url_for('static', filename='js/index-validate.js') }}?v=1"></script>
 <script src="{{ url_for('static', filename='js/index-script.js') }}?v=6" defer></script>
 {% endblock %}

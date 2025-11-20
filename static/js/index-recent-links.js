@@ -31,7 +31,15 @@ function handleStatsClick(button) {
     window.location.href = `/stats/${alias}`;
 }
 
-// Single document-level event delegation for copy and stats buttons
+// Handler for edit button clicks
+function handleEditClick(button) {
+    const alias = button.getAttribute('data-alias');
+    if (typeof openLandingEditModal === 'function') {
+        openLandingEditModal(alias);
+    }
+}
+
+// Single document-level event delegation for copy, stats, and edit buttons
 document.addEventListener('click', (e) => {
     // Handle copy button clicks
     if (e.target.classList.contains('copy-button')) {
@@ -41,9 +49,13 @@ document.addEventListener('click', (e) => {
     else if (e.target.classList.contains('stats-button')) {
         handleStatsClick(e.target);
     }
+    // Handle edit button clicks
+    else if (e.target.classList.contains('edit-button')) {
+        handleEditClick(e.target);
+    }
 });
 
-// Get all elements with the "qr-code" class
+// Render recent URLs without QR codes
 function renderRecentURLs() {
     const container = document.getElementById('recentURLs');
     if (!container) return;
@@ -61,37 +73,19 @@ function renderRecentURLs() {
             <div class="section-1">
                 <div class="left-section">
                     <span class="short-url">
-                        <a href="/${alias}" target="_blank">${shortUrl}</a>
+                        <a href="/${alias}" target="_blank">${shortUrl.replace(/^https?:\/\//, '')}</a>
                     </span>
-                </div>
-                <div class="right-section">
-                    <div class="qr-code" data-url="${shortUrl}"></div>
                 </div>
             </div>
             <div class="section-2">
                 <div class="button-container">
                     <button class="copy-button" data-url="${shortUrl}">Copy</button>
+                    <button class="edit-button" data-alias="${alias}">Edit</button>
                     <button class="stats-button">Stats</button>
                 </div>
             </div>
         `;
         container.appendChild(wrapper);
-    });
-
-    // Generate QR codes for newly rendered items
-    // Note: Event listeners for copy/stats buttons are handled by document-level delegation
-    const qrCodeElements = container.querySelectorAll('.qr-code');
-    qrCodeElements.forEach(element => {
-        const url = element.getAttribute('data-url');
-        const qrcode = new QRCode(element, {
-            text: url,
-            width: 40,
-            height: 40,
-            correctLevel: QRCode.CorrectLevel.L,
-            margin: 0,
-            colorDark: '#000000',
-            colorLight: '#ffffff',
-        });
     });
 }
 

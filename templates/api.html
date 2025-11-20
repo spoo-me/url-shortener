@@ -38,8 +38,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.css" />
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/api.css') }}?v=5">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=4">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=4">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=6">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/prism-duotone-dark.css') }}?v=1">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=9">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/self-promo.css') }}?v=2">
@@ -48,12 +48,12 @@
 
 <body>
     {% if self_promo %}
-        <div class="self-promo">
-            <div class="self-promo-inner"><a href="{{ self_promo_uri }}" target="_blank" rel="noopener">🥳
-                    {{ self_promo_text }}</a></div>
-            <button id="close-button" class="self-promo-close"><img width="20" height="20"
-                    src="https://img.icons8.com/metro/30/ffffff/delete-sign.png" alt="delete-sign" /></button>
-        </div>
+    <div class="self-promo">
+        <div class="self-promo-inner"><a href="{{ self_promo_uri }}" target="_blank" rel="noopener">🥳
+                {{ self_promo_text }}</a></div>
+        <button id="close-button" class="self-promo-close"><img width="20" height="20"
+                src="https://img.icons8.com/metro/30/ffffff/delete-sign.png" alt="delete-sign" /></button>
+    </div>
     {% endif %}
     <!-- Navbar -->
     <div class="navbar">
@@ -556,7 +556,8 @@ puts response.read_body</code></pre>
                     <td>400</td>
                     <td>The User requested Alias is invalid or already taken. The alias must be
                         <code>alphanumeric</code> & must
-                        be <code>under 17 chars (max-length: 16)</code>, anything beyond 16 chars would be stripped by the API
+                        be <code>under 17 chars (max-length: 16)</code>, anything beyond 16 chars would be stripped by
+                        the API
                     </td>
                 </tr>
                 <tr>
@@ -2228,7 +2229,7 @@ print(f"Shortened URL: {short_url}")
     </script>
 
     <script src="{{ url_for('static', filename='js/contacts-popup.js') }}?v=1" defer=""></script>
-    <script src="{{ url_for('static', filename='js/header.js') }}?v=3" defer=""></script>
+    <script src="{{ url_for('static', filename='js/header.js') }}?v=4" defer=""></script>
     <script src="{{ url_for('static', filename='js/self-promo.js') }}?v=1" defer></script>
 
     <script src="https://code.jivosite.com/widget/hJuQcxUqnJ" async></script>

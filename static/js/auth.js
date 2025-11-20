@@ -319,6 +319,8 @@ async function updateAuthNav() {
         // Desktop
         show('nav-auth', !loggedIn);
         show('nav-profile', loggedIn);
+        // Show locked dashboard for anonymous users, hide for logged in
+        show('nav-dashboard-locked', !loggedIn);
         // Hide old direct links when logged in (now in dropdown)
         show('nav-dashboard', false);
         show('nav-keys', false);
@@ -426,7 +428,16 @@ async function updateAuthNav() {
                 };
             }
         }
-    } catch (e) { /* default to logged out */ }
+
+        window.authCheckComplete = true;
+        window.isLoggedIn = loggedIn;
+        document.dispatchEvent(new CustomEvent('auth:init', { detail: { loggedIn, user } }));
+    } catch (e) {
+        /* default to logged out */
+        window.authCheckComplete = true;
+        window.isLoggedIn = false;
+        document.dispatchEvent(new CustomEvent('auth:init', { detail: { loggedIn: false, user: null } }));
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function () {

@@ -106,19 +106,28 @@ def ratelimit_handler(e):
         user_id=str(owner_id) if owner_id else None,
     )
 
+    # Prepare error message with signup nudge for anonymous users
+    is_anonymous = owner_id is None
+    error_message = f"ratelimit exceeded {e.description}"
+
+    if is_anonymous:
+        error_message += (
+            ". Sign up for free to get 5x higher rate limits (5000 requests/day)!"
+        )
+
     if request.path == "/contact":
         return render_template(
             "contact.html",
-            error=f"ratelimit exceeded {e.description}",
+            error=error_message,
             host_url=request.host_url,
         )
     if request.path == "/report":
         return render_template(
             "report.html",
-            error=f"ratelimit exceeded {e.description}",
+            error=error_message,
             host_url=request.host_url,
         )
-    return make_response(jsonify(error=f"ratelimit exceeded {e.description}"), 429)
+    return make_response(jsonify(error=error_message), 429)
 
 
 @atexit.register

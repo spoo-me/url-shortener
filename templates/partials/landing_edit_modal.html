@@ -1,0 +1,163 @@
+<!-- Landing Page Edit Modal - Custom Classes to Avoid Conflicts -->
+<div id="landing-edit-modal" class="landing-edit-modal">
+    <div class="landing-edit-backdrop"></div>
+    <div class="landing-edit-container">
+        <div class="landing-edit-content">
+            <div class="landing-edit-header">
+                <div class="landing-edit-title-section">
+                    <h2 class="landing-edit-title">Edit Link</h2>
+                    <p class="landing-edit-subtitle">Modify your shortened URL settings and configuration</p>
+                </div>
+                <button class="landing-edit-close" type="button" aria-label="Close modal"
+                    onclick="closeLandingEditModal()">
+                    <i class="ti ti-x"></i>
+                </button>
+            </div>
+
+            <div class="landing-edit-body">
+                <form id="landing-edit-form">
+                    <div class="landing-edit-tabs" data-active="0">
+                        <button type="button" class="landing-edit-tab landing-edit-active" data-tab="basic">
+                            <i class="ti ti-link"></i>
+                            <span>Basic</span>
+                        </button>
+                        <button type="button" class="landing-edit-tab" data-tab="security">
+                            <i class="ti ti-shield-lock"></i>
+                            <span>Security</span>
+                        </button>
+                        <button type="button" class="landing-edit-tab" data-tab="advanced">
+                            <i class="ti ti-settings"></i>
+                            <span>Advanced</span>
+                        </button>
+                    </div>
+
+                    <div class="landing-edit-tab-content-container">
+                        <!-- Basic Tab -->
+                        <div class="landing-edit-tab-content landing-edit-active" data-tab="basic">
+                            <div class="landing-edit-form-grid">
+                                <div class="landing-edit-field">
+                                    <label for="landing-edit-alias">Short URL Alias</label>
+                                    <div class="landing-edit-input-group">
+                                        <span class="landing-edit-input-prefix">{{ host_url }}</span>
+                                        <input type="text" id="landing-edit-alias" name="alias"
+                                            placeholder="custom-alias" autocomplete="off" readonly>
+                                    </div>
+                                    <small class="landing-edit-field-hint">URL alias (read-only)</small>
+                                </div>
+
+                                <div class="landing-edit-field">
+                                    <label for="landing-edit-long-url">Destination URL</label>
+                                    <input type="url" id="landing-edit-long-url" name="long_url"
+                                        placeholder="https://example.com" autocomplete="off">
+                                    <small class="landing-edit-field-hint">The URL users will be redirected to</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Tab -->
+                        <div class="landing-edit-tab-content" data-tab="security">
+                            <div class="landing-edit-form-grid">
+                                <div class="landing-edit-field">
+                                    <label for="landing-edit-password">Password Protection</label>
+                                    <div class="landing-edit-password-field-group">
+                                        <input type="password" id="landing-edit-password" name="password"
+                                            placeholder="Enter new password" autocomplete="new-password">
+                                        <small class="landing-edit-password-status"
+                                            id="landing-password-status"></small>
+                                        <div class="landing-edit-checkbox-field">
+                                            <input type="checkbox" id="landing-remove-password-checkbox">
+                                            <label for="landing-remove-password-checkbox"
+                                                class="landing-edit-checkbox-label">
+                                                <span class="landing-edit-checkbox-indicator"></span>
+                                                <div class="landing-edit-checkbox-content">
+                                                    <span class="landing-edit-checkbox-title">Remove password
+                                                        protection</span>
+                                                    <small class="landing-edit-checkbox-desc">Disable password
+                                                        requirement for this
+                                                        URL</small>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <small class="landing-edit-field-hint">Check "Remove password protection" to
+                                        disable, or enter a
+                                        new password to change it</small>
+                                </div>
+
+                                <div class="landing-edit-field">
+                                    <div class="landing-edit-checkbox-field">
+                                        <input type="checkbox" id="landing-edit-private-stats" name="private_stats">
+                                        <label for="landing-edit-private-stats" class="landing-edit-checkbox-label">
+                                            <span class="landing-edit-checkbox-indicator"></span>
+                                            <div class="landing-edit-checkbox-content">
+                                                <span class="landing-edit-checkbox-title">Private Statistics</span>
+                                                <small class="landing-edit-checkbox-desc">Hide click statistics from
+                                                    public
+                                                    view</small>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Tab -->
+                        <div class="landing-edit-tab-content" data-tab="advanced">
+                            <div class="landing-edit-form-grid">
+                                <div class="landing-edit-field">
+                                    <label for="landing-edit-max-clicks">Maximum Clicks</label>
+                                    <input type="number" id="landing-edit-max-clicks" name="max_clicks"
+                                        placeholder="Leave empty for unlimited" min="1">
+                                    <small class="landing-edit-field-hint">URL will be disabled after reaching this
+                                        limit</small>
+                                </div>
+
+                                <div class="landing-edit-field">
+                                    <label for="landing-edit-expire-after">Expiration Date</label>
+                                    <input type="datetime-local" id="landing-edit-expire-after" name="expire_after">
+                                    <small class="landing-edit-field-hint">URL will be disabled after this date</small>
+                                </div>
+
+                                <div class="landing-edit-field">
+                                    <div class="landing-edit-checkbox-field">
+                                        <input type="checkbox" id="landing-edit-block-bots" name="block_bots">
+                                        <label for="landing-edit-block-bots" class="landing-edit-checkbox-label">
+                                            <span class="landing-edit-checkbox-indicator"></span>
+                                            <div class="landing-edit-checkbox-content">
+                                                <span class="landing-edit-checkbox-title">Block Bots</span>
+                                                <small class="landing-edit-checkbox-desc">Prevent automated bot traffic
+                                                    from
+                                                    accessing this URL</small>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- Close tab-content-container -->
+                </form>
+            </div>
+
+            <div class="landing-edit-footer">
+                <div class="landing-edit-footer-actions">
+                    <div class="landing-edit-footer-actions-left">
+                        <button type="button" class="landing-edit-btn landing-edit-btn-secondary"
+                            onclick="closeLandingEditModal()">
+                            <span>Cancel</span>
+                        </button>
+                    </div>
+                    <div class="landing-edit-footer-actions-right">
+                        <!-- LOCKED SAVE BUTTON - Triggers signup -->
+                        <button type="button"
+                            class="landing-edit-btn landing-edit-btn-primary landing-edit-locked-save-btn"
+                            id="landing-save-locked" onclick="promptSignupToSave()" title="Sign up to save changes">
+                            <i class="ti ti-lock"></i>
+                            <span>Save Changes</span>
+                            <span class="landing-edit-locked-badge">Sign up required</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
