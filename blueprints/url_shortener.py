@@ -27,6 +27,7 @@ from utils.mongo_utils import (
     urls_v2_collection,
     clicks_collection,
     get_url_v2_by_alias,
+    get_url_by_length_and_type,
 )
 from utils.general import is_positive_integer, humanize_number
 from utils.logger import get_logger
@@ -34,7 +35,7 @@ from .limiter import limiter
 from cache import dual_cache
 
 from datetime import datetime
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse
 import tldextract
 from crawlerdetect import CrawlerDetect
 import time
@@ -342,6 +343,79 @@ def result(short_code):
             ),
             404,
         )
+
+
+@url_shortener.route("/<short_code>+")
+@limiter.limit("100 per minute")
+def preview_url(short_code):
+    """
+    Show preview of where a short URL redirects to.
+    Only shows destination URL, nothing else.
+    Hides destination for password-protected URLs.
+    """
+    # Decode URL-encoded characters
+    short_code = unquote(short_code)
+
+    # Lookup URL (handles v1, v2, emoji automatically)
+    url_data, schema_type = get_url_by_length_and_type(short_code)
+
+    # Not found
+    if not url_data:
+        log.info("preview_url_not_found", short_code=short_code)
+        return render_template(
+            "preview.html",
+            error="URL not found",
+            short_code=short_code,
+            host_url=request.host_url,
+        ), 404
+
+    # Extract data based on schema type
+    if schema_type == "v2":
+        alias = url_data.get("alias")
+        long_url = url_data.get("long_url")
+        has_password = url_data.get("password") is not None
+    elif schema_type == "emoji":
+        alias = url_data.get("_id")
+        long_url = url_data.get("url")
+        has_password = url_data.get("password") is not None
+    else:  # v1
+        alias = url_data.get("_id")
+        long_url = url_data.get("url")
+        has_password = url_data.get("password") is not None
+
+    # Hide destination for password-protected URLs
+    if has_password:
+        log.info("preview_password_protected", short_code=short_code, alias=alias)
+        return render_template(
+            "preview.html",
+            alias=alias,
+            short_url=f"{request.host_url}{alias}",
+            password_protected=True,
+            host_url=request.host_url,
+        )
+
+    # Parse URL to extract domain, path, and protocol
+    parsed = urlparse(long_url)
+    domain = parsed.netloc or parsed.path.split("/")[0]  # Handle edge cases
+    path = parsed.path + ("?" + parsed.query if parsed.query else "")
+    # Hide "/" path for homepage
+    if path == "/":
+        path = ""
+    is_https = parsed.scheme == "https"
+
+    # Show preview with destination
+    log.info("preview_shown", short_code=short_code, alias=alias, schema=schema_type)
+    return render_template(
+        "preview.html",
+        alias=alias,
+        short_url=f"{request.host_url}{alias}",
+        long_url=long_url,
+        domain=domain,
+        path=path,
+        is_https=is_https,
+        password_protected=False,
+        host_url=request.host_url,
+    )
 
 
 METRIC_PIPELINE_V1 = [

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Link Preview | spoo.me</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nata+Sans:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/preview.css') }}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+</head>
+
+<body>
+    <div class="preview-container">
+        {% if error %}
+        <!-- URL Not Found -->
+        <div class="preview-card error">
+            <div class="preview-icon error-icon">
+                <i class="ti ti-alert-circle"></i>
+            </div>
+            <h1>URL Not Found</h1>
+            <p class="error-message">The short URL <code>{{ short_code }}</code> does not exist.</p>
+            <a href="/" class="btn-primary">Go to spoo.me</a>
+        </div>
+
+        {% elif password_protected %}
+        <!-- Password Protected -->
+        <div class="preview-card locked">
+            <div class="preview-icon lock-icon">
+                <i class="ti ti-lock"></i>
+            </div>
+            <h1>Password Protected</h1>
+            <div class="url-display">
+                <span class="url-label">Short URL:</span>
+                <div class="short-url">{{ short_url }}</div>
+            </div>
+            <p class="info-text">This link requires a password. The destination is hidden for security.</p>
+            <div class="button-group">
+                <a href="/{{ alias }}" class="btn-primary">
+                    <i class="ti ti-key"></i>
+                    Enter Password
+                </a>
+                <button onclick="copyUrl('{{ short_url }}', event)" class="btn-secondary">
+                    <i class="ti ti-copy"></i>
+                    Copy Link
+                </button>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Normal Preview -->
+        <div class="preview-card">
+            <h1>Link Preview</h1>
+            <p class="preview-subtitle">See where this link goes before you click</p>
+            <div class="url-display">
+                <span class="url-label">Short URL:</span>
+                <div class="short-url">{{ short_url }}</div>
+            </div>
+            <div class="url-display destination">
+                <span class="url-label">Redirects to:</span>
+                <div class="long-url">
+                    <div class="url-content">
+                        <div class="url-header">
+                            <img src="https://www.google.com/s2/favicons?domain={{ domain }}&sz=32" class="favicon"
+                                alt="favicon" onerror="this.style.display='none'">
+                            <span class="full-url">
+                                <span class="domain-name">{{ domain }}</span><span class="url-path">{{ path }}</span>
+                            </span>
+                            {% if is_https %}
+                            <span class="https-badge">
+                                <i class="ti ti-lock"></i>
+                                HTTPS
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="button-group">
+                <a href="/{{ alias }}" class="btn-primary">
+                    <i class="ti ti-external-link"></i>
+                    Continue to Destination
+                </a>
+                <button onclick="copyUrl('{{ short_url }}', event)" class="btn-secondary">
+                    <i class="ti ti-copy"></i>
+                    Copy Link
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <div class="preview-footer">
+            <a href="/" class="footer-link">
+                <img src="{{ url_for('static', filename='images/logo-text-dark.png') }}" alt="spoo.me" height="20">
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function copyUrl(url, event) {
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+
+            navigator.clipboard.writeText(url).then(() => {
+                // Add copied class for animation
+                btn.classList.add('copied');
+                btn.innerHTML = '<i class="ti ti-check"></i> Copied!';
+
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = originalHTML;
+                }, 2000);
+            }).catch(() => {
+                // Fallback for older browsers
+                btn.innerHTML = '<i class="ti ti-x"></i> Failed';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+
+</html>
