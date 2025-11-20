@@ -60,6 +60,12 @@ function renderRecentURLs() {
     const container = document.getElementById('recentURLs');
     if (!container) return;
 
+    // Don't show recent URLs for signed-up users
+    if (window.isLoggedIn === true) {
+        container.innerHTML = '';
+        return;
+    }
+
     let list = [];
     try { list = JSON.parse(localStorage.getItem('recentURLs')) || []; } catch (_) { list = []; }
     container.innerHTML = '';
@@ -90,3 +96,6 @@ function renderRecentURLs() {
 }
 
 document.addEventListener('DOMContentLoaded', renderRecentURLs);
+
+// Re-render when authentication state changes
+document.addEventListener('auth:init', renderRecentURLs);
