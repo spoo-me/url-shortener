@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/preview.css') }}">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel=" icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
 </head>
 
 <body>
@@ -27,9 +27,6 @@
         {% if error %}
         <!-- URL Not Found -->
         <div class="preview-card error">
-            <div class="preview-icon error-icon">
-                <i class="ti ti-alert-circle"></i>
-            </div>
             <h1>URL Not Found</h1>
             <p class="error-message">The short URL <code>{{ short_code }}</code> does not exist.</p>
             <a href="/" class="btn-primary">Go to spoo.me</a>
@@ -38,15 +35,13 @@
         {% elif password_protected %}
         <!-- Password Protected -->
         <div class="preview-card locked">
-            <div class="preview-icon lock-icon">
-                <i class="ti ti-lock"></i>
-            </div>
             <h1>Password Protected</h1>
+            <p class="preview-subtitle">This link requires a password to access</p>
             <div class="url-display">
                 <span class="url-label">Short URL:</span>
                 <div class="short-url">{{ short_url }}</div>
             </div>
-            <p class="info-text">This link requires a password. The destination is hidden for security.</p>
+            <p class="info-text">The destination is hidden for security.</p>
             <div class="button-group">
                 <a href="/{{ alias }}" class="btn-primary">
                     <i class="ti ti-key"></i>

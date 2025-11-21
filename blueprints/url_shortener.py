@@ -397,7 +397,11 @@ def preview_url(short_code):
     # Parse URL to extract domain, path, and protocol
     parsed = urlparse(long_url)
     domain = parsed.netloc or parsed.path.split("/")[0]  # Handle edge cases
-    path = parsed.path + ("?" + parsed.query if parsed.query else "")
+    path = (
+        parsed.path
+        + ("?" + parsed.query if parsed.query else "")
+        + ("#" + parsed.fragment if parsed.fragment else "")
+    )
     # Hide "/" path for homepage
     if path == "/":
         path = ""
