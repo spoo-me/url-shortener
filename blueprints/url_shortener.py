@@ -436,6 +436,19 @@ METRIC_PIPELINE_V1 = [
 @url_shortener.route("/metric")
 @limiter.exempt
 def metric():
+    """
+    Provide aggregated metrics for the service including total shortlinks, total clicks, and GitHub stars.
+    
+    Aggregates legacy (v1) and current (v2) shortlink counts plus clicks from the time-series collection, formats human-readable totals, and includes repository star count. The result is cached and returned as a JSON HTTP response.
+    
+    Returns:
+    	Flask Response: JSON object with keys:
+    		- "total-shortlinks-raw": integer total shortlink count (v1 + v2)
+    		- "total-clicks-raw": integer total click count (v1 + timeseries)
+    		- "total-shortlinks": human-readable string of the total shortlinks
+    		- "total-clicks": human-readable string of the total clicks
+    		- "github-stars": integer number of GitHub repository stars
+    """
     def query():
         start_time = time.time()
 

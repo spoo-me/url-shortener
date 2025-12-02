@@ -168,12 +168,9 @@ def configure_structlog() -> None:
 
 def configure_stdlib_logging() -> None:
     """
-    Configure standard library logging to work with structlog.
-
-    Sets up:
-    - Log level from environment
-    - Console handler for stdout
-    - Format compatible with structlog
+    Configure the standard library logging for use with structlog and reduce noisy third‑party output.
+    
+    Sets the root logger format to a simple message format, directs output to stdout, applies the module-wide LOG_LEVEL, and raises log levels for common noisy libraries (urllib3, werkzeug, botocore, boto3) and PyMongo-related loggers to minimize verbose logs.
     """
     logging.basicConfig(
         format="%(message)s",
@@ -197,12 +194,9 @@ def configure_stdlib_logging() -> None:
 
 def configure_sentry_logging() -> None:
     """
-    Configure Sentry integration for error tracking.
-
-    If Sentry DSN is configured, this sets up:
-    - Automatic error capture for ERROR+ level logs
-    - Breadcrumbs for INFO+ level logs (context for errors)
-    - User context attachment
+    Configure Sentry logging integration when SENTRY_DSN is present.
+    
+    If a SENTRY_DSN environment variable is set, instantiate a Sentry LoggingIntegration that records INFO and above as breadcrumbs and sends ERROR and above as events. If SENTRY_DSN is unset or the sentry SDK is not installed, this function does nothing.
     """
     sentry_dsn = os.getenv("SENTRY_DSN")
 

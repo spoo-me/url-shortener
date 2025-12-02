@@ -327,7 +327,19 @@ def process_url_click(
 
 
 def handle_v2_click(url_data, short_code, user_ip, start_time):
-    """Handle click tracking for new v2 schema URLs"""
+    """
+    Record and apply click analytics for a v2-format short URL, handle bot blocking, and expire the URL when max clicks are reached.
+    
+    Parameters:
+    	url_data (dict): URL document for the v2 schema. Must include at least `_id`; may include `block_bots`, `owner_id`, and `max_clicks`.
+    	short_code (str): The short identifier for the URL.
+    	user_ip (str): Client IP address used for geolocation and uniqueness checks.
+    	start_time (float): High-resolution start timestamp (from time.perf_counter()) used to compute redirect latency.
+    
+    Raises:
+    	RedirectorError: For validation or client-related errors (e.g., invalid/missing User-Agent or blocked access).
+    	InternalRedirectorError: On unexpected failures during click processing or datastore updates.
+    """
     try:
         # Get user agent info
         user_agent = request.headers.get("User-Agent", "")

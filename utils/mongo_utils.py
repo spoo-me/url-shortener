@@ -400,6 +400,18 @@ def revoke_api_key_by_id(user_id, key_id, *, hard_delete: bool = False) -> bool:
 
 
 def ensure_indexes():
+    """
+    Ensure required MongoDB collections and indexes exist for the application.
+    
+    Creates the time-series "clicks" collection if missing and ensures indexes used across collections including:
+    - users: unique index on `email` and indexes for OAuth provider lookups.
+    - urls_v2: unique index on `alias`, and indexes for `owner_id`, `created_at`, `total_clicks`, and `last_click`.
+    - clicks (time-series): indexes for `meta.url_id`, `meta.owner_id`, `meta.short_code`, and `clicked_at` to support URL-level, user-level, and anonymous analytics.
+    - api_keys: index on `user_id`, unique index on `token_hash`, and a TTL index on `expires_at`.
+    - verification_tokens: indexes on `user_id`, `token_hash`, `token_type`, and a TTL index on `expires_at`.
+    
+    This function swallows exceptions and is safe to call multiple times.
+    """
     try:
         users_collection.create_index([("email", ASCENDING)], unique=True)
 

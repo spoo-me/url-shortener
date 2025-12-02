@@ -329,7 +329,12 @@ class StatsQueryBuilder:
         return self
 
     def _build_click_query(self) -> Dict[str, Any]:
-        """Build MongoDB query for clicks collection using builder pattern"""
+        """
+        Construct a MongoDB query dict for the clicks collection according to the configured scope, date range, and filters.
+        
+        Returns:
+            Dict[str, Any]: The MongoDB query dictionary for the clicks aggregation, or `None` if query construction failed (an error response will have been recorded).
+        """
         try:
             # Use the appropriate factory method based on scope
             if self.scope == "all":
@@ -362,13 +367,19 @@ class StatsQueryBuilder:
         self, query: Dict[str, Any]
     ) -> tuple[Dict[str, Any], Dict[str, List[Dict[str, Any]]]]:
         """
-        Execute ALL stats (summary + aggregations) in a SINGLE MongoDB round-trip using $facet.
-
-        This is critical for serverless (Vercel) where each DB call adds ~200-400ms latency.
-        $facet allows running multiple aggregation pipelines in parallel on the server side.
-
+        Run summary and per-dimension aggregations in a single MongoDB aggregation using $facet.
+        
+        Performs one {$match: query} followed by a {$facet: {...}} that computes an overall summary and each requested group-by dimension in parallel, then formats and returns the summary and per-dimension results.
+        
+        Parameters:
+            query (Dict[str, Any]): MongoDB match filter used as the initial stage of the aggregation.
+        
         Returns:
-            tuple: (summary_stats, aggregation_results)
+            tuple:
+                - summary (Dict[str, Any]): Aggregated overall statistics with keys
+                  "total_clicks", "unique_clicks", "first_click", "last_click", and "avg_redirection_time".
+                - results (Dict[str, List[Dict[str, Any]]]): Mapping from each group-by dimension to its formatted
+                  aggregation results (each list produced by the corresponding aggregation strategy).
         """
         results = {}
 
@@ -476,7 +487,19 @@ class StatsQueryBuilder:
     def _format_results(
         self, aggregation_results: Dict[str, List[Dict[str, Any]]]
     ) -> Dict[str, Any]:
-        """Format aggregation results into response structure"""
+        """
+        Builds the API response payload from raw aggregation results.
+        
+        Parameters:
+            aggregation_results (Dict[str, List[Dict[str, Any]]]): Mapping from each aggregation dimension
+                (e.g., "time", "short_code", other dimensions) to a list of aggregation documents produced
+                by the aggregation pipeline.
+        
+        Returns:
+            Dict[str, Any]: Response dictionary containing scope, filters, group_by, timezone, time_range,
+            optional short_code and time_bucket_info, and a `metrics` mapping where each key is
+            "<metric>_by_<dimension>" and the value is a list of {<dimension>: value, <metric>: number}.
+        """
         response = {
             "scope": self.scope,
             "filters": self.filters,
@@ -542,6 +565,14 @@ class StatsQueryBuilder:
         return response
 
     def build(self) -> tuple[Response, int]:
+        """
+        Builds, executes, and formats the URL statistics query and returns an HTTP response.
+        
+        Constructs the query from the parsed parameters, executes all requested aggregations in a single database call, formats and enriches the resulting statistics (including summary and requested metrics), and returns a Flask JSON response with the appropriate HTTP status. On validation or authorization errors returns a JSON error response with the corresponding status code; on unexpected failures returns a 500 error response.
+        
+        Returns:
+            (Response, int): A tuple containing the Flask JSON response body and the HTTP status code.
+        """
         if self.error is not None:
             return self.error
 
