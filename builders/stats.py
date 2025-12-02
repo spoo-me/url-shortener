@@ -358,47 +358,120 @@ class StatsQueryBuilder:
             self._fail({"error": "failed to build query"}, 500)
             return None
 
-    def _build_aggregation_pipeline(
+    def _execute_all_stats(
         self, query: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
-        """Build aggregation pipeline for statistics using strategy pattern"""
-        # For multiple group_by dimensions, we'll need to run separate aggregations
-        # and combine the results in _execute_aggregations
-        return []  # This will be handled by strategy pattern
+    ) -> tuple[Dict[str, Any], Dict[str, List[Dict[str, Any]]]]:
+        """
+        Execute ALL stats (summary + aggregations) in a SINGLE MongoDB round-trip using $facet.
 
-    def _execute_aggregations(
-        self, query: Dict[str, Any]
-    ) -> Dict[str, List[Dict[str, Any]]]:
-        """Execute aggregations for each group_by dimension using strategies"""
+        This is critical for serverless (Vercel) where each DB call adds ~200-400ms latency.
+        $facet allows running multiple aggregation pipelines in parallel on the server side.
+
+        Returns:
+            tuple: (summary_stats, aggregation_results)
+        """
         results = {}
 
+        # Build strategies for each dimension
+        strategies = {}
         for group_dimension in self.group_by:
-            try:
-                # Pass time range information for time aggregation strategy
-                if group_dimension == "time":
-                    strategy = AggregationStrategyFactory.get(
-                        group_dimension,
-                        start_date=self.start_date,
-                        end_date=self.end_date,
-                        timezone=self.timezone,  # Pass timezone for output conversion
-                    )
-                else:
-                    strategy = AggregationStrategyFactory.get(group_dimension)
-
-                pipeline = strategy.build_pipeline(query)
-                raw_results = list(clicks_collection.aggregate(pipeline))
-                formatted_results = strategy.format_results(raw_results)
-                results[group_dimension] = formatted_results
-            except Exception as e:
-                log.error(
-                    "stats_aggregation_failed",
-                    dimension=group_dimension,
-                    error=str(e),
-                    error_type=type(e).__name__,
+            if group_dimension == "time":
+                strategies[group_dimension] = AggregationStrategyFactory.get(
+                    group_dimension,
+                    start_date=self.start_date,
+                    end_date=self.end_date,
+                    timezone=self.timezone,
                 )
-                results[group_dimension] = []
+            else:
+                strategies[group_dimension] = AggregationStrategyFactory.get(
+                    group_dimension
+                )
 
-        return results
+        # Build $facet pipeline - all aggregations in ONE query
+        facet_stages = {}
+
+        # Add summary stats as a facet
+        facet_stages["_summary"] = [
+            {
+                "$group": {
+                    "_id": None,
+                    "total_clicks": {"$sum": 1},
+                    "unique_clicks": {"$addToSet": "$ip_address"},
+                    "first_click": {"$min": "$clicked_at"},
+                    "last_click": {"$max": "$clicked_at"},
+                    "avg_redirection_time": {"$avg": "$redirect_ms"},
+                }
+            },
+            {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
+        ]
+
+        # Add dimension aggregations
+        for dimension, strategy in strategies.items():
+            # Get the pipeline stages AFTER $match (we'll do $match once at the start)
+            full_pipeline = strategy.build_pipeline(query)
+            # Skip the $match stage (index 0), keep the rest
+            facet_stages[dimension] = full_pipeline[1:] if full_pipeline else []
+
+        # Single aggregation with $facet - ONE DB CALL for everything
+        combined_pipeline = [
+            {"$match": query},
+            {"$facet": facet_stages},
+        ]
+
+        # Default empty summary
+        summary = {
+            "total_clicks": 0,
+            "unique_clicks": 0,
+            "first_click": None,
+            "last_click": None,
+            "avg_redirection_time": 0,
+        }
+
+        try:
+            raw_results = list(clicks_collection.aggregate(combined_pipeline))
+
+            if raw_results:
+                facet_results = raw_results[0]
+
+                # Extract summary
+                summary_results = facet_results.get("_summary", [])
+                if summary_results:
+                    s = summary_results[0]
+                    summary = {
+                        "total_clicks": s.get("total_clicks", 0),
+                        "unique_clicks": s.get("unique_clicks", 0),
+                        "first_click": self._format_datetime_in_timezone(
+                            s.get("first_click")
+                        ),
+                        "last_click": self._format_datetime_in_timezone(
+                            s.get("last_click")
+                        ),
+                        "avg_redirection_time": round(
+                            s.get("avg_redirection_time") or 0, 2
+                        ),
+                    }
+
+                # Extract dimension aggregations
+                for dimension, strategy in strategies.items():
+                    dimension_results = facet_results.get(dimension, [])
+                    results[dimension] = strategy.format_results(dimension_results)
+            else:
+                # No results, initialize empty
+                for dimension in self.group_by:
+                    results[dimension] = []
+
+        except Exception as e:
+            log.error(
+                "stats_facet_aggregation_failed",
+                error=str(e),
+                error_type=type(e).__name__,
+                dimensions=self.group_by,
+            )
+            # Fallback to empty results
+            for dimension in self.group_by:
+                results[dimension] = []
+
+        return summary, results
 
     def _format_results(
         self, aggregation_results: Dict[str, List[Dict[str, Any]]]
@@ -468,51 +541,6 @@ class StatsQueryBuilder:
 
         return response
 
-    def _get_summary_stats(self, query: Dict[str, Any]) -> Dict[str, Any]:
-        """Get overall summary statistics"""
-        pipeline = [
-            {"$match": query},
-            {
-                "$group": {
-                    "_id": None,
-                    "total_clicks": {"$sum": 1},
-                    "unique_clicks": {"$addToSet": "$ip_address"},
-                    "first_click": {"$min": "$clicked_at"},
-                    "last_click": {"$max": "$clicked_at"},
-                    "avg_redirection_time": {"$avg": "$redirect_ms"},
-                }
-            },
-            {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
-        ]
-
-        try:
-            result = list(clicks_collection.aggregate(pipeline))
-            if result:
-                summary = result[0]
-                return {
-                    "total_clicks": summary.get("total_clicks", 0),
-                    "unique_clicks": summary.get("unique_clicks", 0),
-                    "first_click": self._format_datetime_in_timezone(
-                        summary.get("first_click")
-                    ),
-                    "last_click": self._format_datetime_in_timezone(
-                        summary.get("last_click")
-                    ),
-                    "avg_redirection_time": round(
-                        summary.get("avg_redirection_time", 0), 2
-                    ),
-                }
-        except Exception:
-            pass
-
-        return {
-            "total_clicks": 0,
-            "unique_clicks": 0,
-            "first_click": None,
-            "last_click": None,
-            "avg_redirection_time": 0,
-        }
-
     def build(self) -> tuple[Response, int]:
         if self.error is not None:
             return self.error
@@ -529,11 +557,9 @@ class StatsQueryBuilder:
             if not query and self.scope == "anon":
                 return self._fail({"error": "invalid short_code"}, 400)
 
-            # Get summary statistics
-            summary = self._get_summary_stats(query)
-
-            # Execute aggregations using strategy pattern
-            aggregation_results = self._execute_aggregations(query)
+            # Execute ALL stats in a SINGLE MongoDB call using $facet
+            # This is critical for serverless (Vercel) - reduces latency from N*RTT to 1*RTT
+            summary, aggregation_results = self._execute_all_stats(query)
 
             # Format response
             response = self._format_results(aggregation_results)

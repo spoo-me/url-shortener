@@ -187,6 +187,13 @@ def configure_stdlib_logging() -> None:
     logging.getLogger("botocore").setLevel(logging.WARNING)
     logging.getLogger("boto3").setLevel(logging.WARNING)
 
+    # Silence pymongo debug logs (connection pool, server monitoring, etc.)
+    logging.getLogger("pymongo").setLevel(logging.WARNING)
+    logging.getLogger("pymongo.connection").setLevel(logging.WARNING)
+    logging.getLogger("pymongo.serverSelection").setLevel(logging.WARNING)
+    logging.getLogger("pymongo.command").setLevel(logging.WARNING)
+    logging.getLogger("pymongo.topology").setLevel(logging.WARNING)
+
 
 def configure_sentry_logging() -> None:
     """
