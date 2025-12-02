@@ -446,10 +446,10 @@ def metric():
         v1_clicks = v1_result.get("total-clicks", 0)
 
         # Get document count from v2 urls collection
-        v2_shortlinks = urls_v2_collection.count_documents({})
+        v2_shortlinks = urls_v2_collection.estimated_document_count()
 
         # Get document count from clicks time-series collection
-        total_clicks_from_ts = clicks_collection.count_documents({})
+        total_clicks_from_ts = clicks_collection.estimated_document_count()
 
         # Combine results
         total_shortlinks = v1_shortlinks + v2_shortlinks

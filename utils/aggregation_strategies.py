@@ -245,6 +245,7 @@ class BrowserAggregationStrategy(AggregationStrategy):
             },
             {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
             {"$sort": {"total_clicks": -1}},
+            {"$limit": 20},
         ]
 
     def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -277,6 +278,7 @@ class OSAggregationStrategy(AggregationStrategy):
             },
             {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
             {"$sort": {"total_clicks": -1}},
+            {"$limit": 20},
         ]
 
     def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -309,6 +311,7 @@ class DeviceAggregationStrategy(AggregationStrategy):
             },
             {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
             {"$sort": {"total_clicks": -1}},
+            {"$limit": 20},
         ]
 
     def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -341,6 +344,7 @@ class CountryAggregationStrategy(AggregationStrategy):
             },
             {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
             {"$sort": {"total_clicks": -1}},
+            {"$limit": 50},  # Top 50 countries
         ]
 
     def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -375,6 +379,7 @@ class CityAggregationStrategy(AggregationStrategy):
             },
             {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
             {"$sort": {"total_clicks": -1}},
+            {"$limit": 50},  # Top 50 cities
         ]
 
     def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -407,6 +412,7 @@ class ReferrerAggregationStrategy(AggregationStrategy):
             },
             {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
             {"$sort": {"total_clicks": -1}},
+            {"$limit": 30},  # Top 30 referrers
         ]
 
     def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -439,6 +445,7 @@ class ShortCodeAggregationStrategy(AggregationStrategy):
             },
             {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
             {"$sort": {"total_clicks": -1}},
+            {"$limit": 100},  # Top 100 short codes
         ]
 
     def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

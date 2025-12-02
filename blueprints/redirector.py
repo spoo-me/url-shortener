@@ -27,6 +27,7 @@ from utils.mongo_utils import (
     update_url_v2_clicks,
     expire_url_if_max_clicks_reached,
     insert_click_data,
+    ANONYMOUS_OWNER_ID,
 )
 from utils.auth_utils import verify_password
 from utils.logger import get_logger, hash_ip, should_sample
@@ -400,20 +401,22 @@ def handle_v2_click(url_data, short_code, user_ip, start_time):
             return
 
         # Prepare click data for time-series collection following agreed schema
+        # ANONYMOUS_OWNER_ID is used for unowned URLs to keep consistent ObjectId type
+        # (prevents MongoDB timeseries bucket churn from mixing None/ObjectId types)
         curr_time = datetime.now(timezone.utc)
         click_data = {
             "clicked_at": curr_time,  # timestamp field for time-series
             "meta": {  # meta field for time-series
                 "url_id": url_data["_id"],
                 "short_code": short_code,
-                "owner_id": url_data.get("owner_id"),
+                "owner_id": url_data.get("owner_id")
+                or ANONYMOUS_OWNER_ID,  # Always ObjectId
             },
             "ip_address": user_ip,
             "country": country or "Unknown",
             "city": city or "Unknown",
             "browser": browser,
             "os": os_name,
-            "device": None,  # TODO: find and move to a reliable device detection
             "redirect_ms": redirect_ms,
             "referrer": sanitized_referrer_domain,  # nullable
             "bot_name": bot_name,  # nullable

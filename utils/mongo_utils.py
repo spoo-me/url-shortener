@@ -11,6 +11,11 @@ load_dotenv()
 log = get_logger(__name__)
 MONGO_URI = os.environ["MONGODB_URI"]
 
+# Sentinel ObjectId for anonymous/unowned URLs in timeseries collection
+# Using a consistent ObjectId type prevents MongoDB timeseries bucket churn
+# (mixing None and ObjectId types causes schema changes = new buckets)
+ANONYMOUS_OWNER_ID = ObjectId("000000000000000000000000")
+
 client = MongoClient(MONGO_URI)
 
 try:
@@ -436,6 +441,7 @@ def ensure_indexes():
             pass
 
         # clicks collection indexes (time-series)
+        # Primary index for URL-specific queries
         clicks_collection.create_index(
             [
                 ("meta.url_id", ASCENDING),
@@ -443,6 +449,23 @@ def ensure_indexes():
             ]
         )
         clicks_collection.create_index([("clicked_at", DESCENDING)])
+
+        # CRITICAL: Index for user-level analytics (scope=all queries)
+        # This is essential for dashboard queries that aggregate all user's URLs
+        clicks_collection.create_index(
+            [
+                ("meta.owner_id", ASCENDING),
+                ("clicked_at", DESCENDING),
+            ]
+        )
+
+        # Index for anonymous stats (scope=anon queries by short_code)
+        clicks_collection.create_index(
+            [
+                ("meta.short_code", ASCENDING),
+                ("clicked_at", DESCENDING),
+            ]
+        )
 
         # api keys indexes
         api_keys_collection.create_index([("user_id", ASCENDING)])
