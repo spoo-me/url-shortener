@@ -100,6 +100,93 @@
     background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Empty State Styles */
+.chart-empty-state {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    border-radius: 12px;
+    z-index: 10; 
+}
+
+.chart-empty-state.hidden {
+    display: none;
+}
+
+/* Hide empty state when table view is active */
+.chart-container:has(.stats-table:not([style*="display: none"])) .chart-empty-state {
+    display: none !important;
+}
+
+.empty-state-icon {
+    margin-bottom: 20px;
+    opacity: 0.4;
+    animation: float 3s ease-in-out infinite;
+}
+
+.empty-state-icon i {
+    font-size: 64px;
+    color: var(--text-secondary);
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.empty-state-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+    text-align: center;
+}
+
+.empty-state-description {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0 0 20px 0;
+    text-align: center;
+    max-width: 300px;
+    line-height: 1.5;
+}
+
+.empty-state-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 8px;
+    color: rgba(59, 130, 246, 1);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.empty-state-action:hover {
+    background: rgba(59, 130, 246, 0.25);
+    border-color: rgba(59, 130, 246, 0.5);
+    transform: translateY(-1px);
+}
+
+.empty-state-action i {
+    font-size: 16px;
+}
+
 .export-btn {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.12);

@@ -3,7 +3,7 @@
 {% block title %}API Keys | Dashboard | spoo.me{% endblock %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/keys.css') }}?v=1">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/keys.css') }}?v=2">
 <meta name="robots" content="noindex">
 {% endblock %}
 
@@ -40,7 +40,14 @@
 
     <div id="keys-container" class="keys-list-container">
         <div id="keys-loading" class="loading">Loading…</div>
-        <div id="keys-empty" class="empty" style="display:none">No API keys yet. Create your first key to get started.
+        <div id="keys-empty" class="empty" style="display:none">
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="ti ti-key-off"></i>
+                </div>
+                <h3 class="empty-title">No API Keys Yet</h3>
+                <p class="empty-message">Create your first API key to start integrating with the spoo.me API.</p>
+            </div>
         </div>
 
         <div class="keys-table" id="keys-table" style="display:none">

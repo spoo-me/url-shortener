@@ -1582,6 +1582,12 @@ class StatisticsDashboard {
 
         const totalArr = data.metrics?.[cfg.totalKey] || [];
         const uniqueArr = data.metrics?.[cfg.uniqueKey] || [];
+        
+        // Check for empty data and toggle empty state
+        const hasData = totalArr.length > 0 || uniqueArr.length > 0;
+        this.toggleEmptyState(cfg.id, !hasData);
+        if (!hasData) return;
+        
         // Determine mode precedence: explicit arg > cascade button state > default
         const cascadeVal = document.querySelector(`[data-chart="${cfg.id}"] .cascade-btn`)?.dataset.value;
         const mode = option || cascadeVal || cfg.defaultMode;
@@ -1690,6 +1696,11 @@ class StatisticsDashboard {
         // Extract time series data from metrics
         const clicksByTime = data.metrics?.clicks_by_time || [];
         const uniqueClicksByTime = data.metrics?.unique_clicks_by_time || [];
+        
+        // Check for empty data and toggle empty state
+        const hasData = clicksByTime.length > 0 || uniqueClicksByTime.length > 0;
+        this.toggleEmptyState('timeSeriesChart', !hasData);
+        if (!hasData) return;
 
         // Get bucket strategy from API response for label formatting
         const bucketStrategy = data.time_bucket_info?.strategy || 'daily';
@@ -1762,6 +1773,11 @@ class StatisticsDashboard {
         // Extract country data from metrics
         const clicksByCountry = data.metrics?.clicks_by_country || [];
         const uniqueClicksByCountry = data.metrics?.unique_clicks_by_country || [];
+        
+        // Check for empty data and toggle empty state
+        const hasData = clicksByCountry.length > 0 || uniqueClicksByCountry.length > 0;
+        this.toggleEmptyState('countryChart', !hasData);
+        if (!hasData) return;
 
         const dataOption = option || document.querySelector('[data-chart="countryChart"] .cascade-btn')?.dataset.value || 'total';
         const countryData = dataOption === 'unique' ? uniqueClicksByCountry : clicksByCountry;
@@ -1844,6 +1860,25 @@ class StatisticsDashboard {
     updateCityChart(data, option = null) { this.updateCategoricalChart('city', data, option); }
 
     updateKeyChart(data, option = null) { this.updateCategoricalChart('short_code', data, option); }
+
+    toggleEmptyState(chartId, showEmpty) {
+        const emptyState = document.getElementById(`${chartId}-empty`);
+        const chartElement = document.getElementById(chartId);
+        
+        if (emptyState) {
+            if (showEmpty) {
+                emptyState.classList.remove('hidden');
+                if (chartElement) {
+                    chartElement.style.display = 'none';
+                }
+            } else {
+                emptyState.classList.add('hidden');
+                if (chartElement) {
+                    chartElement.style.display = '';
+                }
+            }
+        }
+    }
 
     formatNumber(num) {
         if (num >= 1000000) {
