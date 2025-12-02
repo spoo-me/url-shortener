@@ -466,6 +466,7 @@ class StatsQueryBuilder:
                 error=str(e),
                 error_type=type(e).__name__,
                 dimensions=self.group_by,
+                query=query,
             )
             # Fallback to empty results
             for dimension in self.group_by:
