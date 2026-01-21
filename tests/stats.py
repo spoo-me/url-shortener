@@ -50,12 +50,15 @@ def test_v1_stats(alias):
 def test_v2_stats(alias):
     """Test stats for V2 URL via API"""
     response = requests.get(
-        f"{BASE_URL}/api/v1/stats",
-        params={"scope": "anon", "short_code": alias}
+        f"{BASE_URL}/api/v1/stats", params={"scope": "anon", "short_code": alias}
     )
-    assert response.status_code == 200, f"V2 stats failed: {response.status_code} - {response.text}"
+    assert response.status_code == 200, (
+        f"V2 stats failed: {response.status_code} - {response.text}"
+    )
     data = response.json()
-    assert "summary" in data or "total_clicks" in data or "total-clicks" in data, "Missing click data"
+    assert "summary" in data or "total_clicks" in data or "total-clicks" in data, (
+        "Missing click data"
+    )
     print(f"✅ V2 stats retrieved for {alias}")
     return data
 
@@ -77,30 +80,30 @@ def test_preview(alias):
 
 def main():
     print("\n🧪 Running Stats Tests\n")
-    
+
     try:
         # Create test URLs
         v1_alias = random_alias()
         create_v1_url(v1_alias)
         print(f"✅ Created V1 test URL: {v1_alias}")
-        
+
         v2_alias = create_v2_url()
         print(f"✅ Created V2 test URL: {v2_alias}")
-        
+
         # Simulate clicks
         click_url(v1_alias)
         click_url(v1_alias)
         click_url(v2_alias)
         print("✅ Simulated clicks")
-        
+
         # Test stats
         test_v1_stats(v1_alias)
         test_v2_stats(v2_alias)
         test_stats_nonexistent()
-        
+
         # Test preview
         test_preview(v1_alias)
-        
+
         print("\n✅ All stats tests passed!\n")
     except AssertionError as e:
         print(f"\n❌ Test failed: {e}\n")
