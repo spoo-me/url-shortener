@@ -16,29 +16,19 @@ jobs:
   test-api:
     runs-on: ubuntu-latest
 
-    env:
-      MONGODB_URI: ${{ secrets.MONGODB_URI }}
-      URL_REPORT_WEBHOOK : ${{ secrets.URL_REPORT_WEBHOOK }}
-      CONTACT_WEBHOOK : ${{ secrets.CONTACT_WEBHOOK }}
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v6
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: 3.12
-
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-
-    - name: Start Flask server
-      run: python main.py &
+    - name: Start services
+      run: docker compose up -d --build --wait
 
     - name: Run API test
-      run: python tests/shorten.py
+      run: docker compose exec app uv run python tests/shorten.py
 
     - name: Run Stats test
-      run: python tests/stats.py
+      run: docker compose exec app uv run python tests/stats.py
+
+    - name: Show logs on failure
+      if: failure()
+      run: docker compose logs
