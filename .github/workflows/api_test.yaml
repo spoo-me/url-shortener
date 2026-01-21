@@ -20,6 +20,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v6
 
+    - name: Setup environment
+      run: cp .env.example .env
+
     - name: Start services
       run: docker compose up -d --build --wait
 
