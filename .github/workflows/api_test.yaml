@@ -26,6 +26,20 @@ jobs:
     - name: Start services
       run: docker compose up -d --build --wait
 
+    - name: Wait for app to be ready
+      run: |
+        for i in {1..30}; do
+          if docker compose exec app uv run python -c "import requests; requests.get('http://localhost:8000/metric', timeout=2)" 2>/dev/null; then
+            echo "✅ App is ready"
+            exit 0
+          fi
+          echo "Waiting for app... ($i/30)"
+          sleep 2
+        done
+        echo "❌ App failed to start"
+        docker compose logs app
+        exit 1
+
     - name: Run API test
       run: docker compose exec app uv run python tests/shorten.py
 
