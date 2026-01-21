@@ -489,4 +489,9 @@ def metric():
 
         return result
 
-    return jsonify(dual_cache.get_or_set("metrics", query))
+    # Cache metrics for 1 day
+    return jsonify(
+        dual_cache.get_or_set(
+            "metrics", query, primary_ttl=60 * 60 * 24, stale_ttl=60 * 60 * 25
+        )
+    )
