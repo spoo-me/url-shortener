@@ -18,7 +18,7 @@ dicttoxml==1.7.16
 dnspython==2.8.0
 emoji==2.15.0
 et-xmlfile==2.0.0
-filelock==3.20.0
+filelock==3.20.1
 flask==3.1.2
 flask-caching==2.3.1
 flask-cors==6.0.1
