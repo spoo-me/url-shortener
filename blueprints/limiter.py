@@ -25,7 +25,7 @@ limiter = Limiter(
 )
 
 
-@cache_store.cached(key="cache:ip_bypasses", ttl=120)
+@cache_store.cached(key="ip_bypasses", ttl=120)
 def _get_ip_bypasses() -> list:
     return [doc["_id"] for doc in ip_bypasses.find()]
 

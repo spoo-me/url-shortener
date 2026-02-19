@@ -1,4 +1,6 @@
 import functools
+import hashlib
+import json
 from typing import Any, Optional
 from walrus import Cache
 from utils.logger import get_logger
@@ -31,11 +33,21 @@ class CacheStore:
             @functools.wraps(fn)
             def wrapper(*args, **kwargs):
                 try:
-                    result = self._cache.get(key)
+                    if args or kwargs:
+                        args_hash = hashlib.md5(
+                            json.dumps(
+                                (args, sorted(kwargs.items())),
+                                default=str,
+                            ).encode()
+                        ).hexdigest()[:8]
+                        cache_key = f"{key}:{args_hash}"
+                    else:
+                        cache_key = key
+                    result = self._cache.get(cache_key)
                     if result is not None:
                         return result
                     result = fn(*args, **kwargs)
-                    self._cache.set(key, result, ttl)
+                    self._cache.set(cache_key, result, ttl)
                     return result
                 except Exception:
                     return fn(*args, **kwargs)

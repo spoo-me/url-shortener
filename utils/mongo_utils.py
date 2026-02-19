@@ -118,7 +118,7 @@ def check_if_emoji_alias_exists(emoji_alias):
     return emoji_data is not None
 
 
-@cache_store.cached(key="cache:blocked_url_patterns", ttl=300)
+@cache_store.cached(key="blocked_url_patterns", ttl=300)
 def _fetch_blocked_patterns() -> list:
     return [doc["_id"] for doc in blocked_urls_collection.find()]
 
