@@ -1,6 +1,7 @@
 import threading
 import geoip2.database
 import geoip2.errors
+import maxminddb
 from utils.logger import get_logger
 
 log = get_logger(__name__)
@@ -25,7 +26,7 @@ class GeoIPService:
                 if not self._country_loaded:
                     try:
                         self._country_reader = geoip2.database.Reader(self._COUNTRY_DB)
-                    except OSError as e:
+                    except (OSError, maxminddb.InvalidDatabaseError) as e:
                         log.warning(
                             "geoip_country_db_unavailable",
                             error=str(e),
@@ -41,7 +42,7 @@ class GeoIPService:
                 if not self._city_loaded:
                     try:
                         self._city_reader = geoip2.database.Reader(self._CITY_DB)
-                    except OSError as e:
+                    except (OSError, maxminddb.InvalidDatabaseError) as e:
                         log.warning(
                             "geoip_city_db_unavailable",
                             error=str(e),
@@ -57,7 +58,11 @@ class GeoIPService:
             return "Unknown"
         try:
             return reader.country(ip_address).country.name or "Unknown"
-        except (geoip2.errors.AddressNotFoundError, ValueError):
+        except (
+            geoip2.errors.AddressNotFoundError,
+            ValueError,
+            maxminddb.InvalidDatabaseError,
+        ):
             return "Unknown"
 
     def get_city(self, ip_address: str) -> str | None:
@@ -66,7 +71,11 @@ class GeoIPService:
             return None
         try:
             return reader.city(ip_address).city.name
-        except (geoip2.errors.AddressNotFoundError, ValueError):
+        except (
+            geoip2.errors.AddressNotFoundError,
+            ValueError,
+            maxminddb.InvalidDatabaseError,
+        ):
             return None
 
 

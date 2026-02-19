@@ -46,7 +46,9 @@ class GoogleStrategy(OAuthProviderStrategy):
         # fall back to an explicit API call if it is absent.
         userinfo = token.get("userinfo")
         if userinfo is None:
-            userinfo = client.get("userinfo", token=token).json()
+            resp = client.get("userinfo", token=token)
+            resp.raise_for_status()
+            userinfo = resp.json()
         return extract_user_info_from_google(userinfo)
 
 
@@ -55,7 +57,9 @@ class GitHubStrategy(OAuthProviderStrategy):
 
     def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]:
         # GitHub requires a separate call to get verified email addresses.
-        user = client.get("user", token=token).json()
+        user_response = client.get("user", token=token)
+        user_response.raise_for_status()
+        user = user_response.json()
         emails_response = client.get("user/emails", token=token)
         emails = emails_response.json() if emails_response.status_code == 200 else []
         if not isinstance(emails, list):
@@ -67,8 +71,9 @@ class DiscordStrategy(OAuthProviderStrategy):
     key = "discord"
 
     def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]:
-        user = client.get("users/@me", token=token).json()
-        return extract_user_info_from_discord(user)
+        resp = client.get("users/@me", token=token)
+        resp.raise_for_status()
+        return extract_user_info_from_discord(resp.json())
 
 
 # Registry: maps provider key → strategy instance.
