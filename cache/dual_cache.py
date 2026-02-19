@@ -61,10 +61,22 @@ class DualCache(BaseCache):
 
         # No cache, try DB
         if self._lock(lock_key):
-            data = query_fn()
-            self.set(primary_key, serialize(data), primary_ttl)
-            self.set(stale_key, serialize(data), stale_ttl)
-            return data
+            try:
+                data = query_fn()
+                self.set(primary_key, serialize(data), primary_ttl)
+                self.set(stale_key, serialize(data), stale_ttl)
+                self.delete(lock_key)
+                return data
+            except Exception as e:
+                log.error(
+                    "dual_cache_query_failed",
+                    base_key=base_key,
+                    error=str(e),
+                    error_type=type(e).__name__,
+                )
+                return None
+                # lock intentionally not released on failure — expires after
+                # lock_ttl to rate-limit retries while the query is broken
 
         # Lock contention — another worker is already fetching.
         # Return None immediately; caller should respond with 204 No Content.
