@@ -145,7 +145,7 @@ def test_stats_post_password_protected_without_password(client, mocker):
     )
     response = client.post("/stats/validcode")
     assert response.status_code == 400
-    assert response.json == {"PasswordError": "Invalid Password", "entered-pass": None}
+    assert response.json == {"PasswordError": "Invalid Password"}
 
 
 def test_stats_get_password_protected_correct_password(client, mocker):

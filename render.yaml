@@ -4,23 +4,34 @@ services:
     name: url-shortener
     repo: https://github.com/spoo-me/url-shortener
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install uv && uv sync --frozen
     startCommand: gunicorn main:app
     envVars:
+      # ── Runtime mode ────────────────────────────────────────────────────────
+      - key: ENV
+        value: production
+      - key: COOKIE_SECURE
+        value: "true"
+
+      # ── Database ─────────────────────────────────────────────────────────────
       - key: MONGODB_URI
-        sync: false
-      - key: CONTACT_WEBHOOK
-        sync: false
-      - key: URL_REPORT_WEBHOOK
         sync: false
       - key: REDIS_URI
         sync: false
+
+      # ── Flask ────────────────────────────────────────────────────────────────
       - key: FLASK_SECRET_KEY
         sync: false
+
+      # ── JWT ──────────────────────────────────────────────────────────────────
       - key: JWT_PRIVATE_KEY
         sync: false
       - key: JWT_PUBLIC_KEY
         sync: false
+      - key: JWT_SECRET
+        sync: false
+
+      # ── OAuth ────────────────────────────────────────────────────────────────
       - key: GOOGLE_OAUTH_CLIENT_ID
         sync: false
       - key: GOOGLE_OAUTH_CLIENT_SECRET
@@ -32,4 +43,26 @@ services:
       - key: DISCORD_OAUTH_CLIENT_ID
         sync: false
       - key: DISCORD_OAUTH_CLIENT_SECRET
+        sync: false
+
+      # ── Contact / report webhooks ─────────────────────────────────────────────
+      - key: CONTACT_WEBHOOK
+        sync: false
+      - key: URL_REPORT_WEBHOOK
+        sync: false
+      - key: HCAPTCHA_SECRET
+        sync: false
+
+      # ── Transactional email (ZeptoMail) ───────────────────────────────────────
+      - key: ZEPTO_API_TOKEN
+        sync: false
+      - key: ZEPTO_FROM_EMAIL
+        sync: false
+      - key: ZEPTO_FROM_NAME
+        sync: false
+      - key: APP_URL
+        sync: false
+
+      # ── Error tracking (optional) ─────────────────────────────────────────────
+      - key: SENTRY_DSN
         sync: false
