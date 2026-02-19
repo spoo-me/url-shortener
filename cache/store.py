@@ -57,7 +57,13 @@ class CacheStore:
                     result = fn(*args, **kwargs)
                     self._cache.set(cache_key, result, ttl)
                     return result
-                except Exception:
+                except Exception as e:
+                    log.error(
+                        "cache_decorated_call_failed",
+                        key=key,
+                        error=str(e),
+                        error_type=type(e).__name__,
+                    )
                     return fn(*args, **kwargs)
 
             return wrapper
