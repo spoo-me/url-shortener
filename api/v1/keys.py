@@ -13,6 +13,7 @@ from utils.mongo_utils import (
     revoke_api_key_by_id,
 )
 from blueprints.limiter import limiter, rate_limit_key_for_request
+from blueprints.limits import Limits
 
 from . import api_v1
 
@@ -46,7 +47,7 @@ def _parse_expires_at(value: Optional[str | int | float]):
 
 
 @api_v1.route("/keys", methods=["POST"])
-@limiter.limit("5 per hour", key_func=rate_limit_key_for_request)
+@limiter.limit(Limits.API_KEY_CREATE, key_func=rate_limit_key_for_request)
 @requires_auth
 def create_api_key():
     """
@@ -255,7 +256,7 @@ def create_api_key():
 
 
 @api_v1.route("/keys", methods=["GET"])
-@limiter.limit("60 per minute", key_func=rate_limit_key_for_request)
+@limiter.limit(Limits.API_KEY_READ, key_func=rate_limit_key_for_request)
 @requires_auth
 def list_api_keys():
     """

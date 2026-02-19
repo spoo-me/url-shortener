@@ -10,15 +10,16 @@ from utils.mongo_utils import check_if_slug_exists, check_if_v2_alias_exists
 from utils.url_utils import get_client_ip
 from utils.logger import get_logger
 from .limiter import limiter
+from .limits import Limits
 
 contact = Blueprint("contact", __name__)
 log = get_logger(__name__)
 
 
 @contact.route("/contact", methods=["GET", "POST"])
-@limiter.limit("20/day")
-@limiter.limit("10/hour")
-@limiter.limit("3/minute")
+@limiter.limit(Limits.CONTACT_DAY)
+@limiter.limit(Limits.CONTACT_HOUR)
+@limiter.limit(Limits.CONTACT_MINUTE)
 def contact_route():
     if request.method == "POST":
         email = request.values.get("email")
@@ -88,9 +89,9 @@ def contact_route():
 
 
 @contact.route("/report", methods=["GET", "POST"])
-@limiter.limit("20/day")
-@limiter.limit("10/hour")
-@limiter.limit("3/minute")
+@limiter.limit(Limits.CONTACT_DAY)
+@limiter.limit(Limits.CONTACT_HOUR)
+@limiter.limit(Limits.CONTACT_MINUTE)
 def report():
     if request.method == "POST":
         # Only read from form data (POST), not query parameters
