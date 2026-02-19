@@ -1,8 +1,8 @@
-import redis
 import datetime
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
-from redis.client import Pipeline
+from walrus import Database
+from cache.redis_client import get_redis
 
 
 @dataclass
@@ -19,12 +19,11 @@ class clickData:
 
 
 class cache_updates:
-    def __init__(self, redis_uri: str, ttl_seconds: int = 60 * 60) -> None:
+    def __init__(self, ttl_seconds: int = 60 * 60) -> None:
         """
-        Intialize the cache_updates class
-        :param redis_uri:  URI string for the Redis connection
+        Initialize the cache_updates class
         """
-        self.r: redis.Redis = redis.Redis.from_url(redis_uri)
+        self.r: Database = get_redis()
         self.ttl_seconds: int = ttl_seconds
 
     def add_data(self, slug: str, clickData: clickData) -> None:
@@ -34,7 +33,7 @@ class cache_updates:
         :param data: Data of the click
         """
         now: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
-        pipe: Pipeline = self.r.pipeline()
+        pipe = self.r.pipeline()
 
         pipe.sadd("slugs", slug)
 
@@ -102,7 +101,7 @@ class cache_updates:
         ip_pattern: str = f"ips:{slug}:*"
         ip_keys = list(self.r.scan_iter(ip_pattern))
 
-        pipe: Pipeline = self.r.pipeline()
+        pipe = self.r.pipeline()
         for k in ip_keys:
             pipe.smembers(k)
         ip_sets = pipe.execute()

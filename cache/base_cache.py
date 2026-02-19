@@ -1,5 +1,5 @@
 from typing import Optional
-from redis import Redis
+from walrus import Database
 from .redis_client import get_redis
 from utils.logger import get_logger
 
@@ -9,7 +9,7 @@ log = get_logger(__name__)
 class BaseCache:
     def __init__(self):
         try:
-            self.r: Optional[Redis] = get_redis()
+            self.r: Optional[Database] = get_redis()
         except Exception as e:
             log.error(
                 "redis_initialization_failed", error=str(e), error_type=type(e).__name__
