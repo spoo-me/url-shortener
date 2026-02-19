@@ -6,7 +6,7 @@ from typing import Optional
 from utils.url_utils import (
     validate_url,
     validate_alias,
-    validate_password,
+    validate_url_password,
 )
 from utils.mongo_utils import (
     check_if_v2_alias_exists,
@@ -121,7 +121,7 @@ class BaseUrlRequestBuilder:
         if not password:
             self.password_hash = None
             return self
-        if not validate_password(password):
+        if not validate_url_password(password):
             log.info("password_validation_failed", password_length=len(password))
             return self._fail(
                 {

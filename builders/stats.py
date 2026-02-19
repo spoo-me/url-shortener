@@ -1,6 +1,7 @@
 from flask import request, jsonify, Response
 from datetime import datetime, timezone, timedelta
 import json
+import time
 from typing import Optional, Any, List, Dict
 from zoneinfo import ZoneInfo, available_timezones
 
@@ -545,8 +546,6 @@ class StatsQueryBuilder:
     def build(self) -> tuple[Response, int]:
         if self.error is not None:
             return self.error
-
-        import time
 
         start_time = time.time()
 

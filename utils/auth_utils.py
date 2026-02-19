@@ -294,8 +294,15 @@ def _handle_auth_failure(error_msg: str):
         )
 
 
+_MISSING = object()
+
+
 def resolve_owner_id_from_request(require_verified: bool = False):
     """Resolve the authenticated user id from either API key or JWT.
+
+    Result is cached on Flask's g for the duration of the request so that
+    multiple callers (rate limiter key func, rate limiter limit func, route
+    handler) only pay the cost of header parsing + DB lookup once.
 
     Args:
         require_verified: If True, sets g.verification_error for unverified users
@@ -308,6 +315,24 @@ def resolve_owner_id_from_request(require_verified: bool = False):
         - Returns ObjectId of user (if require_verified=True, checks email_verified)
     - Otherwise returns None
     """
+    cache_key = "_owner_id_verified" if require_verified else "_owner_id_any"
+    try:
+        cached = getattr(g, cache_key, _MISSING)
+        if cached is not _MISSING:
+            return cached
+    except RuntimeError:
+        return _resolve_owner_id(require_verified)
+
+    result = _resolve_owner_id(require_verified)
+    try:
+        setattr(g, cache_key, result)
+    except RuntimeError:
+        pass
+    return result
+
+
+def _resolve_owner_id(require_verified: bool = False):
+    """Inner implementation — parse auth header and validate credentials."""
     auth_header = request.headers.get("Authorization", "")
     token = None
     if auth_header.lower().startswith("bearer "):

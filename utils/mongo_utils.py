@@ -1,10 +1,11 @@
 from pymongo import MongoClient, ASCENDING, DESCENDING
 from dotenv import load_dotenv
 import os
-import re
+import regex
 from bson import ObjectId
 from utils.url_utils import validate_emoji_alias
 from utils.logger import get_logger
+from cache import cache_store
 
 load_dotenv()
 
@@ -117,14 +118,20 @@ def check_if_emoji_alias_exists(emoji_alias):
     return emoji_data is not None
 
 
-def validate_blocked_url(url):
-    blocked_urls = blocked_urls_collection.find()
-    blocked_urls = [doc["_id"] for doc in blocked_urls]
+@cache_store.cached(key="cache:blocked_url_patterns", ttl=300)
+def _fetch_blocked_patterns() -> list:
+    return [doc["_id"] for doc in blocked_urls_collection.find()]
 
-    for blocked_url in blocked_urls:
-        if re.match(blocked_url, url):
-            return False
 
+def validate_blocked_url(url: str) -> bool:
+    for pattern in _fetch_blocked_patterns():
+        try:
+            if regex.match(pattern, url, timeout=0.2):
+                return False
+        except TimeoutError:
+            log.warning("blocked_url_pattern_timeout", pattern=pattern)
+        except regex.error:
+            log.warning("blocked_url_pattern_invalid", pattern=pattern)
     return True
 
 
@@ -175,13 +182,6 @@ def update_user(user_id, updates):
 
 
 # ===== v2 URL helpers =====
-
-
-def insert_url_v2(doc: dict):
-    try:
-        urls_v2_collection.insert_one(doc)
-    except Exception:
-        pass
 
 
 def get_url_v2_by_alias(alias: str, projection=None):
@@ -293,36 +293,6 @@ def get_url_by_length_and_type(short_code):
             return url_data, "v1"
 
     return None, None
-
-
-def get_url_v2_by_id(url_id, projection=None):
-    """Get a URL V2 document by its MongoDB ObjectId"""
-    try:
-        from bson import ObjectId
-
-        if isinstance(url_id, str):
-            url_id = ObjectId(url_id)
-        return urls_v2_collection.find_one({"_id": url_id}, projection)
-    except Exception:
-        return None
-
-
-def validate_url_ownership(url_id, owner_id):
-    """Validate that a URL belongs to the specified owner"""
-    try:
-        from bson import ObjectId
-
-        if isinstance(url_id, str):
-            url_id = ObjectId(url_id)
-        if isinstance(owner_id, str):
-            owner_id = ObjectId(owner_id)
-
-        url_doc = urls_v2_collection.find_one(
-            {"_id": url_id, "owner_id": owner_id}, {"_id": 1}
-        )
-        return url_doc is not None
-    except Exception:
-        return False
 
 
 def check_url_stats_privacy(short_code):
