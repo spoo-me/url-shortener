@@ -126,7 +126,7 @@ def _fetch_blocked_patterns() -> list:
 def validate_blocked_url(url: str) -> bool:
     for pattern in _fetch_blocked_patterns():
         try:
-            if regex.match(pattern, url, timeout=0.2):
+            if regex.search(pattern, url, timeout=0.2):
                 return False
         except TimeoutError:
             log.warning("blocked_url_pattern_timeout", pattern=pattern)

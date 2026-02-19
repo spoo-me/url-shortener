@@ -1,5 +1,9 @@
+import threading
 import geoip2.database
 import geoip2.errors
+from utils.logger import get_logger
+
+log = get_logger(__name__)
 
 
 class GeoIPService:
@@ -13,23 +17,38 @@ class GeoIPService:
         self._city_reader = None
         self._country_loaded = False
         self._city_loaded = False
+        self._lock = threading.Lock()
 
     def _get_country_reader(self):
         if not self._country_loaded:
-            try:
-                self._country_reader = geoip2.database.Reader(self._COUNTRY_DB)
-            except FileNotFoundError:
-                self._country_reader = None
-            self._country_loaded = True
+            with self._lock:
+                if not self._country_loaded:
+                    try:
+                        self._country_reader = geoip2.database.Reader(self._COUNTRY_DB)
+                    except OSError as e:
+                        log.warning(
+                            "geoip_country_db_unavailable",
+                            error=str(e),
+                            error_type=type(e).__name__,
+                        )
+                        self._country_reader = None
+                    self._country_loaded = True
         return self._country_reader
 
     def _get_city_reader(self):
         if not self._city_loaded:
-            try:
-                self._city_reader = geoip2.database.Reader(self._CITY_DB)
-            except FileNotFoundError:
-                self._city_reader = None
-            self._city_loaded = True
+            with self._lock:
+                if not self._city_loaded:
+                    try:
+                        self._city_reader = geoip2.database.Reader(self._CITY_DB)
+                    except OSError as e:
+                        log.warning(
+                            "geoip_city_db_unavailable",
+                            error=str(e),
+                            error_type=type(e).__name__,
+                        )
+                        self._city_reader = None
+                    self._city_loaded = True
         return self._city_reader
 
     def get_country(self, ip_address: str) -> str:
@@ -38,7 +57,7 @@ class GeoIPService:
             return "Unknown"
         try:
             return reader.country(ip_address).country.name or "Unknown"
-        except geoip2.errors.AddressNotFoundError:
+        except (geoip2.errors.AddressNotFoundError, ValueError):
             return "Unknown"
 
     def get_city(self, ip_address: str) -> str | None:
@@ -47,7 +66,7 @@ class GeoIPService:
             return None
         try:
             return reader.city(ip_address).city.name
-        except geoip2.errors.AddressNotFoundError:
+        except (geoip2.errors.AddressNotFoundError, ValueError):
             return None
 
 

@@ -21,7 +21,9 @@ jobs:
       uses: actions/checkout@v6
 
     - name: Setup environment
-      run: cp .env.example .env
+      run: |
+        cp .env.example .env
+        echo "FLASK_SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')" >> .env
 
     - name: Start services
       run: docker compose up -d --build --wait

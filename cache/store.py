@@ -8,6 +8,8 @@ from utils.logger import get_logger
 
 log = get_logger(__name__)
 
+_MISS = object()  # sentinel to distinguish a cache miss from a cached None
+
 
 class CacheStore:
     """
@@ -51,8 +53,8 @@ class CacheStore:
                         cache_key = f"{key}:{args_hash}"
                     else:
                         cache_key = key
-                    result = self._cache.get(cache_key)
-                    if result is not None:
+                    result = self._cache.get(cache_key, default=_MISS)
+                    if result is not _MISS:
                         return result
                     result = fn(*args, **kwargs)
                     self._cache.set(cache_key, result, ttl)

@@ -48,6 +48,10 @@ def verify_hcaptcha(token):
 
 
 def send_report(webhook_uri, short_code, reason, ip_address, host_uri):
+    if not webhook_uri:
+        log.warning("report_webhook_not_configured")
+        return
+
     data = {
         "embeds": [
             {
@@ -87,6 +91,10 @@ def send_report(webhook_uri, short_code, reason, ip_address, host_uri):
 
 
 def send_contact_message(webhook_uri, email, message):
+    if not webhook_uri:
+        log.warning("contact_webhook_not_configured")
+        return
+
     data = {
         "embeds": [
             {

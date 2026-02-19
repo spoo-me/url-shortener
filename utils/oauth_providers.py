@@ -44,7 +44,9 @@ class GoogleStrategy(OAuthProviderStrategy):
     def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]:
         # Google includes userinfo in the token when openid scope is used;
         # fall back to an explicit API call if it is absent.
-        userinfo = token.get("userinfo") or client.get("userinfo", token=token).json()
+        userinfo = token.get("userinfo")
+        if userinfo is None:
+            userinfo = client.get("userinfo", token=token).json()
         return extract_user_info_from_google(userinfo)
 
 
@@ -54,7 +56,10 @@ class GitHubStrategy(OAuthProviderStrategy):
     def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]:
         # GitHub requires a separate call to get verified email addresses.
         user = client.get("user", token=token).json()
-        emails = client.get("user/emails", token=token).json()
+        emails_response = client.get("user/emails", token=token)
+        emails = emails_response.json() if emails_response.status_code == 200 else []
+        if not isinstance(emails, list):
+            emails = []
         return extract_user_info_from_github(user, emails)
 
 
