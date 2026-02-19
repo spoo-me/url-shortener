@@ -9,10 +9,9 @@ from utils.time_bucket_utils import (
     format_time_bucket_display,
     fill_missing_buckets,
 )
+from utils.logger import get_logger
 
-import logging
-
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 
 class AggregationStrategy(ABC):

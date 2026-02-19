@@ -511,12 +511,7 @@ def get_oauth_redirect_url(provider: str, action: str = "login") -> str:
     if env_redirect_uri:
         return env_redirect_uri
 
-    # Fall back to dynamic generation
-    if provider == OAuthProviders.GOOGLE:
-        return url_for("oauth.oauth_google_callback", _external=True)
-    elif provider == OAuthProviders.GITHUB:
-        return url_for("oauth.oauth_github_callback", _external=True)
-    elif provider == OAuthProviders.DISCORD:
-        return url_for("oauth.oauth_discord_callback", _external=True)
-
-    raise ValueError(f"Unknown OAuth provider: {provider}")
+    # Fall back to dynamic generation.
+    # The generic callback route accepts the provider as a URL parameter,
+    # so no changes here are needed when a new provider is added.
+    return url_for("oauth.oauth_callback", provider=provider, _external=True)

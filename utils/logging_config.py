@@ -253,7 +253,3 @@ def setup_logging() -> None:
         log_format=LOG_FORMAT,
         sentry_enabled=bool(os.getenv("SENTRY_DSN")),
     )
-
-
-# Initialize logging when module is imported
-setup_logging()

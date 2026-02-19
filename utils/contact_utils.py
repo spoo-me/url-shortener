@@ -8,8 +8,8 @@ load_dotenv()
 
 log = get_logger(__name__)
 
-CONTACT_WEBHOOK = os.environ["CONTACT_WEBHOOK"]
-URL_REPORT_WEBHOOK = os.environ["URL_REPORT_WEBHOOK"]
+CONTACT_WEBHOOK = os.environ.get("CONTACT_WEBHOOK")
+URL_REPORT_WEBHOOK = os.environ.get("URL_REPORT_WEBHOOK")
 hcaptcha_secret = os.environ.get("HCAPTCHA_SECRET")
 
 
