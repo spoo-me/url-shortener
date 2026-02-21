@@ -1,9 +1,1 @@
-function removeErrorMessage() {
-    var passError = document.getElementById("password-error");
-
-    if (passError) {
-        setTimeout(function () {
-            passError.remove();
-        }, 3000);
-    }
-}
+function removeErrorMessage(){var a=document.getElementById("password-error");a&&setTimeout(function(){a.remove()},3e3)}

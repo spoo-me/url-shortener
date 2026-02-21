@@ -1,22 +1,4 @@
-/**
- * Email Verification Frontend Enforcement
- * Checks JWT claims for email_verified status and blocks resource creation for unverified users
- */
-
-// Get email verification status from g object (passed from backend)
-function isEmailVerified() {
-    // Check if g object exists and has jwt_claims with email_verified
-    if (typeof g !== 'undefined' && g.jwt_claims && typeof g.jwt_claims.email_verified === 'boolean') {
-        return g.jwt_claims.email_verified;
-    }
-    // Default to true if we can't determine (fail open for better UX)
-    return true;
-}
-
-// Show verification required modal
-function showVerificationModal(action = "perform this action") {
-    // Create modal HTML with unique class names to avoid conflicts
-    const modalHTML = `
+function isEmailVerified(){return!("undefined"!=typeof g&&g.jwt_claims&&"boolean"==typeof g.jwt_claims.email_verified)||g.jwt_claims.email_verified}function showVerificationModal(a="perform this action"){const b=document.getElementById("verificationModal");if(b&&b.remove(),document.body.insertAdjacentHTML("beforeend",`
         <div id="verificationModal" class="email-verification-modal">
             <div class="email-verification-backdrop"></div>
             <div class="email-verification-container">
@@ -35,7 +17,7 @@ function showVerificationModal(action = "perform this action") {
 
                     <div class="email-verification-body">
                         <div class="email-verification-text">
-                            <p>You need to verify your email address to ${action}.</p>
+                            <p>You need to verify your email address to ${a}.</p>
                             <p>We've sent a verification code to your email. Please check your inbox and verify your account.</p>
                         </div>
                     </div>
@@ -51,32 +33,7 @@ function showVerificationModal(action = "perform this action") {
                 </div>
             </div>
         </div>
-    `;
-
-    // Remove existing modal if present
-    const existingModal = document.getElementById('verificationModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-
-    // Add modal to DOM
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-    // Trigger animation by adding active class after a brief delay
-    requestAnimationFrame(() => {
-        const modal = document.getElementById('verificationModal');
-        if (modal) {
-            requestAnimationFrame(() => {
-                modal.classList.add('active');
-            });
-        }
-    });
-
-    // Add modal-specific styles if not already present
-    if (!document.getElementById('verificationModalStyles')) {
-        const styles = document.createElement('style');
-        styles.id = 'verificationModalStyles';
-        styles.textContent = `
+    `),requestAnimationFrame(()=>{const a=document.getElementById("verificationModal");a&&requestAnimationFrame(()=>{a.classList.add("active")})}),!document.getElementById("verificationModalStyles")){const a=document.createElement("style");a.id="verificationModalStyles",a.textContent=`
             /* Email Verification Modal - Standalone styles */
             .email-verification-modal {
                 display: none;
@@ -256,57 +213,4 @@ function showVerificationModal(action = "perform this action") {
                     font-size: 20px;
                 }
             }
-        `;
-        document.head.appendChild(styles);
-    }
-}
-
-// Close verification modal
-function closeVerificationModal() {
-    const modal = document.getElementById('verificationModal');
-    if (modal) {
-        modal.classList.remove('active');
-        setTimeout(() => modal.remove(), 400);
-    }
-}
-
-// Check verification before creating a short URL
-function checkVerificationBeforeShorten() {
-    if (!isEmailVerified()) {
-        showVerificationModal("create short URLs");
-        return false;
-    }
-    return true;
-}
-
-// Check verification before creating an API key
-function checkVerificationBeforeAPIKey() {
-    if (!isEmailVerified()) {
-        showVerificationModal("create API keys");
-        return false;
-    }
-    return true;
-}
-
-// Generic verification check
-function checkVerification(action = "perform this action") {
-    if (!isEmailVerified()) {
-        showVerificationModal(action);
-        return false;
-    }
-    return true;
-}
-
-// Close modal when clicking backdrop
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('email-verification-backdrop')) {
-        closeVerificationModal();
-    }
-});
-
-// Close modal with Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeVerificationModal();
-    }
-});
+        `,document.head.appendChild(a)}}function closeVerificationModal(){const a=document.getElementById("verificationModal");a&&(a.classList.remove("active"),setTimeout(()=>a.remove(),400))}function checkVerificationBeforeShorten(){return!!isEmailVerified()||(showVerificationModal("create short URLs"),!1)}function checkVerificationBeforeAPIKey(){return!!isEmailVerified()||(showVerificationModal("create API keys"),!1)}function checkVerification(a="perform this action"){return!!isEmailVerified()||(showVerificationModal(a),!1)}document.addEventListener("click",function(a){a.target.classList.contains("email-verification-backdrop")&&closeVerificationModal()}),document.addEventListener("keydown",function(a){"Escape"===a.key&&closeVerificationModal()});

@@ -1,16 +1,1 @@
-body {
-    min-height: 100vh;
-    /* overflow: hidden; */
-}
-
-.confetti {
-    width: 8px;
-    height: 8px;
-    position: absolute;
-    z-index: 11;
-    background: var(--color);
-    top: 0;
-    left: 0;
-    will-change: transform;
-    pointer-events: none;
-}
+body{min-height:100vh}.confetti{z-index:11;background:var(--color);will-change:transform;pointer-events:none;width:8px;height:8px;position:absolute;top:0;left:0}
