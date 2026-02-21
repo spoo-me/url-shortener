@@ -13,7 +13,8 @@ from utils.auth_utils import (
     set_refresh_cookie,
 )
 from utils.email_service import email_service
-from utils.logger import get_logger
+from utils.logger import get_logger, hash_ip
+from utils.url_utils import get_client_ip
 from utils.mongo_utils import get_user_by_email, get_user_by_id, users_collection
 from utils.oauth_providers import PROVIDER_STRATEGIES, OAuthProviderStrategy
 from utils.oauth_utils import (
@@ -77,12 +78,21 @@ def _handle_callback(
     # State validation
     state = request.args.get("state")
     if not state:
-        log.warning("oauth_state_missing", provider=provider_key)
+        log.warning(
+            "oauth_state_missing",
+            provider=provider_key,
+            ip_hash=hash_ip(get_client_ip()),
+        )
         return jsonify({"error": "missing state parameter"}), 400
 
-    is_valid, state_data = verify_oauth_state(state, provider_key)
+    is_valid, state_data, failure_reason = verify_oauth_state(state, provider_key)
     if not is_valid:
-        log.warning("oauth_state_invalid", provider=provider_key)
+        log.warning(
+            "oauth_state_invalid",
+            provider=provider_key,
+            reason=failure_reason,
+            ip_hash=hash_ip(get_client_ip()),
+        )
         return jsonify({"error": "invalid state parameter"}), 400
 
     # Provider-reported error
@@ -103,6 +113,8 @@ def _handle_callback(
         # Token exchange + provider-specific user-info fetch
         token = client.authorize_access_token()
         provider_info = strategy.fetch_user_info(client, token)
+
+        log.debug("oauth_userinfo_received", provider=provider_key, **provider_info)
 
         if not provider_info["email"]:
             return jsonify({"error": "email not provided by OAuth provider"}), 400
@@ -148,6 +160,7 @@ def _handle_callback(
                     user_id=link_user_id,
                     provider=provider_key,
                     reason="linking_attempt",
+                    ip_hash=hash_ip(get_client_ip()),
                 )
                 return (
                     jsonify(
@@ -169,6 +182,8 @@ def _handle_callback(
                     "oauth_account_linked",
                     user_id=link_user_id,
                     provider=provider_key,
+                    email=provider_info["email"],
+                    ip_hash=hash_ip(get_client_ip()),
                 )
                 return _make_auth_response(link_user_id, provider_key)
             else:
@@ -195,6 +210,8 @@ def _handle_callback(
                 user_id=user_id,
                 provider=provider_key,
                 action="login",
+                email_verified=existing_oauth_user.get("email_verified", False),
+                ip_hash=hash_ip(get_client_ip()),
             )
             return _make_auth_response(user_id, provider_key)
 
@@ -206,7 +223,11 @@ def _handle_callback(
                 if link_provider_to_user(user_id, provider_info, provider_key):
                     update_user_last_login(user_id)
                     log.info(
-                        "oauth_auto_linked", user_id=user_id, provider=provider_key
+                        "oauth_auto_linked",
+                        user_id=user_id,
+                        provider=provider_key,
+                        email=provider_info["email"],
+                        ip_hash=hash_ip(get_client_ip()),
                     )
                     return _make_auth_response(user_id, provider_key)
                 else:
@@ -217,6 +238,11 @@ def _handle_callback(
                     )
                     return jsonify({"error": "failed to link accounts"}), 500
             else:
+                log.warning(
+                    "oauth_email_collision_rejected",
+                    provider=provider_key,
+                    ip_hash=hash_ip(get_client_ip()),
+                )
                 return (
                     jsonify(
                         {
@@ -234,7 +260,11 @@ def _handle_callback(
             return jsonify({"error": "failed to create user"}), 500
 
         log.info(
-            "user_registered", user_id=user_id, auth_method=f"{provider_key}_oauth"
+            "user_registered",
+            user_id=user_id,
+            auth_method=f"{provider_key}_oauth",
+            email_verified=provider_info.get("email_verified", False),
+            ip_hash=hash_ip(get_client_ip()),
         )
         email_service.send_welcome_email(
             provider_info["email"], provider_info.get("name")
@@ -247,6 +277,7 @@ def _handle_callback(
             provider=provider_key,
             error=str(e),
             error_type=type(e).__name__,
+            ip_hash=hash_ip(get_client_ip()),
         )
         return jsonify({"error": "OAuth authentication failed"}), 500
 
@@ -263,6 +294,7 @@ def oauth_login(provider: str):
     if not strategy or not client:
         return jsonify({"error": f"'{provider}' OAuth not configured"}), 404
 
+    log.info("oauth_flow_initiated", provider=provider, ip_hash=hash_ip(get_client_ip()))
     state = generate_oauth_state(provider, "login")
     redirect_uri = get_oauth_redirect_url(provider)
     return client.authorize_redirect(redirect_uri, state=state)
@@ -301,6 +333,12 @@ def oauth_link(provider: str):
                 409,
             )
 
+    log.info(
+        "oauth_link_initiated",
+        provider=provider,
+        user_id=str(g.user_id),
+        ip_hash=hash_ip(get_client_ip()),
+    )
     state = generate_oauth_state(provider, "link", user_id=str(g.user_id))
     redirect_uri = get_oauth_redirect_url(provider)
     return client.authorize_redirect(redirect_uri, state=state)
@@ -368,7 +406,10 @@ def unlink_oauth_provider(provider_name: str):
 
         if result.modified_count > 0:
             log.info(
-                "oauth_provider_unlinked", user_id=g.user_id, provider=provider_name
+                "oauth_provider_unlinked",
+                user_id=g.user_id,
+                provider=provider_name,
+                ip_hash=hash_ip(get_client_ip()),
             )
             return jsonify(
                 {"success": True, "message": f"{provider_name} unlinked successfully"}

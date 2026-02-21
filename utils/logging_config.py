@@ -149,6 +149,8 @@ def configure_structlog() -> None:
         )
     else:
         # Development: Pretty console output with colors
+        _level_styles = structlog.dev.ConsoleRenderer.get_default_level_styles()
+        _level_styles["debug"] = "\x1b[36m"  # cyan, distinct from info (green)
         structlog.configure(
             processors=shared_processors
             + [
@@ -157,6 +159,7 @@ def configure_structlog() -> None:
                     colors=True,
                     pad_event=15,  # Reduced from default 30
                     sort_keys=False,  # Don't sort keys, keep order
+                    level_styles=_level_styles,
                 ),
             ],
             wrapper_class=structlog.stdlib.BoundLogger,

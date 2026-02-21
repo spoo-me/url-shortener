@@ -154,7 +154,7 @@ def generate_oauth_state(
 
 def verify_oauth_state(
     state: str, expected_provider: str
-) -> Tuple[bool, Dict[str, Any]]:
+) -> Tuple[bool, Dict[str, Any], Optional[str]]:
     """Verify and decode OAuth state parameter
 
     Args:
@@ -162,7 +162,9 @@ def verify_oauth_state(
         expected_provider: Expected provider name
 
     Returns:
-        Tuple of (is_valid, state_data)
+        Tuple of (is_valid, state_data, failure_reason).
+        failure_reason is None on success; one of "provider_mismatch",
+        "expired", or "parse_error" on failure.
     """
     try:
         # Parse state
@@ -174,7 +176,7 @@ def verify_oauth_state(
 
         # Basic validation
         if state_data.get("provider") != expected_provider:
-            return False, {}
+            return False, {}, "provider_mismatch"
 
         # Check timestamp (state should not be older than 10 minutes)
         timestamp_str = state_data.get("timestamp")
@@ -182,11 +184,11 @@ def verify_oauth_state(
             timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
             age = (datetime.now(timezone.utc) - timestamp).total_seconds()
             if age > 600:  # 10 minutes
-                return False, {}
+                return False, {}, "expired"
 
-        return True, state_data
+        return True, state_data, None
     except Exception:
-        return False, {}
+        return False, {}, "parse_error"
 
 
 def extract_user_info_from_google(userinfo: Dict[str, Any]) -> Dict[str, Any]:
