@@ -154,7 +154,7 @@ def generate_oauth_state(
 
 def verify_oauth_state(
     state: str, expected_provider: str
-) -> Tuple[bool, Dict[str, Any]]:
+) -> Tuple[bool, Dict[str, Any], Optional[str]]:
     """Verify and decode OAuth state parameter
 
     Args:
@@ -162,7 +162,9 @@ def verify_oauth_state(
         expected_provider: Expected provider name
 
     Returns:
-        Tuple of (is_valid, state_data)
+        Tuple of (is_valid, state_data, failure_reason).
+        failure_reason is None on success; one of "provider_mismatch",
+        "missing_timestamp", "expired", or "parse_error" on failure.
     """
     try:
         # Parse state
@@ -174,19 +176,22 @@ def verify_oauth_state(
 
         # Basic validation
         if state_data.get("provider") != expected_provider:
-            return False, {}
+            return False, {}, "provider_mismatch"
 
-        # Check timestamp (state should not be older than 10 minutes)
+        # Check timestamp (state should not be older than 10 minutes).
+        # A missing timestamp is rejected outright — it indicates a crafted state.
         timestamp_str = state_data.get("timestamp")
-        if timestamp_str:
-            timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
-            age = (datetime.now(timezone.utc) - timestamp).total_seconds()
-            if age > 600:  # 10 minutes
-                return False, {}
+        if not timestamp_str:
+            return False, {}, "missing_timestamp"
 
-        return True, state_data
+        timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+        age = (datetime.now(timezone.utc) - timestamp).total_seconds()
+        if age > 600:  # 10 minutes
+            return False, {}, "expired"
+
+        return True, state_data, None
     except Exception:
-        return False, {}
+        return False, {}, "parse_error"
 
 
 def extract_user_info_from_google(userinfo: Dict[str, Any]) -> Dict[str, Any]:
@@ -511,12 +516,7 @@ def get_oauth_redirect_url(provider: str, action: str = "login") -> str:
     if env_redirect_uri:
         return env_redirect_uri
 
-    # Fall back to dynamic generation
-    if provider == OAuthProviders.GOOGLE:
-        return url_for("oauth.oauth_google_callback", _external=True)
-    elif provider == OAuthProviders.GITHUB:
-        return url_for("oauth.oauth_github_callback", _external=True)
-    elif provider == OAuthProviders.DISCORD:
-        return url_for("oauth.oauth_discord_callback", _external=True)
-
-    raise ValueError(f"Unknown OAuth provider: {provider}")
+    # Fall back to dynamic generation.
+    # The generic callback route accepts the provider as a URL parameter,
+    # so no changes here are needed when a new provider is added.
+    return url_for("oauth.oauth_callback", provider=provider, _external=True)

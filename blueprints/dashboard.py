@@ -11,6 +11,7 @@ from utils.mongo_utils import (
 )
 from utils.auth_utils import get_user_profile
 from blueprints.limiter import limiter, rate_limit_key_for_request
+from blueprints.limits import Limits
 from utils.logger import get_logger
 
 log = get_logger(__name__)
@@ -20,7 +21,7 @@ dashboard_bp = Blueprint("dashboard", __name__)
 
 
 @dashboard_bp.route("/", methods=["GET"])
-@limiter.limit("60 per minute", key_func=rate_limit_key_for_request)
+@limiter.limit(Limits.DASHBOARD_READ, key_func=rate_limit_key_for_request)
 @requires_auth
 def dashboard():
     # Redirect to links page as the default dashboard view
@@ -29,7 +30,7 @@ def dashboard():
 
 @dashboard_bp.route("/links", methods=["GET"])
 @requires_auth
-@limiter.limit("60 per minute", key_func=rate_limit_key_for_request)
+@limiter.limit(Limits.DASHBOARD_READ, key_func=rate_limit_key_for_request)
 def dashboard_links():
     user = get_user_by_id(g.user_id)
     if not user:
@@ -43,7 +44,7 @@ def dashboard_links():
 
 
 @dashboard_bp.route("/keys", methods=["GET"])
-@limiter.limit("60 per minute", key_func=rate_limit_key_for_request)
+@limiter.limit(Limits.DASHBOARD_READ, key_func=rate_limit_key_for_request)
 @requires_auth
 def dashboard_keys():
     user = get_user_by_id(g.user_id)
@@ -76,7 +77,7 @@ def dashboard_statistics():
 
 @dashboard_bp.route("/settings", methods=["GET"])
 @requires_auth
-@limiter.limit("60 per minute", key_func=rate_limit_key_for_request)
+@limiter.limit(Limits.DASHBOARD_READ, key_func=rate_limit_key_for_request)
 def dashboard_settings():
     user = get_user_by_id(g.user_id)
     if not user:
@@ -91,7 +92,7 @@ def dashboard_settings():
 
 @dashboard_bp.route("/billing", methods=["GET"])
 @requires_auth
-@limiter.limit("60 per minute", key_func=rate_limit_key_for_request)
+@limiter.limit(Limits.DASHBOARD_READ, key_func=rate_limit_key_for_request)
 def dashboard_billing():
     user = get_user_by_id(g.user_id)
     if not user:
@@ -105,7 +106,7 @@ def dashboard_billing():
 
 
 @dashboard_bp.route("/profile-pictures", methods=["GET"])
-@limiter.limit("30 per minute", key_func=rate_limit_key_for_request)
+@limiter.limit(Limits.DASHBOARD_WRITE, key_func=rate_limit_key_for_request)
 @requires_auth
 def get_profile_pictures():
     """Get available profile pictures from connected OAuth providers"""
@@ -136,7 +137,7 @@ def get_profile_pictures():
 
 
 @dashboard_bp.route("/profile-pictures", methods=["POST"])
-@limiter.limit("5 per minute", key_func=rate_limit_key_for_request)
+@limiter.limit(Limits.DASHBOARD_SENSITIVE, key_func=rate_limit_key_for_request)
 @requires_auth
 def set_profile_picture():
     """Set user's profile picture from available options"""

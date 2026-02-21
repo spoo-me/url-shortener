@@ -8,8 +8,8 @@ load_dotenv()
 
 log = get_logger(__name__)
 
-CONTACT_WEBHOOK = os.environ["CONTACT_WEBHOOK"]
-URL_REPORT_WEBHOOK = os.environ["URL_REPORT_WEBHOOK"]
+CONTACT_WEBHOOK = os.environ.get("CONTACT_WEBHOOK")
+URL_REPORT_WEBHOOK = os.environ.get("URL_REPORT_WEBHOOK")
 hcaptcha_secret = os.environ.get("HCAPTCHA_SECRET")
 
 
@@ -48,6 +48,10 @@ def verify_hcaptcha(token):
 
 
 def send_report(webhook_uri, short_code, reason, ip_address, host_uri):
+    if not webhook_uri:
+        log.warning("report_webhook_not_configured")
+        return
+
     data = {
         "embeds": [
             {
@@ -87,6 +91,10 @@ def send_report(webhook_uri, short_code, reason, ip_address, host_uri):
 
 
 def send_contact_message(webhook_uri, email, message):
+    if not webhook_uri:
+        log.warning("contact_webhook_not_configured")
+        return
+
     data = {
         "embeds": [
             {

@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Any, Optional
-import functools
 
 
 def normalize_time_series_data(
@@ -93,74 +92,6 @@ def aggregate_top_n_with_others(
         top_items.append(others_entry)
 
     return top_items
-
-
-def calculate_growth_metrics(
-    current_data: List[Dict[str, Any]],
-    previous_data: List[Dict[str, Any]],
-    metric_field: str,
-) -> Dict[str, float]:
-    """
-    Calculate growth metrics comparing current period to previous period
-
-    Args:
-        current_data: Data for current period
-        previous_data: Data for previous period
-        metric_field: Field name containing the metric to compare
-
-    Returns:
-        Dictionary containing growth metrics
-    """
-    current_total = sum(item.get(metric_field, 0) for item in current_data)
-    previous_total = sum(item.get(metric_field, 0) for item in previous_data)
-
-    if previous_total == 0:
-        growth_rate = float("inf") if current_total > 0 else 0
-        growth_percentage = 100.0 if current_total > 0 else 0.0
-    else:
-        growth_rate = (current_total - previous_total) / previous_total
-        growth_percentage = growth_rate * 100
-
-    return {
-        "current_total": current_total,
-        "previous_total": previous_total,
-        "absolute_change": current_total - previous_total,
-        "growth_rate": growth_rate,
-        "growth_percentage": round(growth_percentage, 2),
-    }
-
-
-@functools.lru_cache(maxsize=128)
-def get_country_name_from_code(country_code: str) -> str:
-    """
-    Convert ISO country code to country name with caching
-
-    Args:
-        country_code: ISO 2-letter country code
-
-    Returns:
-        Country name or the original code if not found
-    """
-    try:
-        import pycountry
-
-        country = pycountry.countries.get(alpha_2=country_code.upper())
-        return country.name if country else country_code
-    except ImportError:
-        # Fallback if pycountry is not available
-        country_map = {
-            "US": "United States",
-            "GB": "United Kingdom",
-            "CA": "Canada",
-            "AU": "Australia",
-            "DE": "Germany",
-            "FR": "France",
-            "JP": "Japan",
-            "CN": "China",
-            "IN": "India",
-            "BR": "Brazil",
-        }
-        return country_map.get(country_code.upper(), country_code)
 
 
 def format_stats_response_with_metadata(

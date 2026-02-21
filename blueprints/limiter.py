@@ -1,41 +1,51 @@
+import os
+import hashlib
 from flask_limiter import Limiter
+from flask import request
 from utils.mongo_utils import MONGO_URI, ip_bypasses
 from utils.url_utils import get_client_ip
 from utils.logger import get_logger
-from flask import request
 from utils.auth_utils import resolve_owner_id_from_request
-import hashlib
+from cache import cache_store
+from .limits import Limits
 
 log = get_logger(__name__)
 
+# Use Redis for rate limit counters (atomic INCR/EXPIRE, sub-millisecond).
+# Fall back to MongoDB if REDIS_URI is not configured.
+_redis_uri = os.environ.get("REDIS_URI")
+_storage_uri = _redis_uri if _redis_uri else MONGO_URI
+
 limiter = Limiter(
-    key_func=get_client_ip,  # Use custom function that handles Cloudflare/proxy headers
-    default_limits=["10 per minute", "500 per day", "100 per hour"],
-    storage_uri=MONGO_URI,
+    key_func=get_client_ip,
+    default_limits=[Limits.DEFAULT_MINUTE, Limits.DEFAULT_HOUR, Limits.DEFAULT_DAY],
+    storage_uri=_storage_uri,
     strategy="fixed-window",
     headers_enabled=True,
 )
 
 
+@cache_store.cached(key="ip_bypasses", ttl=120)
+def _get_ip_bypasses() -> list:
+    return [doc["_id"] for doc in ip_bypasses.find()]
+
+
 @limiter.request_filter
 def ip_whitelist():
     """Skip rate limiting for whitelisted IPs"""
-    bypasses = ip_bypasses.find()
-    bypasses = [doc["_id"] for doc in bypasses]
-
     client_ip = get_client_ip()
-    return client_ip in bypasses
+    return client_ip in _get_ip_bypasses()
 
 
 def dynamic_limit_for_request(
     *,
-    authenticated: str = "60 per minute; 5000 per day",
-    anonymous: str = "20 per minute; 1000 per day",
+    authenticated: str = Limits.API_AUTHED,
+    anonymous: str = Limits.API_ANON,
 ) -> str:
     """Higher limits for authenticated/API-key users, lower for anonymous.
 
     You can override the defaults per-endpoint by calling this with custom values:
-    dynamic_limit_for_request(authenticated="120 per minute", anonymous="30 per minute")
+    dynamic_limit_for_request(authenticated=Limits.X, anonymous=Limits.Y)
     """
     owner_id = resolve_owner_id_from_request()
     if owner_id is not None:

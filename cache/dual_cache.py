@@ -1,6 +1,5 @@
 import json
 import threading
-import time
 from typing import Callable, Any, Optional
 from .base_cache import BaseCache
 from utils.logger import get_logger
@@ -36,7 +35,7 @@ class DualCache(BaseCache):
         def deserialize(raw):
             return json.loads(raw)
 
-        # Use provided TTLs or fall back to instance defaults
+        # Use provided TTLs, fall back to instance defaults if not provided
         primary_ttl = primary_ttl if primary_ttl is not None else self.primary_ttl
         stale_ttl = stale_ttl if stale_ttl is not None else self.stale_ttl
 
@@ -44,12 +43,12 @@ class DualCache(BaseCache):
         stale_key = f"{base_key}:stale"
         lock_key = f"{base_key}:lock"
 
-        # 1. Check primary
+        # Check primary
         raw = self.get(primary_key)
         if raw:
             return deserialize(raw)
 
-        # 2. Check stale
+        # Check stale
         stale = self.get(stale_key)
         if stale:
             if self._lock(lock_key):
@@ -60,21 +59,29 @@ class DualCache(BaseCache):
                 )
             return deserialize(stale)
 
-        # 3. No cache — try DB
+        # No cache, try DB
         if self._lock(lock_key):
-            data = query_fn()
-            self.set(primary_key, serialize(data), primary_ttl)
-            self.set(stale_key, serialize(data), stale_ttl)
-            return data
+            try:
+                data = query_fn()
+                self.set(primary_key, serialize(data), primary_ttl)
+                self.set(stale_key, serialize(data), stale_ttl)
+                self.delete(lock_key)
+                return data
+            except Exception as e:
+                log.error(
+                    "dual_cache_query_failed",
+                    base_key=base_key,
+                    error=str(e),
+                    error_type=type(e).__name__,
+                )
+                return None
+                # lock intentionally not released on failure — expires after
+                # lock_ttl to rate-limit retries while the query is broken
 
-        # 4. Wait and retry
-        for _ in range(10):
-            time.sleep(0.5)
-            raw = self.get(primary_key)
-            if raw:
-                return deserialize(raw)
-
-        raise Exception(f"Failed to fetch and cache '{base_key}'")
+        # Lock contention — another worker is already fetching.
+        # Return None immediately; caller should respond with 204 No Content.
+        log.debug("dual_cache_lock_contention", base_key=base_key)
+        return None
 
     def _refresh(
         self, base_key, query_fn, serializer_fn=None, primary_ttl=None, stale_ttl=None
@@ -82,7 +89,7 @@ class DualCache(BaseCache):
         try:
             data = query_fn()
             serialized = json.dumps(serializer_fn(data) if serializer_fn else data)
-            # Use provided TTLs or fall back to instance defaults
+            # Use provided TTLs, fall back to instance defaults if not provided
             primary_ttl = primary_ttl if primary_ttl is not None else self.primary_ttl
             stale_ttl = stale_ttl if stale_ttl is not None else self.stale_ttl
             self.set(f"{base_key}:live", serialized, primary_ttl)

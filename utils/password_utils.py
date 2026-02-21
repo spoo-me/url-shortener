@@ -79,17 +79,4 @@ def validate_password(password: str) -> Tuple[bool, List[str], int]:
 
     is_valid = len(missing) == 0
 
-    return is_valid, missing
-
-
-def get_password_requirements() -> List[str]:
-    """Get list of all password requirements."""
-    return [
-        "At least 8 characters",
-        "Maximum 128 characters",
-        "At least one uppercase letter",
-        "At least one lowercase letter",
-        "At least one number",
-        "At least one special character",
-        "Only safe characters allowed",
-    ]
+    return is_valid, missing, strength_score

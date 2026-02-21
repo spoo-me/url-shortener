@@ -8,7 +8,7 @@ from flask import (
 )
 from utils.url_utils import (
     get_client_ip,
-    validate_password,
+    validate_url_password,
     validate_url,
     validate_alias,
     validate_emoji_alias,
@@ -32,6 +32,7 @@ from utils.mongo_utils import (
 from utils.general import is_positive_integer, humanize_number
 from utils.logger import get_logger
 from .limiter import limiter
+from .limits import Limits
 from cache import dual_cache
 
 from datetime import datetime
@@ -148,7 +149,7 @@ def shorten_url():
     }
 
     if password:
-        if not validate_password(password):
+        if not validate_url_password(password):
             return (
                 jsonify(
                     {
@@ -254,7 +255,7 @@ def emoji():
     }
 
     if password:
-        if not validate_password(password):
+        if not validate_url_password(password):
             return (
                 jsonify(
                     {
@@ -346,7 +347,7 @@ def result(short_code):
 
 
 @url_shortener.route("/<short_code>+")
-@limiter.limit("100 per minute")
+@limiter.limit(Limits.SHORTEN_LEGACY)
 def preview_url(short_code):
     """
     Show preview of where a short URL redirects to.
@@ -490,8 +491,9 @@ def metric():
         return result
 
     # Cache metrics for 1 day
-    return jsonify(
-        dual_cache.get_or_set(
-            "metrics", query, primary_ttl=60 * 60 * 24, stale_ttl=60 * 60 * 25
-        )
+    result = dual_cache.get_or_set(
+        "metrics", query, primary_ttl=60 * 60 * 24, stale_ttl=60 * 60 * 25
     )
+    if result is None:
+        return "", 204
+    return jsonify(result)

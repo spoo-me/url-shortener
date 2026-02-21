@@ -1,14 +1,13 @@
 import re
 import string
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from emojies import EMOJIES
 from urllib.parse import unquote
 import emoji
 import validators
-import geoip2.errors
-import geoip2.database
 from flask import request
+from utils.geoip import geoip
 
 with open("bot_user_agents.txt", "r") as file:
     BOT_USER_AGENTS = file.read()
@@ -18,15 +17,7 @@ with open("bot_user_agents.txt", "r") as file:
 
 
 def get_country(ip_address):
-    reader = geoip2.database.Reader("misc/GeoLite2-Country.mmdb")
-    try:
-        response = reader.country(ip_address)
-        country = response.country.name
-        return country
-    except geoip2.errors.AddressNotFoundError:
-        return "Unknown"
-    finally:
-        reader.close()
+    return geoip.get_country(ip_address)
 
 
 def get_city_cf(request):
@@ -34,15 +25,7 @@ def get_city_cf(request):
 
 
 def get_city(ip_address):
-    reader = geoip2.database.Reader("misc/GeoLite2-City.mmdb")
-    try:
-        response = reader.city(ip_address)
-        city = response.city.name
-        return city
-    except geoip2.errors.AddressNotFoundError:
-        return "Unknown"
-    finally:
-        reader.close()
+    return geoip.get_city(ip_address)
 
 
 def get_client_ip() -> str:
@@ -66,7 +49,7 @@ def get_client_ip() -> str:
     return request.remote_addr or ""
 
 
-def validate_password(password):
+def validate_url_password(password):
     # Check if the password is at least 8 characters long
     if len(password) < 8:
         return False
@@ -91,23 +74,6 @@ def validate_url(url):
         validators.url(url, skip_ipv4_addr=True, skip_ipv6_addr=True)
         and "spoo.me" not in url
     )
-
-
-# custom expiration time is currently really buggy and not ready for production
-def validate_expiration_time(expiration_time):
-    try:
-        expiration_time = datetime.fromisoformat(expiration_time)
-        # Check if it's timezone aware
-        if expiration_time.tzinfo is None:
-            return False
-        else:
-            # Convert to GMT if it's timezone aware
-            expiration_time = expiration_time.astimezone(timezone.utc)
-        if expiration_time < datetime.now(timezone.utc) + timedelta(minutes=3):
-            return False
-        return True
-    except Exception:
-        return False
 
 
 def convert_to_gmt(expiration_time):

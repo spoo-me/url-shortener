@@ -35,6 +35,7 @@ from cache import cache_query as cq
 from cache.cache_url import UrlCacheData
 
 from .limiter import limiter
+from .limits import Limits
 
 log = get_logger(__name__)
 
@@ -183,7 +184,7 @@ def redirect_url(short_code):
                     _id=short_code,  # For v1, _id is the short_code
                     alias=short_code,
                     long_url=url_data["url"],
-                    block_bots=url_data.get("block_bots", False),
+                    block_bots=url_data.get("block-bots", False),
                     password_hash=url_data.get("password"),
                     expiration_time=url_data.get("expiration-time"),
                     max_clicks=url_data.get("max-clicks"),
@@ -200,13 +201,13 @@ def redirect_url(short_code):
             return (
                 render_template(
                     "error.html",
-                    error_code="403" if status == "BLOCKED" else "400",
+                    error_code="403" if status == "BLOCKED" else "410",
                     error_message="ACCESS DENIED"
                     if status == "BLOCKED"
                     else "SHORT URL EXPIRED",
                     host_url=request.host_url,
                 ),
-                403 if status == "BLOCKED" else 400,
+                403 if status == "BLOCKED" else 410,
             )
 
     # Get the URL to redirect to
@@ -221,11 +222,11 @@ def redirect_url(short_code):
             return (
                 render_template(
                     "error.html",
-                    error_code="400",
+                    error_code="410",
                     error_message="SHORT URL EXPIRED",
                     host_url=request.host_url,
                 ),
-                400,
+                410,
             )
 
     # Check password protection
@@ -507,7 +508,7 @@ def handle_legacy_click(url_data, short_code, is_emoji, user_ip, start_time):
         # Bot detection and blocking
         for bot in BOT_USER_AGENTS:
             if re.search(bot, user_agent, re.IGNORECASE):
-                if url_data.get("block_bots", False):
+                if url_data.get("block-bots", False):
                     log.info(
                         "bot_blocked", short_code=short_code, bot_name=bot, schema="v1"
                     )
@@ -517,7 +518,7 @@ def handle_legacy_click(url_data, short_code, is_emoji, user_ip, start_time):
                 break
         else:
             if crawler_detect.isCrawler(user_agent):
-                if url_data.get("block_bots", False):
+                if url_data.get("block-bots", False):
                     log.info(
                         "bot_blocked",
                         short_code=short_code,
@@ -576,7 +577,7 @@ def handle_legacy_click(url_data, short_code, is_emoji, user_ip, start_time):
 
 
 @url_redirector.route("/<short_code>/password", methods=["POST"])
-@limiter.exempt
+@limiter.limit(Limits.PASSWORD_CHECK)
 def check_password(short_code):
     short_code = unquote(short_code)
     # TODO: Fetch from cache

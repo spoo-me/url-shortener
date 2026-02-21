@@ -1,4 +1,4 @@
-from utils.url_utils import validate_password
+from utils.url_utils import validate_url_password as validate_password
 
 
 def test_password_too_short():

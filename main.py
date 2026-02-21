@@ -25,17 +25,22 @@ from blueprints.dashboard import dashboard_bp
 from api.v1 import api_v1
 from utils.mongo_utils import client, ensure_indexes
 from utils.log_context import setup_logging_middleware
+from utils.logging_config import setup_logging
 from utils.logger import get_logger, hash_ip
 
 from utils.url_utils import get_client_ip
 from utils.auth_utils import resolve_owner_id_from_request
 
+setup_logging()
 app = Flask(__name__)
 log = get_logger(__name__)
 
 flask_secret = os.getenv("FLASK_SECRET_KEY")
-if flask_secret:
-    app.secret_key = flask_secret
+if not flask_secret:
+    raise RuntimeError(
+        "FLASK_SECRET_KEY is not set. Refusing to start with unsigned session cookies."
+    )
+app.secret_key = flask_secret
 
 # Enable credentials so refresh cookies can be sent cross-origin from frontend
 CORS(app, supports_credentials=True)

@@ -4,6 +4,7 @@ from flask import Blueprint, jsonify, request, g, redirect, render_template
 from pymongo.errors import DuplicateKeyError
 
 from .limiter import limiter, rate_limit_key_for_request
+from .limits import Limits
 from utils.logger import get_logger
 from utils.auth_utils import (
     verify_password,
@@ -42,8 +43,7 @@ log = get_logger(__name__)
 
 
 @auth.route("/auth/login", methods=["POST"])
-@limiter.limit("5/minute")
-@limiter.limit("50/day")
+@limiter.limit(Limits.LOGIN)
 def login():
     body = request.get_json(silent=True) or {}
     email = (body.get("email") or "").strip().lower()
@@ -76,7 +76,7 @@ def login():
 
 
 @auth.route("/auth/refresh", methods=["POST"])
-@limiter.limit("20/minute")
+@limiter.limit(Limits.TOKEN_REFRESH)
 def refresh():
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
@@ -122,7 +122,7 @@ def refresh():
 
 
 @auth.route("/auth/logout", methods=["POST"])
-@limiter.limit("60/hour")
+@limiter.limit(Limits.LOGOUT)
 def logout():
     user_id = getattr(g, "user_id", None)
     if user_id:
@@ -136,7 +136,7 @@ def logout():
 
 @auth.route("/auth/me", methods=["GET"])
 @requires_auth
-@limiter.limit("60/minute", key_func=rate_limit_key_for_request)
+@limiter.limit(Limits.AUTH_READ, key_func=rate_limit_key_for_request)
 def me():
     user_id = g.user_id
     user = get_user_by_id(user_id)
@@ -146,8 +146,7 @@ def me():
 
 
 @auth.route("/auth/register", methods=["POST"])
-@limiter.limit("5/minute")
-@limiter.limit("50/day")
+@limiter.limit(Limits.SIGNUP)
 def register():
     body = request.get_json(silent=True) or {}
     email = (body.get("email") or "").strip().lower()
@@ -157,7 +156,7 @@ def register():
         return jsonify({"error": "email and password are required"}), 400
 
     # Validate password with comprehensive checks
-    is_valid, missing_requirements = validate_password(password)
+    is_valid, missing_requirements, _ = validate_password(password)
     if not is_valid:
         return jsonify(
             {
@@ -240,7 +239,7 @@ def register():
 
 @auth.route("/auth/set-password", methods=["POST"])
 @requires_auth
-@limiter.limit("5/minute")
+@limiter.limit(Limits.SET_PASSWORD)
 def set_password():
     """Set password for OAuth-only users"""
     user = get_user_by_id(g.user_id)
@@ -257,7 +256,7 @@ def set_password():
         return jsonify({"error": "password is required"}), 400
 
     # Validate password with comprehensive checks
-    is_valid, missing_requirements = validate_password(password)
+    is_valid, missing_requirements, _ = validate_password(password)
     if not is_valid:
         return jsonify(
             {
@@ -312,7 +311,7 @@ def register_redirect():
 
 @auth.route("/auth/verify", methods=["GET"])
 @requires_auth
-@limiter.limit("60/minute", key_func=rate_limit_key_for_request)
+@limiter.limit(Limits.AUTH_READ, key_func=rate_limit_key_for_request)
 def verify_page():
     """Email verification page"""
     user = get_user_by_id(g.user_id)
@@ -328,7 +327,7 @@ def verify_page():
 
 @auth.route("/auth/send-verification", methods=["POST"])
 @requires_auth
-@limiter.limit("3/hour", key_func=rate_limit_key_for_request)
+@limiter.limit(Limits.RESEND_VERIFICATION, key_func=rate_limit_key_for_request)
 def send_verification_email():
     """Send email verification OTP to authenticated user"""
     user = get_user_by_id(g.user_id)
@@ -379,7 +378,7 @@ def send_verification_email():
 
 @auth.route("/auth/verify-email", methods=["POST"])
 @requires_auth
-@limiter.limit("10/hour", key_func=rate_limit_key_for_request)
+@limiter.limit(Limits.EMAIL_VERIFY, key_func=rate_limit_key_for_request)
 def verify_email():
     """Verify email using OTP code"""
     user = get_user_by_id(g.user_id)
@@ -457,7 +456,7 @@ def verify_email():
 
 
 @auth.route("/auth/request-password-reset", methods=["POST"])
-@limiter.limit("3/hour")
+@limiter.limit(Limits.PASSWORD_RESET_REQUEST)
 def request_password_reset():
     """Request password reset OTP"""
     body = request.get_json(silent=True) or {}
@@ -543,7 +542,7 @@ def request_password_reset():
 
 
 @auth.route("/auth/reset-password", methods=["POST"])
-@limiter.limit("5/hour")
+@limiter.limit(Limits.PASSWORD_RESET_CONFIRM)
 def reset_password():
     """Reset password using OTP code"""
     body = request.get_json(silent=True) or {}
@@ -565,7 +564,7 @@ def reset_password():
     user_id = str(user["_id"])
 
     # Validate new password
-    is_valid, missing_requirements = validate_password(new_password)
+    is_valid, missing_requirements, _ = validate_password(new_password)
     if not is_valid:
         return jsonify(
             {

@@ -7,8 +7,8 @@ from utils.logger import get_logger
 log = get_logger(__name__)
 
 
-class StatsQueryBuilder:
-    """Builder pattern for constructing MongoDB queries for statistics"""
+class ClickQueryBuilder:
+    """Builder pattern for constructing MongoDB queries for the clicks collection"""
 
     def __init__(self):
         self.query: Dict[str, Any] = {}
@@ -21,7 +21,7 @@ class StatsQueryBuilder:
         owner_id: Optional[str],
         scope: str,
         short_code: Optional[str] = None,
-    ) -> "StatsQueryBuilder":
+    ) -> "ClickQueryBuilder":
         """Add scope-based filtering to the query"""
         if scope == "all" and owner_id:
             self.scope_filters["meta.owner_id"] = (
@@ -34,7 +34,7 @@ class StatsQueryBuilder:
 
     def with_time_range(
         self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
-    ) -> "StatsQueryBuilder":
+    ) -> "ClickQueryBuilder":
         """Add time range filtering to the query"""
         if start_date:
             self.time_filters["$gte"] = start_date
@@ -43,7 +43,7 @@ class StatsQueryBuilder:
 
         return self
 
-    def with_filters(self, filters: Dict[str, List[str]]) -> "StatsQueryBuilder":
+    def with_filters(self, filters: Dict[str, List[str]]) -> "ClickQueryBuilder":
         """Add dimension-based filtering to the query"""
         for dimension, values in filters.items():
             if values:
@@ -112,10 +112,10 @@ class StatsQueryBuilderFactory:
         owner_id: str,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
-    ) -> StatsQueryBuilder:
+    ) -> ClickQueryBuilder:
         """Create a query builder for all user statistics"""
         return (
-            StatsQueryBuilder()
+            ClickQueryBuilder()
             .with_scope(owner_id, "all")
             .with_time_range(start_date, end_date)
         )
@@ -125,10 +125,10 @@ class StatsQueryBuilderFactory:
         short_code: str,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
-    ) -> StatsQueryBuilder:
+    ) -> ClickQueryBuilder:
         """Create a query builder for anonymous URL statistics"""
         return (
-            StatsQueryBuilder()
+            ClickQueryBuilder()
             .with_scope(None, "anon", short_code=short_code)
             .with_time_range(start_date, end_date)
         )

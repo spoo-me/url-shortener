@@ -1,7 +1,3 @@
-import string
-import random
-
-
 def is_positive_integer(value):
     try:
         int(value)
@@ -12,11 +8,6 @@ def is_positive_integer(value):
         return False
     except TypeError:
         return False
-
-
-def generate_passkey():
-    letters = string.ascii_lowercase + string.ascii_uppercase + string.digits
-    return "".join(random.choice(letters) for i in range(22))
 
 
 def humanize_number(num):

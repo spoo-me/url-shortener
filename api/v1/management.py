@@ -272,9 +272,11 @@ def delete_url_v1(url_id: str) -> tuple[Response, int]:
         return jsonify({"error": "Invalid URL ID format"}), 400
 
     # Validate ownership first
-    builder = UpdateUrlRequestBuilder({}, url_id)
-    builder.parse_auth_scope(required_scopes={"urls:manage", "admin:all"})
-    builder.load_and_validate_ownership()
+    builder = (
+        UpdateUrlRequestBuilder({}, url_id)
+        .parse_auth_scope(required_scopes={"urls:manage", "admin:all"})
+        .load_and_validate_ownership()
+    )
 
     if builder.error:
         return builder.error

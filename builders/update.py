@@ -21,6 +21,8 @@ class UpdateUrlRequestBuilder(BaseUrlRequestBuilder):
 
     def load_and_validate_ownership(self) -> "UpdateUrlRequestBuilder":
         """Load existing URL and validate ownership"""
+        if self.error is not None:
+            return self
         if not self.url_id:
             return self._fail({"error": "URL ID is required"}, 400)
 

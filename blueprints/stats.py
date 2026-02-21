@@ -23,6 +23,7 @@ from utils.export_utils import (
 )
 from utils.pipeline_utils import get_stats_pipeline
 from .limiter import limiter
+from .limits import Limits
 from utils.logger import get_logger
 
 from datetime import datetime, timezone
@@ -36,7 +37,7 @@ stats = Blueprint("stats", __name__)
 
 @stats.route("/stats", methods=["GET", "POST"])
 @stats.route("/stats/", methods=["GET", "POST"])
-@limiter.exempt
+@limiter.limit(Limits.STATS_LEGACY_PAGE)
 def stats_route():
     if request.method == "POST":
         short_code = request.values.get("short_code")
@@ -95,7 +96,7 @@ def stats_route():
 
 
 @stats.route("/stats/<short_code>", methods=["GET", "POST"])
-@limiter.exempt
+@limiter.limit(Limits.STATS_LEGACY_PAGE)
 def analytics(short_code):
     password = request.values.get("password")
     short_code = unquote(short_code)
@@ -133,12 +134,7 @@ def analytics(short_code):
             )
             if request.method == "POST":
                 return (
-                    jsonify(
-                        {
-                            "PasswordError": "Invalid Password",
-                            "entered-pass": password,
-                        }
-                    ),
+                    jsonify({"PasswordError": "Invalid Password"}),
                     400,
                 )
             else:
@@ -224,7 +220,7 @@ def analytics(short_code):
 
 
 @stats.route("/export/<short_code>/<format>", methods=["GET", "POST"])
-@limiter.exempt
+@limiter.limit(Limits.STATS_LEGACY_EXPORT)
 def export(short_code, format):
     format = format.lower()
     password = request.values.get("password")
@@ -294,12 +290,7 @@ def export(short_code, format):
             )
             if request.method == "POST":
                 return (
-                    jsonify(
-                        {
-                            "PasswordError": "Invalid Password",
-                            "entered-pass": password,
-                        }
-                    ),
+                    jsonify({"PasswordError": "Invalid Password"}),
                     400,
                 )
             else:

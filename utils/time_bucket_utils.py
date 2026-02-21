@@ -255,52 +255,6 @@ def format_time_bucket_display(
         return bucket_value
 
 
-def estimate_bucket_count(
-    start_date: datetime, end_date: datetime, bucket_config: TimeBucketConfig
-) -> int:
-    """
-    Estimate the number of buckets that will be generated for a date range.
-
-    Useful for performance considerations and UI pagination.
-
-    Args:
-        start_date: Start of the time range
-        end_date: End of the time range
-        bucket_config: The bucket configuration
-
-    Returns:
-        Estimated number of buckets
-    """
-    if not start_date or not end_date:
-        return 0
-
-    time_delta = end_date - start_date
-    total_minutes = time_delta.total_seconds() / 60
-
-    return max(1, int(total_minutes / bucket_config.interval_minutes))
-
-
-def get_bucket_strategy_info() -> Dict[str, Dict[str, Any]]:
-    """
-    Get information about all available bucketing strategies.
-
-    Useful for API documentation and frontend configuration.
-
-    Returns:
-        Dictionary with strategy information
-    """
-    return {
-        strategy.value: {
-            "name": strategy.value,
-            "mongo_format": config.mongo_format,
-            "display_format": config.display_format,
-            "interval_minutes": config.interval_minutes,
-            "description": _get_strategy_description(strategy),
-        }
-        for strategy, config in BUCKET_CONFIGS.items()
-    }
-
-
 def generate_complete_time_buckets(
     start_date: datetime, end_date: datetime, bucket_config: TimeBucketConfig
 ) -> List[str]:
