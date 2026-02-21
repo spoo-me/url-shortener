@@ -294,7 +294,9 @@ def oauth_login(provider: str):
     if not strategy or not client:
         return jsonify({"error": f"'{provider}' OAuth not configured"}), 404
 
-    log.info("oauth_flow_initiated", provider=provider, ip_hash=hash_ip(get_client_ip()))
+    log.info(
+        "oauth_flow_initiated", provider=provider, ip_hash=hash_ip(get_client_ip())
+    )
     state = generate_oauth_state(provider, "login")
     redirect_uri = get_oauth_redirect_url(provider)
     return client.authorize_redirect(redirect_uri, state=state)
