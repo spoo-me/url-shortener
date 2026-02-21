@@ -32,3 +32,4 @@ thoughts/
 
 # Docs
 *.md
+!README.md

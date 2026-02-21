@@ -188,3 +188,5 @@ k6-tests/
 local_test_db/
 
 .DS_Store
+
+thoughts/

@@ -164,7 +164,7 @@ def verify_oauth_state(
     Returns:
         Tuple of (is_valid, state_data, failure_reason).
         failure_reason is None on success; one of "provider_mismatch",
-        "expired", or "parse_error" on failure.
+        "missing_timestamp", "expired", or "parse_error" on failure.
     """
     try:
         # Parse state
@@ -178,13 +178,16 @@ def verify_oauth_state(
         if state_data.get("provider") != expected_provider:
             return False, {}, "provider_mismatch"
 
-        # Check timestamp (state should not be older than 10 minutes)
+        # Check timestamp (state should not be older than 10 minutes).
+        # A missing timestamp is rejected outright — it indicates a crafted state.
         timestamp_str = state_data.get("timestamp")
-        if timestamp_str:
-            timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
-            age = (datetime.now(timezone.utc) - timestamp).total_seconds()
-            if age > 600:  # 10 minutes
-                return False, {}, "expired"
+        if not timestamp_str:
+            return False, {}, "missing_timestamp"
+
+        timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+        age = (datetime.now(timezone.utc) - timestamp).total_seconds()
+        if age > 600:  # 10 minutes
+            return False, {}, "expired"
 
         return True, state_data, None
     except Exception:

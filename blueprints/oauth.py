@@ -182,7 +182,6 @@ def _handle_callback(
                     "oauth_account_linked",
                     user_id=link_user_id,
                     provider=provider_key,
-                    email=provider_info["email"],
                     ip_hash=hash_ip(get_client_ip()),
                 )
                 return _make_auth_response(link_user_id, provider_key)
@@ -226,7 +225,6 @@ def _handle_callback(
                         "oauth_auto_linked",
                         user_id=user_id,
                         provider=provider_key,
-                        email=provider_info["email"],
                         ip_hash=hash_ip(get_client_ip()),
                     )
                     return _make_auth_response(user_id, provider_key)
