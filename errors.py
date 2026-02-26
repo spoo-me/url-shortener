@@ -87,5 +87,8 @@ def register_error_handlers(app: FastAPI) -> None:
         # unhandled exceptions before this handler fires.
         return JSONResponse(
             status_code=500,
-            content={"error": "An internal server error occurred.", "code": "internal_error"},
+            content={
+                "error": "An internal server error occurred.",
+                "code": "internal_error",
+            },
         )

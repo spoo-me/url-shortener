@@ -47,9 +47,16 @@ class TestRedisSettings:
 
 class TestJWTSettings:
     def test_defaults(self, monkeypatch):
-        for var in ("JWT_ISSUER", "JWT_AUDIENCE", "ACCESS_TOKEN_TTL_SECONDS",
-                    "REFRESH_TOKEN_TTL_SECONDS", "COOKIE_SECURE",
-                    "JWT_PRIVATE_KEY", "JWT_PUBLIC_KEY", "JWT_SECRET"):
+        for var in (
+            "JWT_ISSUER",
+            "JWT_AUDIENCE",
+            "ACCESS_TOKEN_TTL_SECONDS",
+            "REFRESH_TOKEN_TTL_SECONDS",
+            "COOKIE_SECURE",
+            "JWT_PRIVATE_KEY",
+            "JWT_PUBLIC_KEY",
+            "JWT_SECRET",
+        ):
             monkeypatch.delenv(var, raising=False)
         s = JWTSettings()
         assert s.jwt_issuer == "spoo.me"

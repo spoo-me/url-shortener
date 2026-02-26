@@ -47,5 +47,5 @@ class ClickDoc(MongoBaseModel):
     browser: str
     os: str
     redirect_ms: int
-    referrer: Optional[str] = None   # sanitised referrer domain, nullable
-    bot_name: Optional[str] = None   # nullable
+    referrer: Optional[str] = None  # sanitised referrer domain, nullable
+    bot_name: Optional[str] = None  # nullable

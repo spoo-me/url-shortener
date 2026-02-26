@@ -28,7 +28,6 @@ async def health_check(request: Request) -> JSONResponse:
         checks["mongodb"] = "error"
         overall = "unhealthy"
 
-    
     redis = request.app.state.redis
     if redis is None:
         checks["redis"] = "not_configured"

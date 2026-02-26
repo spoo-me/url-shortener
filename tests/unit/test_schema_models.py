@@ -15,6 +15,7 @@ from schemas.models.token import VerificationTokenDoc
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+
 def now():
     return datetime.now(timezone.utc)
 
@@ -24,6 +25,7 @@ def oid():
 
 
 # ── PyObjectId ────────────────────────────────────────────────────────────────
+
 
 class TestPyObjectId:
     def test_accepts_objectid_instance(self):
@@ -47,6 +49,7 @@ class TestPyObjectId:
 
 # ── MongoBaseModel ─────────────────────────────────────────────────────────────
 
+
 class TestMongoBaseModel:
     def test_from_mongo_returns_none_for_none(self):
         assert MongoBaseModel.from_mongo(None) is None
@@ -69,6 +72,7 @@ class TestMongoBaseModel:
 
 
 # ── UrlV2Doc ──────────────────────────────────────────────────────────────────
+
 
 class TestUrlV2Doc:
     def _make(self, **overrides):
@@ -100,7 +104,9 @@ class TestUrlV2Doc:
         o = oid()
         owner = oid()
         t = now()
-        doc = self._make(**{"_id": o, "owner_id": owner, "created_at": t, "max_clicks": 10})
+        doc = self._make(
+            **{"_id": o, "owner_id": owner, "created_at": t, "max_clicks": 10}
+        )
         mongo = doc.to_mongo()
         restored = UrlV2Doc.from_mongo(mongo)
         assert restored.alias == doc.alias
@@ -112,6 +118,7 @@ class TestUrlV2Doc:
 
 
 # ── LegacyUrlDoc ─────────────────────────────────────────────────────────────
+
 
 class TestLegacyUrlDoc:
     def _make(self, **overrides):
@@ -127,29 +134,33 @@ class TestLegacyUrlDoc:
         assert doc.id == "abcdef"
 
     def test_hyphenated_aliases(self):
-        doc = LegacyUrlDoc.model_validate({
-            "_id": "abcdef",
-            "url": "https://example.com",
-            "max-clicks": 100,
-            "total-clicks": 5,
-            "block-bots": True,
-            "last-click": "2024-01-01 12:00:00",
-            "last-click-browser": "Chrome",
-            "last-click-os": "Windows",
-            "last-click-country": "US",
-        })
+        doc = LegacyUrlDoc.model_validate(
+            {
+                "_id": "abcdef",
+                "url": "https://example.com",
+                "max-clicks": 100,
+                "total-clicks": 5,
+                "block-bots": True,
+                "last-click": "2024-01-01 12:00:00",
+                "last-click-browser": "Chrome",
+                "last-click-os": "Windows",
+                "last-click-country": "US",
+            }
+        )
         assert doc.max_clicks == 100
         assert doc.total_clicks == 5
         assert doc.block_bots is True
         assert doc.last_click_browser == "Chrome"
 
     def test_to_mongo_uses_hyphenated_keys(self):
-        doc = LegacyUrlDoc.model_validate({
-            "_id": "abcdef",
-            "url": "https://example.com",
-            "max-clicks": 50,
-            "total-clicks": 3,
-        })
+        doc = LegacyUrlDoc.model_validate(
+            {
+                "_id": "abcdef",
+                "url": "https://example.com",
+                "max-clicks": 50,
+                "total-clicks": 3,
+            }
+        )
         mongo = doc.to_mongo()
         assert "max-clicks" in mongo
         assert "total-clicks" in mongo
@@ -169,18 +180,22 @@ class TestLegacyUrlDoc:
 
 # ── EmojiUrlDoc ───────────────────────────────────────────────────────────────
 
+
 class TestEmojiUrlDoc:
     def test_same_shape_as_legacy(self):
-        doc = EmojiUrlDoc.model_validate({
-            "_id": "🚀🎉",
-            "url": "https://example.com",
-            "max-clicks": 5,
-        })
+        doc = EmojiUrlDoc.model_validate(
+            {
+                "_id": "🚀🎉",
+                "url": "https://example.com",
+                "max-clicks": 5,
+            }
+        )
         assert doc.id == "🚀🎉"
         assert doc.max_clicks == 5
 
 
 # ── UserDoc ────────────────────────────────────────────────────────────────────
+
 
 class TestUserDoc:
     def _make(self, **overrides):
@@ -215,15 +230,24 @@ class TestUserDoc:
             password_hash=None,
             password_set=False,
             email_verified=True,
-            pfp={"url": "https://example.com/pic.jpg", "source": "google", "last_updated": t},
-            auth_providers=[{
-                "provider": "google",
-                "provider_user_id": "123",
-                "email": "user@example.com",
-                "email_verified": True,
-                "profile": {"name": "Alice", "picture": "https://example.com/pic.jpg"},
-                "linked_at": t,
-            }],
+            pfp={
+                "url": "https://example.com/pic.jpg",
+                "source": "google",
+                "last_updated": t,
+            },
+            auth_providers=[
+                {
+                    "provider": "google",
+                    "provider_user_id": "123",
+                    "email": "user@example.com",
+                    "email_verified": True,
+                    "profile": {
+                        "name": "Alice",
+                        "picture": "https://example.com/pic.jpg",
+                    },
+                    "linked_at": t,
+                }
+            ],
         )
         assert doc.pfp.source == "google"
         assert len(doc.auth_providers) == 1
@@ -243,6 +267,7 @@ class TestUserDoc:
 
 
 # ── ClickDoc ──────────────────────────────────────────────────────────────────
+
 
 class TestClickDoc:
     def _make(self, **overrides):
@@ -275,11 +300,15 @@ class TestClickDoc:
         assert doc.meta.short_code == "abc1234"
 
     def test_anonymous_owner_id(self):
-        doc = self._make(**{"meta": {
-            "url_id": oid(),
-            "short_code": "abc1234",
-            "owner_id": ANONYMOUS_OWNER_ID,
-        }})
+        doc = self._make(
+            **{
+                "meta": {
+                    "url_id": oid(),
+                    "short_code": "abc1234",
+                    "owner_id": ANONYMOUS_OWNER_ID,
+                }
+            }
+        )
         assert doc.meta.owner_id == ANONYMOUS_OWNER_ID
 
     def test_to_mongo_round_trip(self):
@@ -291,6 +320,7 @@ class TestClickDoc:
 
 
 # ── ApiKeyDoc ─────────────────────────────────────────────────────────────────
+
 
 class TestApiKeyDoc:
     def _make(self, **overrides):
@@ -321,6 +351,7 @@ class TestApiKeyDoc:
 
 
 # ── VerificationTokenDoc ───────────────────────────────────────────────────────
+
 
 class TestVerificationTokenDoc:
     def _make(self, **overrides):
