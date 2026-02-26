@@ -38,9 +38,14 @@ class TestPyObjectId:
         assert isinstance(result, ObjectId)
         assert str(result) == s
 
-    def test_rejects_invalid_string(self):
+    @pytest.mark.parametrize(
+        "invalid",
+        ["not-an-objectid", "tooshort", ""],
+        ids=["bad_string", "too_short", "empty"],
+    )
+    def test_rejects_invalid_string(self, invalid):
         with pytest.raises(ValueError):
-            PyObjectId._validate("not-an-objectid")
+            PyObjectId._validate(invalid)
 
     def test_rejects_none(self):
         with pytest.raises((ValueError, TypeError)):
@@ -60,15 +65,12 @@ class TestMongoBaseModel:
         assert m.id == o
 
     def test_to_mongo_drops_none_id(self):
-        m = MongoBaseModel()
-        d = m.to_mongo()
-        assert "_id" not in d
+        assert "_id" not in MongoBaseModel().to_mongo()
 
     def test_to_mongo_keeps_set_id(self):
         o = oid()
         m = MongoBaseModel.model_validate({"_id": o})
-        d = m.to_mongo()
-        assert d["_id"] == o
+        assert m.to_mongo()["_id"] == o
 
 
 # ── UrlV2Doc ──────────────────────────────────────────────────────────────────
@@ -95,20 +97,15 @@ class TestUrlV2Doc:
 
     def test_optional_fields_default_none(self):
         doc = self._make()
-        assert doc.password is None
-        assert doc.max_clicks is None
-        assert doc.last_click is None
-        assert doc.expire_after is None
+        for field in ("password", "max_clicks", "last_click", "expire_after"):
+            assert getattr(doc, field) is None, f"{field} should default to None"
 
     def test_to_mongo_round_trip(self):
-        o = oid()
-        owner = oid()
-        t = now()
+        o, owner, t = oid(), oid(), now()
         doc = self._make(
             **{"_id": o, "owner_id": owner, "created_at": t, "max_clicks": 10}
         )
-        mongo = doc.to_mongo()
-        restored = UrlV2Doc.from_mongo(mongo)
+        restored = UrlV2Doc.from_mongo(doc.to_mongo())
         assert restored.alias == doc.alias
         assert restored.max_clicks == 10
         assert str(restored.id) == str(o)
@@ -122,16 +119,12 @@ class TestUrlV2Doc:
 
 class TestLegacyUrlDoc:
     def _make(self, **overrides):
-        base = {
-            "_id": "abcdef",
-            "url": "https://example.com",
-        }
+        base = {"_id": "abcdef", "url": "https://example.com"}
         base.update(overrides)
         return LegacyUrlDoc.model_validate(base)
 
     def test_string_id(self):
-        doc = self._make()
-        assert doc.id == "abcdef"
+        assert self._make().id == "abcdef"
 
     def test_hyphenated_aliases(self):
         doc = LegacyUrlDoc.model_validate(
@@ -153,18 +146,10 @@ class TestLegacyUrlDoc:
         assert doc.last_click_browser == "Chrome"
 
     def test_to_mongo_uses_hyphenated_keys(self):
-        doc = LegacyUrlDoc.model_validate(
-            {
-                "_id": "abcdef",
-                "url": "https://example.com",
-                "max-clicks": 50,
-                "total-clicks": 3,
-            }
-        )
+        doc = self._make(**{"max-clicks": 50, "total-clicks": 3})
         mongo = doc.to_mongo()
-        assert "max-clicks" in mongo
+        assert mongo.get("max-clicks") == 50
         assert "total-clicks" in mongo
-        assert mongo["max-clicks"] == 50
 
     def test_missing_optional_fields_use_defaults(self):
         doc = self._make()
@@ -184,11 +169,7 @@ class TestLegacyUrlDoc:
 class TestEmojiUrlDoc:
     def test_same_shape_as_legacy(self):
         doc = EmojiUrlDoc.model_validate(
-            {
-                "_id": "🚀🎉",
-                "url": "https://example.com",
-                "max-clicks": 5,
-            }
+            {"_id": "🚀🎉", "url": "https://example.com", "max-clicks": 5}
         )
         assert doc.id == "🚀🎉"
         assert doc.max_clicks == 5
@@ -199,10 +180,7 @@ class TestEmojiUrlDoc:
 
 class TestUserDoc:
     def _make(self, **overrides):
-        base = {
-            "_id": oid(),
-            "email": "user@example.com",
-        }
+        base = {"_id": oid(), "email": "user@example.com"}
         base.update(overrides)
         return UserDoc.model_validate(base)
 
@@ -216,11 +194,7 @@ class TestUserDoc:
         assert doc.auth_providers == []
 
     def test_password_user_shape(self):
-        doc = self._make(
-            password_hash="$argon2id$...",
-            password_set=True,
-            email_verified=False,
-        )
+        doc = self._make(password_hash="$argon2id$...", password_set=True)
         assert doc.password_hash == "$argon2id$..."
         assert doc.password_set is True
 
@@ -254,12 +228,10 @@ class TestUserDoc:
         assert doc.auth_providers[0].provider == "google"
 
     def test_pfp_none(self):
-        doc = self._make(pfp=None)
-        assert doc.pfp is None
+        assert self._make(pfp=None).pfp is None
 
     def test_from_mongo_round_trip(self):
-        o = oid()
-        t = now()
+        o, t = oid(), now()
         doc = self._make(**{"_id": o, "created_at": t, "updated_at": t})
         restored = UserDoc.from_mongo(doc.to_mongo())
         assert restored.email == doc.email
@@ -271,14 +243,9 @@ class TestUserDoc:
 
 class TestClickDoc:
     def _make(self, **overrides):
-        url_id = oid()
         base = {
             "clicked_at": now(),
-            "meta": {
-                "url_id": url_id,
-                "short_code": "abc1234",
-                "owner_id": oid(),
-            },
+            "meta": {"url_id": oid(), "short_code": "abc1234", "owner_id": oid()},
             "ip_address": "1.2.3.4",
             "browser": "Chrome",
             "os": "Windows",
@@ -312,9 +279,8 @@ class TestClickDoc:
         assert doc.meta.owner_id == ANONYMOUS_OWNER_ID
 
     def test_to_mongo_round_trip(self):
-        doc = self._make(referrer="google.com", bot_name=None)
-        mongo = doc.to_mongo()
-        restored = ClickDoc.from_mongo(mongo)
+        doc = self._make(referrer="google.com")
+        restored = ClickDoc.from_mongo(doc.to_mongo())
         assert restored.referrer == "google.com"
         assert restored.redirect_ms == doc.redirect_ms
 
@@ -372,7 +338,7 @@ class TestVerificationTokenDoc:
         assert doc.used_at is None
         assert doc.attempts == 0
 
-    def test_attempts_non_negative(self):
+    def test_negative_attempts_rejected(self):
         with pytest.raises(Exception):
             self._make(attempts=-1)
 

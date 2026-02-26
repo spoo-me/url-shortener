@@ -1,5 +1,7 @@
 """Unit tests for AppError hierarchy."""
 
+import pytest
+
 from errors import (
     AppError,
     AuthenticationError,
@@ -45,23 +47,23 @@ class TestAppErrorSubclasses:
 
 
 class TestAppErrorToDict:
-    def test_basic_to_dict(self):
+    def test_basic(self):
         e = NotFoundError("url not found")
-        d = e.to_dict()
-        assert d == {"error": "url not found", "code": "not_found"}
+        assert e.to_dict() == {"error": "url not found", "code": "not_found"}
 
-    def test_to_dict_with_field(self):
-        e = ValidationError("invalid alias", field="alias")
-        d = e.to_dict()
-        assert d["field"] == "alias"
+    @pytest.mark.parametrize(
+        "kwargs, key, value",
+        [
+            ({"field": "alias"}, "field", "alias"),
+            ({"details": {"min": 1, "max": 10}}, "details", {"min": 1, "max": 10}),
+        ],
+        ids=["with_field", "with_details"],
+    )
+    def test_optional_key_present(self, kwargs, key, value):
+        e = ValidationError("invalid", **kwargs)
+        assert e.to_dict()[key] == value
 
-    def test_to_dict_with_details(self):
-        e = ValidationError("invalid", details={"min": 1, "max": 10})
-        d = e.to_dict()
-        assert d["details"] == {"min": 1, "max": 10}
-
-    def test_to_dict_no_field_key_when_absent(self):
-        e = NotFoundError("missing")
-        d = e.to_dict()
+    def test_no_optional_keys_when_absent(self):
+        d = NotFoundError("missing").to_dict()
         assert "field" not in d
         assert "details" not in d

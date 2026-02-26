@@ -11,16 +11,31 @@ from config import (
 )
 
 
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def with_mongo(monkeypatch):
+    """Set the required MONGODB_URI so AppSettings can be instantiated."""
+    monkeypatch.setenv("MONGODB_URI", "mongodb://localhost:27017/")
+    return monkeypatch
+
+
+# ---------------------------------------------------------------------------
+# DatabaseSettings
+# ---------------------------------------------------------------------------
+
+
 class TestDatabaseSettings:
     def test_loads_mongodb_uri(self, monkeypatch):
         monkeypatch.setenv("MONGODB_URI", "mongodb://localhost:27017/")
-        s = DatabaseSettings()
-        assert s.mongodb_uri == "mongodb://localhost:27017/"
+        assert DatabaseSettings().mongodb_uri == "mongodb://localhost:27017/"
 
     def test_default_db_name(self, monkeypatch):
         monkeypatch.setenv("MONGODB_URI", "mongodb://localhost:27017/")
-        s = DatabaseSettings()
-        assert s.db_name == "url-shortener"
+        assert DatabaseSettings().db_name == "url-shortener"
 
     def test_missing_mongodb_uri_raises(self, monkeypatch):
         monkeypatch.delenv("MONGODB_URI", raising=False)
@@ -28,21 +43,28 @@ class TestDatabaseSettings:
             DatabaseSettings()
 
 
+# ---------------------------------------------------------------------------
+# RedisSettings
+# ---------------------------------------------------------------------------
+
+
 class TestRedisSettings:
     def test_redis_uri_optional(self, monkeypatch):
         monkeypatch.delenv("REDIS_URI", raising=False)
-        s = RedisSettings()
-        assert s.redis_uri is None
+        assert RedisSettings().redis_uri is None
 
     def test_redis_uri_loaded(self, monkeypatch):
         monkeypatch.setenv("REDIS_URI", "redis://localhost:6379")
-        s = RedisSettings()
-        assert s.redis_uri == "redis://localhost:6379"
+        assert RedisSettings().redis_uri == "redis://localhost:6379"
 
     def test_default_ttl(self, monkeypatch):
         monkeypatch.delenv("REDIS_TTL_SECONDS", raising=False)
-        s = RedisSettings()
-        assert s.redis_ttl_seconds == 3600
+        assert RedisSettings().redis_ttl_seconds == 3600
+
+
+# ---------------------------------------------------------------------------
+# JWTSettings
+# ---------------------------------------------------------------------------
 
 
 class TestJWTSettings:
@@ -64,57 +86,62 @@ class TestJWTSettings:
         assert s.access_token_ttl_seconds == 900
         assert s.refresh_token_ttl_seconds == 2592000
 
-    def test_use_rs256_false_when_keys_absent(self, monkeypatch):
+
+@pytest.mark.parametrize(
+    "private_key, public_key, expected",
+    [
+        ("private", "public", True),
+        (None, None, False),
+    ],
+    ids=["keys_present", "keys_absent"],
+)
+def test_jwt_use_rs256(monkeypatch, private_key, public_key, expected):
+    if private_key:
+        monkeypatch.setenv("JWT_PRIVATE_KEY", private_key)
+        monkeypatch.setenv("JWT_PUBLIC_KEY", public_key)
+    else:
         monkeypatch.delenv("JWT_PRIVATE_KEY", raising=False)
         monkeypatch.delenv("JWT_PUBLIC_KEY", raising=False)
-        s = JWTSettings()
-        assert s.use_rs256 is False
+    assert JWTSettings().use_rs256 is expected
 
-    def test_use_rs256_true_when_keys_present(self, monkeypatch):
-        monkeypatch.setenv("JWT_PRIVATE_KEY", "private")
-        monkeypatch.setenv("JWT_PUBLIC_KEY", "public")
-        s = JWTSettings()
-        assert s.use_rs256 is True
+
+# ---------------------------------------------------------------------------
+# AppSettings
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "env, expected",
+    [("production", True), ("development", False)],
+    ids=["production", "development"],
+)
+def test_is_production(with_mongo, env, expected):
+    with_mongo.setenv("ENV", env)
+    assert AppSettings().is_production is expected
+
+
+@pytest.mark.parametrize(
+    "secret_key, flask_secret_key, expected",
+    [
+        (None, "flask-secret", "flask-secret"),  # falls back to FLASK_SECRET_KEY
+        ("new-secret", "old-secret", "new-secret"),  # SECRET_KEY takes precedence
+    ],
+    ids=["flask_fallback", "secret_key_wins"],
+)
+def test_secret_key_resolution(with_mongo, secret_key, flask_secret_key, expected):
+    if secret_key:
+        with_mongo.setenv("SECRET_KEY", secret_key)
+    else:
+        with_mongo.delenv("SECRET_KEY", raising=False)
+    with_mongo.setenv("FLASK_SECRET_KEY", flask_secret_key)
+    assert AppSettings().secret_key == expected
 
 
 class TestAppSettings:
-    def test_flask_secret_key_fallback(self, monkeypatch):
-        monkeypatch.setenv("MONGODB_URI", "mongodb://localhost:27017/")
-        monkeypatch.setenv("FLASK_SECRET_KEY", "flask-secret")
-        monkeypatch.delenv("SECRET_KEY", raising=False)
+    def test_sub_configs_populated(self, with_mongo):
         s = AppSettings()
-        assert s.secret_key == "flask-secret"
+        for attr in ("db", "redis", "jwt", "oauth", "email", "logging", "sentry"):
+            assert getattr(s, attr) is not None, f"sub-config '{attr}' is None"
 
-    def test_secret_key_takes_precedence(self, monkeypatch):
-        monkeypatch.setenv("MONGODB_URI", "mongodb://localhost:27017/")
-        monkeypatch.setenv("SECRET_KEY", "new-secret")
-        monkeypatch.setenv("FLASK_SECRET_KEY", "old-secret")
-        s = AppSettings()
-        assert s.secret_key == "new-secret"
-
-    def test_sub_configs_populated(self, monkeypatch):
-        monkeypatch.setenv("MONGODB_URI", "mongodb://localhost:27017/")
-        s = AppSettings()
-        assert s.db is not None
-        assert s.redis is not None
-        assert s.jwt is not None
-        assert s.oauth is not None
-        assert s.email is not None
-        assert s.logging is not None
-        assert s.sentry is not None
-
-    def test_is_production_false_by_default(self, monkeypatch):
-        monkeypatch.setenv("MONGODB_URI", "mongodb://localhost:27017/")
-        s = AppSettings()
-        assert s.is_production is False
-
-    def test_is_production_true(self, monkeypatch):
-        monkeypatch.setenv("MONGODB_URI", "mongodb://localhost:27017/")
-        monkeypatch.setenv("ENV", "production")
-        s = AppSettings()
-        assert s.is_production is True
-
-    def test_cors_origins_default(self, monkeypatch):
-        monkeypatch.setenv("MONGODB_URI", "mongodb://localhost:27017/")
-        s = AppSettings()
-        assert s.cors_origins == ["*"]
+    def test_cors_origins_default(self, with_mongo):
+        assert AppSettings().cors_origins == ["*"]

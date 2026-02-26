@@ -121,13 +121,22 @@ class TestUpdateUrlRequest:
         assert req.alias is None
         assert req.status is None
 
-    def test_accepts_valid_status(self):
-        req = UpdateUrlRequest.model_validate({"status": "INACTIVE"})
-        assert req.status == "INACTIVE"
+    @pytest.mark.parametrize(
+        "status",
+        ["ACTIVE", "INACTIVE"],
+        ids=["active", "inactive"],
+    )
+    def test_accepts_valid_status(self, status):
+        assert UpdateUrlRequest.model_validate({"status": status}).status == status
 
-    def test_rejects_invalid_status(self):
+    @pytest.mark.parametrize(
+        "status",
+        ["DELETED", "UNKNOWN", "invalid"],
+        ids=["deleted", "unknown", "invalid"],
+    )
+    def test_rejects_invalid_status(self, status):
         with pytest.raises(ValidationError):
-            UpdateUrlRequest.model_validate({"status": "DELETED"})
+            UpdateUrlRequest.model_validate({"status": status})
 
     def test_url_alias_maps_to_long_url(self):
         req = UpdateUrlRequest.model_validate({"url": "https://new.example.com"})
@@ -135,8 +144,7 @@ class TestUpdateUrlRequest:
 
     def test_max_clicks_zero_allowed(self):
         """0 is allowed in update to signal removing the limit."""
-        req = UpdateUrlRequest.model_validate({"max_clicks": 0})
-        assert req.max_clicks == 0
+        assert UpdateUrlRequest.model_validate({"max_clicks": 0}).max_clicks == 0
 
     def test_max_clicks_negative_rejected(self):
         with pytest.raises(ValidationError):
@@ -170,13 +178,14 @@ class TestListUrlsQuery:
             ListUrlsQuery.model_validate({"pageSize": 101})
 
     def test_invalid_sort_by_falls_back_to_created_at(self):
-        q = ListUrlsQuery.model_validate({"sortBy": "invalid_field"})
-        assert q.sort_by == "created_at"
+        assert (
+            ListUrlsQuery.model_validate({"sortBy": "invalid_field"}).sort_by
+            == "created_at"
+        )
 
     def test_valid_filter_json_parsed(self):
         filter_json = json.dumps({"status": "ACTIVE", "passwordSet": True})
         q = ListUrlsQuery.model_validate({"filter": filter_json})
-        assert q.parsed_filter is not None
         assert q.parsed_filter.status == "ACTIVE"
         assert q.parsed_filter.password_set is True
 
@@ -195,8 +204,7 @@ class TestListUrlsQuery:
         assert q.parsed_filter.search == "example"
 
     def test_no_filter_leaves_parsed_filter_none(self):
-        q = ListUrlsQuery.model_validate({})
-        assert q.parsed_filter is None
+        assert ListUrlsQuery.model_validate({}).parsed_filter is None
 
 
 # ── Auth request DTOs ──────────────────────────────────────────────────────────
@@ -209,13 +217,14 @@ class TestLoginRequest:
         )
         assert req.email == "u@example.com"
 
-    def test_requires_email(self):
+    @pytest.mark.parametrize(
+        "payload",
+        [{"password": "pass"}, {"email": "u@example.com"}, {}],
+        ids=["missing_email", "missing_password", "missing_both"],
+    )
+    def test_missing_required_fields_rejected(self, payload):
         with pytest.raises(ValidationError):
-            LoginRequest.model_validate({"password": "pass"})
-
-    def test_requires_password(self):
-        with pytest.raises(ValidationError):
-            LoginRequest.model_validate({"email": "u@example.com"})
+            LoginRequest.model_validate(payload)
 
 
 class TestRegisterRequest:
@@ -234,8 +243,7 @@ class TestRegisterRequest:
 
 class TestVerifyEmailRequest:
     def test_valid(self):
-        req = VerifyEmailRequest.model_validate({"code": "123456"})
-        assert req.code == "123456"
+        assert VerifyEmailRequest.model_validate({"code": "123456"}).code == "123456"
 
     def test_requires_code(self):
         with pytest.raises(ValidationError):
@@ -279,8 +287,9 @@ class TestStatsQuery:
             StatsQuery.model_validate({"group_by": "time,device"})
 
     def test_comma_separated_metrics(self):
-        q = StatsQuery.model_validate({"metrics": "unique_clicks"})
-        assert q.parsed_metrics == ["unique_clicks"]
+        assert StatsQuery.model_validate(
+            {"metrics": "unique_clicks"}
+        ).parsed_metrics == ["unique_clicks"]
 
     def test_invalid_metric_rejected(self):
         with pytest.raises(ValidationError):
@@ -290,7 +299,6 @@ class TestStatsQuery:
         q = StatsQuery.model_validate(
             {"filters": json.dumps({"browser": "Chrome,Firefox"})}
         )
-        assert "browser" in q.parsed_filters
         assert "Chrome" in q.parsed_filters["browser"]
 
     def test_invalid_filters_json_rejected(self):
@@ -307,17 +315,18 @@ class TestStatsQuery:
 
 
 class TestExportQuery:
-    def test_valid_format(self):
-        q = ExportQuery.model_validate({"format": "csv"})
-        assert q.format == "csv"
+    @pytest.mark.parametrize("fmt", ["csv", "xlsx", "json", "xml"])
+    def test_valid_format(self, fmt):
+        assert ExportQuery.model_validate({"format": fmt}).format == fmt
 
     def test_missing_format_rejected(self):
         with pytest.raises(ValidationError):
             ExportQuery.model_validate({})
 
-    def test_invalid_format_rejected(self):
+    @pytest.mark.parametrize("fmt", ["pdf", "txt", "docx", ""])
+    def test_invalid_format_rejected(self, fmt):
         with pytest.raises(ValidationError):
-            ExportQuery.model_validate({"format": "pdf"})
+            ExportQuery.model_validate({"format": fmt})
 
     def test_inherits_stats_fields(self):
         q = ExportQuery.model_validate({"format": "xlsx", "scope": "all"})
@@ -330,30 +339,24 @@ class TestExportQuery:
 class TestCreateApiKeyRequest:
     def test_valid(self):
         req = CreateApiKeyRequest.model_validate(
-            {
-                "name": "My Key",
-                "scopes": ["shorten:create"],
-            }
+            {"name": "My Key", "scopes": ["shorten:create"]}
         )
         assert req.name == "My Key"
         assert req.description is None
         assert req.expires_at is None
 
-    def test_empty_name_rejected(self):
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            {"name": "  ", "scopes": ["shorten:create"]},  # blank name
+            {"name": "Key", "scopes": []},  # empty scopes
+            {"name": "Key", "scopes": ["unknown:scope"]},  # invalid scope
+        ],
+        ids=["blank_name", "empty_scopes", "invalid_scope"],
+    )
+    def test_invalid_input_rejected(self, payload):
         with pytest.raises(ValidationError):
-            CreateApiKeyRequest.model_validate(
-                {"name": "  ", "scopes": ["shorten:create"]}
-            )
-
-    def test_empty_scopes_rejected(self):
-        with pytest.raises(ValidationError):
-            CreateApiKeyRequest.model_validate({"name": "Key", "scopes": []})
-
-    def test_invalid_scope_rejected(self):
-        with pytest.raises(ValidationError):
-            CreateApiKeyRequest.model_validate(
-                {"name": "Key", "scopes": ["unknown:scope"]}
-            )
+            CreateApiKeyRequest.model_validate(payload)
 
     def test_valid_all_scopes(self):
         req = CreateApiKeyRequest.model_validate(
@@ -388,8 +391,9 @@ class TestCreateApiKeyRequest:
 
 class TestErrorResponse:
     def test_minimal(self):
-        r = ErrorResponse(error="not found", error_code="not_found")
-        d = r.model_dump(exclude_none=True)
+        d = ErrorResponse(error="not found", error_code="not_found").model_dump(
+            exclude_none=True
+        )
         assert d == {"error": "not found", "error_code": "not_found"}
 
     def test_with_field_and_details(self):
@@ -404,8 +408,7 @@ class TestErrorResponse:
         assert d["details"] == {"hint": "must be valid email"}
 
     def test_without_optional_fields(self):
-        r = ErrorResponse(error="fail", error_code="err")
-        d = r.model_dump()
+        d = ErrorResponse(error="fail", error_code="err").model_dump()
         assert d["field"] is None
         assert d["details"] is None
 
@@ -517,8 +520,7 @@ class TestUserProfileResponse:
             auth_providers=[],
             pfp=None,
         )
-        d = r.model_dump(exclude_none=True)
-        assert "pfp" not in d
+        assert "pfp" not in r.model_dump(exclude_none=True)
 
     def test_with_auth_provider(self):
         r = UserProfileResponse(
@@ -546,7 +548,8 @@ class TestStatsResponse:
             group_by=["time"],
             timezone="UTC",
             time_range=StatsTimeRange(
-                start_date="2024-01-01T00:00:00Z", end_date="2024-01-08T00:00:00Z"
+                start_date="2024-01-01T00:00:00Z",
+                end_date="2024-01-08T00:00:00Z",
             ),
             summary=StatsSummary(
                 total_clicks=10,
