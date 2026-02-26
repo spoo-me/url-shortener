@@ -39,6 +39,9 @@ dependencies = [
     "walrus>=0.9.8",
 ]
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
 [dependency-groups]
 dev = [
     "anyio[trio]>=4.0.0",
