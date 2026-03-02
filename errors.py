@@ -67,6 +67,11 @@ class ConflictError(AppError):
     error_code = "conflict"
 
 
+class GoneError(AppError):
+    status_code = 410
+    error_code = "gone"
+
+
 class RateLimitError(AppError):
     status_code = 429
     error_code = "rate_limit_exceeded"

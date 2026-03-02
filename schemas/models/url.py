@@ -39,7 +39,7 @@ class UrlV2Doc(MongoBaseModel):
     max_clicks: Optional[int] = None
     expire_after: Optional[datetime] = None
     status: str = "ACTIVE"
-    private_stats: bool = True
+    private_stats: Optional[bool] = True  # None for anonymous/unowned URLs
     total_clicks: int = 0
     last_click: Optional[datetime] = None
 

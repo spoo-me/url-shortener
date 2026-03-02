@@ -16,6 +16,7 @@ from pymongo.asynchronous.mongo_client import AsyncMongoClient
 
 from config import AppSettings
 from errors import register_error_handlers
+from repositories.indexes import ensure_indexes
 from routes.health_routes import router as health_router
 
 
@@ -51,15 +52,12 @@ def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
             )
         app.state.redis = redis_client
 
-        # ensure_indexes is wired in Phase 6 when the repository layer exists.
-        # Guarded with hasattr so Phase 1 boots cleanly without it.
-        if hasattr(app.state, "ensure_indexes"):
-            await app.state.ensure_indexes(app.state.db)
+        await ensure_indexes(app.state.db)
 
         yield
 
         # ── Shutdown ─────────────────────────────────────────────────────────
-        mongo_client.close()
+        await mongo_client.close()
         if redis_client is not None:
             await redis_client.aclose()
 
