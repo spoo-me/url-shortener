@@ -83,6 +83,79 @@ def validate_emoji_alias(alias: str) -> bool:
     return True
 
 
+def validate_account_password(password: str) -> tuple[bool, list[str], int]:
+    """Validate a user account password.
+
+    Rules: ≥8 chars, ≤128 chars, uppercase, lowercase, digit, special char,
+    no invalid characters.
+
+    Returns:
+        (is_valid, missing_requirements, strength_score)
+    """
+    if not password:
+        return False, ["Password is required"], 0
+
+    missing: list[str] = []
+    strength_score = 0
+
+    if len(password) < 8:
+        missing.append("At least 8 characters")
+    else:
+        strength_score += 20
+
+    if len(password) > 128:
+        missing.append("Maximum 128 characters")
+    else:
+        strength_score += 10
+
+    if not re.search(r"[A-Z]", password):
+        missing.append("At least one uppercase letter")
+    else:
+        strength_score += 15
+
+    if not re.search(r"[a-z]", password):
+        missing.append("At least one lowercase letter")
+    else:
+        strength_score += 15
+
+    if not re.search(r"[0-9]", password):
+        missing.append("At least one number")
+    else:
+        strength_score += 15
+
+    if not re.search(r'[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?~`]', password):
+        missing.append("At least one special character")
+    else:
+        strength_score += 15
+
+    if not re.match(
+        r'^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?~`\s]+$', password
+    ):
+        missing.append("Contains invalid characters")
+    else:
+        strength_score += 10
+
+    if len(password) >= 12:
+        strength_score += 5
+    if len(password) >= 16:
+        strength_score += 5
+
+    if re.search(r"(.)\1{2,}", password):
+        strength_score -= 10
+
+    if re.search(
+        r"(012|123|234|345|456|567|678|789|890|abc|bcd|cde|def)", password.lower()
+    ):
+        strength_score -= 15
+
+    for pattern in [r"password", r"123456", r"qwerty", r"admin", r"login", r"welcome"]:
+        if re.search(pattern, password.lower()):
+            strength_score -= 20
+            break
+
+    return len(missing) == 0, missing, strength_score
+
+
 def validate_blocked_url(url: str, patterns: Sequence[str]) -> bool:
     """Return True if *url* does NOT match any blocked pattern.
 

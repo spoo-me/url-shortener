@@ -3,7 +3,7 @@ Response DTOs for authentication endpoints.
 
 AuthProviderInfo    — auth provider entry in UserProfileResponse
 UserPfp             — profile picture in UserProfileResponse
-UserProfileResponse — shape returned by get_user_profile() helper
+UserProfileResponse — shape returned by UserProfileResponse.from_user()
 LoginResponse       — POST /auth/login  (200)
 RegisterResponse    — POST /auth/register  (201)
 RefreshResponse     — POST /auth/refresh  (200)
@@ -13,9 +13,12 @@ VerifyEmailResponse — POST /auth/verify-email  (200)
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from pydantic import BaseModel, ConfigDict
+
+if TYPE_CHECKING:
+    from schemas.models.user import UserDoc
 
 
 class AuthProviderInfo(BaseModel):
@@ -38,7 +41,7 @@ class UserPfp(BaseModel):
 
 
 class UserProfileResponse(BaseModel):
-    """User profile shape returned by get_user_profile() — used in login/register/me."""
+    """User profile shape — used in login/register/me responses."""
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -51,6 +54,31 @@ class UserProfileResponse(BaseModel):
     auth_providers: list[AuthProviderInfo]
     # pfp is absent from the JSON when None (route handlers use exclude_none=True)
     pfp: Optional[UserPfp] = None
+
+    @classmethod
+    def from_user(cls, user: UserDoc) -> UserProfileResponse:
+        """Build a UserProfileResponse from a UserDoc.
+
+        This is the single authoritative place for the profile response shape,
+        replacing the old AuthService.get_user_profile() static helper.
+        """
+        return cls(
+            id=str(user.id),
+            email=user.email,
+            email_verified=user.email_verified,
+            user_name=user.user_name,
+            plan=user.plan,
+            password_set=user.password_set,
+            auth_providers=[
+                AuthProviderInfo(
+                    provider=p.provider,
+                    email=p.email,
+                    linked_at=p.linked_at.isoformat() if p.linked_at else None,
+                )
+                for p in user.auth_providers
+            ],
+            pfp=UserPfp(url=user.pfp.url, source=user.pfp.source) if user.pfp else None,
+        )
 
 
 class LoginResponse(BaseModel):

@@ -142,6 +142,32 @@ class TestJWTHelpers:
         with pytest.raises(AuthenticationError):
             svc._verify_token("not.a.valid.token", token_type="access")
 
+    def test_issue_tokens_returns_valid_pair(self):
+        svc = make_auth_service()
+        settings = make_jwt_settings()
+        user = make_user_doc()
+        access, refresh = svc.issue_tokens(user, "google")
+        # Access token has no type field
+        access_payload = pyjwt.decode(
+            access,
+            settings.jwt_secret,
+            algorithms=["HS256"],
+            audience=settings.jwt_audience,
+            issuer=settings.jwt_issuer,
+        )
+        assert access_payload["amr"] == ["google"]
+        assert "type" not in access_payload
+        # Refresh token has type=refresh
+        refresh_payload = pyjwt.decode(
+            refresh,
+            settings.jwt_secret,
+            algorithms=["HS256"],
+            audience=settings.jwt_audience,
+            issuer=settings.jwt_issuer,
+        )
+        assert refresh_payload["type"] == "refresh"
+        assert refresh_payload["amr"] == ["google"]
+
 
 # ── Login tests ───────────────────────────────────────────────────────────────
 
@@ -642,25 +668,25 @@ class TestSetPassword:
             await svc.set_password(str(USER_OID), "weak")
 
 
-# ── get_user_profile tests ────────────────────────────────────────────────────
+# ── UserProfileResponse.from_user tests ───────────────────────────────────────
 
 
 class TestGetUserProfile:
     def test_basic_profile(self):
-        from services.auth_service import AuthService
+        from schemas.dto.responses.auth import UserProfileResponse
 
         user = make_user_doc()
-        profile = AuthService.get_user_profile(user)
-        assert profile["id"] == str(USER_OID)
-        assert profile["email"] == "test@example.com"
-        assert profile["email_verified"] is True
-        assert profile["user_name"] == "Test User"
-        assert profile["plan"] == "free"
-        assert profile["password_set"] is False
-        assert profile["auth_providers"] == []
+        profile = UserProfileResponse.from_user(user)
+        assert profile.id == str(USER_OID)
+        assert profile.email == "test@example.com"
+        assert profile.email_verified is True
+        assert profile.user_name == "Test User"
+        assert profile.plan == "free"
+        assert profile.password_set is False
+        assert profile.auth_providers == []
 
     def test_profile_with_oauth_provider(self):
-        from services.auth_service import AuthService
+        from schemas.dto.responses.auth import UserProfileResponse
 
         now = datetime(2024, 6, 1, tzinfo=timezone.utc)
         user_doc = {
@@ -685,13 +711,13 @@ class TestGetUserProfile:
             "status": "ACTIVE",
         }
         user = UserDoc.from_mongo(user_doc)
-        profile = AuthService.get_user_profile(user)
-        assert len(profile["auth_providers"]) == 1
-        assert profile["auth_providers"][0]["provider"] == "google"
-        assert profile["auth_providers"][0]["linked_at"] == now.isoformat()
+        profile = UserProfileResponse.from_user(user)
+        assert len(profile.auth_providers) == 1
+        assert profile.auth_providers[0].provider == "google"
+        assert profile.auth_providers[0].linked_at == now.isoformat()
 
     def test_profile_with_pfp(self):
-        from services.auth_service import AuthService
+        from schemas.dto.responses.auth import UserProfileResponse
 
         user_doc = {
             "_id": USER_OID,
@@ -706,6 +732,6 @@ class TestGetUserProfile:
             "status": "ACTIVE",
         }
         user = UserDoc.from_mongo(user_doc)
-        profile = AuthService.get_user_profile(user)
-        assert profile["pfp"]["url"] == "https://img.url"
-        assert profile["pfp"]["source"] == "google"
+        profile = UserProfileResponse.from_user(user)
+        assert profile.pfp.url == "https://img.url"
+        assert profile.pfp.source == "google"
