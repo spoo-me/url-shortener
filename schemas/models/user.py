@@ -17,7 +17,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from schemas.models.base import MongoBaseModel, PyObjectId
+from schemas.models.base import MongoBaseModel
 
 
 class ProviderProfile(BaseModel):

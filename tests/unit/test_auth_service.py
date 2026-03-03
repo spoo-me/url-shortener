@@ -1,14 +1,20 @@
 """Unit tests for Phase 8 — AuthService."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 from unittest.mock import AsyncMock
 from bson import ObjectId
 
 import jwt as pyjwt
 import pytest
 
+from errors import (
+    AuthenticationError,
+    ConflictError,
+    NotFoundError,
+    ValidationError,
+)
 from schemas.models.user import UserDoc
 
 # ── Constants ────────────────────────────────────────────────────────────────
@@ -18,8 +24,10 @@ USER_OID = ObjectId("aaaaaaaaaaaaaaaaaaaaaaaa")
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
+
 def make_jwt_settings():
     from config import JWTSettings
+
     return JWTSettings(
         jwt_issuer="spoo.me",
         jwt_audience="spoo.me.api",
@@ -31,27 +39,35 @@ def make_jwt_settings():
     )
 
 
-def make_user_doc(email_verified=True, password_set=False, password_hash=None, auth_providers=None):
+def make_user_doc(
+    email_verified=True,
+    password_set=False,
+    password_hash=None,
+    auth_providers=None,
+    status="ACTIVE",
+    user_name="Test User",
+):
     doc = {
         "_id": USER_OID,
         "email": "test@example.com",
         "email_verified": email_verified,
         "password_hash": password_hash,
         "password_set": password_set,
-        "user_name": "Test User",
+        "user_name": user_name,
         "pfp": None,
         "auth_providers": auth_providers or [],
         "plan": "free",
         "signup_ip": "1.2.3.4",
         "created_at": datetime(2024, 1, 1, tzinfo=timezone.utc),
         "updated_at": datetime(2024, 1, 1, tzinfo=timezone.utc),
-        "status": "ACTIVE",
+        "status": status,
     }
     return UserDoc.from_mongo(doc)
 
 
 def make_auth_service():
     from services.auth_service import AuthService
+
     return AuthService(
         user_repo=AsyncMock(),
         token_repo=AsyncMock(),
@@ -62,6 +78,7 @@ def make_auth_service():
 
 # ── JWT tests ─────────────────────────────────────────────────────────────────
 
+
 class TestJWTHelpers:
     def test_generate_access_token_returns_string(self):
         svc = make_auth_service()
@@ -71,7 +88,9 @@ class TestJWTHelpers:
     def test_access_token_has_correct_claims(self):
         svc = make_auth_service()
         settings = make_jwt_settings()
-        token = svc._generate_access_token(make_user_doc(email_verified=True), amr="pwd")
+        token = svc._generate_access_token(
+            make_user_doc(email_verified=True), amr="pwd"
+        )
         payload = pyjwt.decode(
             token,
             settings.jwt_secret,
@@ -115,12 +134,578 @@ class TestJWTHelpers:
         # refresh passes as "refresh"
         assert svc._verify_token(refresh, token_type="refresh")["type"] == "refresh"
         # access token fails as "refresh" (no type field)
-        from errors import AuthenticationError
         with pytest.raises(AuthenticationError):
             svc._verify_token(access, token_type="refresh")
 
     def test_verify_invalid_token_raises_auth_error(self):
         svc = make_auth_service()
-        from errors import AuthenticationError
         with pytest.raises(AuthenticationError):
             svc._verify_token("not.a.valid.token", token_type="access")
+
+
+# ── Login tests ───────────────────────────────────────────────────────────────
+
+
+class TestLogin:
+    @pytest.mark.asyncio
+    async def test_login_success(self):
+        from shared.crypto import hash_password
+
+        svc = make_auth_service()
+        hashed = hash_password("ValidPass1!")
+        user = make_user_doc(
+            password_hash=hashed, password_set=True, email_verified=True
+        )
+        svc._user_repo.find_by_email.return_value = user
+
+        result_user, access, refresh = await svc.login(
+            "test@example.com", "ValidPass1!"
+        )
+        assert result_user is user
+        assert isinstance(access, str)
+        assert isinstance(refresh, str)
+
+    @pytest.mark.asyncio
+    async def test_login_user_not_found_raises(self):
+        svc = make_auth_service()
+        svc._user_repo.find_by_email.return_value = None
+
+        with pytest.raises(AuthenticationError, match="invalid credentials"):
+            await svc.login("nouser@example.com", "anypass")
+
+    @pytest.mark.asyncio
+    async def test_login_no_password_hash_raises(self):
+        svc = make_auth_service()
+        user = make_user_doc(password_hash=None)
+        svc._user_repo.find_by_email.return_value = user
+
+        with pytest.raises(AuthenticationError, match="invalid credentials"):
+            await svc.login("test@example.com", "anypass")
+
+    @pytest.mark.asyncio
+    async def test_login_wrong_password_raises(self):
+        from shared.crypto import hash_password
+
+        svc = make_auth_service()
+        hashed = hash_password("CorrectPass1!")
+        user = make_user_doc(password_hash=hashed, password_set=True)
+        svc._user_repo.find_by_email.return_value = user
+
+        with pytest.raises(AuthenticationError, match="invalid credentials"):
+            await svc.login("test@example.com", "WrongPass1!")
+
+    @pytest.mark.asyncio
+    async def test_login_invalid_creds_same_message_for_both_failures(self):
+        """No user enumeration — both failure cases return identical message."""
+        from shared.crypto import hash_password
+
+        svc = make_auth_service()
+
+        svc._user_repo.find_by_email.return_value = None
+        with pytest.raises(AuthenticationError) as exc_info:
+            await svc.login("nobody@example.com", "pass")
+        msg_no_user = str(exc_info.value)
+
+        svc._user_repo.find_by_email.return_value = make_user_doc(
+            password_hash=hash_password("CorrectPass1!"), password_set=True
+        )
+        with pytest.raises(AuthenticationError) as exc_info:
+            await svc.login("test@example.com", "WrongPass1!")
+        msg_wrong_pw = str(exc_info.value)
+
+        assert msg_no_user == msg_wrong_pw
+
+
+# ── Register tests ────────────────────────────────────────────────────────────
+
+
+class TestRegister:
+    @pytest.mark.asyncio
+    async def test_register_success(self):
+        svc = make_auth_service()
+        svc._user_repo.find_by_email.return_value = None
+        svc._user_repo.create.return_value = USER_OID
+        svc._token_repo.count_recent.return_value = 0
+        svc._token_repo.create.return_value = ObjectId()
+        svc._email.send_verification_email.return_value = True
+
+        user_doc, access, refresh, verification_sent = await svc.register(
+            "new@example.com", "ValidPass1!", "New User", "1.2.3.4"
+        )
+        assert user_doc.email == "new@example.com"
+        assert isinstance(access, str)
+        assert isinstance(refresh, str)
+        assert verification_sent is True
+
+    @pytest.mark.asyncio
+    async def test_register_duplicate_email_raises(self):
+        svc = make_auth_service()
+        svc._user_repo.find_by_email.return_value = make_user_doc()
+
+        with pytest.raises(ConflictError, match="email already registered"):
+            await svc.register("test@example.com", "ValidPass1!", None, None)
+
+    @pytest.mark.asyncio
+    async def test_register_weak_password_raises(self):
+        svc = make_auth_service()
+        svc._user_repo.find_by_email.return_value = None
+
+        with pytest.raises(
+            ValidationError, match="Password does not meet requirements"
+        ):
+            await svc.register("new@example.com", "weak", None, None)
+
+    @pytest.mark.asyncio
+    async def test_register_verification_email_failure_is_non_fatal(self):
+        """Registration succeeds even if sending verification email fails."""
+        svc = make_auth_service()
+        svc._user_repo.find_by_email.return_value = None
+        svc._user_repo.create.return_value = USER_OID
+        svc._token_repo.count_recent.return_value = 0
+        svc._token_repo.create.return_value = ObjectId()
+        svc._email.send_verification_email.side_effect = Exception("email server down")
+
+        user_doc, access, refresh, verification_sent = await svc.register(
+            "new@example.com", "ValidPass1!", None, None
+        )
+        assert user_doc is not None
+        assert verification_sent is False
+
+    @pytest.mark.asyncio
+    async def test_register_race_condition_duplicate_raises(self):
+        from pymongo.errors import DuplicateKeyError
+
+        svc = make_auth_service()
+        svc._user_repo.find_by_email.return_value = None
+        svc._user_repo.create.side_effect = DuplicateKeyError("duplicate")
+
+        with pytest.raises(ConflictError, match="email already registered"):
+            await svc.register("new@example.com", "ValidPass1!", None, None)
+
+
+# ── Refresh token tests ───────────────────────────────────────────────────────
+
+
+class TestRefreshToken:
+    @pytest.mark.asyncio
+    async def test_refresh_token_success(self):
+        svc = make_auth_service()
+        user = make_user_doc()
+        # Generate a valid refresh token
+        refresh_tok = svc._generate_refresh_token(user, amr="pwd")
+        svc._user_repo.find_by_id.return_value = user
+
+        result_user, new_access, new_refresh = await svc.refresh_token(refresh_tok)
+        assert result_user is user
+        assert isinstance(new_access, str)
+        assert isinstance(new_refresh, str)
+
+    @pytest.mark.asyncio
+    async def test_refresh_token_invalid_raises(self):
+        svc = make_auth_service()
+
+        with pytest.raises(AuthenticationError):
+            await svc.refresh_token("invalid.token.here")
+
+    @pytest.mark.asyncio
+    async def test_refresh_token_user_not_found_raises(self):
+        svc = make_auth_service()
+        user = make_user_doc()
+        refresh_tok = svc._generate_refresh_token(user, amr="pwd")
+        svc._user_repo.find_by_id.return_value = None
+
+        with pytest.raises(
+            AuthenticationError, match="invalid or expired refresh token"
+        ):
+            await svc.refresh_token(refresh_tok)
+
+    @pytest.mark.asyncio
+    async def test_refresh_token_inactive_user_raises(self):
+        svc = make_auth_service()
+        user = make_user_doc()
+        refresh_tok = svc._generate_refresh_token(user, amr="pwd")
+        inactive_user = make_user_doc(status="INACTIVE")
+        svc._user_repo.find_by_id.return_value = inactive_user
+
+        with pytest.raises(AuthenticationError):
+            await svc.refresh_token(refresh_tok)
+
+    @pytest.mark.asyncio
+    async def test_refresh_rejects_access_token(self):
+        """An access token must not be accepted as a refresh token."""
+        svc = make_auth_service()
+        user = make_user_doc()
+        access_tok = svc._generate_access_token(user, amr="pwd")
+
+        with pytest.raises(AuthenticationError):
+            await svc.refresh_token(access_tok)
+
+
+# ── Verify email tests ────────────────────────────────────────────────────────
+
+
+class TestVerifyEmail:
+    def _make_token_doc(self, user_id, otp_code, expired=False, used=False, attempts=0):
+        from shared.crypto import hash_token
+        from schemas.models.token import VerificationTokenDoc, TOKEN_TYPE_EMAIL_VERIFY
+
+        now = datetime.now(timezone.utc)
+        expires = now - timedelta(seconds=1) if expired else now + timedelta(minutes=10)
+        doc = {
+            "_id": ObjectId(),
+            "user_id": user_id,
+            "email": "test@example.com",
+            "token_hash": hash_token(otp_code),
+            "token_type": TOKEN_TYPE_EMAIL_VERIFY,
+            "expires_at": expires,
+            "created_at": now,
+            "used_at": now if used else None,
+            "attempts": attempts,
+        }
+        return VerificationTokenDoc.from_mongo(doc)
+
+    @pytest.mark.asyncio
+    async def test_verify_email_success(self):
+        svc = make_auth_service()
+        user = make_user_doc(email_verified=False)
+        token_doc = self._make_token_doc(USER_OID, "123456")
+        svc._user_repo.find_by_id.return_value = user
+        svc._token_repo.find_by_hash.return_value = token_doc
+        svc._token_repo.mark_as_used.return_value = True
+        svc._user_repo.update.return_value = True
+        svc._email.send_welcome_email.return_value = True
+
+        access, refresh = await svc.verify_email(str(USER_OID), "123456")
+        assert isinstance(access, str)
+        assert isinstance(refresh, str)
+        # New tokens must have email_verified=True
+        settings = make_jwt_settings()
+        payload = pyjwt.decode(
+            access,
+            settings.jwt_secret,
+            algorithms=["HS256"],
+            audience=settings.jwt_audience,
+            issuer=settings.jwt_issuer,
+        )
+        assert payload["email_verified"] is True
+
+    @pytest.mark.asyncio
+    async def test_verify_email_already_verified_raises(self):
+        svc = make_auth_service()
+        user = make_user_doc(email_verified=True)
+        svc._user_repo.find_by_id.return_value = user
+
+        with pytest.raises(ValidationError, match="email already verified"):
+            await svc.verify_email(str(USER_OID), "123456")
+
+    @pytest.mark.asyncio
+    async def test_verify_email_invalid_otp_raises(self):
+        svc = make_auth_service()
+        user = make_user_doc(email_verified=False)
+        svc._user_repo.find_by_id.return_value = user
+        svc._token_repo.find_by_hash.return_value = None  # token not found
+
+        with pytest.raises(ValidationError):
+            await svc.verify_email(str(USER_OID), "000000")
+
+    @pytest.mark.asyncio
+    async def test_verify_email_expired_otp_raises(self):
+        svc = make_auth_service()
+        user = make_user_doc(email_verified=False)
+        token_doc = self._make_token_doc(USER_OID, "123456", expired=True)
+        svc._user_repo.find_by_id.return_value = user
+        svc._token_repo.find_by_hash.return_value = token_doc
+
+        with pytest.raises(ValidationError, match="expired"):
+            await svc.verify_email(str(USER_OID), "123456")
+
+    @pytest.mark.asyncio
+    async def test_verify_email_used_otp_raises(self):
+        svc = make_auth_service()
+        user = make_user_doc(email_verified=False)
+        token_doc = self._make_token_doc(USER_OID, "123456", used=True)
+        svc._user_repo.find_by_id.return_value = user
+        svc._token_repo.find_by_hash.return_value = token_doc
+
+        with pytest.raises(ValidationError, match="already been used"):
+            await svc.verify_email(str(USER_OID), "123456")
+
+    @pytest.mark.asyncio
+    async def test_verify_email_max_attempts_raises(self):
+        svc = make_auth_service()
+        user = make_user_doc(email_verified=False)
+        token_doc = self._make_token_doc(USER_OID, "123456", attempts=5)
+        svc._user_repo.find_by_id.return_value = user
+        svc._token_repo.find_by_hash.return_value = token_doc
+
+        with pytest.raises(ValidationError, match="Too many failed attempts"):
+            await svc.verify_email(str(USER_OID), "123456")
+
+    @pytest.mark.asyncio
+    async def test_verify_email_welcome_email_failure_is_non_fatal(self):
+        svc = make_auth_service()
+        user = make_user_doc(email_verified=False)
+        token_doc = self._make_token_doc(USER_OID, "123456")
+        svc._user_repo.find_by_id.return_value = user
+        svc._token_repo.find_by_hash.return_value = token_doc
+        svc._token_repo.mark_as_used.return_value = True
+        svc._user_repo.update.return_value = True
+        svc._email.send_welcome_email.side_effect = Exception("server down")
+
+        # Should NOT raise — welcome email is best-effort
+        access, refresh = await svc.verify_email(str(USER_OID), "123456")
+        assert access is not None
+
+
+# ── Request password reset tests ──────────────────────────────────────────────
+
+
+class TestRequestPasswordReset:
+    @pytest.mark.asyncio
+    async def test_always_returns_none_for_nonexistent_email(self):
+        """Timing-safe: nonexistent email returns normally."""
+        svc = make_auth_service()
+        svc._user_repo.find_by_email.return_value = None
+
+        result = await svc.request_password_reset("nobody@example.com")
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_always_returns_none_when_no_password_set(self):
+        """Timing-safe: OAuth-only user returns normally."""
+        svc = make_auth_service()
+        user = make_user_doc(password_set=False)
+        svc._user_repo.find_by_email.return_value = user
+
+        result = await svc.request_password_reset("test@example.com")
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_always_returns_none_when_rate_limited(self):
+        """Timing-safe: rate limited returns normally."""
+        svc = make_auth_service()
+        user = make_user_doc(password_set=True)
+        svc._user_repo.find_by_email.return_value = user
+        svc._token_repo.count_recent.return_value = 99  # definitely rate limited
+
+        result = await svc.request_password_reset("test@example.com")
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_sends_email_when_valid(self):
+        svc = make_auth_service()
+        user = make_user_doc(password_set=True)
+        svc._user_repo.find_by_email.return_value = user
+        svc._token_repo.count_recent.return_value = 0
+        svc._token_repo.delete_by_user.return_value = 0
+        svc._token_repo.create.return_value = ObjectId()
+        svc._email.send_password_reset_email.return_value = True
+
+        await svc.request_password_reset("test@example.com")
+        svc._email.send_password_reset_email.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_always_returns_none_on_send_failure(self):
+        """Timing-safe: email send failure returns normally."""
+        svc = make_auth_service()
+        user = make_user_doc(password_set=True)
+        svc._user_repo.find_by_email.return_value = user
+        svc._token_repo.count_recent.return_value = 0
+        svc._token_repo.delete_by_user.return_value = 0
+        svc._token_repo.create.return_value = ObjectId()
+        svc._email.send_password_reset_email.return_value = False
+
+        result = await svc.request_password_reset("test@example.com")
+        assert result is None
+
+
+# ── Reset password tests ──────────────────────────────────────────────────────
+
+
+class TestResetPassword:
+    def _make_token_doc(self, user_id, otp_code, expired=False):
+        from shared.crypto import hash_token
+        from schemas.models.token import VerificationTokenDoc, TOKEN_TYPE_PASSWORD_RESET
+
+        now = datetime.now(timezone.utc)
+        expires = now - timedelta(seconds=1) if expired else now + timedelta(minutes=10)
+        doc = {
+            "_id": ObjectId(),
+            "user_id": user_id,
+            "email": "test@example.com",
+            "token_hash": hash_token(otp_code),
+            "token_type": TOKEN_TYPE_PASSWORD_RESET,
+            "expires_at": expires,
+            "created_at": now,
+            "used_at": None,
+            "attempts": 0,
+        }
+        return VerificationTokenDoc.from_mongo(doc)
+
+    @pytest.mark.asyncio
+    async def test_reset_password_success(self):
+        svc = make_auth_service()
+        user = make_user_doc(password_set=True)
+        token_doc = self._make_token_doc(USER_OID, "654321")
+        svc._user_repo.find_by_email.return_value = user
+        svc._token_repo.find_by_hash.return_value = token_doc
+        svc._token_repo.mark_as_used.return_value = True
+        svc._user_repo.update.return_value = True
+
+        await svc.reset_password("test@example.com", "654321", "NewValidPass1!")
+        svc._user_repo.update.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_reset_password_user_not_found_raises(self):
+        svc = make_auth_service()
+        svc._user_repo.find_by_email.return_value = None
+
+        with pytest.raises(ValidationError, match="invalid email or code"):
+            await svc.reset_password("nobody@example.com", "000000", "NewValidPass1!")
+
+    @pytest.mark.asyncio
+    async def test_reset_password_weak_password_raises(self):
+        svc = make_auth_service()
+        user = make_user_doc(password_set=True)
+        svc._user_repo.find_by_email.return_value = user
+
+        with pytest.raises(
+            ValidationError, match="password does not meet requirements"
+        ):
+            await svc.reset_password("test@example.com", "654321", "weak")
+
+    @pytest.mark.asyncio
+    async def test_reset_password_wrong_otp_raises(self):
+        svc = make_auth_service()
+        user = make_user_doc(password_set=True)
+        svc._user_repo.find_by_email.return_value = user
+        svc._token_repo.find_by_hash.return_value = None  # token not found
+
+        with pytest.raises(ValidationError):
+            await svc.reset_password("test@example.com", "wrong-code", "NewValidPass1!")
+
+    @pytest.mark.asyncio
+    async def test_request_password_reset_deletes_old_tokens_before_creating(self):
+        """_create_password_reset_otp deletes old reset tokens before inserting new one."""
+        svc = make_auth_service()
+        user = make_user_doc(password_set=True)
+        svc._user_repo.find_by_email.return_value = user
+        svc._token_repo.count_recent.return_value = 0
+        svc._token_repo.delete_by_user.return_value = 1
+        svc._token_repo.create.return_value = ObjectId()
+        svc._email.send_password_reset_email.return_value = True
+
+        await svc.request_password_reset("test@example.com")
+        svc._token_repo.delete_by_user.assert_awaited()
+
+
+# ── Set password tests ────────────────────────────────────────────────────────
+
+
+class TestSetPassword:
+    @pytest.mark.asyncio
+    async def test_set_password_success(self):
+        svc = make_auth_service()
+        user = make_user_doc(password_set=False)
+        svc._user_repo.find_by_id.return_value = user
+        svc._user_repo.update.return_value = True
+
+        await svc.set_password(str(USER_OID), "NewValidPass1!")
+        svc._user_repo.update.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_set_password_already_set_raises(self):
+        svc = make_auth_service()
+        user = make_user_doc(password_set=True)
+        svc._user_repo.find_by_id.return_value = user
+
+        with pytest.raises(ValidationError, match="password already set"):
+            await svc.set_password(str(USER_OID), "NewValidPass1!")
+
+    @pytest.mark.asyncio
+    async def test_set_password_user_not_found_raises(self):
+        svc = make_auth_service()
+        svc._user_repo.find_by_id.return_value = None
+
+        with pytest.raises(NotFoundError):
+            await svc.set_password(str(USER_OID), "NewValidPass1!")
+
+    @pytest.mark.asyncio
+    async def test_set_password_weak_password_raises(self):
+        svc = make_auth_service()
+        user = make_user_doc(password_set=False)
+        svc._user_repo.find_by_id.return_value = user
+
+        with pytest.raises(
+            ValidationError, match="Password does not meet requirements"
+        ):
+            await svc.set_password(str(USER_OID), "weak")
+
+
+# ── get_user_profile tests ────────────────────────────────────────────────────
+
+
+class TestGetUserProfile:
+    def test_basic_profile(self):
+        from services.auth_service import AuthService
+
+        user = make_user_doc()
+        profile = AuthService.get_user_profile(user)
+        assert profile["id"] == str(USER_OID)
+        assert profile["email"] == "test@example.com"
+        assert profile["email_verified"] is True
+        assert profile["user_name"] == "Test User"
+        assert profile["plan"] == "free"
+        assert profile["password_set"] is False
+        assert profile["auth_providers"] == []
+
+    def test_profile_with_oauth_provider(self):
+        from services.auth_service import AuthService
+
+        now = datetime(2024, 6, 1, tzinfo=timezone.utc)
+        user_doc = {
+            "_id": USER_OID,
+            "email": "test@example.com",
+            "email_verified": True,
+            "password_hash": None,
+            "password_set": False,
+            "user_name": "Test",
+            "pfp": None,
+            "auth_providers": [
+                {
+                    "provider": "google",
+                    "provider_user_id": "google123",
+                    "email": "test@gmail.com",
+                    "email_verified": True,
+                    "profile": {"name": "Test User", "picture": "https://pic.url"},
+                    "linked_at": now,
+                }
+            ],
+            "plan": "free",
+            "status": "ACTIVE",
+        }
+        user = UserDoc.from_mongo(user_doc)
+        profile = AuthService.get_user_profile(user)
+        assert len(profile["auth_providers"]) == 1
+        assert profile["auth_providers"][0]["provider"] == "google"
+        assert profile["auth_providers"][0]["linked_at"] == now.isoformat()
+
+    def test_profile_with_pfp(self):
+        from services.auth_service import AuthService
+
+        user_doc = {
+            "_id": USER_OID,
+            "email": "test@example.com",
+            "email_verified": True,
+            "password_hash": None,
+            "password_set": False,
+            "user_name": "Test",
+            "pfp": {"url": "https://img.url", "source": "google"},
+            "auth_providers": [],
+            "plan": "free",
+            "status": "ACTIVE",
+        }
+        user = UserDoc.from_mongo(user_doc)
+        profile = AuthService.get_user_profile(user)
+        assert profile["pfp"]["url"] == "https://img.url"
+        assert profile["pfp"]["source"] == "google"

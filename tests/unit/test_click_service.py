@@ -15,9 +15,8 @@ Tests verify:
 from __future__ import annotations
 
 import pytest
-from datetime import datetime, timezone
 from typing import Optional
-from unittest.mock import AsyncMock, MagicMock, patch, call
+from unittest.mock import AsyncMock, patch
 from bson import ObjectId
 
 from errors import ForbiddenError, ValidationError

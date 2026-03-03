@@ -9,7 +9,6 @@ link_provider_to_user, etc.) will move to the service layer in Phase 7.
 For now they remain here to keep the migration non-breaking.
 """
 
-import os
 import secrets
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone

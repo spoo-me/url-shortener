@@ -3,7 +3,6 @@
 import pytest
 
 from errors import (
-    AppError,
     AuthenticationError,
     ConflictError,
     ForbiddenError,

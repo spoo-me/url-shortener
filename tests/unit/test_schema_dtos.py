@@ -11,9 +11,7 @@ from schemas.dto.requests.api_key import CreateApiKeyRequest
 from schemas.dto.requests.auth import (
     LoginRequest,
     RegisterRequest,
-    RequestPasswordResetRequest,
     ResetPasswordRequest,
-    SetPasswordRequest,
     VerifyEmailRequest,
 )
 from schemas.dto.requests.stats import ExportQuery, StatsQuery
@@ -21,30 +19,21 @@ from schemas.dto.requests.url import (
     CreateUrlRequest,
     ListUrlsQuery,
     UpdateUrlRequest,
-    UrlFilter,
 )
 from schemas.dto.responses.api_key import (
-    ApiKeyActionResponse,
     ApiKeyCreatedResponse,
-    ApiKeyResponse,
-    ApiKeysListResponse,
 )
 from schemas.dto.responses.auth import (
     AuthProviderInfo,
-    LoginResponse,
-    RegisterResponse,
     UserProfileResponse,
 )
-from schemas.dto.responses.common import ErrorResponse, HealthResponse, MessageResponse
+from schemas.dto.responses.common import ErrorResponse, HealthResponse
 from schemas.dto.responses.stats import (
-    ComputedMetrics,
     StatsSummary,
     StatsResponse,
     StatsTimeRange,
 )
 from schemas.dto.responses.url import (
-    UpdateUrlResponse,
-    UrlListItem,
     UrlListResponse,
     UrlResponse,
 )

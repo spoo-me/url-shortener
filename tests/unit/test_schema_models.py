@@ -7,8 +7,8 @@ from bson import ObjectId
 
 from schemas.models.base import ANONYMOUS_OWNER_ID, MongoBaseModel, PyObjectId
 from schemas.models.url import EmojiUrlDoc, LegacyUrlDoc, UrlV2Doc
-from schemas.models.user import AuthProviderEntry, ProfilePicture, UserDoc
-from schemas.models.click import ClickDoc, ClickMeta
+from schemas.models.user import UserDoc
+from schemas.models.click import ClickDoc
 from schemas.models.api_key import ApiKeyDoc
 from schemas.models.token import VerificationTokenDoc
 

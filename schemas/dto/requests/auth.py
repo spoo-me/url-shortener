@@ -12,7 +12,7 @@ ResetPasswordRequest          — POST /auth/reset-password
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class LoginRequest(BaseModel):

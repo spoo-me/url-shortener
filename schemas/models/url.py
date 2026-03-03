@@ -14,7 +14,6 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Optional
 
-from bson import ObjectId
 from pydantic import ConfigDict, Field
 
 from schemas.models.base import MongoBaseModel, PyObjectId
@@ -51,7 +50,7 @@ class LegacyUrlDoc(MongoBaseModel):
     Key differences from v2:
     - `_id` IS the short code string (not an ObjectId).
     - Field names use hyphens: `max-clicks`, `total-clicks`, `block-bots`, etc.
-      Pydantic field aliases map these to valid Python identifiers.
+        Pydantic field aliases map these to valid Python identifiers.
     - Analytics are embedded directly on the URL document.
     - Password is stored in plaintext.
     - No owner_id, no status field.
