@@ -166,3 +166,29 @@ class UrlRepository:
         except Exception as exc:
             log.error("url_repo_count_failed", error=str(exc))
             raise
+
+    async def check_stats_privacy(self, alias: str) -> dict:
+        """Return privacy metadata for a URL alias.
+
+        Returns a dict with keys:
+            exists   — True if the alias exists in the collection.
+            private  — True if ``private_stats`` is set to True.
+            owner_id — str(ObjectId) of the URL owner, or None.
+        """
+        try:
+            doc = await self._col.find_one(
+                {"alias": alias},
+                {"private_stats": 1, "owner_id": 1},
+            )
+            if not doc:
+                return {"exists": False, "private": False, "owner_id": None}
+            return {
+                "exists": True,
+                "private": bool(doc.get("private_stats", False)),
+                "owner_id": str(doc["owner_id"]) if doc.get("owner_id") else None,
+            }
+        except Exception as exc:
+            log.error(
+                "url_repo_check_stats_privacy_failed", alias=alias, error=str(exc)
+            )
+            raise
