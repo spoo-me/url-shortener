@@ -1,14 +1,8 @@
 """
-Click tracking service.
+Click handlers — one class per URL schema.
 
-Orchestrates bot detection, GeoIP lookup, user-agent parsing, referrer
-sanitization, click document creation, and max-clicks expiry.
-
-Key behavioral differences between v1 and v2 (preserved exactly):
-  - v2: inserts into `clicks` time-series collection.
-        Blocked bots → analytics skipped, redirect still proceeds (no error).
-  - v1/emoji: updates embedded analytics on the URL document itself.
-              Blocked bots → ForbiddenError raised, redirect is also blocked.
+Each handler implements the ClickHandler protocol, receives its dependencies
+via constructor injection, and reads all click metadata from the ClickContext.
 """
 
 from __future__ import annotations
@@ -23,7 +17,7 @@ from ua_parser import parse as ua_parse
 import tldextract
 
 from errors import ForbiddenError, ValidationError
-from infrastructure.cache.url_cache import UrlCache, UrlCacheData
+from infrastructure.cache.url_cache import UrlCache
 from infrastructure.geoip import GeoIPService
 from repositories.click_repository import ClickRepository
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
@@ -31,84 +25,31 @@ from repositories.legacy.legacy_url_repository import LegacyUrlRepository
 from repositories.url_repository import UrlRepository
 from schemas.models.base import ANONYMOUS_OWNER_ID
 from schemas.models.click import ClickDoc, ClickMeta
+from services.click.protocol import ClickContext
 from shared.bot_detection import get_bot_name, is_bot_request
 from shared.logging import get_logger
 
 log = get_logger(__name__)
 
-# Module-level TLDExtract instance (no DNS cache — same as legacy redirector)
 _tld_extractor = tldextract.TLDExtract(cache_dir=None)
 
 
-class ClickService:
+class V2ClickHandler:
+    """Records a click for a v2 URL in the time-series clicks collection."""
+
     def __init__(
         self,
         click_repo: ClickRepository,
         url_repo: UrlRepository,
-        legacy_repo: LegacyUrlRepository,
-        emoji_repo: EmojiUrlRepository,
         geoip: GeoIPService,
         url_cache: UrlCache,
     ) -> None:
         self._click_repo = click_repo
         self._url_repo = url_repo
-        self._legacy_repo = legacy_repo
-        self._emoji_repo = emoji_repo
         self._geoip = geoip
         self._url_cache = url_cache
 
-    # ── Public API ────────────────────────────────────────────────────────────
-
-    async def track_click(
-        self,
-        url_data: UrlCacheData,
-        short_code: str,
-        schema: str,
-        is_emoji: bool,
-        client_ip: str,
-        start_time: float,
-        user_agent: str,
-        referrer: Optional[str],
-        cf_city: Optional[str] = None,
-    ) -> None:
-        """
-        Dispatch click tracking to the appropriate handler.
-
-        Raises:
-            ValidationError: Invalid or missing User-Agent (both v1 and v2).
-            ForbiddenError:  Bot blocked for v1/emoji URLs (redirect blocked).
-        """
-        if schema == "v2":
-            await self.handle_v2_click(
-                url_data,
-                short_code,
-                client_ip,
-                start_time,
-                user_agent,
-                referrer,
-                cf_city,
-            )
-        else:
-            await self.handle_legacy_click(
-                url_data,
-                short_code,
-                is_emoji,
-                client_ip,
-                start_time,
-                user_agent,
-                referrer,
-            )
-
-    async def handle_v2_click(
-        self,
-        url_data: UrlCacheData,
-        short_code: str,
-        client_ip: str,
-        start_time: float,
-        user_agent: str,
-        referrer: Optional[str],
-        cf_city: Optional[str] = None,
-    ) -> None:
+    async def handle(self, context: ClickContext) -> None:
         """
         Record a click for a v2 URL in the time-series clicks collection.
 
@@ -118,6 +59,14 @@ class ClickService:
         Raises:
             ValidationError: Missing or unparseable User-Agent header.
         """
+        url_data = context.url_data
+        short_code = context.short_code
+        client_ip = context.client_ip
+        start_time = context.start_time
+        user_agent = context.user_agent
+        referrer = context.referrer
+        cf_city = context.cf_city
+
         if not user_agent:
             raise ValidationError("Invalid User-Agent")
 
@@ -204,16 +153,21 @@ class ClickService:
                 )
                 await self._url_cache.invalidate(short_code)
 
-    async def handle_legacy_click(
+
+class LegacyClickHandler:
+    """Records a click for a v1 or emoji URL via embedded document update."""
+
+    def __init__(
         self,
-        url_data: UrlCacheData,
-        short_code: str,
-        is_emoji: bool,
-        client_ip: str,
-        start_time: float,
-        user_agent: str,
-        referrer: Optional[str],
+        legacy_repo: LegacyUrlRepository,
+        emoji_repo: EmojiUrlRepository,
+        geoip: GeoIPService,
     ) -> None:
+        self._legacy_repo = legacy_repo
+        self._emoji_repo = emoji_repo
+        self._geoip = geoip
+
+    async def handle(self, context: ClickContext) -> None:
         """
         Record a click for a v1 or emoji URL via embedded document update.
 
@@ -224,6 +178,14 @@ class ClickService:
             ValidationError: Missing or unparseable User-Agent.
             ForbiddenError:  Bot blocked (v1 behavior — redirect is prevented).
         """
+        url_data = context.url_data
+        short_code = context.short_code
+        is_emoji = context.is_emoji
+        client_ip = context.client_ip
+        start_time = context.start_time
+        user_agent = context.user_agent
+        referrer = context.referrer
+
         if not user_agent:
             raise ValidationError("Invalid User-Agent")
 
