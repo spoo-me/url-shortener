@@ -425,16 +425,37 @@ class TestManagement:
 # ── GET /api/v1/stats ─────────────────────────────────────────────────────────
 
 
+_SUMMARY = {
+    "total_clicks": 42,
+    "unique_clicks": 20,
+    "first_click": "2024-01-01T00:00:00+00:00",
+    "last_click": "2024-01-07T00:00:00+00:00",
+    "avg_redirection_time": 1.5,
+}
+_TIME_BUCKET_INFO = {
+    "strategy": "daily",
+    "mongo_format": "%Y-%m-%d",
+    "display_format": "%Y-%m-%d",
+    "timezone": "UTC",
+}
+_BASE_STATS_RESULT = {
+    "timezone": "UTC",
+    "group_by": ["time"],
+    "filters": {},
+    "time_range": {"start_date": "2024-01-01T00:00:00+00:00", "end_date": "2024-01-08T00:00:00+00:00"},
+    "summary": _SUMMARY,
+    "metrics": {},
+    "generated_at": "2024-01-08T00:00:00+00:00",
+    "api_version": "v1",
+}
+
+
 class TestStats:
     _STATS_RESULT = {
+        **_BASE_STATS_RESULT,
         "scope": "anon",
-        "timezone": "UTC",
-        "group_by": ["time"],
-        "filters": {},
-        "time_range": {"start_date": "2024-01-01", "end_date": "2024-01-08"},
-        "summary": {},
-        "metrics": {},
-        "time_bucket_info": {"strategy": "daily", "timezone": "UTC"},
+        "short_code": "abc123",
+        "time_bucket_info": _TIME_BUCKET_INFO,
     }
 
     def test_stats_anon_scope(self):
@@ -450,18 +471,15 @@ class TestStats:
         assert resp.status_code == 200
         body = resp.json()
         assert body["scope"] == "anon"
+        assert body["summary"]["total_clicks"] == 42
         assert "time_bucket_info" in body
+        assert body["time_bucket_info"]["strategy"] == "daily"
 
     def test_stats_all_scope_with_auth(self):
         user = _make_user()
         mock_svc = AsyncMock()
         mock_svc.query = AsyncMock(
-            return_value={
-                "scope": "all",
-                "metrics": {},
-                "summary": {},
-                "time_bucket_info": {},
-            }
+            return_value={**_BASE_STATS_RESULT, "scope": "all"}
         )
 
         application = _build_test_app(

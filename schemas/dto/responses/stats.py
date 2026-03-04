@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class StatsSummary(BaseModel):
@@ -47,6 +47,18 @@ class ComputedMetrics(BaseModel):
     average_clicks_per_visitor: float
 
 
+class TimeBucketInfo(BaseModel):
+    """Time bucketing metadata — only present when 'time' is in group_by."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    strategy: str  # e.g. "hourly", "daily", "weekly", "monthly", "legacy"
+    mongo_format: str  # strftime format used in MongoDB $dateToString
+    display_format: str  # strftime format used in the response labels
+    timezone: str  # IANA timezone name
+    interval_minutes: Optional[int] = None  # only for fixed-interval strategies
+
+
 class StatsResponse(BaseModel):
     """Response body for GET /api/v1/stats.
 
@@ -64,7 +76,15 @@ class StatsResponse(BaseModel):
     time_range: StatsTimeRange
     summary: StatsSummary
     # dynamic: {"clicks_by_time": [...], "unique_clicks_by_browser": [...], ...}
-    metrics: dict[str, list[dict[str, Any]]]
+    metrics: dict[str, list[dict[str, Any]]] = Field(
+        default_factory=dict,
+        description=(
+            "Keyed by '{metric}_by_{dimension}' (e.g. 'clicks_by_browser', "
+            "'unique_clicks_by_time'). Each value is a list of data-point objects "
+            "whose keys are the dimension name, the metric name, and "
+            "'{metric}_percentage'."
+        ),
+    )
 
     # Metadata fields added by format_stats_response_with_metadata
     generated_at: Optional[str] = None  # ISO 8601 string
@@ -74,7 +94,7 @@ class StatsResponse(BaseModel):
     short_code: Optional[str] = None
 
     # Only present when group_by includes "time"
-    time_bucket_info: Optional[dict[str, Any]] = None
+    time_bucket_info: Optional[TimeBucketInfo] = None
 
     # Only present when total_clicks > 0
     computed_metrics: Optional[ComputedMetrics] = None

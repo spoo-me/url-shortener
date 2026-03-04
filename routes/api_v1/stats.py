@@ -7,7 +7,7 @@ API key users require ``stats:read``, ``urls:read``, or ``admin:all``.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Request
 
@@ -19,6 +19,7 @@ from dependencies import (
 )
 from middleware.rate_limiter import dynamic_limit, limiter
 from schemas.dto.requests.stats import StatsQuery
+from schemas.dto.responses.stats import StatsResponse
 from services.stats_service import StatsService
 from shared.datetime_utils import parse_datetime
 
@@ -39,7 +40,7 @@ async def stats_v1(
     query: StatsQuery = Depends(),
     user: Optional[CurrentUser] = Depends(get_current_user),
     stats_service: StatsService = Depends(get_stats_service),
-) -> dict[str, Any]:
+) -> StatsResponse:
     """Get click statistics for URLs.
 
     Scope (if API key): ``stats:read``, ``urls:read``, or ``admin:all``.
@@ -51,7 +52,7 @@ async def stats_v1(
     start_date = parse_datetime(query.start_date) if query.start_date else None
     end_date = parse_datetime(query.end_date) if query.end_date else None
 
-    return await stats_service.query(
+    result = await stats_service.query(
         owner_id=owner_id,
         scope=query.scope,
         short_code=query.short_code,
@@ -62,3 +63,4 @@ async def stats_v1(
         metrics=query.parsed_metrics,
         tz_name=query.timezone,
     )
+    return StatsResponse.model_validate(result)
