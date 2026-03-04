@@ -13,7 +13,14 @@ from __future__ import annotations
 import json
 from typing import Any, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PrivateAttr,
+    field_validator,
+    model_validator,
+)
 
 ALLOWED_SCOPES = frozenset({"all", "anon"})
 ALLOWED_GROUP_BY = frozenset(
@@ -71,10 +78,22 @@ class StatsQuery(BaseModel):
     city: Optional[str] = None
     referrer: Optional[str] = None
 
-    # --- Parsed/validated results (excluded from serialization) ---
-    parsed_group_by: list[str] = Field(default_factory=list, exclude=True)
-    parsed_metrics: list[str] = Field(default_factory=list, exclude=True)
-    parsed_filters: dict[str, list[str]] = Field(default_factory=dict, exclude=True)
+    # --- Parsed/validated results (private — not exposed as query params) ---
+    _parsed_group_by: list[str] = PrivateAttr(default_factory=list)
+    _parsed_metrics: list[str] = PrivateAttr(default_factory=list)
+    _parsed_filters: dict[str, list[str]] = PrivateAttr(default_factory=dict)
+
+    @property
+    def parsed_group_by(self) -> list[str]:
+        return self._parsed_group_by
+
+    @property
+    def parsed_metrics(self) -> list[str]:
+        return self._parsed_metrics
+
+    @property
+    def parsed_filters(self) -> dict[str, list[str]]:
+        return self._parsed_filters
 
     @field_validator("scope", mode="after")
     @classmethod
@@ -91,7 +110,7 @@ class StatsQuery(BaseModel):
         invalid = set(raw_group) - ALLOWED_GROUP_BY
         if invalid:
             raise ValueError(f"invalid group_by values: {', '.join(invalid)}")
-        self.parsed_group_by = raw_group if raw_group else ["time"]
+        self._parsed_group_by = raw_group if raw_group else ["time"]
 
         # metrics
         raw_metrics = _parse_comma_separated(self.metrics)
@@ -99,11 +118,12 @@ class StatsQuery(BaseModel):
             invalid_m = set(raw_metrics) - ALLOWED_METRICS
             if invalid_m:
                 raise ValueError(f"invalid metrics: {', '.join(invalid_m)}")
-            self.parsed_metrics = raw_metrics
+            self._parsed_metrics = raw_metrics
         else:
-            self.parsed_metrics = ["clicks", "unique_clicks"]
+            self._parsed_metrics = ["clicks", "unique_clicks"]
 
         # filters JSON string
+        parsed_filters: dict[str, list[str]] = {}
         if self.filters:
             try:
                 filters_json = json.loads(self.filters)
@@ -112,7 +132,7 @@ class StatsQuery(BaseModel):
             if isinstance(filters_json, dict):
                 for key, value in filters_json.items():
                     if key in ALLOWED_FILTERS:
-                        self.parsed_filters[key] = _parse_comma_separated(value)
+                        parsed_filters[key] = _parse_comma_separated(value)
 
         # Individual dimension filter params
         for dim in ("browser", "os", "country", "city", "referrer", "short_code"):
@@ -121,7 +141,9 @@ class StatsQuery(BaseModel):
                 # short_code filter is blocked when scope=anon (bypass prevention)
                 if dim == "short_code" and self.scope == "anon":
                     continue
-                self.parsed_filters[dim] = _parse_comma_separated(raw)
+                parsed_filters[dim] = _parse_comma_separated(raw)
+
+        self._parsed_filters = parsed_filters
 
         return self
 

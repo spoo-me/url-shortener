@@ -13,10 +13,14 @@ import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo.asynchronous.mongo_client import AsyncMongoClient
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from config import AppSettings
 from errors import register_error_handlers
+from middleware.rate_limiter import limiter
 from repositories.indexes import ensure_indexes
+from routes.api_v1 import router as api_v1_router
 from routes.health_routes import router as health_router
 
 
@@ -78,7 +82,11 @@ def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
         allow_headers=["*"],
     )
 
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
     register_error_handlers(app)
     app.include_router(health_router)
+    app.include_router(api_v1_router)
 
     return app

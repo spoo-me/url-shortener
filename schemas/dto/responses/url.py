@@ -76,6 +76,15 @@ class UrlListItem(BaseModel):
     last_click: Optional[str] = None  # ISO 8601 string or null
 
 
+class DeleteUrlResponse(BaseModel):
+    """Response body for DELETE /api/v1/urls/{url_id}."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    message: str
+    id: str
+
+
 class UrlListResponse(BaseModel):
     """Response body for GET /api/v1/urls.
 

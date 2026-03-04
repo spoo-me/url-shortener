@@ -41,6 +41,7 @@ class UrlV2Doc(MongoBaseModel):
     private_stats: Optional[bool] = True  # None for anonymous/unowned URLs
     total_clicks: int = 0
     last_click: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 
 class LegacyUrlDoc(MongoBaseModel):

@@ -12,7 +12,9 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError as PydanticValidationError
 
 
 class AppError(Exception):
@@ -57,6 +59,20 @@ class ForbiddenError(AppError):
     error_code = "forbidden"
 
 
+class EmailNotVerifiedError(ForbiddenError):
+    """Raised when email verification is required before proceeding."""
+
+    error_code = "EMAIL_NOT_VERIFIED"
+
+    def to_dict(self) -> dict:
+        d = super().to_dict()
+        d["message"] = (
+            "You must verify your email address before creating resources. "
+            "Check your inbox for the verification code."
+        )
+        return d
+
+
 class NotFoundError(AppError):
     status_code = 404
     error_code = "not_found"
@@ -83,6 +99,26 @@ def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
         return JSONResponse(status_code=exc.status_code, content=exc.to_dict())
+
+    @app.exception_handler(RequestValidationError)
+    async def request_validation_error_handler(
+        request: Request, exc: RequestValidationError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=422,
+            content={"error": "Validation error", "code": "validation_error"},
+        )
+
+    @app.exception_handler(PydanticValidationError)
+    async def pydantic_validation_error_handler(
+        request: Request, exc: PydanticValidationError
+    ) -> JSONResponse:
+        # pydantic.ValidationError from Depends() resolution is not automatically
+        # wrapped as RequestValidationError — handle it here to return 422.
+        return JSONResponse(
+            status_code=422,
+            content={"error": "Validation error", "code": "validation_error"},
+        )
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(

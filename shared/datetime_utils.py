@@ -43,6 +43,25 @@ def parse_datetime(value: Any) -> Optional[datetime]:
         return None
 
 
+def to_unix_timestamp(dt: Optional[datetime], default: Optional[int] = None) -> Optional[int]:
+    """Convert a datetime to a Unix timestamp integer.
+
+    Naive datetimes are assumed to be UTC.  Returns *default* if *dt* is ``None``.
+
+    Args:
+        dt: The datetime to convert, or ``None``.
+        default: Value to return when *dt* is ``None`` (defaults to ``None``).
+
+    Returns:
+        Unix timestamp as an integer, or *default* if *dt* is ``None``.
+    """
+    if dt is None:
+        return default
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return int(dt.timestamp())
+
+
 def convert_to_gmt(expiration_time: str) -> Optional[datetime]:
     """Parse an ISO 8601 string and convert to UTC.
 
