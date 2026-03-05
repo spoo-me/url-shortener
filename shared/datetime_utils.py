@@ -43,7 +43,9 @@ def parse_datetime(value: Any) -> Optional[datetime]:
         return None
 
 
-def to_unix_timestamp(dt: Optional[datetime], default: Optional[int] = None) -> Optional[int]:
+def to_unix_timestamp(
+    dt: Optional[datetime], default: Optional[int] = None
+) -> Optional[int]:
     """Convert a datetime to a Unix timestamp integer.
 
     Naive datetimes are assumed to be UTC.  Returns *default* if *dt* is ``None``.

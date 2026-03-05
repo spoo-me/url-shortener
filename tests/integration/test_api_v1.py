@@ -442,7 +442,10 @@ _BASE_STATS_RESULT = {
     "timezone": "UTC",
     "group_by": ["time"],
     "filters": {},
-    "time_range": {"start_date": "2024-01-01T00:00:00+00:00", "end_date": "2024-01-08T00:00:00+00:00"},
+    "time_range": {
+        "start_date": "2024-01-01T00:00:00+00:00",
+        "end_date": "2024-01-08T00:00:00+00:00",
+    },
     "summary": _SUMMARY,
     "metrics": {},
     "generated_at": "2024-01-08T00:00:00+00:00",
@@ -478,9 +481,7 @@ class TestStats:
     def test_stats_all_scope_with_auth(self):
         user = _make_user()
         mock_svc = AsyncMock()
-        mock_svc.query = AsyncMock(
-            return_value={**_BASE_STATS_RESULT, "scope": "all"}
-        )
+        mock_svc.query = AsyncMock(return_value={**_BASE_STATS_RESULT, "scope": "all"})
 
         application = _build_test_app(
             {get_current_user: lambda: user, get_stats_service: lambda: mock_svc}

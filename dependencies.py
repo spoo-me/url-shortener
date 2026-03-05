@@ -23,11 +23,15 @@ from repositories.blocked_url_repository import BlockedUrlRepository
 from repositories.click_repository import ClickRepository
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
 from repositories.legacy.legacy_url_repository import LegacyUrlRepository
+from repositories.token_repository import TokenRepository
 from repositories.url_repository import UrlRepository
+from repositories.user_repository import UserRepository
 from schemas.models.api_key import ApiKeyDoc
 from services.api_key_service import ApiKeyService
+from services.auth_service import AuthService
 from services.export.formatters import default_formatters
 from services.export.service import ExportService
+from services.oauth_service import OAuthService
 from services.stats_service import StatsService
 from services.url_service import UrlService
 from shared.crypto import hash_token
@@ -52,6 +56,11 @@ async def get_db(request: Request):
 async def get_redis(request: Request):
     """Return the async Redis client from app.state (may be None if not configured)."""
     return request.app.state.redis
+
+
+def get_email_provider(request: Request):
+    """Return the shared ZeptoMailProvider singleton from app.state."""
+    return request.app.state.email_provider
 
 
 # ── Auth ─────────────────────────────────────────────────────────────────────
@@ -99,15 +108,11 @@ async def get_current_user(
             raw = token[len("spoo_") :]
             token_hash = hash_token(raw)
             try:
-                doc = await db["api-keys"].find_one({"token_hash": token_hash})
+                key = await ApiKeyRepository(db["api-keys"]).find_by_hash(token_hash)
             except Exception:
                 return None
 
-            if not doc:
-                return None
-
-            key = ApiKeyDoc.from_mongo(doc)
-            if key.revoked:
+            if key is None or key.revoked:
                 return None
 
             now = datetime.now(timezone.utc)
@@ -120,15 +125,12 @@ async def get_current_user(
                 if exp <= now:
                     return None
 
-            # Fetch email_verified from users collection
             try:
-                user_doc = await db["users"].find_one(
-                    {"_id": key.user_id}, {"email_verified": 1}
-                )
+                user = await UserRepository(db["users"]).find_by_id(key.user_id)
             except Exception:
                 return None
 
-            email_verified = bool((user_doc or {}).get("email_verified", False))
+            email_verified = user.email_verified if user else False
             return CurrentUser(
                 user_id=key.user_id,
                 email_verified=email_verified,
@@ -229,3 +231,24 @@ async def get_export_service(
 async def get_api_key_service(db=Depends(get_db)) -> ApiKeyService:
     api_key_repo = ApiKeyRepository(db["api-keys"])
     return ApiKeyService(api_key_repo)
+
+
+async def get_auth_service(
+    db=Depends(get_db),
+    settings: AppSettings = Depends(get_settings),
+    email=Depends(get_email_provider),
+) -> AuthService:
+    """Build and return an AuthService for the current request."""
+    user_repo = UserRepository(db["users"])
+    token_repo = TokenRepository(db["verification-tokens"])
+    return AuthService(user_repo, token_repo, email, settings.jwt)
+
+
+async def get_oauth_service(
+    db=Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
+    email=Depends(get_email_provider),
+) -> OAuthService:
+    """Build and return an OAuthService for the current request."""
+    user_repo = UserRepository(db["users"])
+    return OAuthService(user_repo, auth_service, email)

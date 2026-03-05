@@ -16,12 +16,19 @@ from pymongo.asynchronous.mongo_client import AsyncMongoClient
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
+from starlette.middleware.sessions import SessionMiddleware
+
 from config import AppSettings
 from errors import register_error_handlers
+from infrastructure.email.zeptomail import ZeptoMailProvider
+from infrastructure.http_client import HttpClient
+from infrastructure.oauth_clients import init_oauth
 from middleware.rate_limiter import limiter
 from repositories.indexes import ensure_indexes
 from routes.api_v1 import router as api_v1_router
+from routes.auth_routes import router as auth_router
 from routes.health_routes import router as health_router
+from routes.oauth_routes import router as oauth_router
 
 
 def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
@@ -56,6 +63,17 @@ def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
             )
         app.state.redis = redis_client
 
+        # OAuth clients — stored on app.state for route-layer access
+        _, oauth_providers = init_oauth(settings.oauth)
+        app.state.oauth_providers = oauth_providers
+
+        # Shared HTTP client + email provider — singletons to preserve connection pooling
+        http_client = HttpClient(timeout=5.0)
+        app.state.http_client = http_client
+        app.state.email_provider = ZeptoMailProvider(
+            settings.email, http_client, app_url=settings.app_url
+        )
+
         await ensure_indexes(app.state.db)
 
         yield
@@ -64,6 +82,7 @@ def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
         await mongo_client.close()
         if redis_client is not None:
             await redis_client.aclose()
+        await http_client.aclose()
 
     app = FastAPI(
         title=settings.app_name,
@@ -72,6 +91,9 @@ def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
         redoc_url=None,
         lifespan=lifespan,
     )
+
+    # Session middleware — required by Authlib Starlette OAuth client for state storage
+    app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
 
     # all origins allowed with credentials support.
     app.add_middleware(
@@ -87,6 +109,8 @@ def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
 
     register_error_handlers(app)
     app.include_router(health_router)
+    app.include_router(auth_router)
+    app.include_router(oauth_router)
     app.include_router(api_v1_router)
 
     return app

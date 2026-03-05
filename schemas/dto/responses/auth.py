@@ -13,7 +13,7 @@ VerifyEmailResponse — POST /auth/verify-email  (200)
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -125,3 +125,30 @@ class VerifyEmailResponse(BaseModel):
     success: bool
     message: str
     email_verified: bool
+
+
+class MeResponse(BaseModel):
+    """Response body for GET /auth/me (200)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    user: UserProfileResponse
+
+
+class SendVerificationResponse(BaseModel):
+    """Response body for POST /auth/send-verification (200)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    success: bool
+    message: str
+    expires_in: int
+
+
+class OAuthProvidersResponse(BaseModel):
+    """Response body for GET /oauth/providers (200)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    providers: list[dict[str, Any]]
+    password_set: bool

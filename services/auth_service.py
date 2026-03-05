@@ -679,3 +679,14 @@ class AuthService:
             raise AppError("failed to set password")
 
         log.info("password_set", user_id=user_id)
+
+    async def get_user_profile(self, user_id: str) -> UserDoc:
+        """Fetch a user document for profile display.
+
+        Raises:
+            NotFoundError: User not found.
+        """
+        user = await self._user_repo.find_by_id(ObjectId(user_id))
+        if not user:
+            raise NotFoundError("user not found")
+        return user
