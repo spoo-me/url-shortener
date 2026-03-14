@@ -33,11 +33,11 @@
 {% endblock %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=9">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/customNotification.css') }}?v=4">
+<link rel="stylesheet" href="{{ url_for('static', path='css/index.css') }}?v=9">
+<link rel="stylesheet" href="{{ url_for('static', path='css/customNotification.css') }}?v=4">
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/landing-edit-modal.css') }}">
-<script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
+<link rel="stylesheet" href="{{ url_for('static', path='css/landing-edit-modal.css') }}">
+<script src="{{ url_for('static', path='js/customNotification.js') }}?v=3"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Allerta+Stencil&display=swap" rel="preload">
@@ -122,8 +122,8 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/landing-edit-modal.js') }}"></script>
-<script src="{{ url_for('static', filename='js/index-recent-links.js') }}?v=1"></script>
-<script src="{{ url_for('static', filename='js/index-validate.js') }}?v=1"></script>
-<script src="{{ url_for('static', filename='js/index-script.js') }}?v=6" defer></script>
+<script src="{{ url_for('static', path='js/landing-edit-modal.js') }}"></script>
+<script src="{{ url_for('static', path='js/index-recent-links.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='js/index-validate.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='js/index-script.js') }}?v=6" defer></script>
 {% endblock %}

@@ -5,30 +5,40 @@ create_app() is the single entry point for building the app.
 
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, Optional
 
 import redis.asyncio as aioredis
 import sentry_sdk
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pymongo.asynchronous.mongo_client import AsyncMongoClient
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-
 from starlette.middleware.sessions import SessionMiddleware
 
 from config import AppSettings
-from errors import register_error_handlers
 from infrastructure.email.zeptomail import ZeptoMailProvider
+from infrastructure.geoip import GeoIPService
 from infrastructure.http_client import HttpClient
 from infrastructure.oauth_clients import init_oauth
+from middleware.error_handler import register_error_handlers
+from middleware.logging import RequestLoggingMiddleware
 from middleware.rate_limiter import limiter
+from middleware.security import MaxContentLengthMiddleware, configure_cors
 from repositories.indexes import ensure_indexes
+from shared.logging import get_logger
+
 from routes.api_v1 import router as api_v1_router
 from routes.auth_routes import router as auth_router
+from routes.dashboard_routes import router as dashboard_router
 from routes.health_routes import router as health_router
+from routes.legacy.stats import router as legacy_stats_router
+from routes.legacy.url_shortener import router as legacy_url_router
 from routes.oauth_routes import router as oauth_router
+from routes.redirect_routes import router as redirect_router
+from routes.static_routes import router as static_router
+
+log = get_logger(__name__)
 
 
 def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
@@ -60,6 +70,20 @@ def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
                 settings.redis.redis_uri,
                 encoding="utf-8",
                 decode_responses=True,
+                socket_keepalive=True,
+                health_check_interval=30,
+            )
+            try:
+                await redis_client.ping()
+                log.info(
+                    "redis_connected", ttl_seconds=settings.redis.redis_ttl_seconds
+                )
+            except Exception as e:
+                log.error("redis_connection_failed", error=str(e))
+                redis_client = None
+        else:
+            log.warning(
+                "redis_not_configured", detail="set REDIS_URI to enable caching"
             )
         app.state.redis = redis_client
 
@@ -72,6 +96,11 @@ def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
         app.state.http_client = http_client
         app.state.email_provider = ZeptoMailProvider(
             settings.email, http_client, app_url=settings.app_url
+        )
+
+        # GeoIP — singleton so the .mmdb readers are opened once and reused
+        app.state.geoip = GeoIPService(
+            settings.geoip_country_db, settings.geoip_city_db
         )
 
         await ensure_indexes(app.state.db)
@@ -92,25 +121,37 @@ def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Session middleware — required by Authlib Starlette OAuth client for state storage
+    # ── Middleware (registered in reverse execution order) ────────────────
+    # 1. Session — outermost, needed by Authlib OAuth for state storage
     app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
-
-    # all origins allowed with credentials support.
+    # 2. CORS — must wrap everything
+    configure_cors(app, settings)
+    # 3. Body size limit
     app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.cors_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        MaxContentLengthMiddleware, max_content_length=settings.max_content_length
     )
+    # 4. Request logging — innermost, logs all requests with request_id
+    app.add_middleware(RequestLoggingMiddleware)
 
+    # ── Error handlers + rate limiter ────────────────────────────────────
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
     register_error_handlers(app)
+
+    # ── Static files ─────────────────────────────────────────────────────
+    _static_dir = os.path.join(os.path.dirname(__file__), "static")
+    if os.path.isdir(_static_dir):
+        app.mount("/static", StaticFiles(directory=_static_dir), name="static")
+
+    # ── Routers ──────────────────────────────────────────────────────────
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(oauth_router)
     app.include_router(api_v1_router)
+    app.include_router(dashboard_router)
+    app.include_router(static_router)
+    app.include_router(legacy_stats_router)
+    # legacy_url_router and redirect_router last — both have catch-all /{short_code} variants
+    app.include_router(legacy_url_router)
+    app.include_router(redirect_router)
 
     return app

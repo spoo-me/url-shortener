@@ -1,20 +1,12 @@
 """
-Application error hierarchy and FastAPI exception handlers.
+Application error hierarchy.
 
-AppError is the base for all typed errors. The global exception handler
-converts AppError subclasses to consistent JSON responses.
-
-Non-AppError exceptions bubble up as 500s (with Sentry reporting in production).
+AppError is the base for all typed errors.
 """
 
 from __future__ import annotations
 
 from typing import Any, Optional
-
-from fastapi import FastAPI, Request
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
-from pydantic import ValidationError as PydanticValidationError
 
 
 class AppError(Exception):
@@ -91,45 +83,3 @@ class GoneError(AppError):
 class RateLimitError(AppError):
     status_code = 429
     error_code = "rate_limit_exceeded"
-
-
-def register_error_handlers(app: FastAPI) -> None:
-    """Register global exception handlers on the FastAPI app."""
-
-    @app.exception_handler(AppError)
-    async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
-        return JSONResponse(status_code=exc.status_code, content=exc.to_dict())
-
-    @app.exception_handler(RequestValidationError)
-    async def request_validation_error_handler(
-        request: Request, exc: RequestValidationError
-    ) -> JSONResponse:
-        return JSONResponse(
-            status_code=422,
-            content={"error": "Validation error", "code": "validation_error"},
-        )
-
-    @app.exception_handler(PydanticValidationError)
-    async def pydantic_validation_error_handler(
-        request: Request, exc: PydanticValidationError
-    ) -> JSONResponse:
-        # pydantic.ValidationError from Depends() resolution is not automatically
-        # wrapped as RequestValidationError — handle it here to return 422.
-        return JSONResponse(
-            status_code=422,
-            content={"error": "Validation error", "code": "validation_error"},
-        )
-
-    @app.exception_handler(Exception)
-    async def unhandled_exception_handler(
-        request: Request, exc: Exception
-    ) -> JSONResponse:
-        # Sentry integration: if sentry_sdk is initialized it will auto-capture
-        # unhandled exceptions before this handler fires.
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": "An internal server error occurred.",
-                "code": "internal_error",
-            },
-        )

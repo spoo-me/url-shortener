@@ -36,15 +36,15 @@ def make_cursor() -> AsyncMock:
 def make_collection() -> AsyncMock:
     """Return a mock that behaves like an async pymongo AsyncCollection.
 
-    In PyMongo async, find() and aggregate() are *synchronous* calls that
-    return a cursor object; only cursor.to_list() is awaitable. We reflect
-    that here by using MagicMock (not AsyncMock) for find/aggregate so that
-    calling them returns a cursor directly rather than a coroutine.
+    In PyMongo async (4.16+):
+    - find() is *synchronous* — returns a cursor directly (MagicMock)
+    - aggregate() is *async* — returns a coroutine that resolves to a cursor (AsyncMock)
+    - find_one(), count_documents(), etc. are async (handled by AsyncMock default)
     """
     col = AsyncMock()
     cursor = make_cursor()
     col.find = MagicMock(return_value=cursor)
-    col.aggregate = MagicMock(return_value=cursor)
+    col.aggregate = AsyncMock(return_value=cursor)
     return col
 
 

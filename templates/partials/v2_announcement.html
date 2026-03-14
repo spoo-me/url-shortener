@@ -18,7 +18,7 @@
             <!-- Step 1: Welcome -->
             <div id="v2-step-1" class="v2-modal-content active">
                 <div class="v2-emoji-container v2-emoji-plain">
-                    <img src="{{ url_for('static', filename='images/party_popper_3D.png') }}"
+                    <img src="{{ url_for('static', path='images/party_popper_3D.png') }}"
                         alt="Party popper celebrating v2 launch" width="120" height="120">
                 </div>
                 <h1 class="v2-title">spoo.me v2 is here!</h1>
@@ -36,9 +36,9 @@
             <div id="v2-step-2" class="v2-modal-content">
                 <div class="v2-feature-page">
                     <div class="v2-preview-tooltip"
-                        data-preview-url="{{ url_for('static', filename='images/banner-rounded.png') }}"></div>
+                        data-preview-url="{{ url_for('static', path='images/banner-rounded.png') }}"></div>
                     <div class="v2-emoji-container v2-emoji-feature">
-                        <img src="{{ url_for('static', filename='images/login_3D.png') }}"
+                        <img src="{{ url_for('static', path='images/login_3D.png') }}"
                             alt="Login and dashboard 3D icon" width="100" height="100">
                     </div>
                     <h2 class="v2-feature-title">Login System & Dashboard</h2>
@@ -47,17 +47,17 @@
                     </p>
                     <div class="v2-feature-highlights">
                         <div class="v2-feature-highlight-item"
-                            data-preview-url="{{ url_for('static', filename='images/signin_demo.jpeg') }}">
+                            data-preview-url="{{ url_for('static', path='images/signin_demo.jpeg') }}">
                             <i class="ti ti-check"></i>
                             <span>Secure authentication with email/password</span>
                         </div>
                         <div class="v2-feature-highlight-item"
-                            data-preview-url="{{ url_for('static', filename='images/signin_demo.jpeg') }}">
+                            data-preview-url="{{ url_for('static', path='images/signin_demo.jpeg') }}">
                             <i class="ti ti-check"></i>
                             <span>OAuth login with Google, GitHub & Discord</span>
                         </div>
                         <div class="v2-feature-highlight-item"
-                            data-preview-url="{{ url_for('static', filename='images/dashboard_demo.jpeg') }}">
+                            data-preview-url="{{ url_for('static', path='images/dashboard_demo.jpeg') }}">
                             <i class="ti ti-check"></i>
                             <span>Centralized dashboard for all your links</span>
                         </div>
@@ -70,7 +70,7 @@
                 <div class="v2-feature-page">
                     <div class="v2-preview-tooltip"></div>
                     <div class="v2-emoji-container v2-emoji-feature">
-                        <img src="{{ url_for('static', filename='images/link_3D.png') }}"
+                        <img src="{{ url_for('static', path='images/link_3D.png') }}"
                             alt="Advanced link management 3D icon" width="100" height="100">
                     </div>
                     <h2 class="v2-feature-title">Advanced Link Management</h2>
@@ -79,17 +79,17 @@
                     </p>
                     <div class="v2-feature-highlights">
                         <div class="v2-feature-highlight-item"
-                            data-preview-url="{{ url_for('static', filename='images/edit_url_demo.jpeg') }}">
+                            data-preview-url="{{ url_for('static', path='images/edit_url_demo.jpeg') }}">
                             <i class="ti ti-check"></i>
                             <span>Edit destination URLs anytime</span>
                         </div>
                         <div class="v2-feature-highlight-item"
-                            data-preview-url="{{ url_for('static', filename='images/pause_demo.jpeg') }}">
+                            data-preview-url="{{ url_for('static', path='images/pause_demo.jpeg') }}">
                             <i class="ti ti-check"></i>
                             <span>Pause or activate links on demand</span>
                         </div>
                         <div class="v2-feature-highlight-item"
-                            data-preview-url="{{ url_for('static', filename='images/max_clicks_demo.jpeg') }}">
+                            data-preview-url="{{ url_for('static', path='images/max_clicks_demo.jpeg') }}">
                             <i class="ti ti-check"></i>
                             <span>Update passwords and max clicks</span>
                         </div>
@@ -102,7 +102,7 @@
                 <div class="v2-feature-page">
                     <div class="v2-preview-tooltip"></div>
                     <div class="v2-emoji-container v2-emoji-feature">
-                        <img src="{{ url_for('static', filename='images/key_3D.png') }}" alt="API keys security 3D icon"
+                        <img src="{{ url_for('static', path='images/key_3D.png') }}" alt="API keys security 3D icon"
                             width="100" height="100">
                     </div>
                     <h2 class="v2-feature-title">API Keys & Security</h2>
@@ -111,17 +111,17 @@
                     </p>
                     <div class="v2-feature-highlights">
                         <div class="v2-feature-highlight-item"
-                            data-preview-url="{{ url_for('static', filename='images/api_keys_demo.jpeg') }}">
+                            data-preview-url="{{ url_for('static', path='images/api_keys_demo.jpeg') }}">
                             <i class="ti ti-check"></i>
                             <span>Multiple API keys per account</span>
                         </div>
                         <div class="v2-feature-highlight-item"
-                            data-preview-url="{{ url_for('static', filename='images/api_permissions_demo.jpeg') }}">
+                            data-preview-url="{{ url_for('static', path='images/api_permissions_demo.jpeg') }}">
                             <i class="ti ti-check"></i>
                             <span>Granular permission controls</span>
                         </div>
                         <div class="v2-feature-highlight-item"
-                            data-preview-url="{{ url_for('static', filename='images/api_keys_demo.jpeg') }}">
+                            data-preview-url="{{ url_for('static', path='images/api_keys_demo.jpeg') }}">
                             <i class="ti ti-check"></i>
                             <span>Easy key rotation and revocation</span>
                         </div>
@@ -134,7 +134,7 @@
                 <div class="v2-feature-page">
                     <div class="v2-preview-tooltip"></div>
                     <div class="v2-emoji-container v2-emoji-feature">
-                        <img src="{{ url_for('static', filename='images/stats_3D.png') }}"
+                        <img src="{{ url_for('static', path='images/stats_3D.png') }}"
                             alt="Enhanced analytics 3D icon" width="100" height="100">
                     </div>
                     <h2 class="v2-feature-title">Enhanced Analytics</h2>
@@ -143,17 +143,17 @@
                     </p>
                     <div class="v2-feature-highlights">
                         <div class="v2-feature-highlight-item"
-                            data-preview-url="{{ url_for('static', filename='images/time_filter_demo.jpeg') }}">
+                            data-preview-url="{{ url_for('static', path='images/time_filter_demo.jpeg') }}">
                             <i class="ti ti-check"></i>
                             <span>Time-based filtering & date ranges</span>
                         </div>
                         <div class="v2-feature-highlight-item"
-                            data-preview-url="{{ url_for('static', filename='images/stats_demo.jpeg') }}">
+                            data-preview-url="{{ url_for('static', path='images/stats_demo.jpeg') }}">
                             <i class="ti ti-check"></i>
                             <span>Browser, OS & device breakdowns</span>
                         </div>
                         <div class="v2-feature-highlight-item"
-                            data-preview-url="{{ url_for('static', filename='images/geo_stats_demo.jpeg') }}">
+                            data-preview-url="{{ url_for('static', path='images/geo_stats_demo.jpeg') }}">
                             <i class="ti ti-check"></i>
                             <span>Geographic location insights</span>
                         </div>
@@ -166,7 +166,7 @@
                 <div class="v2-feature-page">
                     <div class="v2-preview-tooltip"></div>
                     <div class="v2-emoji-container v2-emoji-feature">
-                        <img src="{{ url_for('static', filename='images/api_3D.png') }}" alt="API platform 3D icon"
+                        <img src="{{ url_for('static', path='images/api_3D.png') }}" alt="API platform 3D icon"
                             width="100" height="100">
                     </div>
                     <h2 class="v2-feature-title">Next-Gen API Platform</h2>
@@ -176,17 +176,17 @@
                     </p>
                     <div class="v2-feature-highlights">
                         <div class="v2-feature-highlight-item"
-                            data-preview-url="{{ url_for('static', filename='images/api_demo.jpeg') }}">
+                            data-preview-url="{{ url_for('static', path='images/api_demo.jpeg') }}">
                             <i class="ti ti-check"></i>
                             <span>60 req/sec burst + larger daily quotas per key</span>
                         </div>
                         <div class="v2-feature-highlight-item"
-                            data-preview-url="{{ url_for('static', filename='images/stats_api_demo.jpeg') }}">
+                            data-preview-url="{{ url_for('static', path='images/stats_api_demo.jpeg') }}">
                             <i class="ti ti-check"></i>
                             <span>Unified endpoints for shorten, edit, stats & exports</span>
                         </div>
                         <div class="v2-feature-highlight-item"
-                            data-preview-url="{{ url_for('static', filename='images/api_key_api_demo.jpeg') }}">
+                            data-preview-url="{{ url_for('static', path='images/api_key_api_demo.jpeg') }}">
                             <i class="ti ti-check"></i>
                             <span>Fine-grained environment keys</span>
                         </div>
@@ -197,7 +197,7 @@
             <!-- Step 7: CTA (renumbered after removing Performance slide) -->
             <div id="v2-step-7" class="v2-modal-content">
                 <div class="v2-emoji-container v2-emoji-plain">
-                    <img src="{{ url_for('static', filename='images/rocket_3D.png') }}"
+                    <img src="{{ url_for('static', path='images/rocket_3D.png') }}"
                         alt="Rocket launching to represent getting started" width="120" height="120">
                 </div>
                 <h2 class="v2-title" style="font-size: 40px;">Ready to Get Started?</h2>

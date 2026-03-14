@@ -38,8 +38,8 @@ from errors import (
     ForbiddenError,
     NotFoundError,
     ValidationError,
-    register_error_handlers,
 )
+from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
 from routes.api_v1 import router as api_v1_router
 from schemas.models.api_key import ApiKeyDoc

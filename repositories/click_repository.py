@@ -52,7 +52,7 @@ class ClickRepository:
         multiple simultaneous aggregations). Returns the full result list.
         """
         try:
-            cursor = self._col.aggregate(pipeline)
+            cursor = await self._col.aggregate(pipeline)
             return await cursor.to_list(length=None)
         except Exception as exc:
             log.error(

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from errors import register_error_handlers
+from middleware.error_handler import register_error_handlers
 from routes.health_routes import router as health_router
 
 # Ensure a MONGODB_URI is present so AppSettings can be instantiated

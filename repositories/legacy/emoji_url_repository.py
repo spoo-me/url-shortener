@@ -75,7 +75,7 @@ class EmojiUrlRepository:
         aggregate_emoji_url() behaviour).
         """
         try:
-            cursor = self._col.aggregate(pipeline)
+            cursor = await self._col.aggregate(pipeline)
             results = await cursor.to_list(length=1)
             return results[0] if results else None
         except Exception as exc:

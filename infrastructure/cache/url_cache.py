@@ -29,6 +29,7 @@ class UrlCacheData:
     url_status: str  # ACTIVE, INACTIVE, BLOCKED, EXPIRED
     schema_version: str  # "v1" or "v2"
     owner_id: Optional[str]  # ObjectId as string; None for v1 URLs
+    total_clicks: int = 0  # Live click count for v1 max-clicks check
 
 
 class UrlCache:

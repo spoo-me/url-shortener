@@ -20,9 +20,9 @@
 {% endblock %}
 
 {% block head_css %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}?v=3">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/customNotification.css') }}?v=4">
-    <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/report.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/customNotification.css') }}?v=4">
+    <script src="{{ url_for('static', path='js/customNotification.js') }}?v=3"></script>
 {% endblock %}
 
 {% block content %}
@@ -36,7 +36,7 @@
             <input type="text" id="alias" name="short_code" placeholder="short-code" value="{{ short_code }}" required>
         </div>
         <textarea id="message" name="reason" placeholder="Reason for Reporting this Short URL" required>{{ reason }}</textarea>
-        <button type="submit" class="h-captcha" data-sitekey="ab2b86e1-0532-4971-87ce-26a0b1ea8712" data-callback="onSubmit"><img alt="hCaptcha Logo" src="{{ url_for('static', filename='images/hcaptcha.png') }}">Report</button>
+        <button type="submit" class="h-captcha" data-sitekey="ab2b86e1-0532-4971-87ce-26a0b1ea8712" data-callback="onSubmit"><img alt="hCaptcha Logo" src="{{ url_for('static', path='images/hcaptcha.png') }}">Report</button>
     </form>
 {% endblock %}
 

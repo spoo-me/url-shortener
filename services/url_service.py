@@ -103,13 +103,21 @@ class UrlService:
         # 3. Populate cache according to caching rules
         await self._populate_cache(short_code, url_cache_data, schema)
 
-        # 4. Raise for non-ACTIVE v2 (after caching minimal data)
+        # 4a. Raise for non-ACTIVE v2 (after caching minimal data)
         if schema == "v2" and url_cache_data.url_status in (
             "BLOCKED",
             "EXPIRED",
             "INACTIVE",
         ):
             _raise_for_status(url_cache_data.url_status)
+
+        # 4b. Raise for v1 URLs whose max-clicks have been exhausted
+        if (
+            schema == "v1"
+            and url_cache_data.max_clicks is not None
+            and url_cache_data.total_clicks >= url_cache_data.max_clicks
+        ):
+            raise GoneError("URL has expired (max clicks reached)")
 
         return url_cache_data, schema
 
@@ -556,6 +564,7 @@ def _legacy_doc_to_cache(
         max_clicks=doc.max_clicks,
         url_status="ACTIVE",
         schema_version=schema_version,
+        total_clicks=doc.total_clicks,
         owner_id=None,
     )
 

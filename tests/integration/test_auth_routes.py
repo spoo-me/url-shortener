@@ -32,8 +32,8 @@ from errors import (
     AuthenticationError,
     ConflictError,
     ValidationError,
-    register_error_handlers,
 )
+from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
 from routes.auth_routes import router as auth_router
 from routes.oauth_routes import router as oauth_router
