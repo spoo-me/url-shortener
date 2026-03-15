@@ -52,31 +52,75 @@ class StatsQuery(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    # Scope: "all" = all URLs owned by the authenticated user;
-    #        "anon" = single URL identified by short_code (may be unauthenticated)
-    scope: str = Field(default="all")
-    # Required when scope="anon"
-    short_code: Optional[str] = None
+    scope: str = Field(
+        default="all",
+        description="Statistics scope. 'anon' for public URL stats (requires short_code), 'all' for aggregate stats (requires auth)",
+        examples=["anon"],
+    )
+    short_code: Optional[str] = Field(
+        default=None,
+        description="URL alias to query stats for (required when scope=anon)",
+        examples=["mylink"],
+    )
 
-    # Time range — ISO 8601 strings or Unix epoch seconds
-    start_date: Optional[str] = None
-    end_date: Optional[str] = None
+    start_date: Optional[str] = Field(
+        default=None,
+        description="Start of time range as ISO 8601 datetime or Unix timestamp",
+        examples=["2025-01-01T00:00:00Z"],
+    )
+    end_date: Optional[str] = Field(
+        default=None,
+        description="End of time range as ISO 8601 datetime or Unix timestamp",
+        examples=["2025-12-31T23:59:59Z"],
+    )
 
-    # Aggregation dimensions: comma-separated subset of ALLOWED_GROUP_BY
-    group_by: Optional[str] = None
-    # Metrics to return: comma-separated subset of ALLOWED_METRICS
-    metrics: Optional[str] = None
+    group_by: Optional[str] = Field(
+        default=None,
+        description="Comma-separated dimensions: time, browser, os, country, city, referrer, short_code",
+        examples=["time,browser"],
+    )
+    metrics: Optional[str] = Field(
+        default=None,
+        description="Comma-separated metrics: clicks, unique_clicks",
+        examples=["clicks,unique_clicks"],
+    )
 
-    # IANA timezone for output date formatting
-    timezone: str = Field(default="UTC")
+    timezone: str = Field(
+        default="UTC",
+        description="IANA timezone for output formatting",
+        examples=["UTC", "America/New_York"],
+    )
 
-    # Dimension filters — JSON object string OR individual query params
-    filters: Optional[str] = None
-    browser: Optional[str] = None
-    os: Optional[str] = None
-    country: Optional[str] = None
-    city: Optional[str] = None
-    referrer: Optional[str] = None
+    filters: Optional[str] = Field(
+        default=None,
+        description='JSON filter object e.g. {"browser":["Chrome"]}',
+        examples=['{"browser":["Chrome","Firefox"]}'],
+    )
+    browser: Optional[str] = Field(
+        default=None,
+        description="Filter by browser name(s), comma-separated",
+        examples=["Chrome,Firefox"],
+    )
+    os: Optional[str] = Field(
+        default=None,
+        description="Filter by operating system(s), comma-separated",
+        examples=["Windows,macOS"],
+    )
+    country: Optional[str] = Field(
+        default=None,
+        description="Filter by country name(s), comma-separated",
+        examples=["United States,Germany"],
+    )
+    city: Optional[str] = Field(
+        default=None,
+        description="Filter by city name(s), comma-separated",
+        examples=["San Francisco,Berlin"],
+    )
+    referrer: Optional[str] = Field(
+        default=None,
+        description="Filter by referrer domain(s), comma-separated",
+        examples=["google.com,twitter.com"],
+    )
 
     # --- Parsed/validated results (private — not exposed as query params) ---
     _parsed_group_by: list[str] = PrivateAttr(default_factory=list)
@@ -154,7 +198,10 @@ class ExportQuery(StatsQuery):
     Superset of StatsQuery — adds the required ``format`` parameter.
     """
 
-    format: str
+    format: str = Field(
+        description="Export file format",
+        examples=["json"],
+    )
 
     @field_validator("format", mode="after")
     @classmethod

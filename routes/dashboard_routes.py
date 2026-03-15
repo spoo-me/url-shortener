@@ -33,7 +33,7 @@ from shared.logging import get_logger
 
 log = get_logger(__name__)
 
-router = APIRouter(prefix="/dashboard")
+router = APIRouter(prefix="/dashboard", include_in_schema=False)
 
 _TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
 templates = Jinja2Templates(directory=_TEMPLATE_DIR)

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
     from schemas.models.user import UserDoc
@@ -26,9 +26,19 @@ class AuthProviderInfo(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    provider: Optional[str] = None
-    email: Optional[str] = None
-    linked_at: Optional[str] = None  # ISO 8601 string
+    provider: Optional[str] = Field(
+        default=None, description="OAuth provider name", examples=["google"]
+    )
+    email: Optional[str] = Field(
+        default=None,
+        description="Email address from the OAuth provider",
+        examples=["user@gmail.com"],
+    )
+    linked_at: Optional[str] = Field(
+        default=None,
+        description="ISO 8601 timestamp when the provider was linked",
+        examples=["2025-01-15T10:30:00+00:00"],
+    )
 
 
 class UserPfp(BaseModel):
@@ -36,8 +46,14 @@ class UserPfp(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    url: Optional[str] = None
-    source: Optional[str] = None
+    url: Optional[str] = Field(
+        default=None,
+        description="Profile picture URL",
+        examples=["https://lh3.googleusercontent.com/a/photo"],
+    )
+    source: Optional[str] = Field(
+        default=None, description="Source of the profile picture", examples=["google"]
+    )
 
 
 class UserProfileResponse(BaseModel):
@@ -45,15 +61,23 @@ class UserProfileResponse(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    id: str
-    email: Optional[str] = None
-    email_verified: bool
-    user_name: Optional[str] = None
-    plan: str
-    password_set: bool
-    auth_providers: list[AuthProviderInfo]
+    id: str = Field(description="User ID", examples=["507f1f77bcf86cd799439011"])
+    email: Optional[str] = Field(
+        default=None, description="User's email address", examples=["user@example.com"]
+    )
+    email_verified: bool = Field(
+        description="Whether the email address has been verified"
+    )
+    user_name: Optional[str] = Field(
+        default=None, description="Display name", examples=["Jane Doe"]
+    )
+    plan: str = Field(description="Subscription plan", examples=["free"])
+    password_set: bool = Field(description="Whether the user has set a password")
+    auth_providers: list[AuthProviderInfo] = Field(description="Linked OAuth providers")
     # pfp is absent from the JSON when None (route handlers use exclude_none=True)
-    pfp: Optional[UserPfp] = None
+    pfp: Optional[UserPfp] = Field(
+        default=None, description="Profile picture (absent when not set)"
+    )
 
     @classmethod
     def from_user(cls, user: UserDoc) -> UserProfileResponse:
@@ -86,8 +110,10 @@ class LoginResponse(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    access_token: str
-    user: UserProfileResponse
+    access_token: str = Field(
+        description="JWT access token", examples=["eyJhbGciOiJIUzI1NiIs..."]
+    )
+    user: UserProfileResponse = Field(description="Authenticated user's profile")
 
 
 class RegisterResponse(BaseModel):
@@ -95,10 +121,16 @@ class RegisterResponse(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    access_token: str
-    user: UserProfileResponse
-    requires_verification: bool
-    verification_sent: bool
+    access_token: str = Field(
+        description="JWT access token", examples=["eyJhbGciOiJIUzI1NiIs..."]
+    )
+    user: UserProfileResponse = Field(description="Newly created user's profile")
+    requires_verification: bool = Field(
+        description="Whether email verification is required before accessing protected resources"
+    )
+    verification_sent: bool = Field(
+        description="Whether the verification email was sent successfully"
+    )
 
 
 class RefreshResponse(BaseModel):
@@ -106,7 +138,9 @@ class RefreshResponse(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    access_token: str
+    access_token: str = Field(
+        description="New JWT access token", examples=["eyJhbGciOiJIUzI1NiIs..."]
+    )
 
 
 class LogoutResponse(BaseModel):
@@ -114,7 +148,7 @@ class LogoutResponse(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    success: bool
+    success: bool = Field(description="Always true on successful logout")
 
 
 class VerifyEmailResponse(BaseModel):
@@ -122,9 +156,14 @@ class VerifyEmailResponse(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    success: bool
-    message: str
-    email_verified: bool
+    success: bool = Field(description="Whether verification succeeded")
+    message: str = Field(
+        description="Human-readable status message",
+        examples=["email verified successfully"],
+    )
+    email_verified: bool = Field(
+        description="Updated email verification status (always true on success)"
+    )
 
 
 class MeResponse(BaseModel):
@@ -132,7 +171,9 @@ class MeResponse(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    user: UserProfileResponse
+    user: UserProfileResponse = Field(
+        description="Current authenticated user's profile"
+    )
 
 
 class SendVerificationResponse(BaseModel):
@@ -140,9 +181,11 @@ class SendVerificationResponse(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    success: bool
-    message: str
-    expires_in: int
+    success: bool = Field(description="Whether the verification email was sent")
+    message: str = Field(description="Human-readable status message")
+    expires_in: int = Field(
+        description="OTP expiry duration in seconds", examples=[600]
+    )
 
 
 class OAuthProvidersResponse(BaseModel):
@@ -150,5 +193,9 @@ class OAuthProvidersResponse(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    providers: list[dict[str, Any]]
-    password_set: bool
+    providers: list[dict[str, Any]] = Field(
+        description="List of linked OAuth providers with name, email, and linked_at"
+    )
+    password_set: bool = Field(
+        description="Whether the user has a password set (affects unlink eligibility)"
+    )

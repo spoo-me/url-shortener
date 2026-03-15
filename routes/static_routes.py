@@ -24,7 +24,7 @@ from shared.logging import get_logger
 
 log = get_logger(__name__)
 
-router = APIRouter()
+router = APIRouter(include_in_schema=False)
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 _MISC_DIR = os.path.join(_PROJECT_ROOT, "misc")

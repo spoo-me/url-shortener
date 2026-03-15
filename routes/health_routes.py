@@ -12,11 +12,30 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-router = APIRouter(tags=["health"])
+from middleware.openapi import PUBLIC_SECURITY
+
+router = APIRouter(tags=["System"])
 
 
-@router.get("/health")
+@router.get(
+    "/health",
+    openapi_extra=PUBLIC_SECURITY,
+    operation_id="healthCheck",
+    summary="Health Check",
+)
 async def health_check(request: Request) -> JSONResponse:
+    """Check the health of the application and its dependencies.
+
+    Pings MongoDB and Redis to determine overall system status:
+
+    - **healthy** (200): Both MongoDB and Redis are reachable.
+    - **degraded** (200): MongoDB is reachable but Redis is down or not configured.
+    - **unhealthy** (503): MongoDB is unreachable -- the app cannot function.
+
+    **Authentication**: Not required (public endpoint)
+
+    **Rate Limits**: None
+    """
     checks: dict[str, str] = {}
     overall = "healthy"
 

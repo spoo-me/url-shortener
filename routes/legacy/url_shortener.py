@@ -43,7 +43,7 @@ from errors import ForbiddenError, GoneError, NotFoundError
 
 log = get_logger(__name__)
 
-router = APIRouter()
+router = APIRouter(include_in_schema=False)
 
 _TEMPLATE_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "templates"

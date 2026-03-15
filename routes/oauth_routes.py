@@ -27,6 +27,7 @@ from infrastructure.oauth_clients import (
     get_oauth_redirect_url,
     verify_oauth_state,
 )
+from middleware.openapi import ERROR_RESPONSES, PUBLIC_SECURITY
 from middleware.rate_limiter import limiter
 from routes.cookie_helpers import set_auth_cookies
 from services.oauth_service import OAuthService
@@ -35,7 +36,7 @@ from shared.logging import get_logger
 
 log = get_logger(__name__)
 
-router = APIRouter(prefix="/oauth")
+router = APIRouter(prefix="/oauth", tags=["OAuth"])
 
 _DASHBOARD_URL = "/dashboard"
 
@@ -43,19 +44,38 @@ _DASHBOARD_URL = "/dashboard"
 # ── Provider management (fixed paths — must come before parametric routes) ────
 
 
-@router.get("/providers")
+@router.get(
+    "/providers",
+    responses=ERROR_RESPONSES,
+    operation_id="listOAuthProviders",
+    summary="List OAuth Providers",
+)
 @limiter.limit("60 per minute")
 async def list_providers(
     request: Request,
     user: CurrentUser = Depends(require_auth),
     oauth_service: OAuthService = Depends(get_oauth_service),
 ) -> OAuthProvidersResponse:
-    """List all linked OAuth providers for the authenticated user."""
+    """List all OAuth providers linked to the authenticated user's account.
+
+    Returns each linked provider's name, email, and link date, plus whether
+    the user has a password set (needed by the UI to decide if unlinking
+    the last provider is allowed).
+
+    **Authentication**: Required (JWT or API key)
+
+    **Rate Limits**: 60/min
+    """
     providers, password_set = await oauth_service.list_providers(str(user.user_id))
     return OAuthProvidersResponse(providers=providers, password_set=password_set)
 
 
-@router.delete("/providers/{provider_name}/unlink")
+@router.delete(
+    "/providers/{provider_name}/unlink",
+    responses=ERROR_RESPONSES,
+    operation_id="unlinkOAuthProvider",
+    summary="Unlink OAuth Provider",
+)
 @limiter.limit("5 per minute")
 async def unlink_provider(
     provider_name: str,
@@ -63,7 +83,15 @@ async def unlink_provider(
     user: CurrentUser = Depends(require_auth),
     oauth_service: OAuthService = Depends(get_oauth_service),
 ) -> MessageResponse:
-    """Unlink an OAuth provider from the authenticated user's account."""
+    """Remove an OAuth provider link from the authenticated user's account.
+
+    Fails if the provider is the user's only authentication method (i.e.,
+    no password set and no other providers linked).
+
+    **Authentication**: Required (JWT or API key)
+
+    **Rate Limits**: 5/min
+    """
     await oauth_service.unlink_provider(str(user.user_id), provider_name)
     return MessageResponse(
         success=True, message=f"{provider_name} unlinked successfully"
@@ -73,13 +101,30 @@ async def unlink_provider(
 # ── OAuth flow (parametric provider routes — after fixed paths) ───────────────
 
 
-@router.get("/{provider}")
+@router.get(
+    "/{provider}",
+    responses=ERROR_RESPONSES,
+    openapi_extra=PUBLIC_SECURITY,
+    operation_id="initiateOAuthLogin",
+    summary="OAuth Login",
+)
 @limiter.limit("10 per minute")
 async def oauth_login(
     provider: str,
     request: Request,
 ) -> Response:
-    """Initiate OAuth login flow for the given provider."""
+    """Initiate the OAuth authorization flow for the given provider.
+
+    Redirects the user to the provider's consent screen (e.g., Google,
+    GitHub). After the user grants access, the provider redirects back
+    to ``GET /oauth/{provider}/callback``.
+
+    **Authentication**: Not required (public endpoint)
+
+    **Rate Limits**: 10/min
+
+    **Supported providers**: google, github (configurable)
+    """
     strategy = PROVIDER_STRATEGIES.get(provider)
     client = getattr(request.app.state, "oauth_providers", {}).get(provider)
     if not strategy or not client:
@@ -91,18 +136,32 @@ async def oauth_login(
     return await client.authorize_redirect(request, redirect_uri, state=state)
 
 
-@router.get("/{provider}/callback")
+@router.get(
+    "/{provider}/callback",
+    responses=ERROR_RESPONSES,
+    openapi_extra=PUBLIC_SECURITY,
+    operation_id="oauthCallback",
+    summary="OAuth Callback",
+)
 @limiter.limit("20 per minute")
 async def oauth_callback(
     provider: str,
     request: Request,
     oauth_service: OAuthService = Depends(get_oauth_service),
 ) -> Response:
-    """Handle OAuth callback for the given provider.
+    """Handle the OAuth provider callback after user authorization.
 
-    Validates state (CSRF), exchanges the auth code for a token, fetches user
-    info, delegates all business logic to OAuthService.handle_callback(), then
-    redirects to /dashboard with JWT cookies set.
+    Validates the CSRF state parameter, exchanges the authorization code for
+    an access token, fetches the user's profile from the provider, and then
+    either logs in an existing user or creates a new account. On success,
+    redirects to ``/dashboard`` with JWT cookies set.
+
+    **Authentication**: Not required (public endpoint)
+
+    **Rate Limits**: 20/min
+
+    **Notes**: This endpoint is called by the OAuth provider, not directly
+    by the client. The ``state`` query parameter is required for CSRF protection.
     """
     strategy = PROVIDER_STRATEGIES.get(provider)
     client = getattr(request.app.state, "oauth_providers", {}).get(provider)
@@ -157,14 +216,28 @@ async def oauth_callback(
     return resp
 
 
-@router.get("/{provider}/link")
+@router.get(
+    "/{provider}/link",
+    responses=ERROR_RESPONSES,
+    operation_id="linkOAuthProvider",
+    summary="Link OAuth Provider",
+)
 @limiter.limit("5 per minute")
 async def oauth_link(
     provider: str,
     request: Request,
     user: CurrentUser = Depends(require_auth),
 ) -> Response:
-    """Initiate OAuth linking flow to attach a provider to the authenticated account."""
+    """Initiate an OAuth flow to link a provider to the authenticated account.
+
+    Similar to ``GET /oauth/{provider}`` but includes the user's ID in the
+    state token so the callback knows to link rather than log in. The user
+    must already be authenticated.
+
+    **Authentication**: Required (JWT or API key)
+
+    **Rate Limits**: 5/min
+    """
     strategy = PROVIDER_STRATEGIES.get(provider)
     client = getattr(request.app.state, "oauth_providers", {}).get(provider)
     if not strategy or not client:

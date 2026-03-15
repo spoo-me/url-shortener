@@ -21,6 +21,7 @@ from dependencies import (
     require_verified_email,
 )
 from errors import NotFoundError, ValidationError
+from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES
 from middleware.rate_limiter import limiter
 from schemas.dto.requests.api_key import CreateApiKeyRequest
 from schemas.dto.responses.api_key import (
@@ -32,10 +33,16 @@ from schemas.dto.responses.api_key import (
 from services.api_key_service import ApiKeyService
 from shared.datetime_utils import parse_datetime, to_unix_timestamp
 
-router = APIRouter()
+router = APIRouter(tags=["API Keys"])
 
 
-@router.post("/keys", status_code=201)
+@router.post(
+    "/keys",
+    status_code=201,
+    responses=AUTH_RESPONSES,
+    operation_id="createApiKey",
+    summary="Create API Key",
+)
 @limiter.limit("5 per hour")
 async def create_api_key(
     request: Request,
@@ -43,10 +50,24 @@ async def create_api_key(
     user: CurrentUser = Depends(require_verified_email),
     api_key_service: ApiKeyService = Depends(get_api_key_service),
 ) -> ApiKeyCreatedResponse:
-    """Create a new API key.
+    """Create a new API key for programmatic access.
 
-    Requires JWT auth + verified email.
-    The full token is returned ONLY in this response.
+    Generate a new API key with the specified name and scopes. The full token
+    (prefixed with `spoo_`) is returned **only in this response** and cannot be
+    retrieved again.
+
+    **Authentication**: Required — JWT Bearer only (API keys cannot create other
+    API keys). Email must be verified.
+
+    **Rate Limits**: 5/hour
+
+    **Available Scopes**: `shorten:create`, `urls:manage`, `urls:read`,
+    `stats:read`, `admin:all`
+
+    **Notes**:
+    - Store the returned `token` securely — it will not be shown again
+    - Set `expires_at` to limit the key's lifetime (ISO 8601 or Unix epoch)
+    - Omit `expires_at` for a non-expiring key
     """
     # Parse expires_at from the raw value in the DTO
     expires_at: Optional[datetime] = None
@@ -84,7 +105,12 @@ async def create_api_key(
     )
 
 
-@router.get("/keys")
+@router.get(
+    "/keys",
+    responses=ERROR_RESPONSES,
+    operation_id="listApiKeys",
+    summary="List API Keys",
+)
 @limiter.limit("60 per minute")
 async def list_api_keys(
     request: Request,
@@ -93,7 +119,13 @@ async def list_api_keys(
 ) -> ApiKeysListResponse:
     """List all API keys for the authenticated user.
 
-    Returns both active and revoked keys; the full token is never returned.
+    Returns metadata for all API keys (both active and revoked) belonging to the
+    authenticated user. The full token value is **never** returned in this
+    endpoint for security reasons — only the `token_prefix` is shown.
+
+    **Authentication**: Required — JWT Bearer or API key with appropriate scope.
+
+    **Rate Limits**: 60/min
     """
     keys = await api_key_service.list_by_user(user.user_id)
     return ApiKeysListResponse(
@@ -113,7 +145,12 @@ async def list_api_keys(
     )
 
 
-@router.delete("/keys/{key_id}")
+@router.delete(
+    "/keys/{key_id}",
+    responses=ERROR_RESPONSES,
+    operation_id="deleteApiKey",
+    summary="Delete/Revoke API Key",
+)
 @limiter.limit("30 per minute")
 async def delete_api_key(
     request: Request,
@@ -122,10 +159,20 @@ async def delete_api_key(
     user: CurrentUser = Depends(require_auth),
     api_key_service: ApiKeyService = Depends(get_api_key_service),
 ) -> ApiKeyActionResponse:
-    """Delete (hard) or revoke (soft) an API key.
+    """Delete or revoke an API key.
 
-    ``?revoke=true`` marks the key as revoked but preserves the record.
-    Default (``?revoke=false``) permanently deletes the key.
+    Remove an API key either permanently (hard delete) or by marking it as
+    revoked (soft delete). Revoked keys stop working immediately but remain
+    visible in the key list for audit purposes.
+
+    **Authentication**: Required — JWT Bearer or API key.
+
+    **Rate Limits**: 30/min
+
+    **Modes**:
+    - `?revoke=false` (default) — **permanently deletes** the key record
+    - `?revoke=true` — marks the key as revoked but preserves the record;
+      the key appears with `revoked: true` in the list endpoint
     """
     try:
         key_oid = ObjectId(key_id)

@@ -30,9 +30,8 @@ def test_openapi_has_expected_paths(smoke_client: TestClient) -> None:
     data = smoke_client.get("/openapi.json").json()
     paths = set(data["paths"].keys())
 
-    # Routes with include_in_schema=False (legacy/page routes using
-    # api_route with multiple methods) are intentionally excluded from
-    # OpenAPI to avoid slowapi duplicate operation ID warnings.
+    # Routes with include_in_schema=False (legacy/page routes, redirect
+    # shortcuts, password form) are intentionally excluded from OpenAPI.
     expected = [
         "/health",
         "/auth/login",
@@ -59,7 +58,6 @@ def test_openapi_has_expected_paths(smoke_client: TestClient) -> None:
         "/oauth/{provider}",
         "/oauth/{provider}/callback",
         "/oauth/{provider}/link",
-        "/{short_code}/password",
     ]
     for path in expected:
         assert path in paths, f"Missing path: {path}"

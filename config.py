@@ -21,6 +21,8 @@ class DatabaseSettings(BaseSettings):
 
     mongodb_uri: str
     db_name: str = "url-shortener"
+    max_pool_size: int = 200
+    min_pool_size: int = 10
 
 
 class RedisSettings(BaseSettings):

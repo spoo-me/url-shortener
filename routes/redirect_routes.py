@@ -142,7 +142,7 @@ async def redirect_url(
     return resp
 
 
-@router.post("/{short_code}/password")
+@router.post("/{short_code}/password", include_in_schema=False)
 @limiter.limit("10 per minute; 30 per hour")
 async def check_password(
     short_code: str,

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class UrlResponse(BaseModel):
@@ -26,13 +26,29 @@ class UrlResponse(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    alias: str
-    short_url: str
-    long_url: str
-    owner_id: Optional[str] = None
-    created_at: int  # Unix timestamp
-    status: str
-    private_stats: Optional[bool] = None
+    alias: str = Field(description="Short code for the URL.", examples=["mylink"])
+    short_url: str = Field(
+        description="Full shortened URL ready for sharing.",
+        examples=["https://spoo.me/mylink"],
+    )
+    long_url: str = Field(
+        description="Original destination URL.",
+        examples=["https://example.com/long/url"],
+    )
+    owner_id: Optional[str] = Field(
+        default=None,
+        description="User ID if authenticated, null for anonymous URLs.",
+        examples=["507f1f77bcf86cd799439011"],
+    )
+    created_at: int = Field(
+        description="Creation time as Unix timestamp.",
+        examples=[1704067200],
+    )
+    status: str = Field(description="URL status.", examples=["ACTIVE"])
+    private_stats: Optional[bool] = Field(
+        default=None,
+        description="Whether statistics are private (owner-only).",
+    )
 
 
 class UpdateUrlResponse(BaseModel):
@@ -40,16 +56,39 @@ class UpdateUrlResponse(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    id: str
-    alias: Optional[str] = None
-    long_url: Optional[str] = None
-    status: Optional[str] = None
-    password_set: bool
-    max_clicks: Optional[int] = None
-    expire_after: Optional[int] = None  # Unix timestamp or null
-    block_bots: Optional[bool] = None
-    private_stats: Optional[bool] = None
-    updated_at: int  # Unix timestamp
+    id: str = Field(
+        description="MongoDB ObjectId of the URL.",
+        examples=["507f1f77bcf86cd799439011"],
+    )
+    alias: Optional[str] = Field(
+        default=None, description="Short code.", examples=["mylink"]
+    )
+    long_url: Optional[str] = Field(
+        default=None,
+        description="Destination URL.",
+        examples=["https://example.com/long/url"],
+    )
+    status: Optional[str] = Field(
+        default=None, description="URL status.", examples=["ACTIVE"]
+    )
+    password_set: bool = Field(description="Whether the URL is password-protected.")
+    max_clicks: Optional[int] = Field(
+        default=None, description="Click limit, or null if unlimited.", examples=[100]
+    )
+    expire_after: Optional[int] = Field(
+        default=None,
+        description="Expiration as Unix timestamp, or null.",
+        examples=[1735689599],
+    )
+    block_bots: Optional[bool] = Field(
+        default=None, description="Whether bot blocking is enabled."
+    )
+    private_stats: Optional[bool] = Field(
+        default=None, description="Whether statistics are private."
+    )
+    updated_at: int = Field(
+        description="Last update time as Unix timestamp.", examples=[1704067200]
+    )
 
 
 class UrlListItem(BaseModel):
@@ -81,8 +120,10 @@ class DeleteUrlResponse(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    message: str
-    id: str
+    message: str = Field(description="Confirmation message.", examples=["URL deleted"])
+    id: str = Field(
+        description="ID of the deleted URL.", examples=["507f1f77bcf86cd799439011"]
+    )
 
 
 class UrlListResponse(BaseModel):

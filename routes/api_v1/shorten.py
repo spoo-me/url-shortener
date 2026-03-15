@@ -17,6 +17,7 @@ from dependencies import (
     get_current_user,
     get_url_service,
 )
+from middleware.openapi import AUTH_RESPONSES, OPTIONAL_AUTH_SECURITY
 from middleware.rate_limiter import dynamic_limit, limiter
 from schemas.dto.requests.url import CreateUrlRequest
 from schemas.dto.responses.url import UrlResponse
@@ -24,7 +25,7 @@ from services.url_service import UrlService
 from shared.datetime_utils import to_unix_timestamp
 from shared.ip_utils import get_client_ip
 
-router = APIRouter()
+router = APIRouter(tags=["URL Shortening"])
 
 _shorten_limit, _shorten_key = dynamic_limit(
     "60 per minute; 5000 per day",
@@ -32,7 +33,14 @@ _shorten_limit, _shorten_key = dynamic_limit(
 )
 
 
-@router.post("/shorten", status_code=201)
+@router.post(
+    "/shorten",
+    status_code=201,
+    responses=AUTH_RESPONSES,
+    openapi_extra=OPTIONAL_AUTH_SECURITY,
+    operation_id="shortenUrl",
+    summary="Create Shortened URL",
+)
 @limiter.limit(_shorten_limit, key_func=_shorten_key)
 async def shorten_v1(
     request: Request,
@@ -42,8 +50,22 @@ async def shorten_v1(
 ) -> UrlResponse:
     """Create a new shortened URL.
 
-    Scope (if API key): ``shorten:create`` or ``admin:all``.
-    Returns 201 on success.
+    Create a shortened URL with optional customization including password protection,
+    expiration, click limits, and bot blocking.
+
+    **Authentication**: Optional — higher rate limits when authenticated.
+
+    **API Key Scope**: `shorten:create` or `admin:all`
+
+    **Rate Limits**:
+    - Authenticated: 60/min, 5,000/day
+    - Anonymous: 20/min, 1,000/day
+
+    **Anonymous Usage Consequences**:
+    - Lower rate limits
+    - Cannot manage or view URLs later
+    - Cannot use private stats
+    - URLs not linked to any account
     """
     check_api_key_scope(user, {"shorten:create", "admin:all"})
 

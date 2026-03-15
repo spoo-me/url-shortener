@@ -18,12 +18,13 @@ from dependencies import (
     get_current_user,
     get_export_service,
 )
+from middleware.openapi import EXPORT_RESPONSES, OPTIONAL_AUTH_SECURITY
 from middleware.rate_limiter import dynamic_limit, limiter
 from schemas.dto.requests.stats import ExportQuery
 from services.export.service import ExportService
 from shared.datetime_utils import parse_datetime
 
-router = APIRouter()
+router = APIRouter(tags=["Statistics"])
 
 _STATS_SCOPES = {"stats:read", "urls:read", "admin:all"}
 
@@ -33,7 +34,13 @@ _export_limit, _export_key = dynamic_limit(
 )
 
 
-@router.get("/export")
+@router.get(
+    "/export",
+    responses=EXPORT_RESPONSES,
+    openapi_extra=OPTIONAL_AUTH_SECURITY,
+    operation_id="exportStats",
+    summary="Export Statistics",
+)
 @limiter.limit(_export_limit, key_func=_export_key)
 async def export_v1(
     request: Request,
@@ -41,9 +48,28 @@ async def export_v1(
     user: Optional[CurrentUser] = Depends(get_current_user),
     export_service: ExportService = Depends(get_export_service),
 ) -> Response:
-    """Export URL click stats as a downloadable file.
+    """Export URL click statistics as a downloadable file.
 
-    Scope (if API key): ``stats:read``, ``urls:read``, or ``admin:all``.
+    Generate a file export of click analytics data in the specified format.
+    The response is a binary download with appropriate `Content-Disposition` header.
+
+    **Authentication**: Optional for `scope=anon` (public stats on a single URL);
+    required for `scope=all`.
+
+    **API Key Scope**: `stats:read`, `urls:read`, or `admin:all`
+
+    **Rate Limits**:
+    - Authenticated: 30/min, 1,000/day
+    - Anonymous: 10/min, 200/day
+
+    **Export Formats**:
+    - `json` — single JSON file
+    - `xml` — single XML file
+    - `xlsx` — Excel spreadsheet with multiple sheets
+    - `csv` — **ZIP archive** containing `summary.csv` plus one CSV file per metrics dimension
+
+    **Note**: Export generation is resource-intensive. Lower rate limits apply
+    compared to other endpoints.
     """
     check_api_key_scope(user, _STATS_SCOPES)
 

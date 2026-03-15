@@ -23,6 +23,13 @@ from infrastructure.http_client import HttpClient
 from infrastructure.oauth_clients import init_oauth
 from middleware.error_handler import register_error_handlers
 from middleware.logging import RequestLoggingMiddleware
+from middleware.openapi import (
+    API_CONTACT,
+    API_DESCRIPTION,
+    API_LICENSE,
+    OPENAPI_TAGS,
+    configure_openapi,
+)
 from middleware.rate_limiter import limiter
 from middleware.security import MaxContentLengthMiddleware, configure_cors
 from repositories.indexes import ensure_indexes
@@ -58,7 +65,11 @@ def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         # ── Startup ──────────────────────────────────────────────────────────
-        mongo_client: AsyncMongoClient = AsyncMongoClient(settings.db.mongodb_uri)
+        mongo_client: AsyncMongoClient = AsyncMongoClient(
+            settings.db.mongodb_uri,
+            maxPoolSize=settings.db.max_pool_size,
+            minPoolSize=settings.db.min_pool_size,
+        )
         app.state.mongo_client = mongo_client
         app.state.db = mongo_client[settings.db.db_name]
         app.state.settings = settings
@@ -116,10 +127,16 @@ def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
         version="1.0.0",
+        description=API_DESCRIPTION,
+        contact=API_CONTACT,
+        license_info=API_LICENSE,
         docs_url=settings.docs_url,
         redoc_url=None,
         lifespan=lifespan,
+        openapi_tags=OPENAPI_TAGS,
     )
+
+    configure_openapi(app, app_url=settings.app_url)
 
     # ── Middleware (registered in reverse execution order) ────────────────
     # 1. Session — outermost, needed by Authlib OAuth for state storage
