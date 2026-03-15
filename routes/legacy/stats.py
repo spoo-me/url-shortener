@@ -58,8 +58,8 @@ templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 # ── Stats entry form ──────────────────────────────────────────────────────────
 
 
-@router.api_route("/stats", methods=["GET", "POST"])
-@router.api_route("/stats/", methods=["GET", "POST"])
+@router.api_route("/stats", methods=["GET", "POST"], include_in_schema=False)
+@router.api_route("/stats/", methods=["GET", "POST"], include_in_schema=False)
 @limiter.limit("20 per minute; 1000 per day")
 async def stats_route(request: Request, db=Depends(get_db)) -> Response:
     """Stats entry form — GET renders the form; POST redirects to /stats/<code>."""
@@ -138,7 +138,9 @@ async def stats_route(request: Request, db=Depends(get_db)) -> Response:
 # ── Analytics page / JSON ─────────────────────────────────────────────────────
 
 
-@router.api_route("/stats/{short_code}", methods=["GET", "POST"])
+@router.api_route(
+    "/stats/{short_code}", methods=["GET", "POST"], include_in_schema=False
+)
 @limiter.limit("20 per minute; 1000 per day")
 async def analytics(short_code: str, request: Request, db=Depends(get_db)) -> Response:
     """Analytics page — GET renders stats_view.html; POST returns JSON."""
@@ -263,7 +265,9 @@ async def analytics(short_code: str, request: Request, db=Depends(get_db)) -> Re
 # ── Export ────────────────────────────────────────────────────────────────────
 
 
-@router.api_route("/export/{short_code}/{fmt}", methods=["GET", "POST"])
+@router.api_route(
+    "/export/{short_code}/{fmt}", methods=["GET", "POST"], include_in_schema=False
+)
 @limiter.limit("10 per minute; 200 per day")
 async def export(
     short_code: str, fmt: str, request: Request, db=Depends(get_db)

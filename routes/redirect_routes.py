@@ -39,7 +39,7 @@ def _check_url_password(password: str | None, password_hash: str, schema: str) -
     return password == password_hash
 
 
-@router.api_route("/{short_code}", methods=["GET", "HEAD"])
+@router.api_route("/{short_code}", methods=["GET", "HEAD"], include_in_schema=False)
 @limiter.exempt
 async def redirect_url(
     short_code: str,

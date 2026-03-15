@@ -137,7 +137,7 @@ async def docs_wildcard(path: str, request: Request) -> Response:
 # ── Contact ──────────────────────────────────────────────────────────────────
 
 
-@router.api_route("/contact", methods=["GET", "POST"])
+@router.api_route("/contact", methods=["GET", "POST"], include_in_schema=False)
 @limiter.limit("5 per minute; 20 per hour; 50 per day")
 async def contact(
     request: Request,
@@ -203,7 +203,7 @@ async def contact(
 # ── Report ───────────────────────────────────────────────────────────────────
 
 
-@router.api_route("/report", methods=["GET", "POST"])
+@router.api_route("/report", methods=["GET", "POST"], include_in_schema=False)
 @limiter.limit("5 per minute; 20 per hour; 50 per day")
 async def report(
     request: Request,

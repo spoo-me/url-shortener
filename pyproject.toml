@@ -3,7 +3,7 @@ name = "spoo-me"
 version = "1.0.0"
 description = "Open-Source URL Shortener Written in Flask"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "argon2-cffi>=25.1.0",
     "authlib>=1.6.5",
@@ -41,6 +41,47 @@ dependencies = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+pythonpath = ["."]
+addopts = [
+    "--import-mode=importlib",
+    "-n", "auto",
+    "--cov=.",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-report=html:htmlcov",
+    "--cov-config=pyproject.toml",
+    "-p", "no:randomly",
+]
+
+[tool.coverage.run]
+source = ["."]
+parallel = true
+omit = [
+    "tests/*",
+    "*/test_*",
+    "*/conftest.py",
+    ".venv/*",
+    "main.py",
+    "asgi.py",
+    # Legacy code (pre-migration, will be removed in Phase 16)
+    "blueprints/*",
+    "builders/*",
+    "utils/*",
+    "cache/*",
+    "api/*",
+    "emojies.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.",
+    "pass",
+    "\\.\\.\\.",
+]
+fail_under = 0
+show_missing = true
+skip_covered = true
 
 [dependency-groups]
 dev = [
@@ -48,8 +89,13 @@ dev = [
     "mongomock>=4.3.0",
     "pytest>=8.3.5",
     "pytest-asyncio>=0.25.0",
+    "pytest-clarity>=1.0.1",
+    "pytest-cov>=7.0.0",
     "pytest-flask>=1.3.0",
     "pytest-mock>=3.14.1",
+    "pytest-randomly>=4.0.1",
+    "pytest-sugar>=1.1.1",
+    "pytest-xdist>=3.8.0",
     "requests-mock>=1.12.1",
     "ruff>=0.11.11",
     "uv>=0.9.6",

@@ -244,7 +244,7 @@ async def shorten_url(
 # ── Emoji URL shortening ──────────────────────────────────────────────────────
 
 
-@router.api_route("/emoji", methods=["GET", "POST"])
+@router.api_route("/emoji", methods=["GET", "POST"], include_in_schema=False)
 @limiter.limit("100 per minute")
 async def emoji(
     request: Request,
