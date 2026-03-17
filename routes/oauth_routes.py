@@ -17,7 +17,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import RedirectResponse
 
-from dependencies import CurrentUser, get_oauth_service, require_auth
+from dependencies import AuthUser, get_oauth_service
 from errors import AppError, NotFoundError, ValidationError
 from schemas.dto.responses.auth import OAuthProvidersResponse
 from schemas.dto.responses.common import MessageResponse
@@ -53,7 +53,7 @@ _DASHBOARD_URL = "/dashboard"
 @limiter.limit("60 per minute")
 async def list_providers(
     request: Request,
-    user: CurrentUser = Depends(require_auth),
+    user: AuthUser,
     oauth_service: OAuthService = Depends(get_oauth_service),
 ) -> OAuthProvidersResponse:
     """List all OAuth providers linked to the authenticated user's account.
@@ -80,7 +80,7 @@ async def list_providers(
 async def unlink_provider(
     provider_name: str,
     request: Request,
-    user: CurrentUser = Depends(require_auth),
+    user: AuthUser,
     oauth_service: OAuthService = Depends(get_oauth_service),
 ) -> MessageResponse:
     """Remove an OAuth provider link from the authenticated user's account.
@@ -226,7 +226,7 @@ async def oauth_callback(
 async def oauth_link(
     provider: str,
     request: Request,
-    user: CurrentUser = Depends(require_auth),
+    user: AuthUser,
 ) -> Response:
     """Initiate an OAuth flow to link a provider to the authenticated account.
 

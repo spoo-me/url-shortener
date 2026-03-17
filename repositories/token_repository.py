@@ -54,7 +54,7 @@ class TokenRepository:
                     "used_at": None,
                 }
             )
-            return VerificationTokenDoc.from_mongo(doc)  # type: ignore[return-value]
+            return VerificationTokenDoc.from_mongo(doc)
         except PyMongoError as exc:
             log.error(
                 "token_repo_find_by_hash_failed",

@@ -27,7 +27,7 @@ class UserRepository:
         """Find a user by email address."""
         try:
             doc = await self._col.find_one({"email": email})
-            return UserDoc.from_mongo(doc)  # type: ignore[return-value]
+            return UserDoc.from_mongo(doc)
         except PyMongoError as exc:
             log.error(
                 "user_repo_find_by_email_failed",
@@ -40,7 +40,7 @@ class UserRepository:
         """Find a user by ObjectId."""
         try:
             doc = await self._col.find_one({"_id": user_id})
-            return UserDoc.from_mongo(doc)  # type: ignore[return-value]
+            return UserDoc.from_mongo(doc)
         except PyMongoError as exc:
             log.error(
                 "user_repo_find_by_id_failed",
@@ -65,7 +65,7 @@ class UserRepository:
                     "auth_providers.provider_user_id": provider_user_id,
                 }
             )
-            return UserDoc.from_mongo(doc)  # type: ignore[return-value]
+            return UserDoc.from_mongo(doc)
         except PyMongoError as exc:
             log.error(
                 "user_repo_find_by_oauth_failed",

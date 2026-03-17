@@ -12,12 +12,12 @@ from fastapi import APIRouter, Depends, Query, Request
 
 from dependencies import (
     CurrentUser,
-    check_api_key_scope,
+    URL_READ_SCOPES,
     get_url_service,
-    require_auth,
+    require_scopes,
 )
 from middleware.openapi import ERROR_RESPONSES
-from middleware.rate_limiter import limiter
+from middleware.rate_limiter import Limits, limiter
 from schemas.dto.requests.url import ListUrlsQuery
 from schemas.dto.responses.url import UrlListResponse
 from services.url_service import UrlService
@@ -31,11 +31,11 @@ router = APIRouter(tags=["Link Management"])
     operation_id="listUrls",
     summary="List Your URLs",
 )
-@limiter.limit("60 per minute; 5000 per day")
+@limiter.limit(Limits.API_AUTHED)
 async def list_urls_v1(
     request: Request,
     query: Annotated[ListUrlsQuery, Query()],
-    user: CurrentUser = Depends(require_auth),
+    user: CurrentUser = Depends(require_scopes(URL_READ_SCOPES)),
     url_service: UrlService = Depends(get_url_service),
 ) -> UrlListResponse:
     """List all URLs owned by the authenticated user.
@@ -59,5 +59,4 @@ async def list_urls_v1(
     `status`, `createdAfter`, `createdBefore`, `passwordSet`, `maxClicksSet`,
     and `search`.
     """
-    check_api_key_scope(user, {"urls:manage", "urls:read", "admin:all"})
     return await url_service.list_by_owner(user.user_id, query)

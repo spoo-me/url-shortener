@@ -13,12 +13,12 @@ from fastapi import APIRouter, Depends, Query, Request
 
 from dependencies import (
     CurrentUser,
-    check_api_key_scope,
-    get_current_user,
+    STATS_SCOPES,
     get_stats_service,
+    optional_scopes,
 )
 from middleware.openapi import ERROR_RESPONSES, OPTIONAL_AUTH_SECURITY
-from middleware.rate_limiter import dynamic_limit, limiter
+from middleware.rate_limiter import Limits, dynamic_limit, limiter
 from schemas.dto.requests.stats import StatsQuery
 from schemas.dto.responses.stats import StatsResponse
 from services.stats_service import StatsService
@@ -26,12 +26,7 @@ from shared.datetime_utils import parse_datetime
 
 router = APIRouter(tags=["Statistics"])
 
-_STATS_SCOPES = {"stats:read", "urls:read", "admin:all"}
-
-_stats_limit, _stats_key = dynamic_limit(
-    "60 per minute; 5000 per day",
-    "20 per minute; 1000 per day",
-)
+_stats_limit, _stats_key = dynamic_limit(Limits.API_AUTHED, Limits.API_ANON)
 
 
 @router.get(
@@ -45,7 +40,7 @@ _stats_limit, _stats_key = dynamic_limit(
 async def stats_v1(
     request: Request,
     query: Annotated[StatsQuery, Query()],
-    user: Optional[CurrentUser] = Depends(get_current_user),
+    user: Optional[CurrentUser] = Depends(optional_scopes(STATS_SCOPES)),
     stats_service: StatsService = Depends(get_stats_service),
 ) -> StatsResponse:
     """Get click statistics for URLs.
@@ -76,8 +71,6 @@ async def stats_v1(
     **Filtering**: Filter by `browser`, `os`, `country`, `city`, `referrer`,
     or `short_code` using query params or a JSON `filters` object.
     """
-    check_api_key_scope(user, _STATS_SCOPES)
-
     owner_id = str(user.user_id) if user is not None else None
 
     start_date = parse_datetime(query.start_date) if query.start_date else None

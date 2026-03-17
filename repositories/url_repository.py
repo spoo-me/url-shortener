@@ -28,7 +28,7 @@ class UrlRepository:
         """Find a URL document by its short alias."""
         try:
             doc = await self._col.find_one({"alias": alias})
-            return UrlV2Doc.from_mongo(doc)  # type: ignore[return-value]
+            return UrlV2Doc.from_mongo(doc)
         except PyMongoError as exc:
             log.error(
                 "url_repo_find_by_alias_failed",
@@ -42,7 +42,7 @@ class UrlRepository:
         """Find a URL document by its ObjectId."""
         try:
             doc = await self._col.find_one({"_id": url_id})
-            return UrlV2Doc.from_mongo(doc)  # type: ignore[return-value]
+            return UrlV2Doc.from_mongo(doc)
         except PyMongoError as exc:
             log.error(
                 "url_repo_find_by_id_failed",

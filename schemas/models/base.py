@@ -8,7 +8,7 @@ Python objects and raw MongoDB dicts.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Optional, TypeVar
 
 from bson import ObjectId
 from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler
@@ -40,6 +40,8 @@ class PyObjectId(ObjectId):
 # Using a consistent ObjectId type prevents MongoDB time-series bucket churn
 # caused by mixing None and ObjectId types across documents.
 ANONYMOUS_OWNER_ID = ObjectId("000000000000000000000000")
+
+_T = TypeVar("_T", bound="MongoBaseModel")
 
 
 class MongoBaseModel(BaseModel):
@@ -75,7 +77,7 @@ class MongoBaseModel(BaseModel):
         return data
 
     @classmethod
-    def from_mongo(cls, data: Optional[dict]) -> Optional["MongoBaseModel"]:
+    def from_mongo(cls: type[_T], data: Optional[dict]) -> Optional[_T]:
         """Build a model instance from a raw MongoDB document dict.
 
         Returns None when data is None (e.g. find_one returns None).

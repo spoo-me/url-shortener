@@ -29,7 +29,7 @@ class EmojiUrlRepository:
         """Find an emoji URL document by its alias (_id)."""
         try:
             doc = await self._col.find_one({"_id": alias})
-            return EmojiUrlDoc.from_mongo(doc)  # type: ignore[return-value]
+            return EmojiUrlDoc.from_mongo(doc)
         except PyMongoError as exc:
             log.error(
                 "emoji_url_repo_find_failed",

@@ -32,6 +32,20 @@ _TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templa
 templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 
 
+def _error_page(request: Request, code: str, message: str, status: int) -> Response:
+    """Render error.html with consistent structure."""
+    return templates.TemplateResponse(
+        request,
+        "error.html",
+        {
+            "error_code": code,
+            "error_message": message,
+            "host_url": str(request.base_url),
+        },
+        status_code=status,
+    )
+
+
 def _check_url_password(password: str | None, password_hash: str, schema: str) -> bool:
     """Verify a URL password — bcrypt for v2, plaintext comparison for v1/emoji."""
     if schema == "v2":
@@ -61,40 +75,13 @@ async def redirect_url(
         url_data, schema = await url_service.resolve(short_code)
     except NotFoundError:
         log.info("url_not_found", short_code=short_code)
-        return templates.TemplateResponse(
-            request,
-            "error.html",
-            {
-                "error_code": "404",
-                "error_message": "URL NOT FOUND",
-                "host_url": host_url,
-            },
-            status_code=404,
-        )
+        return _error_page(request, "404", "URL NOT FOUND", 404)
     except ForbiddenError:
         log.warning("url_blocked", short_code=short_code)
-        return templates.TemplateResponse(
-            request,
-            "error.html",
-            {
-                "error_code": "403",
-                "error_message": "ACCESS DENIED",
-                "host_url": host_url,
-            },
-            status_code=403,
-        )
+        return _error_page(request, "403", "ACCESS DENIED", 403)
     except GoneError:
         log.info("url_gone", short_code=short_code)
-        return templates.TemplateResponse(
-            request,
-            "error.html",
-            {
-                "error_code": "410",
-                "error_message": "SHORT URL EXPIRED",
-                "host_url": host_url,
-            },
-            status_code=410,
-        )
+        return _error_page(request, "410", "SHORT URL EXPIRED", 410)
 
     # 2. Password check
     if url_data.password_hash:
@@ -173,27 +160,13 @@ async def check_password(
     try:
         url_data, schema = await url_service.resolve(short_code)
     except (NotFoundError, ForbiddenError, GoneError):
-        return templates.TemplateResponse(
-            request,
-            "error.html",
-            {
-                "error_code": "400",
-                "error_message": "Invalid short code or URL not password-protected",
-                "host_url": host_url,
-            },
-            status_code=400,
+        return _error_page(
+            request, "400", "Invalid short code or URL not password-protected", 400
         )
 
     if not url_data.password_hash:
-        return templates.TemplateResponse(
-            request,
-            "error.html",
-            {
-                "error_code": "400",
-                "error_message": "Invalid short code or URL not password-protected",
-                "host_url": host_url,
-            },
-            status_code=400,
+        return _error_page(
+            request, "400", "Invalid short code or URL not password-protected", 400
         )
 
     if _check_url_password(password, url_data.password_hash, schema):

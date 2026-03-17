@@ -35,7 +35,7 @@ class LegacyUrlRepository:
         """Find a v1 URL document by its short code (_id)."""
         try:
             doc = await self._col.find_one({"_id": short_code})
-            return LegacyUrlDoc.from_mongo(doc)  # type: ignore[return-value]
+            return LegacyUrlDoc.from_mongo(doc)
         except PyMongoError as exc:
             log.error(
                 "legacy_url_repo_find_failed",

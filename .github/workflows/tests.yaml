@@ -44,7 +44,7 @@ jobs:
         env:
           MONGODB_URI: "mongodb://localhost:27017/"
         run: |
-          uv run python -m pytest tests/unit tests/integration tests/smoke \
+          uv run python -m pytest \
             -n auto \
             --cov=. \
             --cov-report=term-missing:skip-covered \

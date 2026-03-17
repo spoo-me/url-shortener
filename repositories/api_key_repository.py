@@ -43,7 +43,7 @@ class ApiKeyRepository:
         """Find an API key document by its SHA-256 token hash."""
         try:
             doc = await self._col.find_one({"token_hash": token_hash})
-            return ApiKeyDoc.from_mongo(doc)  # type: ignore[return-value]
+            return ApiKeyDoc.from_mongo(doc)
         except PyMongoError as exc:
             log.error(
                 "api_key_repo_find_by_hash_failed",

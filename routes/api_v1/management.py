@@ -16,9 +16,9 @@ from fastapi import APIRouter, Depends, Path, Request
 
 from dependencies import (
     CurrentUser,
-    check_api_key_scope,
+    URL_MANAGEMENT_SCOPES,
     get_url_service,
-    require_auth,
+    require_scopes,
 )
 from errors import ValidationError
 from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES
@@ -29,8 +29,6 @@ from schemas.dto.responses.url import DeleteUrlResponse, UpdateUrlResponse
 from services.url_service import UrlService
 
 router = APIRouter(tags=["Link Management"])
-
-_MANAGEMENT_SCOPES = {"urls:manage", "admin:all"}
 
 
 def _parse_url_id(url_id: str) -> ObjectId:
@@ -52,7 +50,7 @@ async def update_url_v1(
     request: Request,
     url_id: Annotated[str, Path(description="Unique identifier of the URL")],
     body: UpdateUrlRequest,
-    user: CurrentUser = Depends(require_auth),
+    user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),
     url_service: UrlService = Depends(get_url_service),
 ) -> UpdateUrlResponse:
     """Update an existing URL's properties.
@@ -76,7 +74,6 @@ async def update_url_v1(
     - Changing the `alias` checks availability and may fail with 409 Conflict
     - The `url_id` is the MongoDB ObjectId, not the alias
     """
-    check_api_key_scope(user, _MANAGEMENT_SCOPES)
     oid = _parse_url_id(url_id)
     doc = await url_service.update(oid, body, user.user_id)
     return UpdateUrlResponse(
@@ -104,7 +101,7 @@ async def update_url_status_v1(
     request: Request,
     url_id: Annotated[str, Path(description="Unique identifier of the URL")],
     body: UpdateUrlStatusRequest,
-    user: CurrentUser = Depends(require_auth),
+    user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),
     url_service: UrlService = Depends(get_url_service),
 ) -> UpdateUrlResponse:
     """Update only the status of a URL (ACTIVE / INACTIVE).
@@ -127,7 +124,6 @@ async def update_url_status_v1(
     - Set `INACTIVE` to temporarily disable redirects without deleting the URL
     - Set `ACTIVE` to re-enable a previously disabled URL
     """
-    check_api_key_scope(user, _MANAGEMENT_SCOPES)
     oid = _parse_url_id(url_id)
 
     status_only = UpdateUrlRequest(status=body.status)
@@ -157,7 +153,7 @@ async def update_url_status_v1(
 async def delete_url_v1(
     request: Request,
     url_id: Annotated[str, Path(description="Unique identifier of the URL")],
-    user: CurrentUser = Depends(require_auth),
+    user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),
     url_service: UrlService = Depends(get_url_service),
 ) -> DeleteUrlResponse:
     """Delete a URL permanently.
@@ -175,7 +171,6 @@ async def delete_url_v1(
     **Recommendation**: Consider setting the URL status to `INACTIVE` via
     `PATCH /urls/{url_id}/status` instead if you may want to restore it later.
     """
-    check_api_key_scope(user, _MANAGEMENT_SCOPES)
     oid = _parse_url_id(url_id)
     await url_service.delete(oid, user.user_id)
     return DeleteUrlResponse(message="URL deleted", id=url_id)

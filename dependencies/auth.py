@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Annotated, Optional
 
 import jwt as pyjwt
 import structlog
@@ -155,3 +155,59 @@ def check_api_key_scope(user: Optional[CurrentUser], required_scopes: set[str]) 
     if user is not None and user.api_key_doc is not None:
         if not set(user.api_key_doc.scopes) & required_scopes:
             raise ForbiddenError("Insufficient scope for this operation")
+
+
+# ── Named scope sets ─────────────────────────────────────────────────────────
+
+STATS_SCOPES: set[str] = {"stats:read", "urls:read", "admin:all"}
+URL_MANAGEMENT_SCOPES: set[str] = {"urls:manage", "admin:all"}
+URL_READ_SCOPES: set[str] = {"urls:manage", "urls:read", "admin:all"}
+SHORTEN_SCOPES: set[str] = {"shorten:create", "admin:all"}
+
+
+# ── Parameterised scope dependency factories ─────────────────────────────────
+
+
+def require_scopes(scopes: set[str]):
+    """Dependency factory: require_auth + API-key scope check.
+
+    Moves scope enforcement into the dependency graph so route handlers
+    receive an already-validated ``CurrentUser``.
+
+    Usage::
+
+        user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES))
+    """
+
+    async def _dep(user: CurrentUser = Depends(require_auth)) -> CurrentUser:
+        check_api_key_scope(user, scopes)
+        return user
+
+    return _dep
+
+
+def optional_scopes(scopes: set[str]):
+    """Dependency factory: get_current_user + optional API-key scope check.
+
+    Does not require authentication; raises only when an API key is used
+    and it lacks the required scope.
+
+    Usage::
+
+        user: Optional[CurrentUser] = Depends(optional_scopes(SHORTEN_SCOPES))
+    """
+
+    async def _dep(
+        user: Optional[CurrentUser] = Depends(get_current_user),
+    ) -> Optional[CurrentUser]:
+        check_api_key_scope(user, scopes)
+        return user
+
+    return _dep
+
+
+# ── Annotated type aliases — community-standard Depends shortcuts ─────────────
+
+AuthUser = Annotated[CurrentUser, Depends(require_auth)]
+VerifiedUser = Annotated[CurrentUser, Depends(require_verified_email)]
+OptionalUser = Annotated[Optional[CurrentUser], Depends(get_current_user)]

@@ -13,12 +13,12 @@ from fastapi import APIRouter, Depends, Request
 
 from dependencies import (
     CurrentUser,
-    check_api_key_scope,
-    get_current_user,
+    SHORTEN_SCOPES,
     get_url_service,
+    optional_scopes,
 )
 from middleware.openapi import AUTH_RESPONSES, OPTIONAL_AUTH_SECURITY
-from middleware.rate_limiter import dynamic_limit, limiter
+from middleware.rate_limiter import Limits, dynamic_limit, limiter
 from schemas.dto.requests.url import CreateUrlRequest
 from schemas.dto.responses.url import UrlResponse
 from services.url_service import UrlService
@@ -27,10 +27,7 @@ from shared.ip_utils import get_client_ip
 
 router = APIRouter(tags=["URL Shortening"])
 
-_shorten_limit, _shorten_key = dynamic_limit(
-    "60 per minute; 5000 per day",
-    "20 per minute; 1000 per day",
-)
+_shorten_limit, _shorten_key = dynamic_limit(Limits.API_AUTHED, Limits.API_ANON)
 
 
 @router.post(
@@ -45,7 +42,7 @@ _shorten_limit, _shorten_key = dynamic_limit(
 async def shorten_v1(
     request: Request,
     body: CreateUrlRequest,
-    user: Optional[CurrentUser] = Depends(get_current_user),
+    user: Optional[CurrentUser] = Depends(optional_scopes(SHORTEN_SCOPES)),
     url_service: UrlService = Depends(get_url_service),
 ) -> UrlResponse:
     """Create a new shortened URL.
@@ -69,8 +66,6 @@ async def shorten_v1(
     - Cannot use private stats
     - URLs not linked to any account
     """
-    check_api_key_scope(user, {"shorten:create", "admin:all"})
-
     owner_id = user.user_id if user is not None else None
     client_ip = get_client_ip(request)
 

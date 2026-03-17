@@ -25,7 +25,7 @@ from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from dependencies import CurrentUser, get_auth_service, require_auth
+from dependencies import AuthUser, get_auth_service
 from errors import AuthenticationError
 from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES, PUBLIC_SECURITY
 from middleware.rate_limiter import limiter
@@ -249,7 +249,7 @@ async def logout(
 @limiter.limit("60 per minute")
 async def me(
     request: Request,
-    user: CurrentUser = Depends(require_auth),
+    user: AuthUser,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> MeResponse:
     """Return the authenticated user's full profile.
@@ -276,7 +276,7 @@ async def me(
 async def set_password(
     request: Request,
     body: SetPasswordRequest,
-    user: CurrentUser = Depends(require_auth),
+    user: AuthUser,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> MessageResponse:
     """Set a password for an OAuth-only account.
@@ -297,7 +297,7 @@ async def set_password(
 @limiter.limit("60 per minute")
 async def verify_page(
     request: Request,
-    user: CurrentUser = Depends(require_auth),
+    user: AuthUser,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> Response:
     """Email verification page.
@@ -321,7 +321,7 @@ async def verify_page(
 @limiter.limit("3 per hour")
 async def send_verification(
     request: Request,
-    user: CurrentUser = Depends(require_auth),
+    user: AuthUser,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> SendVerificationResponse:
     """Send a 6-digit OTP verification code to the user's email.
@@ -355,7 +355,7 @@ async def verify_email(
     request: Request,
     response: Response,
     body: VerifyEmailRequest,
-    user: CurrentUser = Depends(require_auth),
+    user: AuthUser,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> VerifyEmailResponse:
     """Verify the user's email address using a 6-digit OTP code.

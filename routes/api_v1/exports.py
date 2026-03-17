@@ -14,23 +14,20 @@ from fastapi.responses import Response
 
 from dependencies import (
     CurrentUser,
-    check_api_key_scope,
-    get_current_user,
+    STATS_SCOPES,
     get_export_service,
+    optional_scopes,
 )
 from middleware.openapi import EXPORT_RESPONSES, OPTIONAL_AUTH_SECURITY
-from middleware.rate_limiter import dynamic_limit, limiter
+from middleware.rate_limiter import Limits, dynamic_limit, limiter
 from schemas.dto.requests.stats import ExportQuery
 from services.export.service import ExportService
 from shared.datetime_utils import parse_datetime
 
 router = APIRouter(tags=["Statistics"])
 
-_STATS_SCOPES = {"stats:read", "urls:read", "admin:all"}
-
 _export_limit, _export_key = dynamic_limit(
-    "30 per minute; 1000 per day",
-    "10 per minute; 200 per day",
+    Limits.API_EXPORT_AUTHED, Limits.API_EXPORT_ANON
 )
 
 
@@ -66,7 +63,7 @@ _export_limit, _export_key = dynamic_limit(
 async def export_v1(
     request: Request,
     query: Annotated[ExportQuery, Query()],
-    user: Optional[CurrentUser] = Depends(get_current_user),
+    user: Optional[CurrentUser] = Depends(optional_scopes(STATS_SCOPES)),
     export_service: ExportService = Depends(get_export_service),
 ) -> Response:
     """Export URL click statistics as a downloadable file.
@@ -94,8 +91,6 @@ async def export_v1(
     **Note**: Export generation is resource-intensive. Lower rate limits apply
     compared to other endpoints.
     """
-    check_api_key_scope(user, _STATS_SCOPES)
-
     owner_id = str(user.user_id) if user is not None else None
 
     start_date = parse_datetime(query.start_date) if query.start_date else None

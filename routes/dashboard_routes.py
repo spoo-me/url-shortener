@@ -21,10 +21,10 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 from dependencies import (
+    AuthUser,
     CurrentUser,
-    get_current_user,
+    OptionalUser,
     get_profile_picture_service,
-    require_auth,
 )
 from errors import NotFoundError
 from middleware.rate_limiter import limiter
@@ -71,7 +71,7 @@ async def _render_dashboard_page(
 @limiter.limit("30 per minute")
 async def dashboard_root(
     request: Request,
-    user: CurrentUser | None = Depends(get_current_user),
+    user: OptionalUser,
 ) -> Response:
     if user is None:
         return _unauth_redirect()
@@ -82,7 +82,7 @@ async def dashboard_root(
 @limiter.limit("30 per minute")
 async def dashboard_links(
     request: Request,
-    user: CurrentUser | None = Depends(get_current_user),
+    user: OptionalUser,
     svc: ProfilePictureService = Depends(get_profile_picture_service),
 ) -> Response:
     return await _render_dashboard_page("dashboard/links.html", request, user, svc)
@@ -92,7 +92,7 @@ async def dashboard_links(
 @limiter.limit("30 per minute")
 async def dashboard_keys(
     request: Request,
-    user: CurrentUser | None = Depends(get_current_user),
+    user: OptionalUser,
     svc: ProfilePictureService = Depends(get_profile_picture_service),
 ) -> Response:
     return await _render_dashboard_page("dashboard/keys.html", request, user, svc)
@@ -102,7 +102,7 @@ async def dashboard_keys(
 @limiter.limit("30 per minute")
 async def dashboard_statistics(
     request: Request,
-    user: CurrentUser | None = Depends(get_current_user),
+    user: OptionalUser,
     svc: ProfilePictureService = Depends(get_profile_picture_service),
 ) -> Response:
     return await _render_dashboard_page("dashboard/statistics.html", request, user, svc)
@@ -112,7 +112,7 @@ async def dashboard_statistics(
 @limiter.limit("30 per minute")
 async def dashboard_settings(
     request: Request,
-    user: CurrentUser | None = Depends(get_current_user),
+    user: OptionalUser,
     svc: ProfilePictureService = Depends(get_profile_picture_service),
 ) -> Response:
     return await _render_dashboard_page("dashboard/settings.html", request, user, svc)
@@ -122,7 +122,7 @@ async def dashboard_settings(
 @limiter.limit("30 per minute")
 async def dashboard_billing(
     request: Request,
-    user: CurrentUser | None = Depends(get_current_user),
+    user: OptionalUser,
     svc: ProfilePictureService = Depends(get_profile_picture_service),
 ) -> Response:
     return await _render_dashboard_page("dashboard/billing.html", request, user, svc)
@@ -139,7 +139,7 @@ class SetProfilePictureRequest(BaseModel):
 @limiter.limit("30 per minute")
 async def get_profile_pictures(
     request: Request,
-    user: CurrentUser = Depends(require_auth),
+    user: AuthUser,
     svc: ProfilePictureService = Depends(get_profile_picture_service),
 ) -> Response:
     pictures = await svc.get_available_pictures(user.user_id)
@@ -151,7 +151,7 @@ async def get_profile_pictures(
 async def set_profile_picture(
     request: Request,
     body: SetProfilePictureRequest,
-    user: CurrentUser = Depends(require_auth),
+    user: AuthUser,
     svc: ProfilePictureService = Depends(get_profile_picture_service),
 ) -> Response:
     try:
