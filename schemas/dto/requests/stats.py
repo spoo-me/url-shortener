@@ -68,7 +68,7 @@ class StatsQuery(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    scope: Literal["all", "anon"] = Field(description=STATS_SCOPE_DESC)
+    scope: Literal["all", "anon"] = Field(default="all", description=STATS_SCOPE_DESC)
     short_code: Optional[str] = Field(
         default=None,
         description=STATS_SHORT_CODE_DESC,

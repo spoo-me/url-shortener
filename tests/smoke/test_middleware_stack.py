@@ -87,11 +87,6 @@ def test_middleware_ordering_correct(smoke_app) -> None:
     Registration order: Session, CORS, MaxContentLength, RequestLogging
     Execution order (outermost first): Session -> CORS -> MaxContentLength -> RequestLogging
     """
-    from starlette.middleware.sessions import SessionMiddleware as _SM
-    from starlette.middleware.cors import CORSMiddleware as _CM
-
-    from middleware.logging import RequestLoggingMiddleware as _RL
-    from middleware.security import MaxContentLengthMiddleware as _MCL
 
     # Walk the middleware stack from the app
     # In Starlette, app.middleware_stack is built by wrapping: outermost first

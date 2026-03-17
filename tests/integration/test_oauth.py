@@ -23,16 +23,15 @@ os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
 from config import AppSettings
 from dependencies import (
     CurrentUser,
-    get_auth_service,
     get_oauth_service,
     require_auth,
 )
-from errors import NotFoundError, ValidationError
+from errors import ValidationError
 from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
 from routes.auth_routes import router as auth_router
 from routes.oauth_routes import router as oauth_router
-from schemas.models.user import AuthProviderEntry, ProviderProfile, UserDoc
+from schemas.models.user import UserDoc
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 

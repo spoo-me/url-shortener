@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 from contextlib import asynccontextmanager
 from typing import Optional
-from unittest.mock import AsyncMock, MagicMock, call
+from unittest.mock import AsyncMock, MagicMock
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -23,7 +23,7 @@ os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
 
 from config import AppSettings
 from dependencies import get_click_service, get_url_service
-from errors import ForbiddenError, NotFoundError, ValidationError
+from errors import ForbiddenError, ValidationError
 from infrastructure.cache.url_cache import UrlCacheData
 from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter

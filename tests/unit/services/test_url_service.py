@@ -485,7 +485,7 @@ class TestUrlServiceCreate:
         from schemas.dto.requests.url import CreateUrlRequest
 
         req = CreateUrlRequest(long_url="https://example.com", password="Secret1!")
-        result = await svc.create(req, owner_id=USER_OID, client_ip="1.2.3.4")
+        await svc.create(req, owner_id=USER_OID, client_ip="1.2.3.4")
 
         # password in DB doc should be a hash, not plaintext
         inserted_doc = url_repo.insert.call_args[0][0]
@@ -527,7 +527,7 @@ class TestUrlServiceCreate:
         # far future unix timestamp
         future_ts = 9999999999
         req = CreateUrlRequest(long_url="https://example.com", expire_after=future_ts)
-        result = await svc.create(req, owner_id=USER_OID, client_ip="1.2.3.4")
+        await svc.create(req, owner_id=USER_OID, client_ip="1.2.3.4")
 
         inserted_doc = url_repo.insert.call_args[0][0]
         assert inserted_doc["expire_after"] is not None
@@ -569,7 +569,7 @@ class TestUrlServiceUpdate:
         from schemas.dto.requests.url import UpdateUrlRequest
 
         req = UpdateUrlRequest(long_url="https://new-url.com")
-        result = await svc.update(URL_OID, req, USER_OID)
+        await svc.update(URL_OID, req, USER_OID)
 
         url_repo.update.assert_called_once()
         update_doc = url_repo.update.call_args[0][1]
@@ -591,7 +591,7 @@ class TestUrlServiceUpdate:
 
         # Send same long_url — no actual change
         req = UpdateUrlRequest(long_url="https://example.com")
-        result = await svc.update(URL_OID, req, USER_OID)
+        await svc.update(URL_OID, req, USER_OID)
 
         url_repo.update.assert_not_called()
         url_cache.invalidate.assert_not_called()

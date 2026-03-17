@@ -164,7 +164,7 @@ def test_create_api_key_returns_token_once():
 
 def test_create_api_key_requires_verified_email():
     """Unverified user -> 403 EMAIL_NOT_VERIFIED."""
-    unverified_user = _make_unverified_user()
+    _make_unverified_user()
 
     # require_verified_email calls require_auth first, then checks email_verified.
     # We override require_verified_email to raise the correct error.

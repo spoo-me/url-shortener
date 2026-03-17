@@ -25,7 +25,7 @@ import pytest
 
 from config import AppSettings
 from middleware.error_handler import register_error_handlers
-from middleware.rate_limiter import Limits, limiter, rate_limit_key
+from middleware.rate_limiter import limiter, rate_limit_key
 from routes.health_routes import router as health_router
 
 _STATIC_DIR = os.path.join(

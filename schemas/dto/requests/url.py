@@ -13,7 +13,6 @@ from pydantic import (
     ConfigDict,
     Field,
     PrivateAttr,
-    field_validator,
     model_validator,
 )
 

@@ -22,7 +22,6 @@ os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
 
 from config import AppSettings
 from errors import (
-    AppError,
     AuthenticationError,
     ConflictError,
     ForbiddenError,
@@ -235,7 +234,7 @@ def test_validation_error_returns_422_json():
 
 def test_pydantic_validation_error_returns_422():
     """Pydantic ValidationError (raised in business logic) should return 422 JSON."""
-    from pydantic import BaseModel, ValidationError as PydanticValidationError
+    from pydantic import BaseModel
 
     app = _build_test_app()
     trigger_router = APIRouter(prefix="/api/v1")

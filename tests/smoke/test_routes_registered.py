@@ -152,7 +152,7 @@ def test_redirect_route_registered_last(smoke_app: FastAPI) -> None:
     """The catch-all /{short_code} redirect route must be the LAST API route."""
     api_routes = _get_api_routes(smoke_app)
     # Find routes with path "/{short_code}" — the redirect (GET/HEAD) should be last
-    last_route = api_routes[-1]
+    _ = api_routes[-1]
     # The very last route could be /{short_code}/password or /{short_code}
     # Both redirect_routes endpoints should be at the end
     last_two_paths = [r.path for r in api_routes[-2:]]

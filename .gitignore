@@ -15,6 +15,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!k6/lib/
 lib64/
 parts/
 sdist/
@@ -186,7 +187,6 @@ misc/*.py
 todo.md
 
 # Local API Testings
-k6-tests/
 local_test_db/
 
 .DS_Store
