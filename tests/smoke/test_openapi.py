@@ -40,7 +40,6 @@ def test_openapi_has_expected_paths(smoke_client: TestClient) -> None:
         "/auth/refresh",
         "/auth/logout",
         "/auth/set-password",
-        "/auth/verify",
         "/auth/send-verification",
         "/auth/verify-email",
         "/auth/request-password-reset",

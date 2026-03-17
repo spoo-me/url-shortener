@@ -6,7 +6,9 @@ Requires authentication. Returns paginated list with camelCase keys.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query, Request
 
 from dependencies import (
     CurrentUser,
@@ -17,6 +19,7 @@ from dependencies import (
 from middleware.openapi import ERROR_RESPONSES
 from middleware.rate_limiter import limiter
 from schemas.dto.requests.url import ListUrlsQuery
+from schemas.dto.responses.url import UrlListResponse
 from services.url_service import UrlService
 
 router = APIRouter(tags=["Link Management"])
@@ -31,10 +34,10 @@ router = APIRouter(tags=["Link Management"])
 @limiter.limit("60 per minute; 5000 per day")
 async def list_urls_v1(
     request: Request,
-    query: ListUrlsQuery = Depends(),
+    query: Annotated[ListUrlsQuery, Query()],
     user: CurrentUser = Depends(require_auth),
     url_service: UrlService = Depends(get_url_service),
-) -> dict:
+) -> UrlListResponse:
     """List all URLs owned by the authenticated user.
 
     Returns a paginated list of shortened URLs with support for filtering,

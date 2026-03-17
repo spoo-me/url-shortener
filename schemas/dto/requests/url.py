@@ -17,6 +17,8 @@ from pydantic import (
     model_validator,
 )
 
+from schemas.dto.requests._descriptions import LIST_URLS_FILTER_DESC
+
 ALLOWED_SORT_FIELDS = frozenset({"created_at", "last_click", "total_clicks"})
 
 
@@ -138,6 +140,15 @@ class UpdateUrlRequest(BaseModel):
     )
 
 
+class UpdateUrlStatusRequest(BaseModel):
+    """Request body for updating only the status of a shortened URL."""
+
+    status: Literal["ACTIVE", "INACTIVE"] = Field(
+        description="New status for the URL. `ACTIVE` enables redirects, `INACTIVE` disables them.",
+        examples=["ACTIVE"],
+    )
+
+
 class ListUrlsQuery(BaseModel):
     """Query parameters for listing a user's URLs with pagination and filtering.
 
@@ -151,7 +162,7 @@ class ListUrlsQuery(BaseModel):
     page: int = Field(
         default=1,
         ge=1,
-        description="Page number (1-indexed).",
+        description="Page number (default: 1)",
         examples=[1],
     )
     page_size: int = Field(
@@ -159,26 +170,31 @@ class ListUrlsQuery(BaseModel):
         ge=1,
         le=100,
         alias="pageSize",
-        description="Items per page (1-100).",
+        description="Items per page (default: 20, max: 100)",
         examples=[20],
     )
-    sort_by: str = Field(
+    sort_by: Literal["created_at", "last_click", "total_clicks"] = Field(
         default="created_at",
         alias="sortBy",
-        description="Sort field. One of: created_at, last_click, total_clicks.",
-        examples=["created_at"],
+        description="Field to sort by",
     )
-    sort_order: str = Field(
+    sort_order: Literal["ascending", "asc", "1", "descending", "desc", "-1"] = Field(
         default="descending",
         alias="sortOrder",
-        description="Sort direction: ascending/asc/1 or descending/desc/-1.",
-        examples=["descending"],
+        description="Sort direction",
     )
     # Raw JSON string; also accepted as ``filterBy`` (the existing API supports both)
     filter: Optional[str] = Field(
         default=None,
-        description="JSON-encoded filter object. Available fields: status, createdAfter, createdBefore, passwordSet, maxClicksSet, search.",
-        examples=['{"status":"ACTIVE"}'],
+        description=LIST_URLS_FILTER_DESC,
+        examples=[
+            '{"status":"ACTIVE"}',
+            '{"passwordSet": true}',
+            '{"createdAfter": "2024-01-01T00:00:00Z"}',
+            '{"status": "ACTIVE", "maxClicksSet": true}',
+            '{"search": "example"}',
+            '{"createdAfter": "2024-01-01", "createdBefore": "2024-12-31", "status": "ACTIVE"}',
+        ],
     )
     filter_by: Optional[str] = Field(
         default=None,
@@ -187,11 +203,6 @@ class ListUrlsQuery(BaseModel):
     )
     # Parsed result — populated by the model validator, invisible to FastAPI/OpenAPI
     _parsed_filter: Optional[UrlFilter] = PrivateAttr(default=None)
-
-    @field_validator("sort_by", mode="after")
-    @classmethod
-    def _validate_sort_by(cls, v: str) -> str:
-        return v if v in ALLOWED_SORT_FIELDS else "created_at"
 
     @model_validator(mode="after")
     def _parse_filter_json(self) -> "ListUrlsQuery":

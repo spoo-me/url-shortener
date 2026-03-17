@@ -7,9 +7,9 @@ API key users require ``stats:read``, ``urls:read``, or ``admin:all``.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 
 from dependencies import (
     CurrentUser,
@@ -44,15 +44,14 @@ _stats_limit, _stats_key = dynamic_limit(
 @limiter.limit(_stats_limit, key_func=_stats_key)
 async def stats_v1(
     request: Request,
-    query: StatsQuery = Depends(),
+    query: Annotated[StatsQuery, Query()],
     user: Optional[CurrentUser] = Depends(get_current_user),
     stats_service: StatsService = Depends(get_stats_service),
 ) -> StatsResponse:
     """Get click statistics for URLs.
 
     Retrieve aggregated click analytics with flexible grouping, filtering,
-    and time-range options. Results are computed in a single database round-trip
-    using `$facet` aggregation.
+    and time-range options.
 
     **Authentication**: Optional for `scope=anon` (public stats on a single URL);
     required for `scope=all` (all URLs owned by the user).
@@ -60,10 +59,12 @@ async def stats_v1(
     **API Key Scope**: `stats:read`, `urls:read`, or `admin:all`
 
     **Rate Limits**:
+
     - Authenticated: 60/min, 5,000/day
     - Anonymous: 20/min, 1,000/day
 
     **Scopes**:
+
     - `scope=anon` + `short_code=<alias>` — public stats for one URL (if stats are not private)
     - `scope=all` — aggregate stats across all URLs owned by the authenticated user
 

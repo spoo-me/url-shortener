@@ -65,6 +65,7 @@ async def create_api_key(
     `stats:read`, `admin:all`
 
     **Notes**:
+
     - Store the returned `token` securely — it will not be shown again
     - Set `expires_at` to limit the key's lifetime (ISO 8601 or Unix epoch)
     - Omit `expires_at` for a non-expiring key
@@ -170,6 +171,7 @@ async def delete_api_key(
     **Rate Limits**: 30/min
 
     **Modes**:
+
     - `?revoke=false` (default) — **permanently deletes** the key record
     - `?revoke=true` — marks the key as revoked but preserves the record;
       the key appears with `revoked: true` in the list endpoint

@@ -165,6 +165,7 @@ async def register(
 
 @router.post(
     "/auth/refresh",
+    response_model=RefreshResponse,
     responses=ERROR_RESPONSES,
     openapi_extra=PUBLIC_SECURITY,
     operation_id="refreshTokens",
@@ -292,7 +293,7 @@ async def set_password(
     return MessageResponse(success=True, message="password set successfully")
 
 
-@router.get("/auth/verify")
+@router.get("/auth/verify", include_in_schema=False)
 @limiter.limit("60 per minute")
 async def verify_page(
     request: Request,

@@ -39,11 +39,10 @@ class CreateApiKeyRequest(BaseModel):
         description="Permission scopes for the key",
         examples=[["shorten:create", "stats:read"]],
     )
-    # ISO 8601 string or Unix epoch seconds; null means no expiration
-    expires_at: Optional[Union[str, int, float]] = Field(
+    expires_at: Optional[Union[str, int]] = Field(
         default=None,
-        description="Expiration as ISO 8601 string or Unix timestamp; null means no expiration",
-        examples=["2026-01-01T00:00:00Z"],
+        description="Expiration time. ISO 8601 string (e.g. `2026-01-01T00:00:00Z`) or Unix epoch seconds (e.g. `1735689599`). Omit for non-expiring key.",
+        examples=["2026-01-01T00:00:00Z", 1735689599],
     )
 
     @field_validator("name", mode="after")

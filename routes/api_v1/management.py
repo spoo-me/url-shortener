@@ -9,8 +9,10 @@ All endpoints require authentication.  API key users require
 
 from __future__ import annotations
 
+from typing import Annotated
+
 from bson import ObjectId
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Path, Request
 
 from dependencies import (
     CurrentUser,
@@ -22,7 +24,7 @@ from errors import ValidationError
 from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES
 from middleware.rate_limiter import limiter
 from shared.datetime_utils import to_unix_timestamp
-from schemas.dto.requests.url import UpdateUrlRequest
+from schemas.dto.requests.url import UpdateUrlRequest, UpdateUrlStatusRequest
 from schemas.dto.responses.url import DeleteUrlResponse, UpdateUrlResponse
 from services.url_service import UrlService
 
@@ -48,7 +50,7 @@ def _parse_url_id(url_id: str) -> ObjectId:
 @limiter.limit("120 per minute; 2000 per day")
 async def update_url_v1(
     request: Request,
-    url_id: str,
+    url_id: Annotated[str, Path(description="Unique identifier of the URL")],
     body: UpdateUrlRequest,
     user: CurrentUser = Depends(require_auth),
     url_service: UrlService = Depends(get_url_service),
@@ -69,6 +71,7 @@ async def update_url_v1(
     `max_clicks`, `expire_after`, `private_stats`, `status`
 
     **Notes**:
+
     - Setting `max_clicks` to `0` or `null` removes the click limit
     - Changing the `alias` checks availability and may fail with 409 Conflict
     - The `url_id` is the MongoDB ObjectId, not the alias
@@ -99,15 +102,14 @@ async def update_url_v1(
 @limiter.limit("120 per minute; 2000 per day")
 async def update_url_status_v1(
     request: Request,
-    url_id: str,
-    body: UpdateUrlRequest,
+    url_id: Annotated[str, Path(description="Unique identifier of the URL")],
+    body: UpdateUrlStatusRequest,
     user: CurrentUser = Depends(require_auth),
     url_service: UrlService = Depends(get_url_service),
 ) -> UpdateUrlResponse:
     """Update only the status of a URL (ACTIVE / INACTIVE).
 
-    Convenience endpoint that accepts the same body as the full update but only
-    applies the `status` field. All other fields in the request body are ignored.
+    Toggle a URL between active and inactive without modifying other properties.
 
     **Authentication**: Required — you must own the URL.
 
@@ -115,14 +117,19 @@ async def update_url_status_v1(
 
     **Rate Limits**: 120/min, 2,000/day
 
+    **Status Values**:
+
+    - `ACTIVE` — URL is accessible and redirects normally
+    - `INACTIVE` — URL is disabled and returns an error page
+
     **Use Cases**:
+
     - Set `INACTIVE` to temporarily disable redirects without deleting the URL
     - Set `ACTIVE` to re-enable a previously disabled URL
     """
     check_api_key_scope(user, _MANAGEMENT_SCOPES)
     oid = _parse_url_id(url_id)
 
-    # Pre-filter: only the status field is considered
     status_only = UpdateUrlRequest(status=body.status)
 
     doc = await url_service.update(oid, status_only, user.user_id)
@@ -149,7 +156,7 @@ async def update_url_status_v1(
 @limiter.limit("60 per minute; 1000 per day")
 async def delete_url_v1(
     request: Request,
-    url_id: str,
+    url_id: Annotated[str, Path(description="Unique identifier of the URL")],
     user: CurrentUser = Depends(require_auth),
     url_service: UrlService = Depends(get_url_service),
 ) -> DeleteUrlResponse:

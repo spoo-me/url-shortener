@@ -11,7 +11,7 @@ IANA timezone names.  The JSON ``filters`` string is parsed into a typed dict.
 from __future__ import annotations
 
 import json
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import (
     BaseModel,
@@ -20,6 +20,22 @@ from pydantic import (
     PrivateAttr,
     field_validator,
     model_validator,
+)
+
+from schemas.dto.requests._descriptions import (
+    STATS_BROWSER_DESC,
+    STATS_CITY_DESC,
+    STATS_COUNTRY_DESC,
+    STATS_END_DATE_DESC,
+    STATS_FILTERS_DESC,
+    STATS_GROUP_BY_DESC,
+    STATS_METRICS_DESC,
+    STATS_OS_DESC,
+    STATS_REFERRER_DESC,
+    STATS_SCOPE_DESC,
+    STATS_SHORT_CODE_DESC,
+    STATS_START_DATE_DESC,
+    STATS_TIMEZONE_DESC,
 )
 
 ALLOWED_SCOPES = frozenset({"all", "anon"})
@@ -52,74 +68,65 @@ class StatsQuery(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    scope: str = Field(
-        default="all",
-        description="Statistics scope. 'anon' for public URL stats (requires short_code), 'all' for aggregate stats (requires auth)",
-        examples=["anon"],
-    )
+    scope: Literal["all", "anon"] = Field(description=STATS_SCOPE_DESC)
     short_code: Optional[str] = Field(
         default=None,
-        description="URL alias to query stats for (required when scope=anon)",
+        description=STATS_SHORT_CODE_DESC,
         examples=["mylink"],
     )
 
     start_date: Optional[str] = Field(
         default=None,
-        description="Start of time range as ISO 8601 datetime or Unix timestamp",
+        description=STATS_START_DATE_DESC,
         examples=["2025-01-01T00:00:00Z"],
     )
     end_date: Optional[str] = Field(
         default=None,
-        description="End of time range as ISO 8601 datetime or Unix timestamp",
+        description=STATS_END_DATE_DESC,
         examples=["2025-12-31T23:59:59Z"],
     )
 
     group_by: Optional[str] = Field(
         default=None,
-        description="Comma-separated dimensions: time, browser, os, country, city, referrer, short_code",
-        examples=["time,browser"],
+        description=STATS_GROUP_BY_DESC,
+        examples=["time,browser", "country", "time,country,browser"],
     )
     metrics: Optional[str] = Field(
         default=None,
-        description="Comma-separated metrics: clicks, unique_clicks",
-        examples=["clicks,unique_clicks"],
+        description=STATS_METRICS_DESC,
+        examples=["clicks,unique_clicks", "clicks"],
     )
 
     timezone: str = Field(
         default="UTC",
-        description="IANA timezone for output formatting",
+        description=STATS_TIMEZONE_DESC,
         examples=["UTC", "America/New_York"],
     )
 
     filters: Optional[str] = Field(
         default=None,
-        description='JSON filter object e.g. {"browser":["Chrome"]}',
-        examples=['{"browser":["Chrome","Firefox"]}'],
+        description=STATS_FILTERS_DESC,
+        examples=[
+            '{"browser":["Chrome","Firefox"]}',
+            '{"country":["United States","Canada"],"browser":["Chrome"]}',
+        ],
     )
     browser: Optional[str] = Field(
-        default=None,
-        description="Filter by browser name(s), comma-separated",
-        examples=["Chrome,Firefox"],
+        default=None, description=STATS_BROWSER_DESC, examples=["Chrome,Firefox"]
     )
     os: Optional[str] = Field(
-        default=None,
-        description="Filter by operating system(s), comma-separated",
-        examples=["Windows,macOS"],
+        default=None, description=STATS_OS_DESC, examples=["Windows,macOS"]
     )
     country: Optional[str] = Field(
-        default=None,
-        description="Filter by country name(s), comma-separated",
-        examples=["United States,Germany"],
+        default=None, description=STATS_COUNTRY_DESC, examples=["United States,Germany"]
     )
     city: Optional[str] = Field(
-        default=None,
-        description="Filter by city name(s), comma-separated",
-        examples=["San Francisco,Berlin"],
+        default=None, description=STATS_CITY_DESC, examples=["San Francisco,Berlin"]
     )
     referrer: Optional[str] = Field(
         default=None,
-        description="Filter by referrer domain(s), comma-separated",
-        examples=["google.com,twitter.com"],
+        description=STATS_REFERRER_DESC,
+        examples=["https://google.com,https://twitter.com"],
     )
 
     # --- Parsed/validated results (private — not exposed as query params) ---
@@ -139,13 +146,10 @@ class StatsQuery(BaseModel):
     def parsed_filters(self) -> dict[str, list[str]]:
         return self._parsed_filters
 
-    @field_validator("scope", mode="after")
+    @field_validator("scope", mode="before")
     @classmethod
-    def _validate_scope(cls, v: str) -> str:
-        v = v.strip().lower()
-        if v not in ALLOWED_SCOPES:
-            raise ValueError(f"scope must be one of: {', '.join(ALLOWED_SCOPES)}")
-        return v
+    def _normalize_scope(cls, v: str) -> str:
+        return v.strip().lower() if isinstance(v, str) else v
 
     @model_validator(mode="after")
     def _parse_multi_value_fields(self) -> "StatsQuery":
@@ -198,9 +202,8 @@ class ExportQuery(StatsQuery):
     Superset of StatsQuery — adds the required ``format`` parameter.
     """
 
-    format: str = Field(
-        description="Export file format",
-        examples=["json"],
+    format: Literal["csv", "xlsx", "json", "xml"] = Field(
+        description="Export file format.",
     )
 
     @field_validator("format", mode="after")

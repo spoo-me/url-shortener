@@ -58,10 +58,12 @@ async def shorten_v1(
     **API Key Scope**: `shorten:create` or `admin:all`
 
     **Rate Limits**:
+
     - Authenticated: 60/min, 5,000/day
     - Anonymous: 20/min, 1,000/day
 
     **Anonymous Usage Consequences**:
+
     - Lower rate limits
     - Cannot manage or view URLs later
     - Cannot use private stats

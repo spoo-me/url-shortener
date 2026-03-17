@@ -7,9 +7,9 @@ API key users require ``stats:read``, ``urls:read``, or ``admin:all``.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import Response
 
 from dependencies import (
@@ -36,7 +36,28 @@ _export_limit, _export_key = dynamic_limit(
 
 @router.get(
     "/export",
-    responses=EXPORT_RESPONSES,
+    responses={
+        **EXPORT_RESPONSES,
+        200: {
+            "description": "Export file download",
+            "content": {
+                "application/json": {
+                    "schema": {"type": "string", "format": "binary"},
+                },
+                "application/xml": {
+                    "schema": {"type": "string", "format": "binary"},
+                },
+                "application/zip": {
+                    "schema": {"type": "string", "format": "binary"},
+                    "x-description": "CSV export — ZIP archive containing summary.csv plus one file per dimension",
+                },
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                    "schema": {"type": "string", "format": "binary"},
+                    "x-description": "XLSX export — Excel workbook with multiple sheets",
+                },
+            },
+        },
+    },
     openapi_extra=OPTIONAL_AUTH_SECURITY,
     operation_id="exportStats",
     summary="Export Statistics",
@@ -44,7 +65,7 @@ _export_limit, _export_key = dynamic_limit(
 @limiter.limit(_export_limit, key_func=_export_key)
 async def export_v1(
     request: Request,
-    query: ExportQuery = Depends(),
+    query: Annotated[ExportQuery, Query()],
     user: Optional[CurrentUser] = Depends(get_current_user),
     export_service: ExportService = Depends(get_export_service),
 ) -> Response:
@@ -59,10 +80,12 @@ async def export_v1(
     **API Key Scope**: `stats:read`, `urls:read`, or `admin:all`
 
     **Rate Limits**:
+
     - Authenticated: 30/min, 1,000/day
     - Anonymous: 10/min, 200/day
 
     **Export Formats**:
+
     - `json` — single JSON file
     - `xml` — single XML file
     - `xlsx` — Excel spreadsheet with multiple sheets

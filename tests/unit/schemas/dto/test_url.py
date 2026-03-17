@@ -145,11 +145,9 @@ class TestListUrlsQuery:
         with pytest.raises(ValidationError):
             ListUrlsQuery.model_validate({"pageSize": 101})
 
-    def test_invalid_sort_by_falls_back_to_created_at(self):
-        assert (
-            ListUrlsQuery.model_validate({"sortBy": "invalid_field"}).sort_by
-            == "created_at"
-        )
+    def test_invalid_sort_by_rejected(self):
+        with pytest.raises(ValidationError):
+            ListUrlsQuery.model_validate({"sortBy": "invalid_field"})
 
     def test_valid_filter_json_parsed(self):
         filter_json = json.dumps({"status": "ACTIVE", "passwordSet": True})
