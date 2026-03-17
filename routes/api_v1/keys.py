@@ -15,8 +15,8 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, Query, Request
 
 from dependencies import (
-    AuthUser,
-    VerifiedUser,
+    JwtUser,
+    JwtVerifiedUser,
     get_api_key_service,
 )
 from errors import NotFoundError, ValidationError
@@ -46,7 +46,7 @@ router = APIRouter(tags=["API Keys"])
 async def create_api_key(
     request: Request,
     body: CreateApiKeyRequest,
-    user: VerifiedUser,
+    user: JwtVerifiedUser,
     api_key_service: ApiKeyService = Depends(get_api_key_service),
 ) -> ApiKeyCreatedResponse:
     """Create a new API key for programmatic access.
@@ -114,7 +114,7 @@ async def create_api_key(
 @limiter.limit("60 per minute")
 async def list_api_keys(
     request: Request,
-    user: AuthUser,
+    user: JwtUser,
     api_key_service: ApiKeyService = Depends(get_api_key_service),
 ) -> ApiKeysListResponse:
     """List all API keys for the authenticated user.
@@ -155,7 +155,7 @@ async def list_api_keys(
 async def delete_api_key(
     request: Request,
     key_id: str,
-    user: AuthUser,
+    user: JwtUser,
     api_key_service: ApiKeyService = Depends(get_api_key_service),
     revoke: bool = Query(default=False),
 ) -> ApiKeyActionResponse:

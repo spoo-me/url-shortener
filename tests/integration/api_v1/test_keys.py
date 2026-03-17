@@ -10,8 +10,8 @@ from fastapi.testclient import TestClient
 from dependencies import (
     get_api_key_service,
     get_current_user,
-    require_auth,
-    require_verified_email,
+    require_jwt,
+    require_jwt_verified,
 )
 
 from .conftest import _build_test_app, _make_api_key_doc, _make_user
@@ -27,7 +27,7 @@ class TestApiKeys:
 
         application = _build_test_app(
             {
-                require_verified_email: lambda: user,
+                require_jwt_verified: lambda: user,
                 get_api_key_service: lambda: mock_svc,
             }
         )
@@ -87,7 +87,7 @@ class TestApiKeys:
         mock_svc.list_by_user = AsyncMock(return_value=[key_doc])
 
         application = _build_test_app(
-            {require_auth: lambda: user, get_api_key_service: lambda: mock_svc}
+            {require_jwt: lambda: user, get_api_key_service: lambda: mock_svc}
         )
         with TestClient(application, raise_server_exceptions=True) as client:
             resp = client.get("/api/v1/keys")
@@ -104,7 +104,7 @@ class TestApiKeys:
         mock_svc.revoke = AsyncMock(return_value=True)
 
         application = _build_test_app(
-            {require_auth: lambda: user, get_api_key_service: lambda: mock_svc}
+            {require_jwt: lambda: user, get_api_key_service: lambda: mock_svc}
         )
         key_id = str(ObjectId())
         with TestClient(application, raise_server_exceptions=True) as client:
@@ -124,7 +124,7 @@ class TestApiKeys:
         mock_svc.revoke = AsyncMock(return_value=True)
 
         application = _build_test_app(
-            {require_auth: lambda: user, get_api_key_service: lambda: mock_svc}
+            {require_jwt: lambda: user, get_api_key_service: lambda: mock_svc}
         )
         key_id = str(ObjectId())
         with TestClient(application, raise_server_exceptions=True) as client:
@@ -143,7 +143,7 @@ class TestApiKeys:
         mock_svc.revoke = AsyncMock(return_value=False)
 
         application = _build_test_app(
-            {require_auth: lambda: user, get_api_key_service: lambda: mock_svc}
+            {require_jwt: lambda: user, get_api_key_service: lambda: mock_svc}
         )
         with TestClient(application, raise_server_exceptions=False) as client:
             resp = client.delete(f"/api/v1/keys/{ObjectId()}")
@@ -155,7 +155,7 @@ class TestApiKeys:
         user = _make_user()
 
         application = _build_test_app(
-            {require_auth: lambda: user, get_api_key_service: lambda: AsyncMock()}
+            {require_jwt: lambda: user, get_api_key_service: lambda: AsyncMock()}
         )
         with TestClient(application, raise_server_exceptions=False) as client:
             resp = client.delete("/api/v1/keys/not-an-objectid")

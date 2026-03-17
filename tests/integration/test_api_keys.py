@@ -32,8 +32,8 @@ from dependencies import (
     get_api_key_service,
     get_current_user,
     get_url_service,
-    require_auth,
-    require_verified_email,
+    require_jwt,
+    require_jwt_verified,
 )
 from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
@@ -144,7 +144,7 @@ def test_create_api_key_returns_token_once():
     verified_user = _make_verified_user()
     app = _build_test_app(
         {
-            require_verified_email: lambda: verified_user,
+            require_jwt_verified: lambda: verified_user,
             get_api_key_service: lambda: mock_svc,
         }
     )
@@ -175,7 +175,7 @@ def test_create_api_key_requires_verified_email():
 
     app = _build_test_app(
         {
-            require_verified_email: _raise_unverified,
+            require_jwt_verified: _raise_unverified,
         }
     )
     client = TestClient(app, raise_server_exceptions=False)
@@ -198,7 +198,7 @@ def test_create_api_key_requires_auth():
 
     app = _build_test_app(
         {
-            require_verified_email: _raise_unauth,
+            require_jwt_verified: _raise_unauth,
         }
     )
     client = TestClient(app, raise_server_exceptions=False)
@@ -222,7 +222,7 @@ def test_create_api_key_with_scopes():
     verified_user = _make_verified_user()
     app = _build_test_app(
         {
-            require_verified_email: lambda: verified_user,
+            require_jwt_verified: lambda: verified_user,
             get_api_key_service: lambda: mock_svc,
         }
     )
@@ -250,7 +250,7 @@ def test_list_api_keys_returns_without_token():
     verified_user = _make_verified_user()
     app = _build_test_app(
         {
-            require_auth: lambda: verified_user,
+            require_jwt: lambda: verified_user,
             get_api_key_service: lambda: mock_svc,
         }
     )
@@ -340,7 +340,7 @@ def test_revoke_api_key_soft():
     verified_user = _make_verified_user()
     app = _build_test_app(
         {
-            require_auth: lambda: verified_user,
+            require_jwt: lambda: verified_user,
             get_api_key_service: lambda: mock_svc,
         }
     )
@@ -361,7 +361,7 @@ def test_revoke_api_key_hard():
     verified_user = _make_verified_user()
     app = _build_test_app(
         {
-            require_auth: lambda: verified_user,
+            require_jwt: lambda: verified_user,
             get_api_key_service: lambda: mock_svc,
         }
     )
@@ -387,7 +387,7 @@ def test_revoked_api_key_rejected():
 
     app = _build_test_app(
         {
-            require_auth: _raise_unauth,
+            require_jwt: _raise_unauth,
             get_api_key_service: lambda: mock_svc,
         }
     )
@@ -410,7 +410,7 @@ def test_expired_api_key_rejected():
 
     app = _build_test_app(
         {
-            require_auth: _raise_unauth,
+            require_jwt: _raise_unauth,
             get_api_key_service: lambda: mock_svc,
         }
     )
@@ -428,7 +428,7 @@ def test_api_key_not_found_on_delete():
     verified_user = _make_verified_user()
     app = _build_test_app(
         {
-            require_auth: lambda: verified_user,
+            require_jwt: lambda: verified_user,
             get_api_key_service: lambda: mock_svc,
         }
     )

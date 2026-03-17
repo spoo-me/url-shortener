@@ -8,6 +8,8 @@ Re-exports all dependencies from sub-modules so that existing
 from dependencies.auth import (
     AuthUser,
     CurrentUser,
+    JwtUser,
+    JwtVerifiedUser,
     OptionalUser,
     SHORTEN_SCOPES,
     STATS_SCOPES,
@@ -18,6 +20,8 @@ from dependencies.auth import (
     get_current_user,
     optional_scopes,
     require_auth,
+    require_jwt,
+    require_jwt_verified,
     require_scopes,
     require_verified_email,
 )
@@ -45,6 +49,8 @@ __all__ = [
     # auth
     "AuthUser",
     "CurrentUser",
+    "JwtUser",
+    "JwtVerifiedUser",
     "OptionalUser",
     "SHORTEN_SCOPES",
     "STATS_SCOPES",
@@ -55,6 +61,8 @@ __all__ = [
     "get_current_user",
     "optional_scopes",
     "require_auth",
+    "require_jwt",
+    "require_jwt_verified",
     "require_scopes",
     "require_verified_email",
     # infra

@@ -147,6 +147,29 @@ async def require_verified_email(
     return user
 
 
+async def require_jwt(
+    user: CurrentUser = Depends(require_auth),
+) -> CurrentUser:
+    """Raise 403 if the request was authenticated via API key.
+
+    Use on endpoints where API key auth must be explicitly prohibited —
+    e.g. key management routes (an API key must not be able to create,
+    list, or delete other API keys).
+    """
+    if user.api_key_doc is not None:
+        raise ForbiddenError("API keys cannot be used to manage API keys")
+    return user
+
+
+async def require_jwt_verified(
+    user: CurrentUser = Depends(require_jwt),
+) -> CurrentUser:
+    """JWT-only auth + verified email check."""
+    if not user.email_verified:
+        raise EmailNotVerifiedError("Email verification required")
+    return user
+
+
 def check_api_key_scope(user: Optional[CurrentUser], required_scopes: set[str]) -> None:
     """Raise ForbiddenError if an API-key-authenticated user lacks a required scope.
 
@@ -211,3 +234,5 @@ def optional_scopes(scopes: set[str]):
 AuthUser = Annotated[CurrentUser, Depends(require_auth)]
 VerifiedUser = Annotated[CurrentUser, Depends(require_verified_email)]
 OptionalUser = Annotated[Optional[CurrentUser], Depends(get_current_user)]
+JwtUser = Annotated[CurrentUser, Depends(require_jwt)]
+JwtVerifiedUser = Annotated[CurrentUser, Depends(require_jwt_verified)]
