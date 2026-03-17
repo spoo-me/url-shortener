@@ -11,6 +11,7 @@ from typing import Optional
 
 from bson import ObjectId
 from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.errors import DuplicateKeyError, PyMongoError
 
 from schemas.models.user import UserDoc
 from shared.logging import get_logger
@@ -27,8 +28,12 @@ class UserRepository:
         try:
             doc = await self._col.find_one({"email": email})
             return UserDoc.from_mongo(doc)  # type: ignore[return-value]
-        except Exception as exc:
-            log.error("user_repo_find_by_email_failed", error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "user_repo_find_by_email_failed",
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
 
     async def find_by_id(self, user_id: ObjectId) -> Optional[UserDoc]:
@@ -36,9 +41,12 @@ class UserRepository:
         try:
             doc = await self._col.find_one({"_id": user_id})
             return UserDoc.from_mongo(doc)  # type: ignore[return-value]
-        except Exception as exc:
+        except PyMongoError as exc:
             log.error(
-                "user_repo_find_by_id_failed", user_id=str(user_id), error=str(exc)
+                "user_repo_find_by_id_failed",
+                user_id=str(user_id),
+                error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise
 
@@ -58,11 +66,12 @@ class UserRepository:
                 }
             )
             return UserDoc.from_mongo(doc)  # type: ignore[return-value]
-        except Exception as exc:
+        except PyMongoError as exc:
             log.error(
                 "user_repo_find_by_oauth_failed",
                 provider=provider,
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise
 
@@ -71,11 +80,19 @@ class UserRepository:
         try:
             result = await self._col.insert_one(user_data)
             return result.inserted_id
-        except Exception as exc:
+        except DuplicateKeyError as exc:
+            log.warning(
+                "user_repo_create_duplicate",
+                email=user_data.get("email"),
+                error=str(exc),
+            )
+            raise
+        except PyMongoError as exc:
             log.error(
                 "user_repo_create_failed",
                 email=user_data.get("email"),
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise
 
@@ -88,6 +105,11 @@ class UserRepository:
         try:
             result = await self._col.update_one({"_id": user_id}, update_ops)
             return result.matched_count > 0
-        except Exception as exc:
-            log.error("user_repo_update_failed", user_id=str(user_id), error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "user_repo_update_failed",
+                user_id=str(user_id),
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise

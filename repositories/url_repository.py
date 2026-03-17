@@ -12,6 +12,7 @@ from typing import Optional
 
 from bson import ObjectId
 from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.errors import DuplicateKeyError, PyMongoError
 
 from schemas.models.url import UrlV2Doc
 from shared.logging import get_logger
@@ -28,8 +29,13 @@ class UrlRepository:
         try:
             doc = await self._col.find_one({"alias": alias})
             return UrlV2Doc.from_mongo(doc)  # type: ignore[return-value]
-        except Exception as exc:
-            log.error("url_repo_find_by_alias_failed", alias=alias, error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "url_repo_find_by_alias_failed",
+                alias=alias,
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
 
     async def find_by_id(self, url_id: ObjectId) -> Optional[UrlV2Doc]:
@@ -37,8 +43,13 @@ class UrlRepository:
         try:
             doc = await self._col.find_one({"_id": url_id})
             return UrlV2Doc.from_mongo(doc)  # type: ignore[return-value]
-        except Exception as exc:
-            log.error("url_repo_find_by_id_failed", url_id=str(url_id), error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "url_repo_find_by_id_failed",
+                url_id=str(url_id),
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
 
     async def insert(self, doc: dict) -> ObjectId:
@@ -46,11 +57,17 @@ class UrlRepository:
         try:
             result = await self._col.insert_one(doc)
             return result.inserted_id
-        except Exception as exc:
+        except DuplicateKeyError as exc:
+            log.warning(
+                "url_repo_insert_duplicate", alias=doc.get("alias"), error=str(exc)
+            )
+            raise
+        except PyMongoError as exc:
             log.error(
                 "url_repo_insert_failed",
                 alias=doc.get("alias"),
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise
 
@@ -63,8 +80,13 @@ class UrlRepository:
         try:
             result = await self._col.update_one({"_id": url_id}, update_ops)
             return result.matched_count > 0
-        except Exception as exc:
-            log.error("url_repo_update_failed", url_id=str(url_id), error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "url_repo_update_failed",
+                url_id=str(url_id),
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
 
     async def delete(self, url_id: ObjectId) -> bool:
@@ -72,8 +94,13 @@ class UrlRepository:
         try:
             result = await self._col.delete_one({"_id": url_id})
             return result.deleted_count > 0
-        except Exception as exc:
-            log.error("url_repo_delete_failed", url_id=str(url_id), error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "url_repo_delete_failed",
+                url_id=str(url_id),
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
 
     async def check_alias_exists(self, alias: str) -> bool:
@@ -81,8 +108,13 @@ class UrlRepository:
         try:
             doc = await self._col.find_one({"alias": alias}, {"_id": 1})
             return doc is not None
-        except Exception as exc:
-            log.error("url_repo_check_alias_failed", alias=alias, error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "url_repo_check_alias_failed",
+                alias=alias,
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
 
     async def increment_clicks(
@@ -101,11 +133,12 @@ class UrlRepository:
                     "$set": {"last_click": click_time},
                 },
             )
-        except Exception as exc:
+        except PyMongoError as exc:
             log.error(
                 "url_repo_increment_clicks_failed",
                 url_id=str(url_id),
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise
 
@@ -122,12 +155,13 @@ class UrlRepository:
                 {"$set": {"status": "EXPIRED"}},
             )
             return result.modified_count > 0
-        except Exception as exc:
+        except PyMongoError as exc:
             log.error(
                 "url_repo_expire_failed",
                 url_id=str(url_id),
                 max_clicks=max_clicks,
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise
 
@@ -155,16 +189,22 @@ class UrlRepository:
             )
             docs = await cursor.to_list(length=limit)
             return [UrlV2Doc.from_mongo(d) for d in docs]  # type: ignore[misc]
-        except Exception as exc:
-            log.error("url_repo_find_by_owner_failed", error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "url_repo_find_by_owner_failed",
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
 
     async def count_by_query(self, query: dict) -> int:
         """Count documents matching query."""
         try:
             return await self._col.count_documents(query)
-        except Exception as exc:
-            log.error("url_repo_count_failed", error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "url_repo_count_failed", error=str(exc), error_type=type(exc).__name__
+            )
             raise
 
     async def check_stats_privacy(self, alias: str) -> dict:
@@ -187,8 +227,11 @@ class UrlRepository:
                 "private": bool(doc.get("private_stats", False)),
                 "owner_id": str(doc["owner_id"]) if doc.get("owner_id") else None,
             }
-        except Exception as exc:
+        except PyMongoError as exc:
             log.error(
-                "url_repo_check_stats_privacy_failed", alias=alias, error=str(exc)
+                "url_repo_check_stats_privacy_failed",
+                alias=alias,
+                error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise

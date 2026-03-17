@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.errors import DuplicateKeyError, PyMongoError
 
 from schemas.models.url import EmojiUrlDoc
 from shared.logging import get_logger
@@ -29,8 +30,13 @@ class EmojiUrlRepository:
         try:
             doc = await self._col.find_one({"_id": alias})
             return EmojiUrlDoc.from_mongo(doc)  # type: ignore[return-value]
-        except Exception as exc:
-            log.error("emoji_url_repo_find_failed", alias=alias, error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "emoji_url_repo_find_failed",
+                alias=alias,
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
 
     async def insert(self, alias: str, url_data: dict) -> None:
@@ -41,8 +47,16 @@ class EmojiUrlRepository:
         """
         try:
             await self._col.insert_one({"_id": alias, **url_data})
-        except Exception as exc:
-            log.error("emoji_url_repo_insert_failed", alias=alias, error=str(exc))
+        except DuplicateKeyError as exc:
+            log.warning("emoji_url_repo_insert_duplicate", alias=alias, error=str(exc))
+            raise
+        except PyMongoError as exc:
+            log.error(
+                "emoji_url_repo_insert_failed",
+                alias=alias,
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
 
     async def update(self, alias: str, update_ops: dict) -> None:
@@ -54,8 +68,13 @@ class EmojiUrlRepository:
         """
         try:
             await self._col.update_one({"_id": alias}, update_ops)
-        except Exception as exc:
-            log.error("emoji_url_repo_update_failed", alias=alias, error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "emoji_url_repo_update_failed",
+                alias=alias,
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
 
     async def check_exists(self, alias: str) -> bool:
@@ -63,8 +82,13 @@ class EmojiUrlRepository:
         try:
             doc = await self._col.find_one({"_id": alias}, {"_id": 1})
             return doc is not None
-        except Exception as exc:
-            log.error("emoji_url_repo_check_exists_failed", alias=alias, error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "emoji_url_repo_check_exists_failed",
+                alias=alias,
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
 
     async def aggregate(self, pipeline: list[dict]) -> Optional[dict[str, Any]]:
@@ -78,6 +102,10 @@ class EmojiUrlRepository:
             cursor = await self._col.aggregate(pipeline)
             results = await cursor.to_list(length=1)
             return results[0] if results else None
-        except Exception as exc:
-            log.error("emoji_url_repo_aggregate_failed", error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "emoji_url_repo_aggregate_failed",
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise

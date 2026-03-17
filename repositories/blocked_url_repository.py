@@ -11,6 +11,7 @@ All methods are async. Errors are logged and re-raised.
 from __future__ import annotations
 
 from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.errors import PyMongoError
 
 from shared.logging import get_logger
 
@@ -32,6 +33,10 @@ class BlockedUrlRepository:
             cursor = self._col.find({}, {"_id": 1})
             docs = await cursor.to_list(length=None)
             return [doc["_id"] for doc in docs]
-        except Exception as exc:
-            log.error("blocked_url_repo_get_patterns_failed", error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "blocked_url_repo_get_patterns_failed",
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise

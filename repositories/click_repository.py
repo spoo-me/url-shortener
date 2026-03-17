@@ -14,6 +14,7 @@ from __future__ import annotations
 from typing import Any
 
 from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.errors import PyMongoError
 
 from shared.logging import get_logger
 
@@ -36,7 +37,7 @@ class ClickRepository:
         """
         try:
             await self._col.insert_one(doc)
-        except Exception as exc:
+        except PyMongoError as exc:
             log.error(
                 "click_repo_insert_failed",
                 error=str(exc),
@@ -54,7 +55,7 @@ class ClickRepository:
         try:
             cursor = await self._col.aggregate(pipeline)
             return await cursor.to_list(length=None)
-        except Exception as exc:
+        except PyMongoError as exc:
             log.error(
                 "click_repo_aggregate_failed",
                 error=str(exc),

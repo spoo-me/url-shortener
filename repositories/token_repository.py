@@ -13,6 +13,7 @@ from typing import Optional
 
 from bson import ObjectId
 from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.errors import PyMongoError
 
 from schemas.models.token import VerificationTokenDoc
 from shared.logging import get_logger
@@ -29,8 +30,12 @@ class TokenRepository:
         try:
             result = await self._col.insert_one(token_data)
             return result.inserted_id
-        except Exception as exc:
-            log.error("token_repo_create_failed", error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "token_repo_create_failed",
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
 
     async def find_by_hash(
@@ -50,11 +55,12 @@ class TokenRepository:
                 }
             )
             return VerificationTokenDoc.from_mongo(doc)  # type: ignore[return-value]
-        except Exception as exc:
+        except PyMongoError as exc:
             log.error(
                 "token_repo_find_by_hash_failed",
                 token_type=token_type,
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise
 
@@ -70,11 +76,12 @@ class TokenRepository:
                 {"$set": {"used_at": datetime.now(timezone.utc)}},
             )
             return result.modified_count > 0
-        except Exception as exc:
+        except PyMongoError as exc:
             log.error(
                 "token_repo_mark_used_failed",
                 token_id=str(token_id),
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise
 
@@ -92,12 +99,13 @@ class TokenRepository:
         try:
             result = await self._col.delete_many(query)
             return result.deleted_count
-        except Exception as exc:
+        except PyMongoError as exc:
             log.error(
                 "token_repo_delete_by_user_failed",
                 user_id=str(user_id),
                 token_type=token_type,
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise
 
@@ -119,11 +127,12 @@ class TokenRepository:
                     "created_at": {"$gte": cutoff},
                 }
             )
-        except Exception as exc:
+        except PyMongoError as exc:
             log.error(
                 "token_repo_count_recent_failed",
                 user_id=str(user_id),
                 token_type=token_type,
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise

@@ -19,6 +19,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.errors import DuplicateKeyError, PyMongoError
 
 from schemas.models.url import LegacyUrlDoc
 from shared.logging import get_logger
@@ -35,11 +36,12 @@ class LegacyUrlRepository:
         try:
             doc = await self._col.find_one({"_id": short_code})
             return LegacyUrlDoc.from_mongo(doc)  # type: ignore[return-value]
-        except Exception as exc:
+        except PyMongoError as exc:
             log.error(
                 "legacy_url_repo_find_failed",
                 short_code=short_code,
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise
 
@@ -51,11 +53,19 @@ class LegacyUrlRepository:
         """
         try:
             await self._col.insert_one({"_id": short_code, **url_data})
-        except Exception as exc:
+        except DuplicateKeyError as exc:
+            log.warning(
+                "legacy_url_repo_insert_duplicate",
+                short_code=short_code,
+                error=str(exc),
+            )
+            raise
+        except PyMongoError as exc:
             log.error(
                 "legacy_url_repo_insert_failed",
                 short_code=short_code,
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise
 
@@ -70,11 +80,12 @@ class LegacyUrlRepository:
         """
         try:
             await self._col.update_one({"_id": short_code}, update_ops)
-        except Exception as exc:
+        except PyMongoError as exc:
             log.error(
                 "legacy_url_repo_update_failed",
                 short_code=short_code,
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise
 
@@ -83,11 +94,12 @@ class LegacyUrlRepository:
         try:
             doc = await self._col.find_one({"_id": short_code}, {"_id": 1})
             return doc is not None
-        except Exception as exc:
+        except PyMongoError as exc:
             log.error(
                 "legacy_url_repo_check_exists_failed",
                 short_code=short_code,
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise
 
@@ -102,6 +114,10 @@ class LegacyUrlRepository:
             cursor = await self._col.aggregate(pipeline)
             results = await cursor.to_list(length=1)
             return results[0] if results else None
-        except Exception as exc:
-            log.error("legacy_url_repo_aggregate_failed", error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "legacy_url_repo_aggregate_failed",
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise

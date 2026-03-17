@@ -11,6 +11,7 @@ from typing import Optional
 
 from bson import ObjectId
 from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.errors import DuplicateKeyError, PyMongoError
 
 from schemas.models.api_key import ApiKeyDoc
 from shared.logging import get_logger
@@ -27,8 +28,15 @@ class ApiKeyRepository:
         try:
             result = await self._col.insert_one(doc)
             return result.inserted_id
-        except Exception as exc:
-            log.error("api_key_repo_insert_failed", error=str(exc))
+        except DuplicateKeyError as exc:
+            log.warning("api_key_repo_insert_duplicate", error=str(exc))
+            raise
+        except PyMongoError as exc:
+            log.error(
+                "api_key_repo_insert_failed",
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
 
     async def find_by_hash(self, token_hash: str) -> Optional[ApiKeyDoc]:
@@ -36,8 +44,12 @@ class ApiKeyRepository:
         try:
             doc = await self._col.find_one({"token_hash": token_hash})
             return ApiKeyDoc.from_mongo(doc)  # type: ignore[return-value]
-        except Exception as exc:
-            log.error("api_key_repo_find_by_hash_failed", error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "api_key_repo_find_by_hash_failed",
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
 
     async def list_by_user(self, user_id: ObjectId) -> list[ApiKeyDoc]:
@@ -46,8 +58,13 @@ class ApiKeyRepository:
             cursor = self._col.find({"user_id": user_id}).sort("created_at", 1)
             docs = await cursor.to_list(length=None)
             return [ApiKeyDoc.from_mongo(d) for d in docs]  # type: ignore[misc]
-        except Exception as exc:
-            log.error("api_key_repo_list_failed", user_id=str(user_id), error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "api_key_repo_list_failed",
+                user_id=str(user_id),
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
 
     async def revoke(
@@ -72,13 +89,14 @@ class ApiKeyRepository:
                     {"$set": {"revoked": True}},
                 )
                 return result.modified_count == 1
-        except Exception as exc:
+        except PyMongoError as exc:
             log.error(
                 "api_key_repo_revoke_failed",
                 user_id=str(user_id),
                 key_id=str(key_id),
                 hard_delete=hard_delete,
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise
 
@@ -88,6 +106,11 @@ class ApiKeyRepository:
             return await self._col.count_documents(
                 {"user_id": user_id, "revoked": {"$ne": True}}
             )
-        except Exception as exc:
-            log.error("api_key_repo_count_failed", user_id=str(user_id), error=str(exc))
+        except PyMongoError as exc:
+            log.error(
+                "api_key_repo_count_failed",
+                user_id=str(user_id),
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             raise
