@@ -57,7 +57,7 @@ export default function (data) {
       // GET /api/v1/stats
       if (data.alias) {
         const res = http.get(
-          `${BASE_URL}/api/v1/stats?alias=${data.alias}&scope=anon`,
+          `${BASE_URL}/api/v1/stats?short_code=${data.alias}&scope=anon`,
           { headers: buildApiHeaders() },
         );
         check(res, {
@@ -72,7 +72,7 @@ export default function (data) {
       // GET /api/v1/export
       if (data.alias) {
         const res = http.get(
-          `${BASE_URL}/api/v1/export?alias=${data.alias}&format=json&scope=anon`,
+          `${BASE_URL}/api/v1/export?short_code=${data.alias}&format=json&scope=anon`,
           { headers: buildApiHeaders() },
         );
         check(res, {

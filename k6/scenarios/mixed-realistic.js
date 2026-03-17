@@ -174,7 +174,7 @@ export function statsTraffic(data) {
   if (roll < 0.7) {
     // GET /api/v1/stats
     const res = http.get(
-      `${BASE_URL}/api/v1/stats?alias=${encodeURIComponent(alias)}&scope=anon`,
+      `${BASE_URL}/api/v1/stats?short_code=${encodeURIComponent(alias)}&scope=anon`,
       { headers: buildApiHeaders() },
     );
     check(res, {
@@ -183,7 +183,7 @@ export function statsTraffic(data) {
   } else {
     // GET /api/v1/export
     const res = http.get(
-      `${BASE_URL}/api/v1/export?alias=${encodeURIComponent(alias)}&format=json&scope=anon`,
+      `${BASE_URL}/api/v1/export?short_code=${encodeURIComponent(alias)}&format=json&scope=anon`,
       { headers: buildApiHeaders() },
     );
     check(res, {

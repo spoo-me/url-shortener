@@ -1,5 +1,5 @@
 // Base URL — override via K6_BASE_URL env var
-export const BASE_URL = __ENV.K6_BASE_URL || 'http://localhost:8001';
+export const BASE_URL = __ENV.K6_BASE_URL || 'http://localhost:8000';
 
 // Common thresholds reusable across scenarios
 export const THRESHOLDS = {
