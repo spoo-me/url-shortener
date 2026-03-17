@@ -144,6 +144,7 @@ class AuthService:
                 "attempts": 0,
             }
         )
+        log.info("otp_created", user_id=str(user_id), token_type=token_type)
         return otp_code
 
     async def _verify_otp(

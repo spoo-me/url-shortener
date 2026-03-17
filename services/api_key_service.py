@@ -48,10 +48,21 @@ class ApiKeyService:
             ValidationError: User already has MAX_ACTIVE_KEYS active keys.
         """
         if not email_verified:
+            log.warning(
+                "api_key_create_rejected",
+                reason="email_not_verified",
+                user_id=str(user_id),
+            )
             raise EmailNotVerifiedError("Email verification required")
 
         active_count = await self._repo.count_by_user(user_id)
         if active_count >= MAX_ACTIVE_KEYS:
+            log.warning(
+                "api_key_create_rejected",
+                reason="max_limit_reached",
+                user_id=str(user_id),
+                count=active_count,
+            )
             raise ValidationError(f"maximum {MAX_ACTIVE_KEYS} active keys allowed")
 
         raw = generate_secure_token()

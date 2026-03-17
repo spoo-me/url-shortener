@@ -22,7 +22,7 @@ from services.click import ClickService
 from services.url_service import UrlService
 from shared.crypto import verify_password
 from shared.ip_utils import get_client_ip
-from shared.logging import get_logger
+from shared.logging import get_logger, should_sample
 
 log = get_logger(__name__)
 
@@ -60,6 +60,7 @@ async def redirect_url(
     try:
         url_data, schema = await url_service.resolve(short_code)
     except NotFoundError:
+        log.info("url_not_found", short_code=short_code)
         return templates.TemplateResponse(
             request,
             "error.html",
@@ -71,6 +72,7 @@ async def redirect_url(
             status_code=404,
         )
     except ForbiddenError:
+        log.warning("url_blocked", short_code=short_code)
         return templates.TemplateResponse(
             request,
             "error.html",
@@ -82,6 +84,7 @@ async def redirect_url(
             status_code=403,
         )
     except GoneError:
+        log.info("url_gone", short_code=short_code)
         return templates.TemplateResponse(
             request,
             "error.html",
@@ -97,6 +100,7 @@ async def redirect_url(
     if url_data.password_hash:
         password = request.query_params.get("password")
         if not _check_url_password(password, url_data.password_hash, schema):
+            log.debug("url_password_required", short_code=short_code, schema=schema)
             return templates.TemplateResponse(
                 request,
                 "password.html",
@@ -137,6 +141,13 @@ async def redirect_url(
             log.exception("click_tracking_failed", short_code=short_code, schema=schema)
 
     # 4. Redirect
+    if should_sample("url_redirect"):
+        log.info(
+            "url_redirect",
+            short_code=short_code,
+            schema=schema,
+            duration_ms=int((time.perf_counter() - start_time) * 1000),
+        )
     resp = RedirectResponse(url_data.long_url, status_code=302)
     resp.headers["X-Robots-Tag"] = "noindex, nofollow"
     return resp
@@ -186,9 +197,11 @@ async def check_password(
         )
 
     if _check_url_password(password, url_data.password_hash, schema):
+        log.info("url_password_verified", short_code=short_code)
         return RedirectResponse(f"/{short_code}?password={password}", status_code=302)
 
     # Wrong password — re-render password form with error
+    log.warning("url_password_incorrect", short_code=short_code)
     return templates.TemplateResponse(
         request,
         "password.html",

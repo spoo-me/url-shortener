@@ -27,7 +27,7 @@ from schemas.models.base import ANONYMOUS_OWNER_ID
 from schemas.models.click import ClickDoc, ClickMeta
 from services.click.protocol import ClickContext
 from shared.bot_detection import get_bot_name, is_bot_request
-from shared.logging import get_logger
+from shared.logging import get_logger, should_sample
 
 log = get_logger(__name__)
 
@@ -73,11 +73,17 @@ class V2ClickHandler:
         try:
             ua = ua_parse(user_agent)
         except Exception:
+            log.warning(
+                "ua_parse_failed",
+                schema="v2",
+                user_agent=user_agent[:200],
+            )
             raise ValidationError(
                 "An internal error occurred while processing the User-Agent"
             )
 
         if not ua or not ua.user_agent or not ua.os:
+            log.debug("ua_invalid", schema="v2", user_agent=user_agent[:200])
             raise ValidationError("Invalid User-Agent")
 
         os_name = ua.os.family
@@ -138,6 +144,17 @@ class V2ClickHandler:
         await self._click_repo.insert(click_doc.to_mongo())
         await self._url_repo.increment_clicks(url_id, last_click_time=curr_time)
 
+        if should_sample("url_redirect"):
+            log.info(
+                "click_recorded",
+                short_code=short_code,
+                schema="v2",
+                country=country or "Unknown",
+                browser=browser,
+                is_bot=is_bot,
+                redirect_ms=redirect_ms,
+            )
+
         # Max-clicks expiry — atomic conditional update
         if url_data.max_clicks:
             expired = await self._url_repo.expire_if_max_clicks(
@@ -191,6 +208,7 @@ class LegacyClickHandler:
 
         ua = ua_parse(user_agent)
         if not ua or not ua.user_agent or not ua.os:
+            log.debug("ua_invalid", schema="v1", user_agent=user_agent[:200])
             raise ValidationError("Invalid User-Agent")
 
         os_name = ua.os.family
@@ -275,3 +293,13 @@ class LegacyClickHandler:
             await self._emoji_repo.update(short_code, updates)
         else:
             await self._legacy_repo.update(short_code, updates)
+
+        if should_sample("url_redirect"):
+            log.info(
+                "click_recorded",
+                short_code=short_code,
+                schema="emoji" if is_emoji else "v1",
+                country=country or "Unknown",
+                browser=browser,
+                is_bot=is_bot,
+            )

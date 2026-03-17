@@ -17,6 +17,7 @@ Dispatch heuristic (get_url_by_length_and_type) is preserved exactly:
 from __future__ import annotations
 
 import re
+import time
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -41,7 +42,7 @@ from schemas.models.url import EmojiUrlDoc, LegacyUrlDoc, UrlV2Doc
 from shared.crypto import hash_password
 from shared.datetime_utils import parse_datetime
 from shared.generators import generate_short_code_v2
-from shared.logging import get_logger
+from shared.logging import get_logger, should_sample
 from shared.validators import (
     validate_alias,
     validate_blocked_url,
@@ -92,12 +93,29 @@ class UrlService:
                 "EXPIRED",
                 "INACTIVE",
             ):
+                log.info(
+                    "url_resolve_non_active",
+                    short_code=short_code,
+                    status=cached.url_status,
+                    schema=schema,
+                    source="cache",
+                )
                 _raise_for_status(cached.url_status)
+            if should_sample("cache_operation"):
+                log.debug(
+                    "url_cache_hit",
+                    short_code=short_code,
+                    schema=schema,
+                    status=cached.url_status,
+                )
             return cached, schema
 
         # 2. Cache miss — dispatch by length and type
+        if should_sample("cache_operation"):
+            log.debug("url_cache_miss", short_code=short_code)
         url_cache_data, schema = await self._dispatch(short_code)
         if url_cache_data is None:
+            log.info("url_resolve_not_found", short_code=short_code)
             raise NotFoundError("URL not found")
 
         # 3. Populate cache according to caching rules
@@ -109,6 +127,13 @@ class UrlService:
             "EXPIRED",
             "INACTIVE",
         ):
+            log.info(
+                "url_resolve_non_active",
+                short_code=short_code,
+                status=url_cache_data.url_status,
+                schema=schema,
+                source="db",
+            )
             _raise_for_status(url_cache_data.url_status)
 
         # 4b. Raise for v1 URLs whose max-clicks have been exhausted
@@ -117,6 +142,12 @@ class UrlService:
             and url_cache_data.max_clicks is not None
             and url_cache_data.total_clicks >= url_cache_data.max_clicks
         ):
+            log.info(
+                "url_resolve_expired_max_clicks",
+                short_code=short_code,
+                total_clicks=url_cache_data.total_clicks,
+                max_clicks=url_cache_data.max_clicks,
+            )
             raise GoneError("URL has expired (max clicks reached)")
 
         return url_cache_data, schema
@@ -148,12 +179,22 @@ class UrlService:
         if not validate_url(
             request.long_url, blocked_self_domains=self._blocked_self_domains
         ):
+            log.warning(
+                "url_create_rejected",
+                reason="invalid_url",
+                long_url=request.long_url,
+            )
             raise ValidationError("URL is not allowed or invalid", field="long_url")
 
         # 2. Check against DB blocked patterns
         # validate_blocked_url returns True if allowed, False if blocked
         blocked_patterns = await self._blocked_url_repo.get_patterns()
         if not validate_blocked_url(request.long_url, blocked_patterns):
+            log.warning(
+                "url_create_rejected",
+                reason="blocked_pattern",
+                long_url=request.long_url,
+            )
             raise ValidationError("URL is blocked", field="long_url")
 
         # 3. Password hash (cheap — do before alias generation loop)
@@ -183,6 +224,7 @@ class UrlService:
                     "Alias contains invalid characters", field="alias"
                 )
             if not await self.check_alias_available(request.alias):
+                log.info("url_alias_conflict", alias=request.alias)
                 raise ConflictError("Alias is already in use")
             alias = request.alias
         else:
@@ -269,6 +311,11 @@ class UrlService:
 
         if request.alias is not None and request.alias != existing.alias:
             if not await self.check_alias_available(request.alias):
+                log.info(
+                    "url_alias_conflict",
+                    alias=request.alias,
+                    url_id=str(url_id),
+                )
                 raise ConflictError("Alias is already in use")
             update_ops["alias"] = request.alias
 
@@ -379,6 +426,7 @@ class UrlService:
 
         The returned dict matches the current API JSON response shape exactly.
         """
+        start_time = time.perf_counter()
         mongo_query: dict = {"owner_id": owner_id}
         f = query.parsed_filter
 
@@ -433,6 +481,21 @@ class UrlService:
 
         items = [_format_url_list_item(doc) for doc in docs]
         has_next = (skip + len(items)) < total
+        duration_ms = int((time.perf_counter() - start_time) * 1000)
+
+        log.info(
+            "url_list_query",
+            owner_id=str(owner_id),
+            page=query.page,
+            page_size=query.page_size,
+            sort_by=query.sort_by,
+            sort_order="descending" if sort_order == -1 else "ascending",
+            filter_count=len(mongo_query) - 1,  # subtract the base owner_id filter
+            total=total,
+            returned=len(items),
+            has_next=has_next,
+            duration_ms=duration_ms,
+        )
 
         return {
             "items": items,
@@ -516,6 +579,7 @@ class UrlService:
             candidate = generate_short_code_v2(7)
             if not await self._url_repo.check_alias_exists(candidate):
                 return candidate
+        log.error("url_alias_generation_exhausted")
         raise AppError("Could not generate a unique alias; please try again")
 
 

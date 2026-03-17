@@ -419,7 +419,7 @@ class StatsService:
             ForbiddenError:       Authenticated user does not own private URL.
             AppError:             DB failure.
         """
-        start_time = time.time()
+        start_time = time.perf_counter()
 
         # ── Apply date defaults ───────────────────────────────────────────────
         now = datetime.now(timezone.utc)
@@ -521,7 +521,7 @@ class StatsService:
         response["summary"] = summary
         response = self._add_metadata(response)
 
-        duration_ms = int((time.time() - start_time) * 1000)
+        duration_ms = int((time.perf_counter() - start_time) * 1000)
         log.info(
             "stats_query",
             scope=scope,
@@ -534,7 +534,6 @@ class StatsService:
             total_clicks=summary.get("total_clicks", 0),
             unique_clicks=summary.get("unique_clicks", 0),
             duration_ms=duration_ms,
-            slow_query=duration_ms > 5000,
         )
 
         return response
