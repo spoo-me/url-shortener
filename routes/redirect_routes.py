@@ -12,7 +12,7 @@ import time
 from urllib.parse import unquote
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi.responses import RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from dependencies import get_click_service, get_url_service
@@ -120,10 +120,10 @@ async def redirect_url(
             )
         except ForbiddenError as exc:
             # Bot blocked (v1 / emoji) — block the redirect
-            return JSONResponse(
-                {"error_code": "403", "error_message": str(exc), "host_url": host_url},
-                status_code=403,
+            log.warning(
+                "click_tracking_bot_blocked", short_code=short_code, reason=str(exc)
             )
+            return _error_page(request, "403", "ACCESS DENIED", 403)
         except Exception:
             log.exception("click_tracking_failed", short_code=short_code, schema=schema)
 

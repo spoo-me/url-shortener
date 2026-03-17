@@ -351,13 +351,11 @@ def test_redirect_bot_blocked_v1():
     resp = client.get("/abc123", follow_redirects=False)
 
     assert resp.status_code == 403
-    body = resp.json()
-    assert body["error_code"] == "403"
-    assert "Bot access denied" in body["error_message"]
+    assert "text/html" in resp.headers["content-type"]
 
 
 def test_redirect_bot_blocked_v2():
-    """v2 with block_bots, click_service raises ForbiddenError -> 403 JSON."""
+    """v2 with block_bots, click_service raises ForbiddenError -> 403 HTML."""
     url_data = _make_cache_data(schema_version="v2", block_bots=True)
     mock_url_svc = AsyncMock()
     mock_url_svc.resolve = AsyncMock(return_value=(url_data, "v2"))
@@ -376,8 +374,7 @@ def test_redirect_bot_blocked_v2():
     resp = client.get("/abc123", follow_redirects=False)
 
     assert resp.status_code == 403
-    body = resp.json()
-    assert body["error_code"] == "403"
+    assert "text/html" in resp.headers["content-type"]
 
 
 def test_redirect_bad_user_agent_still_redirects():

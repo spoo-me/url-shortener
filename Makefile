@@ -30,7 +30,7 @@ docker-down:        ## Stop full stack
 openapi:            ## Export OpenAPI spec to openapi.json
 	uv run python -c \
 		"from app import create_app; import json; app = create_app(); \
-		print(json.dumps(app.spec, indent=2))" > openapi.json
+		print(json.dumps(app.openapi(), indent=2))" > openapi.json
 
 docs:               ## Open API docs in browser (requires running server)
-	open http://localhost:8000/docs
+	open http://localhost:8000/api-docs

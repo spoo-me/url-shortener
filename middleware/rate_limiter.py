@@ -122,18 +122,6 @@ limiter = Limiter(
 )
 
 
-# ── IP whitelist (env-based) ─────────────────────────────────────────────────
-# Checked inside rate_limit_key — whitelisted IPs get a shared "bypass" bucket
-# with no effective limit, rather than being filtered at the limiter level
-# (slowapi doesn't support request_filter for Starlette/FastAPI).
-
-_IP_WHITELIST: frozenset[str] = frozenset(
-    ip.strip()
-    for ip in os.environ.get("RATE_LIMIT_IP_WHITELIST", "").split(",")
-    if ip.strip()
-)
-
-
 # ── Dynamic limits ───────────────────────────────────────────────────────────
 
 

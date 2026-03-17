@@ -51,6 +51,9 @@ from schemas.dto.responses.auth import (
 from schemas.dto.responses.common import MessageResponse
 from services.auth_service import OTP_EXPIRY_SECONDS, AuthService
 from shared.ip_utils import get_client_ip
+from shared.logging import get_logger
+
+log = get_logger(__name__)
 
 router = APIRouter(tags=["Authentication"])
 
@@ -193,7 +196,7 @@ async def refresh(
     refresh_token_str = request.cookies.get("refresh_token")
     if not refresh_token_str:
         resp = JSONResponse(
-            {"error": "missing refresh token", "error_code": "AUTHENTICATION_ERROR"},
+            {"error": "missing refresh token", "code": "AUTHENTICATION_ERROR"},
             status_code=401,
         )
         clear_auth_cookies(resp, jwt_cfg)
@@ -204,8 +207,12 @@ async def refresh(
             refresh_token_str
         )
     except AuthenticationError as exc:
+        log.warning("token_refresh_failed", error=str(exc))
         resp = JSONResponse(
-            {"error": str(exc), "error_code": "AUTHENTICATION_ERROR"},
+            {
+                "error": "invalid or expired refresh token",
+                "code": "AUTHENTICATION_ERROR",
+            },
             status_code=401,
         )
         clear_auth_cookies(resp, jwt_cfg)

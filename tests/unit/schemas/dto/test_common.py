@@ -7,15 +7,15 @@ from schemas.dto.responses.common import ErrorResponse, HealthResponse
 
 class TestErrorResponse:
     def test_minimal(self):
-        d = ErrorResponse(error="not found", error_code="not_found").model_dump(
+        d = ErrorResponse(error="not found", code="not_found").model_dump(
             exclude_none=True
         )
-        assert d == {"error": "not found", "error_code": "not_found"}
+        assert d == {"error": "not found", "code": "not_found"}
 
     def test_with_field_and_details(self):
         r = ErrorResponse(
             error="bad input",
-            error_code="validation_error",
+            code="validation_error",
             field="email",
             details={"hint": "must be valid email"},
         )
@@ -24,7 +24,7 @@ class TestErrorResponse:
         assert d["details"] == {"hint": "must be valid email"}
 
     def test_without_optional_fields(self):
-        d = ErrorResponse(error="fail", error_code="err").model_dump()
+        d = ErrorResponse(error="fail", code="err").model_dump()
         assert d["field"] is None
         assert d["details"] is None
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 from unittest.mock import AsyncMock, MagicMock
+from pymongo.errors import CollectionInvalid
 
 
 class TestEnsureIndexes:
@@ -27,8 +28,8 @@ class TestEnsureIndexes:
             "verification-tokens": tokens_col,
         }[name]
 
-        # create_collection may raise (already exists) — that's fine
-        db.create_collection = AsyncMock(side_effect=Exception("already exists"))
+        # create_collection raises CollectionInvalid when collection already exists
+        db.create_collection = AsyncMock(side_effect=CollectionInvalid("clicks"))
 
         await ensure_indexes(db)
 

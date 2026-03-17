@@ -11,6 +11,7 @@ including every index definition and the time-series collection config.
 from __future__ import annotations
 
 from pymongo.asynchronous.database import AsyncDatabase
+from pymongo.errors import CollectionInvalid, OperationFailure
 
 from shared.logging import get_logger
 
@@ -55,9 +56,14 @@ async def ensure_indexes(db: AsyncDatabase) -> None:
                 "granularity": "seconds",
             },
         )
-    except Exception:
-        # Collection already exists — that's fine
-        pass
+    except (CollectionInvalid, OperationFailure) as e:
+        # Error code 48 = NamespaceExists (collection already exists) — expected on every
+        # boot after the first. Any other OperationFailure (permissions, bad options, etc.)
+        # is a real problem and should propagate.
+        if isinstance(e, CollectionInvalid) or getattr(e, "code", None) == 48:
+            pass
+        else:
+            raise
 
     await clicks_col.create_index([("meta.url_id", 1), ("clicked_at", -1)])
     await clicks_col.create_index([("clicked_at", -1)])

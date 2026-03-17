@@ -747,7 +747,7 @@ class TestCheckAliasAvailable:
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-class TestUrlServiceUpdate:
+class TestUrlServiceUpdateEdgeCases:
     @pytest.mark.asyncio
     async def test_update_not_found_raises(self):
         url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
@@ -812,7 +812,7 @@ class TestUrlServiceUpdate:
         # Pydantic v2: explicitly passing password=None puts it in model_fields_set
         assert "password" in req.model_fields_set
 
-        result = await svc.update(URL_OID, req, USER_OID)
+        await svc.update(URL_OID, req, USER_OID)
 
         call_args = url_repo.update.call_args[0][1]
         assert call_args["$set"]["password"] is None
@@ -831,7 +831,7 @@ class TestUrlServiceUpdate:
         from schemas.dto.requests.url import UpdateUrlRequest
 
         req = UpdateUrlRequest(max_clicks=0)
-        result = await svc.update(URL_OID, req, USER_OID)
+        await svc.update(URL_OID, req, USER_OID)
 
         call_args = url_repo.update.call_args[0][1]
         assert call_args["$set"]["max_clicks"] is None
@@ -852,7 +852,7 @@ class TestUrlServiceUpdate:
         from schemas.dto.requests.url import UpdateUrlRequest
 
         req = UpdateUrlRequest(expire_after=None)
-        result = await svc.update(URL_OID, req, USER_OID)
+        await svc.update(URL_OID, req, USER_OID)
 
         call_args = url_repo.update.call_args[0][1]
         assert call_args["$set"]["expire_after"] is None
@@ -890,7 +890,7 @@ class TestUrlServiceUpdate:
         from schemas.dto.requests.url import UpdateUrlRequest
 
         req = UpdateUrlRequest(block_bots=True)
-        result = await svc.update(URL_OID, req, USER_OID)
+        await svc.update(URL_OID, req, USER_OID)
 
         call_args = url_repo.update.call_args[0][1]
         assert call_args["$set"]["block_bots"] is True

@@ -36,7 +36,11 @@ class MaxContentLengthMiddleware(BaseHTTPMiddleware):
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
         content_length = request.headers.get("content-length")
-        if content_length and int(content_length) > self.max_content_length:
+        try:
+            parsed = int(content_length) if content_length else None
+        except ValueError:
+            parsed = None
+        if parsed is not None and parsed > self.max_content_length:
             return JSONResponse(
                 status_code=413,
                 content={

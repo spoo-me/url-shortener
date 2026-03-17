@@ -157,6 +157,9 @@ async def set_profile_picture(
     try:
         await svc.set_picture(user.user_id, body.picture_id)
     except NotFoundError as exc:
-        return JSONResponse({"error": str(exc)}, status_code=404)
+        log.warning(
+            "profile_picture_not_found", user_id=str(user.user_id), error=str(exc)
+        )
+        return JSONResponse({"error": "Profile picture not found"}, status_code=404)
 
     return JSONResponse({"message": "Profile picture updated successfully"})

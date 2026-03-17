@@ -19,7 +19,7 @@ class ErrorResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     error: str
-    error_code: str
+    code: str
     field: Optional[str] = None
     details: Optional[Any] = None
 

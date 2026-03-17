@@ -175,9 +175,7 @@ def test_click_bot_blocked_returns_403():
     with TestClient(app, raise_server_exceptions=False) as c:
         resp = c.get("/abc123", headers={"User-Agent": "Googlebot/2.1"})
     assert resp.status_code == 403
-    data = resp.json()
-    assert data["error_code"] == "403"
-    assert "bots not allowed" in data["error_message"]
+    assert "text/html" in resp.headers["content-type"]
 
 
 def test_click_track_receives_correct_context():

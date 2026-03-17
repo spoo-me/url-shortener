@@ -227,7 +227,7 @@ def test_redirect_bot_blocked_v1_returns_403():
     with TestClient(app) as client:
         resp = client.get("/abc123", headers={"User-Agent": "Googlebot/2.1"})
     assert resp.status_code == 403
-    assert "error_code" in resp.json()
+    assert "text/html" in resp.headers["content-type"]
 
 
 def test_redirect_head_skips_click_tracking():
