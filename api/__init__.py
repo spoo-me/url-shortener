@@ -1,2 +1,0 @@
-# Namespace for API versions
-

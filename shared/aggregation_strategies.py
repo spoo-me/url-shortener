@@ -1,19 +1,18 @@
 """
 Aggregation strategies for analytics queries.
 
-This is a relocation of utils/aggregation_strategies.py with import paths
-updated to use shared.* instead of utils.*.
-
-utils.analytics_utils is not yet relocated (Phase 4 scope), so that import
-is kept pointing at utils until a later phase.
+Relocated from utils/aggregation_strategies.py. The convert_country_name
+helper (formerly in utils/analytics_utils.py) is now inlined here.
 """
 
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from functools import lru_cache
 from zoneinfo import ZoneInfo
 
-from utils.analytics_utils import convert_country_name
+import pycountry
+
 from shared.time_bucket_utils import (
     get_optimal_bucket_config,
     create_mongo_time_bucket_pipeline,
@@ -23,6 +22,29 @@ from shared.time_bucket_utils import (
 from shared.logging import get_logger
 
 log = get_logger(__name__)
+
+
+@lru_cache(maxsize=None)
+def convert_country_name(country_name: str) -> str:
+    """
+    Convert country name to ISO 2-letter country code with caching.
+
+    Args:
+        country_name: Full country name (e.g., "United States", "Germany")
+
+    Returns:
+        ISO 2-letter country code (e.g., "US", "DE") or "XX" if not found
+    """
+    try:
+        return pycountry.countries.lookup(country_name.strip()).alpha_2
+    except (LookupError, ImportError):
+        if country_name == "Turkey":
+            return "TR"
+        elif country_name == "Russia":
+            return "RU"
+        elif country_name == "Unknown":
+            return "XX"
+        return "XX"
 
 
 class AggregationStrategy(ABC):

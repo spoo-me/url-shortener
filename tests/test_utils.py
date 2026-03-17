@@ -1,62 +1,19 @@
-import pytest
-from utils.url_utils import (
-    get_country,
-    get_client_ip,
+from shared.validators import (
     validate_alias,
-    generate_short_code,
     validate_emoji_alias,
 )
-from utils.general import humanize_number, is_positive_integer
-from utils.analytics_utils import (
-    convert_country_name,
+from shared.generators import generate_short_code
+from shared.legacy_helpers import (
+    humanize_number,
+    is_positive_integer,
     add_missing_dates,
     top_four,
     calculate_click_averages,
 )
-from flask import Flask
+from shared.aggregation_strategies import convert_country_name
 import string
 from datetime import datetime, timedelta
 from urllib.parse import unquote
-
-app = Flask(__name__)
-
-
-@pytest.mark.parametrize(
-    "ip_address, expected_country",
-    [
-        ("8.8.8.8", "United States"),  # Google Public DNS
-        ("123.45.6.78", "South Korea"),  # Example IP address for South Korea
-        ("110.33.122.75", "Australia"),  # Example IP address for Australia
-        ("101.96.32.0", "Japan"),  # Example IP address for Japan
-        ("192.206.151.131", "Canada"),  # Example IP address for Canada
-        ("85.214.132.117", "Germany"),  # Example IP address for Germany
-    ],
-)
-def test_get_country(ip_address, expected_country):
-    country = get_country(ip_address)
-    assert country == expected_country
-
-
-def test_get_unknown_country():
-    ip_address = "127.0.0.1"  # Localhost IP address
-    country = get_country(ip_address)
-    assert country == "Unknown"
-
-
-# Retrieves IP from HTTP_X_FORWARDED_FOR if present
-def test_retrieves_ip_from_http_x_forwarded_for(mocker):
-    with app.test_request_context(
-        environ_base={"HTTP_X_FORWARDED_FOR": "192.168.1.1, 10.0.0.1"}
-    ):
-        ip = get_client_ip()
-        assert ip == "192.168.1.1"
-
-
-# Handles empty HTTP_X_FORWARDED_FOR header gracefully
-def test_handles_empty_http_x_forwarded_for(mocker):
-    with app.test_request_context(environ_base={"HTTP_X_FORWARDED_FOR": ""}):
-        ip = get_client_ip()
-        assert ip == ""
 
 
 # Test humanize_number

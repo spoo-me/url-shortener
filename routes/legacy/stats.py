@@ -37,13 +37,13 @@ from repositories.legacy.legacy_url_repository import LegacyUrlRepository
 from shared.datetime_utils import convert_to_gmt
 from shared.logging import get_logger
 from shared.validators import validate_emoji_alias
-from utils.analytics_utils import (
+from shared.legacy_helpers import (
     add_missing_dates,
     calculate_click_averages,
     convert_country_data,
+    get_stats_pipeline,
     top_four,
 )
-from utils.pipeline_utils import get_stats_pipeline
 
 log = get_logger(__name__)
 

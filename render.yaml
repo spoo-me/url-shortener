@@ -5,7 +5,7 @@ services:
     repo: https://github.com/spoo-me/url-shortener
     plan: free
     buildCommand: pip install uv && uv sync --frozen
-    startCommand: gunicorn main:app
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --no-access-log
     envVars:
       # ── Runtime mode ────────────────────────────────────────────────────────
       - key: ENV
@@ -19,8 +19,8 @@ services:
       - key: REDIS_URI
         sync: false
 
-      # ── Flask ────────────────────────────────────────────────────────────────
-      - key: FLASK_SECRET_KEY
+      # ── App Secret ────────────────────────────────────────────────────────────
+      - key: SECRET_KEY
         sync: false
 
       # ── JWT ──────────────────────────────────────────────────────────────────

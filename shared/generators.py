@@ -7,11 +7,18 @@ the system PRNG where security is not required (alias generation).
 
 from __future__ import annotations
 
+import json
+import os
 import random
 import secrets
 import string
 
-from emojies import EMOJIES
+_EMOJIS_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "data", "emojis.json"
+)
+
+with open(_EMOJIS_PATH, encoding="utf-8") as _f:
+    EMOJIES: list[str] = json.load(_f)
 
 
 def generate_short_code() -> str:

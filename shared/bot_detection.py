@@ -11,11 +11,16 @@ import-time I/O (unlike the original ``utils/url_utils.py``).
 
 from __future__ import annotations
 
+import os
 import re
 from functools import lru_cache
 from typing import Optional
 
 from crawlerdetect import CrawlerDetect
+
+_BOT_UA_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "data", "bot_user_agents.txt"
+)
 
 _crawler_detect = CrawlerDetect()
 
@@ -28,7 +33,7 @@ def _load_bot_user_agents() -> list[str]:
     degrade gracefully rather than raising at import time.
     """
     try:
-        with open("bot_user_agents.txt", "r") as fh:
+        with open(_BOT_UA_PATH, "r") as fh:
             return [line.strip() for line in fh if line.strip()]
     except OSError:
         return []

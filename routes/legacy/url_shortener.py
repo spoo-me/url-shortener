@@ -38,7 +38,7 @@ from shared.validators import (
     validate_url,
     validate_url_password,
 )
-from utils.general import humanize_number, is_positive_integer
+from shared.legacy_helpers import humanize_number, is_positive_integer
 from errors import ForbiddenError, GoneError, NotFoundError
 
 log = get_logger(__name__)

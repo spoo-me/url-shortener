@@ -1,7 +1,7 @@
 .PHONY: dev test test-unit test-integration lint format format-check docker-up docker-down openapi
 
 dev:                ## Start development server
-	uv run main.py
+	uv run uvicorn main:app --reload --no-access-log
 
 test:               ## Run all tests
 	uv run pytest
