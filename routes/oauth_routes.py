@@ -189,7 +189,7 @@ async def oauth_callback(
     # ── Token exchange + provider user-info ──────────────────────────────────
     try:
         token = await client.authorize_access_token(request)
-        provider_info = strategy.fetch_user_info(client, token)
+        provider_info = await strategy.fetch_user_info(client, token)
     except Exception as exc:
         log.error(
             "oauth_callback_failed",

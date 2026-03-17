@@ -175,6 +175,7 @@ class OAuthService:
                 "oauth_user_creation_failed",
                 provider=provider,
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
             raise AppError("failed to create user") from exc
 
@@ -190,6 +191,7 @@ class OAuthService:
                 "oauth_last_login_update_failed",
                 user_id=str(user_id),
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
 
     def _make_tokens(self, user: UserDoc, provider_key: str) -> tuple[str, str]:
@@ -373,6 +375,7 @@ class OAuthService:
                 "oauth_welcome_email_failed",
                 provider=provider_key,
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
 
         new_user = await self._user_repo.find_by_id(new_user_id)

@@ -162,13 +162,15 @@ def test_oauth_callback_new_user_creates_account():
     mock_oauth_svc.handle_callback.return_value = (user, _ACCESS_TOKEN, _REFRESH_TOKEN)
 
     mock_strategy = MagicMock()
-    mock_strategy.fetch_user_info.return_value = {
-        "email": _EMAIL,
-        "email_verified": True,
-        "provider_user_id": "google-123",
-        "name": "OAuth User",
-        "picture": "",
-    }
+    mock_strategy.fetch_user_info = AsyncMock(
+        return_value={
+            "email": _EMAIL,
+            "email_verified": True,
+            "provider_user_id": "google-123",
+            "name": "OAuth User",
+            "picture": "",
+        }
+    )
 
     mock_oauth_client = AsyncMock()
     mock_oauth_client.authorize_access_token.return_value = {
@@ -204,13 +206,15 @@ def test_oauth_callback_existing_user_logs_in():
     mock_oauth_svc.handle_callback.return_value = (user, _ACCESS_TOKEN, _REFRESH_TOKEN)
 
     mock_strategy = MagicMock()
-    mock_strategy.fetch_user_info.return_value = {
-        "email": _EMAIL,
-        "email_verified": True,
-        "provider_user_id": "google-123",
-        "name": "OAuth User",
-        "picture": "",
-    }
+    mock_strategy.fetch_user_info = AsyncMock(
+        return_value={
+            "email": _EMAIL,
+            "email_verified": True,
+            "provider_user_id": "google-123",
+            "name": "OAuth User",
+            "picture": "",
+        }
+    )
 
     mock_oauth_client = AsyncMock()
     mock_oauth_client.authorize_access_token.return_value = {
@@ -243,13 +247,15 @@ def test_oauth_callback_email_collision_auto_links():
     mock_oauth_svc.handle_callback.return_value = (user, _ACCESS_TOKEN, _REFRESH_TOKEN)
 
     mock_strategy = MagicMock()
-    mock_strategy.fetch_user_info.return_value = {
-        "email": _EMAIL,
-        "email_verified": True,
-        "provider_user_id": "google-new-456",
-        "name": "OAuth User",
-        "picture": "",
-    }
+    mock_strategy.fetch_user_info = AsyncMock(
+        return_value={
+            "email": _EMAIL,
+            "email_verified": True,
+            "provider_user_id": "google-new-456",
+            "name": "OAuth User",
+            "picture": "",
+        }
+    )
 
     mock_oauth_client = AsyncMock()
     mock_oauth_client.authorize_access_token.return_value = {

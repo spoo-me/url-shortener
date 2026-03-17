@@ -32,16 +32,16 @@ class OAuthProviderStrategy(ABC):
     def key(self) -> str: ...
 
     @abstractmethod
-    def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]: ...
+    async def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]: ...
 
 
 class GoogleStrategy(OAuthProviderStrategy):
     key = "google"
 
-    def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]:
+    async def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]:
         userinfo = token.get("userinfo")
         if userinfo is None:
-            resp = client.get("userinfo", token=token)
+            resp = await client.get("userinfo", token=token)
             resp.raise_for_status()
             userinfo = resp.json()
         return extract_user_info_from_google(userinfo)
@@ -50,11 +50,11 @@ class GoogleStrategy(OAuthProviderStrategy):
 class GitHubStrategy(OAuthProviderStrategy):
     key = "github"
 
-    def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]:
-        user_response = client.get("user", token=token)
+    async def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]:
+        user_response = await client.get("user", token=token)
         user_response.raise_for_status()
         user = user_response.json()
-        emails_response = client.get("user/emails", token=token)
+        emails_response = await client.get("user/emails", token=token)
         emails = emails_response.json() if emails_response.status_code == 200 else []
         if not isinstance(emails, list):
             emails = []
@@ -64,8 +64,8 @@ class GitHubStrategy(OAuthProviderStrategy):
 class DiscordStrategy(OAuthProviderStrategy):
     key = "discord"
 
-    def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]:
-        resp = client.get("users/@me", token=token)
+    async def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]:
+        resp = await client.get("users/@me", token=token)
         resp.raise_for_status()
         return extract_user_info_from_discord(resp.json())
 

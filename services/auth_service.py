@@ -1,9 +1,10 @@
 """
 AuthService — authentication business logic.
 
-Handles JWT issuance/verification, OTP-based email verification, password
-management, and user registration/login.  Framework-agnostic: no FastAPI
-imports.  All I/O goes through the injected repositories and email provider.
+Handles OTP-based email verification, password management, and user
+registration/login.  JWT issuance and verification is delegated to
+TokenFactory.  Framework-agnostic: no FastAPI imports.  All I/O goes
+through the injected repositories and email provider.
 """
 
 from __future__ import annotations
@@ -11,7 +12,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
-import jwt as pyjwt
 from bson import ObjectId
 from pymongo.errors import DuplicateKeyError
 
@@ -29,6 +29,7 @@ from repositories.token_repository import TokenRepository
 from repositories.user_repository import UserRepository
 from schemas.models.token import TOKEN_TYPE_EMAIL_VERIFY, TOKEN_TYPE_PASSWORD_RESET
 from schemas.models.user import UserDoc
+from services.token_factory import TokenFactory
 from shared.crypto import hash_password, hash_token, verify_password
 from shared.generators import generate_otp_code
 from shared.logging import get_logger
@@ -63,82 +64,9 @@ class AuthService:
         self._user_repo = user_repo
         self._token_repo = token_repo
         self._email = email
-        self._settings = settings
+        self._tokens = TokenFactory(settings)
 
-    # ── JWT helpers ───────────────────────────────────────────────────────────
-
-    def _jwt_algorithm(self) -> str:
-        """Return 'RS256' when RSA keys are configured, 'HS256' otherwise."""
-        return "RS256" if self._settings.use_rs256 else "HS256"
-
-    def _jwt_signing_key(self) -> str:
-        """Return the key used to sign tokens."""
-        if self._settings.use_rs256:
-            return self._settings.jwt_private_key
-        return self._settings.jwt_secret
-
-    def _jwt_verification_key(self) -> str:
-        """Return the key used to verify tokens."""
-        if self._settings.use_rs256:
-            return self._settings.jwt_public_key
-        return self._settings.jwt_secret
-
-    def _generate_access_token(self, user: UserDoc, *, amr: str) -> str:
-        """Issue a signed JWT access token for *user*.
-
-        Claims:
-            iss            — issuer (from settings)
-            aud            — audience (from settings)
-            sub            — user ObjectId as string
-            iat            — issued-at (UTC epoch seconds)
-            exp            — expiry (iat + access_token_ttl_seconds)
-            amr            — authentication method reference list, e.g. ["pwd"]
-            email_verified — bool from the user document
-
-        Returns:
-            Signed JWT string.
-        """
-        now = int(datetime.now(timezone.utc).timestamp())
-        payload: dict[str, Any] = {
-            "iss": self._settings.jwt_issuer,
-            "aud": self._settings.jwt_audience,
-            "sub": str(user.id),
-            "iat": now,
-            "exp": now + self._settings.access_token_ttl_seconds,
-            "amr": [amr],
-            "email_verified": user.email_verified,
-        }
-        return pyjwt.encode(
-            payload,
-            self._jwt_signing_key(),
-            algorithm=self._jwt_algorithm(),
-        )
-
-    def _generate_refresh_token(self, user: UserDoc, *, amr: str) -> str:
-        """Issue a signed JWT refresh token for *user*.
-
-        Identical to the access token but includes ``"type": "refresh"`` and
-        uses ``refresh_token_ttl_seconds`` for the expiry window.
-
-        Returns:
-            Signed JWT string.
-        """
-        now = int(datetime.now(timezone.utc).timestamp())
-        payload: dict[str, Any] = {
-            "iss": self._settings.jwt_issuer,
-            "aud": self._settings.jwt_audience,
-            "sub": str(user.id),
-            "iat": now,
-            "exp": now + self._settings.refresh_token_ttl_seconds,
-            "amr": [amr],
-            "email_verified": user.email_verified,
-            "type": "refresh",
-        }
-        return pyjwt.encode(
-            payload,
-            self._jwt_signing_key(),
-            algorithm=self._jwt_algorithm(),
-        )
+    # ── JWT delegation ────────────────────────────────────────────────────────
 
     def issue_tokens(self, user: UserDoc, amr: str) -> tuple[str, str]:
         """Issue an access + refresh token pair for *user*.
@@ -146,46 +74,16 @@ class AuthService:
         Returns:
             (access_token, refresh_token)
         """
-        return (
-            self._generate_access_token(user, amr=amr),
-            self._generate_refresh_token(user, amr=amr),
-        )
+        return self._tokens.issue_tokens(user, amr)
+
+    def _generate_access_token(self, user: UserDoc, *, amr: str) -> str:
+        return self._tokens.generate_access_token(user, amr=amr)
+
+    def _generate_refresh_token(self, user: UserDoc, *, amr: str) -> str:
+        return self._tokens.generate_refresh_token(user, amr=amr)
 
     def _verify_token(self, token: str, *, token_type: str) -> dict[str, Any]:
-        """Decode and validate *token*.
-
-        Args:
-            token:      Raw JWT string.
-            token_type: ``"access"`` or ``"refresh"``.  When ``"refresh"``,
-                        the payload must contain ``"type": "refresh"``; any
-                        token lacking that field is rejected with
-                        :class:`~errors.AuthenticationError`.
-
-        Returns:
-            The decoded payload dict.
-
-        Raises:
-            AuthenticationError: On any decode / validation failure, or when
-                a refresh token is expected but the payload has no ``type``
-                field.
-        """
-        try:
-            payload: dict[str, Any] = pyjwt.decode(
-                token,
-                self._jwt_verification_key(),
-                algorithms=[self._jwt_algorithm()],
-                audience=self._settings.jwt_audience,
-                issuer=self._settings.jwt_issuer,
-            )
-        except pyjwt.PyJWTError as exc:
-            raise AuthenticationError(f"Invalid token: {exc}") from exc
-
-        if token_type == "refresh" and payload.get("type") != "refresh":
-            raise AuthenticationError(
-                "Token is not a refresh token — 'type' field missing or incorrect."
-            )
-
-        return payload
+        return self._tokens.verify_token(token, token_type=token_type)
 
     # ── OTP helpers ───────────────────────────────────────────────────────────
 
@@ -357,8 +255,7 @@ class AuthService:
             raise AuthenticationError("invalid credentials")
 
         log.info("login_success", user_id=str(user.id), auth_method="password")
-        access_token = self._generate_access_token(user, amr="pwd")
-        refresh_token = self._generate_refresh_token(user, amr="pwd")
+        access_token, refresh_token = self._tokens.issue_tokens(user, "pwd")
         return user, access_token, refresh_token
 
     async def register(
@@ -423,8 +320,7 @@ class AuthService:
             has_username=bool(user_name),
         )
 
-        access_token = self._generate_access_token(user_doc, amr="pwd")
-        refresh_token = self._generate_refresh_token(user_doc, amr="pwd")
+        access_token, refresh_token = self._tokens.issue_tokens(user_doc, "pwd")
 
         # Send verification email — non-fatal, do not fail registration on error
         verification_sent = False
@@ -438,6 +334,7 @@ class AuthService:
                 "registration_verification_email_failed",
                 user_id=str(user_id),
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
 
         return user_doc, access_token, refresh_token, verification_sent
@@ -470,8 +367,7 @@ class AuthService:
             raise AuthenticationError("invalid or expired refresh token")
 
         log.info("token_refreshed", user_id=user_id)
-        new_access = self._generate_access_token(user, amr="pwd")
-        new_refresh = self._generate_refresh_token(user, amr="pwd")
+        new_access, new_refresh = self._tokens.issue_tokens(user, "pwd")
         return user, new_access, new_refresh
 
     async def verify_email(self, user_id: str, otp_code: str) -> tuple[str, str]:
@@ -519,8 +415,7 @@ class AuthService:
         user_data["email_verified"] = True
         updated_user = UserDoc.model_validate(user_data)
 
-        access_token = self._generate_access_token(updated_user, amr="pwd")
-        refresh_token = self._generate_refresh_token(updated_user, amr="pwd")
+        access_token, refresh_token = self._tokens.issue_tokens(updated_user, "pwd")
 
         # Send welcome email — best-effort, do not fail verification on error
         try:
@@ -530,6 +425,7 @@ class AuthService:
                 "welcome_email_send_failed",
                 user_id=user_id,
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
 
         return access_token, refresh_token
@@ -599,6 +495,7 @@ class AuthService:
                 "password_reset_unexpected_error",
                 email=email,
                 error=str(exc),
+                error_type=type(exc).__name__,
             )
 
     async def reset_password(
