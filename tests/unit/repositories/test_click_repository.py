@@ -6,6 +6,8 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime, timezone
 
+from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
+
 from .conftest import make_collection, URL_OID, USER_OID
 
 
@@ -54,3 +56,32 @@ class TestClickRepository:
         cursor.to_list = AsyncMock(side_effect=Exception("agg failed"))
         with pytest.raises(Exception, match="agg failed"):
             await self._repo(col).aggregate([])
+
+    # ── Error path tests ──────────────────────────────────────────────────────
+
+    @pytest.mark.asyncio
+    async def test_insert_raises_on_server_timeout(self):
+        """ServerSelectionTimeoutError (MongoDB unreachable) propagates from insert."""
+        col = make_collection()
+        col.insert_one = AsyncMock(side_effect=ServerSelectionTimeoutError("timed out"))
+        with pytest.raises(ServerSelectionTimeoutError):
+            await self._repo(col).insert(
+                {"meta": {}, "clicked_at": datetime.now(timezone.utc)}
+            )
+
+    @pytest.mark.asyncio
+    async def test_aggregate_raises_on_operation_failure(self):
+        """OperationFailure (e.g. invalid pipeline stage) propagates from aggregate."""
+        col = make_collection()
+        col.aggregate = AsyncMock(side_effect=OperationFailure("pipeline failed"))
+        with pytest.raises(OperationFailure):
+            await self._repo(col).aggregate([{"$match": {}}])
+
+    @pytest.mark.asyncio
+    async def test_aggregate_raises_on_server_timeout(self):
+        """ServerSelectionTimeoutError during aggregation propagates."""
+        col = make_collection()
+        cursor = col.aggregate.return_value
+        cursor.to_list = AsyncMock(side_effect=ServerSelectionTimeoutError("timed out"))
+        with pytest.raises(ServerSelectionTimeoutError):
+            await self._repo(col).aggregate([{"$match": {}}])

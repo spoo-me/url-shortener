@@ -1,8 +1,14 @@
 """Unit tests for OAuth utility functions."""
 
 from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from infrastructure.oauth_clients import (
+    DiscordStrategy,
+    GitHubStrategy,
+    GoogleStrategy,
     can_auto_link_accounts,
     extract_user_info_from_discord,
     extract_user_info_from_github,
@@ -108,6 +114,119 @@ class TestExtractUserInfo:
         }
         result = extract_user_info_from_discord(userinfo)
         assert result["picture"] == ""
+
+
+class TestProviderStrategies:
+    @pytest.mark.asyncio
+    async def test_google_uses_userinfo_from_token(self):
+        """GoogleStrategy reads userinfo embedded in the token dict (no extra request)."""
+        strategy = GoogleStrategy()
+        client = MagicMock()
+        token = {
+            "userinfo": {
+                "sub": "g-123",
+                "email": "User@Google.COM",
+                "email_verified": True,
+                "name": "Google User",
+                "picture": "https://example.com/pic.jpg",
+            }
+        }
+        result = await strategy.fetch_user_info(client, token)
+
+        assert result["provider_user_id"] == "g-123"
+        assert result["email"] == "user@google.com"
+        assert result["email_verified"] is True
+        client.get.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_google_fetches_userinfo_when_absent_from_token(self):
+        """GoogleStrategy calls client.get('userinfo') when token has no userinfo."""
+        strategy = GoogleStrategy()
+        resp = MagicMock()
+        resp.raise_for_status = MagicMock()
+        resp.json.return_value = {
+            "sub": "g-456",
+            "email": "fetched@google.com",
+            "email_verified": True,
+            "name": "Fetched User",
+        }
+        client = MagicMock()
+        client.get = AsyncMock(return_value=resp)
+
+        result = await strategy.fetch_user_info(client, {})
+
+        client.get.assert_awaited_once_with("userinfo", token={})
+        assert result["provider_user_id"] == "g-456"
+        assert result["email"] == "fetched@google.com"
+
+    @pytest.mark.asyncio
+    async def test_github_fetches_user_and_emails(self):
+        """GitHubStrategy calls /user then /user/emails and picks the primary."""
+        strategy = GitHubStrategy()
+        user_resp = MagicMock()
+        user_resp.raise_for_status = MagicMock()
+        user_resp.json.return_value = {
+            "id": 99,
+            "login": "ghuser",
+            "name": "GH User",
+            "avatar_url": "https://example.com/av.png",
+        }
+        emails_resp = MagicMock()
+        emails_resp.status_code = 200
+        emails_resp.json.return_value = [
+            {"email": "other@gh.com", "primary": False, "verified": True},
+            {"email": "primary@gh.com", "primary": True, "verified": True},
+        ]
+        client = MagicMock()
+        client.get = AsyncMock(side_effect=[user_resp, emails_resp])
+
+        result = await strategy.fetch_user_info(client, {})
+
+        assert result["provider_user_id"] == "99"
+        assert result["email"] == "primary@gh.com"
+        assert result["email_verified"] is True
+
+    @pytest.mark.asyncio
+    async def test_github_falls_back_to_first_email_when_no_primary(self):
+        """GitHubStrategy uses the first email when none is marked primary."""
+        strategy = GitHubStrategy()
+        user_resp = MagicMock()
+        user_resp.raise_for_status = MagicMock()
+        user_resp.json.return_value = {"id": 7, "login": "user7", "name": ""}
+        emails_resp = MagicMock()
+        emails_resp.status_code = 200
+        emails_resp.json.return_value = [
+            {"email": "fallback@gh.com", "primary": False, "verified": False},
+        ]
+        client = MagicMock()
+        client.get = AsyncMock(side_effect=[user_resp, emails_resp])
+
+        result = await strategy.fetch_user_info(client, {})
+
+        assert result["email"] == "fallback@gh.com"
+
+    @pytest.mark.asyncio
+    async def test_discord_fetches_me_and_builds_avatar_url(self):
+        """DiscordStrategy calls /users/@me and builds the CDN avatar URL."""
+        strategy = DiscordStrategy()
+        resp = MagicMock()
+        resp.raise_for_status = MagicMock()
+        resp.json.return_value = {
+            "id": "777",
+            "email": "D@Discord.COM",
+            "verified": True,
+            "global_name": "DiscordUser",
+            "avatar": "hash123",
+        }
+        client = MagicMock()
+        client.get = AsyncMock(return_value=resp)
+
+        result = await strategy.fetch_user_info(client, {})
+
+        client.get.assert_awaited_once_with("users/@me", token={})
+        assert result["provider_user_id"] == "777"
+        assert result["email"] == "d@discord.com"
+        assert "cdn.discordapp.com/avatars/777/hash123.png" in result["picture"]
 
 
 class TestCanAutoLinkAccounts:

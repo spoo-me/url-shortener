@@ -740,3 +740,272 @@ class TestCheckAliasAvailable:
         legacy_repo.check_exists.return_value = True
 
         assert await svc.check_alias_available("v1code") is False
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TestUrlServiceUpdate
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class TestUrlServiceUpdate:
+    @pytest.mark.asyncio
+    async def test_update_not_found_raises(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        url_repo.find_by_id.return_value = None
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        with pytest.raises(NotFoundError):
+            await svc.update(URL_OID, UpdateUrlRequest(), USER_OID)
+
+    @pytest.mark.asyncio
+    async def test_update_forbidden_raises(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        other_user = ObjectId("bbbbbbbbbbbbbbbbbbbbbbbb")
+        url_repo.find_by_id.return_value = make_url_v2_doc(owner_id=other_user)
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        with pytest.raises(ForbiddenError):
+            await svc.update(URL_OID, UpdateUrlRequest(), USER_OID)
+
+    @pytest.mark.asyncio
+    async def test_update_no_op_returns_existing(self):
+        """When nothing changes, update() returns the existing doc without hitting the DB."""
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = make_url_v2_doc()
+        url_repo.find_by_id.return_value = existing
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        # Empty request — nothing in model_fields_set, no long_url or alias given
+        result = await svc.update(URL_OID, UpdateUrlRequest(), USER_OID)
+
+        url_repo.update.assert_not_awaited()
+        url_cache.invalidate.assert_not_awaited()
+        assert result is existing
+
+    @pytest.mark.asyncio
+    async def test_update_clears_password_when_set_to_none(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = make_url_v2_doc(password="oldhash")
+        url_repo.find_by_id.return_value = existing
+        url_repo.update.return_value = True
+        url_cache.invalidate.return_value = None
+
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        req = UpdateUrlRequest(password=None)
+        # Pydantic v2: explicitly passing password=None puts it in model_fields_set
+        assert "password" in req.model_fields_set
+
+        result = await svc.update(URL_OID, req, USER_OID)
+
+        call_args = url_repo.update.call_args[0][1]
+        assert call_args["$set"]["password"] is None
+
+    @pytest.mark.asyncio
+    async def test_update_clears_max_clicks_when_set_to_zero(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = make_url_v2_doc(max_clicks=100)
+        url_repo.find_by_id.return_value = existing
+        url_repo.update.return_value = True
+
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        req = UpdateUrlRequest(max_clicks=0)
+        result = await svc.update(URL_OID, req, USER_OID)
+
+        call_args = url_repo.update.call_args[0][1]
+        assert call_args["$set"]["max_clicks"] is None
+
+    @pytest.mark.asyncio
+    async def test_update_clears_expire_after_when_set_to_none(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = make_url_v2_doc(
+            expire_after=datetime(2030, 1, 1, tzinfo=timezone.utc)
+        )
+        url_repo.find_by_id.return_value = existing
+        url_repo.update.return_value = True
+
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        req = UpdateUrlRequest(expire_after=None)
+        result = await svc.update(URL_OID, req, USER_OID)
+
+        call_args = url_repo.update.call_args[0][1]
+        assert call_args["$set"]["expire_after"] is None
+
+    @pytest.mark.asyncio
+    async def test_update_alias_conflict_raises(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = make_url_v2_doc(alias="old123")
+        url_repo.find_by_id.return_value = existing
+        # alias is taken
+        url_repo.check_alias_exists.return_value = True
+        legacy_repo.check_exists.return_value = False
+
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        req = UpdateUrlRequest(alias="newcode")
+        with pytest.raises(ConflictError):
+            await svc.update(URL_OID, req, USER_OID)
+
+    @pytest.mark.asyncio
+    async def test_update_changes_block_bots(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = make_url_v2_doc(block_bots=False)
+        url_repo.find_by_id.return_value = existing
+        url_repo.update.return_value = True
+
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        req = UpdateUrlRequest(block_bots=True)
+        result = await svc.update(URL_OID, req, USER_OID)
+
+        call_args = url_repo.update.call_args[0][1]
+        assert call_args["$set"]["block_bots"] is True
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TestUrlServiceListByOwner
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class TestUrlServiceListByOwner:
+    @pytest.mark.asyncio
+    async def test_list_no_filter_returns_pagination(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        url_repo.count_by_query.return_value = 1
+        url_repo.find_by_owner.return_value = [make_url_v2_doc()]
+
+        from schemas.dto.requests.url import ListUrlsQuery
+
+        result = await svc.list_by_owner(USER_OID, ListUrlsQuery())
+
+        assert result["total"] == 1
+        assert result["page"] == 1
+        assert len(result["items"]) == 1
+        assert result["hasNext"] is False
+
+    @pytest.mark.asyncio
+    async def test_list_with_status_filter(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        url_repo.count_by_query.return_value = 0
+        url_repo.find_by_owner.return_value = []
+
+        from schemas.dto.requests.url import ListUrlsQuery
+
+        q = ListUrlsQuery(filter='{"status": "INACTIVE"}')
+        await svc.list_by_owner(USER_OID, q)
+
+        call_query = url_repo.count_by_query.call_args[0][0]
+        assert call_query.get("status") == "INACTIVE"
+
+    @pytest.mark.asyncio
+    async def test_list_with_search_filter(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        url_repo.count_by_query.return_value = 0
+        url_repo.find_by_owner.return_value = []
+
+        from schemas.dto.requests.url import ListUrlsQuery
+
+        q = ListUrlsQuery(filter='{"search": "example"}')
+        await svc.list_by_owner(USER_OID, q)
+
+        call_query = url_repo.count_by_query.call_args[0][0]
+        assert "$or" in call_query
+
+    @pytest.mark.asyncio
+    async def test_list_with_password_set_filter(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        url_repo.count_by_query.return_value = 0
+        url_repo.find_by_owner.return_value = []
+
+        from schemas.dto.requests.url import ListUrlsQuery
+
+        q = ListUrlsQuery(filter='{"passwordSet": true}')
+        await svc.list_by_owner(USER_OID, q)
+
+        call_query = url_repo.count_by_query.call_args[0][0]
+        assert call_query.get("password") == {"$ne": None}
+
+    @pytest.mark.asyncio
+    async def test_list_with_max_clicks_set_false_filter(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        url_repo.count_by_query.return_value = 0
+        url_repo.find_by_owner.return_value = []
+
+        from schemas.dto.requests.url import ListUrlsQuery
+
+        q = ListUrlsQuery(filter='{"maxClicksSet": false}')
+        await svc.list_by_owner(USER_OID, q)
+
+        call_query = url_repo.count_by_query.call_args[0][0]
+        assert call_query.get("max_clicks") is None
+
+    @pytest.mark.asyncio
+    async def test_list_has_next_when_more_pages(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        url_repo.count_by_query.return_value = 50
+        url_repo.find_by_owner.return_value = [make_url_v2_doc()] * 20
+
+        from schemas.dto.requests.url import ListUrlsQuery
+
+        result = await svc.list_by_owner(USER_OID, ListUrlsQuery(pageSize=20))
+
+        assert result["hasNext"] is True
+        assert result["total"] == 50

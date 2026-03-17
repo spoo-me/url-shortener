@@ -6,6 +6,12 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime, timezone
 
+from pymongo.errors import (
+    DuplicateKeyError,
+    OperationFailure,
+    ServerSelectionTimeoutError,
+)
+
 from .conftest import make_collection, _url_v2_doc, URL_OID, USER_OID
 
 
@@ -167,3 +173,55 @@ class TestUrlRepository:
         col.find_one = AsyncMock(side_effect=Exception("connection refused"))
         with pytest.raises(Exception, match="connection refused"):
             await self._repo(col).find_by_alias("any")
+
+    # ── Error path tests ──────────────────────────────────────────────────────
+
+    @pytest.mark.asyncio
+    async def test_find_by_alias_raises_on_operation_failure(self):
+        """OperationFailure (e.g. query plan error) propagates from find_by_alias."""
+        col = make_collection()
+        col.find_one = AsyncMock(side_effect=OperationFailure("query failed"))
+        with pytest.raises(OperationFailure):
+            await self._repo(col).find_by_alias("abc")
+
+    @pytest.mark.asyncio
+    async def test_find_by_alias_raises_on_server_timeout(self):
+        """ServerSelectionTimeoutError (e.g. MongoDB unreachable) propagates."""
+        col = make_collection()
+        col.find_one = AsyncMock(side_effect=ServerSelectionTimeoutError("timed out"))
+        with pytest.raises(ServerSelectionTimeoutError):
+            await self._repo(col).find_by_alias("abc")
+
+    @pytest.mark.asyncio
+    async def test_insert_raises_duplicate_key(self):
+        """DuplicateKeyError on insert propagates (alias unique index violation)."""
+        col = make_collection()
+        col.insert_one = AsyncMock(
+            side_effect=DuplicateKeyError("E11000 duplicate key")
+        )
+        with pytest.raises(DuplicateKeyError):
+            await self._repo(col).insert({"alias": "abc1234"})
+
+    @pytest.mark.asyncio
+    async def test_insert_raises_on_operation_failure(self):
+        """OperationFailure on insert propagates."""
+        col = make_collection()
+        col.insert_one = AsyncMock(side_effect=OperationFailure("write failed"))
+        with pytest.raises(OperationFailure):
+            await self._repo(col).insert({"alias": "abc1234"})
+
+    @pytest.mark.asyncio
+    async def test_update_raises_on_server_timeout(self):
+        """ServerSelectionTimeoutError during update propagates."""
+        col = make_collection()
+        col.update_one = AsyncMock(side_effect=ServerSelectionTimeoutError("timed out"))
+        with pytest.raises(ServerSelectionTimeoutError):
+            await self._repo(col).update(URL_OID, {"$set": {"status": "INACTIVE"}})
+
+    @pytest.mark.asyncio
+    async def test_non_pymongo_error_propagates_uncaught(self):
+        """Errors outside pymongo (e.g. ValueError) are NOT caught by the repo."""
+        col = make_collection()
+        col.find_one = AsyncMock(side_effect=ValueError("unexpected"))
+        with pytest.raises(ValueError, match="unexpected"):
+            await self._repo(col).find_by_alias("abc")
