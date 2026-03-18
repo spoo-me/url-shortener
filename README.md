@@ -17,6 +17,7 @@
 <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fspoo.me%2Fmetric&query=%24.total-clicks&label=Clicks%20Redirected&color=6a5cf4&cacheSeconds=60" alt="Total Clicks Redirected">
 <a href="https://spoo.me/discord"><img src="https://img.shields.io/discord/1192388005206433892?logo=discord" alt="Discord"></a>
 <a href="https://twitter.com/spoo_me"><img src="https://img.shields.io/twitter/follow/spoo_me?logo=x&label=%40spoo_me&color=0bf" alt="X (formerly Twitter) Follow"></a>
+<a href="https://codecov.io/gh/spoo-me/spoo"><img src="https://codecov.io/gh/spoo-me/spoo/graph/badge.svg?token=4ZHHWVVCLH" alt="codecov"></a>
 </p>
 
 # ⚡ Introduction

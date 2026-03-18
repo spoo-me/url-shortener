@@ -49,7 +49,6 @@ jobs:
             --cov=. \
             --cov-report=term-missing:skip-covered \
             --cov-report=xml:coverage.xml \
-            --cov-report=json:coverage.json \
             --cov-config=pyproject.toml \
             --junitxml=junit.xml \
             -q
@@ -61,29 +60,6 @@ jobs:
           files: coverage.xml
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Generate coverage badge
-        if: matrix.python-version == '3.13' && github.ref == 'refs/heads/main'
-        run: |
-          COVERAGE=$(uv run python -c "
-          import json
-          data = json.load(open('coverage.json'))
-          print(int(data['totals']['percent_covered_display']))
-          ")
-          echo "COVERAGE=${COVERAGE}" >> $GITHUB_ENV
-
-      - name: Create badge
-        if: matrix.python-version == '3.13' && github.ref == 'refs/heads/main'
-        uses: schneegans/dynamic-badges-action@v1.7.0
-        with:
-          auth: ${{ secrets.GIST_TOKEN }}
-          gistID: ${{ vars.COVERAGE_GIST_ID }}
-          filename: coverage-badge.json
-          label: coverage
-          message: ${{ env.COVERAGE }}%
-          valColorRange: ${{ env.COVERAGE }}
-          minColorRange: 50
-          maxColorRange: 90
 
       - name: Upload test results
         if: always()
