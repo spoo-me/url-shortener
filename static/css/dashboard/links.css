@@ -199,9 +199,11 @@
     transition: opacity 0.2s ease;
 }
 
-/* QR loading animation */
+/* QR loading animation — hide alt text while loading */
 .qr-image:not([src*="qr.spoo.me"]) {
     animation: qr-loading 1.5s infinite;
+    color: transparent;
+    font-size: 0;
 }
 
 @keyframes qr-loading {

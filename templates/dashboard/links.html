@@ -3,7 +3,7 @@
 {% block title %}Links | Dashboard | spoo.me{% endblock %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/links.css') }}?v=1">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/links.css') }}?v=2">
 <link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/url-modal.css') }}?v=1">
 <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
@@ -718,20 +718,17 @@
 
             // Show loading state for QR code
             if (qrImg) {
-                qrImg.src = "";
-                qrImg.style.animation = "qr-loading 1.5s infinite";
+                qrImg.removeAttribute("src");
+                qrImg.style.opacity = "0";
+                qrImg.parentElement.style.animation = "qr-loading 1.5s infinite";
 
-                // Load QR code with delay to show loading animation
-                setTimeout(() => {
-                    const enc = encodeURIComponent(shortUrl);
-                    qrImg.src = `https://qr.spoo.me/gradient?text=${enc}&width=280&height=280&gradient1=1d1919&gradient2=322c29`;
-
-                    // Set up QR code interactions when loaded
-                    qrImg.onload = function () {
-                        qrImg.style.animation = "none";
-                        setupQRCodeInteractions();
-                    };
-                }, 800);
+                const enc = encodeURIComponent(shortUrl);
+                qrImg.onload = function () {
+                    qrImg.parentElement.style.animation = "none";
+                    qrImg.style.opacity = "1";
+                    setupQRCodeInteractions();
+                };
+                qrImg.src = `https://qr.spoo.me/api/v1/gradient?content=${enc}&size=280&start=%231d1919&end=%23322c29`;
             }
 
             modal.classList.add('active');
