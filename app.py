@@ -50,7 +50,7 @@ from routes.static_routes import router as static_router
 log = get_logger(__name__)
 
 _SCALAR_CDN = "https://cdn.jsdelivr.net/npm/@scalar/api-reference"
-_DOCS_URL = "https://spoo.me/docs"
+_DOCS_URL = "https://docs.spoo.me"
 
 
 def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
