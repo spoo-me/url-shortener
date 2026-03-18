@@ -9,9 +9,14 @@ services:
       MONGO_INITDB_ROOT_USERNAME: mongouser
       MONGO_INITDB_ROOT_PASSWORD: mongouser
     volumes:
-      # Persist MongoDB data and configuration across container restarts
       - mongo-data:/data/db
       - mongo-config:/data/configdb
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   redis:
     image: "redis:latest" # reccommended by offical docs
@@ -19,11 +24,16 @@ services:
     restart: always
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   app:
     build: .
     container_name: spoo_app
-    command: /app/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --no-access-log --reload
+    command: uv run uvicorn main:app --host 0.0.0.0 --port 8000 --no-access-log --reload
     volumes:
       # This mount enables hot reloading for your application code
       - .:/app
@@ -32,8 +42,10 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file: .env
     environment:
       - MONGODB_URI=mongodb://mongouser:mongouser@db:27017
