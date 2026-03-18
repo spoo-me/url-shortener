@@ -3,8 +3,8 @@
 {% block title %}Links | Dashboard | spoo.me{% endblock %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/links.css') }}?v=1">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/url-modal.css') }}?v=1">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/links.css') }}?v=1">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/url-modal.css') }}?v=1">
 <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/relativeTime.js"></script>
@@ -605,9 +605,9 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/dashboard/smart-datetime.js') }}?v=1"></script>
-<script src="{{ url_for('static', filename='js/dashboard.js') }}?v=1" defer></script>
-<script src="{{ url_for('static', filename='js/url-manager.js') }}?v=1" defer></script>
+<script src="{{ url_for('static', path='js/dashboard/smart-datetime.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='js/dashboard.js') }}?v=1" defer></script>
+<script src="{{ url_for('static', path='js/url-manager.js') }}?v=1" defer></script>
 <script>
     // Initialize segmented controls for the options dropdown
     document.addEventListener('DOMContentLoaded', function () {

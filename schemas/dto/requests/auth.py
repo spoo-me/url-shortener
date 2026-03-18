@@ -1,0 +1,104 @@
+"""
+Request DTOs for authentication endpoints.
+
+LoginRequest                  — POST /auth/login
+RegisterRequest               — POST /auth/register
+SetPasswordRequest            — POST /auth/set-password
+VerifyEmailRequest            — POST /auth/verify-email
+SendVerificationRequest       — POST /auth/send-verification  (no body)
+RequestPasswordResetRequest   — POST /auth/request-password-reset
+ResetPasswordRequest          — POST /auth/reset-password
+"""
+
+from __future__ import annotations
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class LoginRequest(BaseModel):
+    """Request body for POST /auth/login."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    email: str = Field(
+        description="Account email address", examples=["user@example.com"]
+    )
+    password: str = Field(description="Account password", examples=["MySecurePass123!"])
+
+
+class RegisterRequest(BaseModel):
+    """Request body for POST /auth/register."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    email: str = Field(
+        description="Email address for the new account",
+        examples=["newuser@example.com"],
+    )
+    password: str = Field(
+        description="Password (min 8 chars, must contain letter + number + special char)",
+        examples=["MySecurePass123!"],
+    )
+    user_name: str | None = Field(
+        default=None,
+        description="Display name (optional)",
+        examples=["Jane Doe"],
+    )
+
+
+class SetPasswordRequest(BaseModel):
+    """Request body for POST /auth/set-password.
+
+    Only applies to OAuth-only users who have not yet set a password.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    password: str = Field(
+        description="New password (min 8 chars, must contain letter + number + special char)",
+        examples=["MySecurePass123!"],
+    )
+
+
+class VerifyEmailRequest(BaseModel):
+    """Request body for POST /auth/verify-email.
+
+    ``code`` is the 6-digit OTP sent to the user's email address.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    code: str = Field(
+        description="6-digit OTP from verification email",
+        examples=["123456"],
+    )
+
+
+class RequestPasswordResetRequest(BaseModel):
+    """Request body for POST /auth/request-password-reset."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    email: str = Field(
+        description="Email address of the account to reset",
+        examples=["user@example.com"],
+    )
+
+
+class ResetPasswordRequest(BaseModel):
+    """Request body for POST /auth/reset-password."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    email: str = Field(
+        description="Email address of the account",
+        examples=["user@example.com"],
+    )
+    code: str = Field(
+        description="6-digit OTP from password reset email",
+        examples=["123456"],
+    )
+    password: str = Field(
+        description="New password (min 8 chars, must contain letter + number + special char)",
+        examples=["NewSecurePass456!"],
+    )

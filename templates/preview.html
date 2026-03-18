@@ -16,10 +16,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
 
     <!-- Styles -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/preview.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/preview.css') }}">
 
     <!-- Favicon -->
-    <link rel=" icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel=" icon" type="image/png" href="{{ url_for('static', path='images/favicon.png') }}">
 </head>
 
 <body>
@@ -99,7 +99,7 @@
         <!-- Footer -->
         <div class="preview-footer">
             <a href="/" class="footer-link">
-                <img src="{{ url_for('static', filename='images/logo-text-dark.png') }}" alt="spoo.me" height="20">
+                <img src="{{ url_for('static', path='images/logo-text-dark.png') }}" alt="spoo.me" height="20">
             </a>
         </div>
     </div>

@@ -22,9 +22,9 @@
 {% endblock %}
 
 {% block head_css %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats.css') }}?v=5">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/customNotification.css') }}?v=4">
-    <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/stats.css') }}?v=5">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/customNotification.css') }}?v=4">
+    <script src="{{ url_for('static', path='js/customNotification.js') }}?v=3"></script>
 {% endblock %}
 
 {% block content %}
@@ -52,7 +52,7 @@
 {% endblock %}
 
 {% block scripts %}
-    <script src="{{ url_for('static', filename='js/stats-script.js') }}" defer></script>
+    <script src="{{ url_for('static', path='js/stats-script.js') }}" defer></script>
     {% if error %}
     <script>document.querySelector(".buttonIn").classList.add("shake");setTimeout(function(){document.querySelector(".buttonIn").classList.remove("shake");},1000);</script>
     {% endif %}

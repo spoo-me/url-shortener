@@ -3,7 +3,7 @@
 {% block title %}API Keys | Dashboard | spoo.me{% endblock %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/keys.css') }}?v=2">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/keys.css') }}?v=2">
 <meta name="robots" content="noindex">
 {% endblock %}
 
@@ -275,5 +275,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/dashboard/keys.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='js/dashboard/keys.js') }}?v=1"></script>
 {% endblock %}

@@ -1,4 +1,4 @@
-from utils.url_utils import validate_url
+from shared.validators import validate_url
 
 
 def test_valid_url():

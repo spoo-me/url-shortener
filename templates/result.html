@@ -3,8 +3,8 @@
 {% block title %}URL Shortener Result{% endblock %}
 
 {% block head_css %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/result.css') }}?v=4">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/confetti.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/result.css') }}?v=4">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/confetti.css') }}">
     <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/16327/gsap-latest-beta.min.js"></script>
 {% endblock %}
 
@@ -49,8 +49,8 @@
 
 {% block scripts %}
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-    <script src="{{ url_for('static', filename='js/result-script.js') }}?v=1"></script>
-    <script src="{{ url_for('static', filename='js/confetti.js') }}?v=2" defer></script>
+    <script src="{{ url_for('static', path='js/result-script.js') }}?v=1"></script>
+    <script src="{{ url_for('static', path='js/confetti.js') }}?v=2" defer></script>
     <script>
         function viewStats() { window.location.href = "/stats/{{ short_code }}"; }
     </script>

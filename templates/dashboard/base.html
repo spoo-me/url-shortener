@@ -12,9 +12,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Nata+Sans:wght@100..900&display=swap" rel="stylesheet">
 
     <!-- Base styles -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}?v=2">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard/dashboard-base.css') }}?v=2">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/customNotification.css') }}?v=5">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/base.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/dashboard-base.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/customNotification.css') }}?v=5">
 
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
@@ -24,7 +24,7 @@
     <script src="https://unpkg.com/tippy.js@6"></script>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', path='images/favicon.png') }}">
 
 
     <!-- Sentry session replays -->
@@ -41,7 +41,7 @@
                 <i class="ti ti-menu-2"></i>
             </button>
             <a href="/" class="mobile-brand">
-                <img src="{{ url_for('static', filename='images/logo-text-dark.png') }}" alt="spoo.me" class="w-8 h-8">
+                <img src="{{ url_for('static', path='images/logo-text-dark.png') }}" alt="spoo.me" class="w-8 h-8">
                 <!-- <span>spoo.me</span> -->
             </a>
         </header>
@@ -57,15 +57,15 @@
     </div>
 
     <!-- Base scripts -->
-    <script src="{{ url_for('static', filename='js/customNotification.js') }}?v=3"></script>
-    <script src="{{ url_for('static', filename='js/dashboard/dashboard-base.js') }}?v=1"></script>
+    <script src="{{ url_for('static', path='js/customNotification.js') }}?v=3"></script>
+    <script src="{{ url_for('static', path='js/dashboard/dashboard-base.js') }}?v=1"></script>
 
     <!-- Auth utilities -->
     <script>
         // Pass JWT claims to frontend
         const g = {
             jwt_claims: {
-                email_verified: {{ g.jwt_claims.get('email_verified', false) | tojson }}
+                email_verified: {{ user.email_verified | default(false) | tojson }}
             }
         };
 
@@ -93,7 +93,7 @@
     </script>
 
     <!-- Verification check -->
-    <script src="{{ url_for('static', filename='js/verification-check.js') }}"></script>
+    <script src="{{ url_for('static', path='js/verification-check.js') }}"></script>
 
     <!-- Check for verification success -->
     <script>

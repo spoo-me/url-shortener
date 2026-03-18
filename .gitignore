@@ -15,6 +15,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!k6/lib/
 lib64/
 parts/
 sdist/
@@ -45,6 +46,8 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+coverage.json
+junit.xml
 *.cover
 *.py,cover
 .hypothesis/
@@ -184,7 +187,6 @@ misc/*.py
 todo.md
 
 # Local API Testings
-k6-tests/
 local_test_db/
 
 .DS_Store

@@ -14,15 +14,15 @@
     {% block custom_css_scripts %}{% endblock %}
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/contacts-modal.css') }}?v=8">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/docs.css') }}?v=3">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}?v=6">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-header.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/contacts-modal.css') }}?v=8">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/docs.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/header.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/mobile-header.css') }}?v=6">
 </head>
 
 <body>
     <div class="navbar">
-        <img class="navbar-image" src="{{ url_for('static', filename='images/text.png') }}" alt="Spoo.me Banner Image"
+        <img class="navbar-image" src="{{ url_for('static', path='images/text.png') }}" alt="Spoo.me Banner Image"
             loading="lazy">
         <div class="links">
             <ul>
@@ -122,8 +122,8 @@
 
     {% block custom_js_scripts %}{% endblock %}
 
-    <script src="{{ url_for('static', filename='js/contacts-popup.js') }}?v=1" defer=""></script>
-    <script src="{{ url_for('static', filename='js/header.js') }}?v=5" defer=""></script>
+    <script src="{{ url_for('static', path='js/contacts-popup.js') }}?v=1" defer=""></script>
+    <script src="{{ url_for('static', path='js/header.js') }}?v=5" defer=""></script>
 
     <script>
         window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
