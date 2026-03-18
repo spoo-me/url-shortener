@@ -1,7 +1,7 @@
 """
 OpenAPI schema configuration — tags, security schemes, and metadata.
 
-Called once during app creation to configure the Swagger UI at /api-docs.
+Called once during app creation to configure the OpenAPI schema.
 """
 
 from __future__ import annotations

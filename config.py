@@ -125,13 +125,6 @@ class AppSettings(BaseSettings):
     url_report_webhook: str = ""
     hcaptcha_secret: str = ""
 
-    # OpenAPI docs URL — enabled in development only
-    @property
-    def docs_url(self) -> Optional[str]:
-        import os
-
-        return "/api-docs" if os.getenv("ENV", "development") != "production" else None
-
     # Sub-configs (composed via model_validator below)
     db: Optional[DatabaseSettings] = None
     redis: Optional[RedisSettings] = None

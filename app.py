@@ -11,8 +11,10 @@ from typing import AsyncIterator, Optional
 
 import redis.asyncio as aioredis
 import sentry_sdk
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pymongo.asynchronous.mongo_client import AsyncMongoClient
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -46,6 +48,9 @@ from routes.redirect_routes import router as redirect_router
 from routes.static_routes import router as static_router
 
 log = get_logger(__name__)
+
+_SCALAR_CDN = "https://cdn.jsdelivr.net/npm/@scalar/api-reference"
+_DOCS_URL = "https://spoo.me/docs"
 
 
 def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
@@ -130,13 +135,32 @@ def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
         description=API_DESCRIPTION,
         contact=API_CONTACT,
         license_info=API_LICENSE,
-        docs_url=settings.docs_url,
+        docs_url=None,
         redoc_url=None,
         lifespan=lifespan,
         openapi_tags=OPENAPI_TAGS,
     )
 
     configure_openapi(app, app_url=settings.app_url)
+
+    # ── /docs — Scalar in dev, redirect in prod ──────────────────────────
+    _is_prod = settings.is_production
+    _templates = Jinja2Templates(
+        directory=os.path.join(os.path.dirname(__file__), "templates")
+    )
+
+    @app.get("/docs", include_in_schema=False)
+    async def docs(request: Request):
+        if _is_prod:
+            return RedirectResponse(_DOCS_URL)
+        return _templates.TemplateResponse(
+            "scalar_docs.html",
+            {
+                "request": request,
+                "app_name": settings.app_name,
+                "scalar_cdn": _SCALAR_CDN,
+            },
+        )
 
     # ── Middleware (registered in reverse execution order) ────────────────
     # 1. Session — outermost, needed by Authlib OAuth for state storage

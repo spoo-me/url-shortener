@@ -33,4 +33,4 @@ openapi:            ## Export OpenAPI spec to openapi.json
 		print(json.dumps(app.openapi(), indent=2))" > openapi.json
 
 docs:               ## Open API docs in browser (requires running server)
-	open http://localhost:8000/api-docs
+	open http://localhost:8000/docs

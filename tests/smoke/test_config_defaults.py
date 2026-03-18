@@ -91,15 +91,9 @@ def test_is_production_true_for_production() -> None:
         assert settings.is_production is True
 
 
-def test_docs_url_non_production() -> None:
-    """docs_url should return '/api-docs' for non-production."""
-    with patch.dict(os.environ, {"ENV": "development"}, clear=False):
-        settings = AppSettings()
-        assert settings.docs_url == "/api-docs"
+def test_docs_disabled_in_fastapi() -> None:
+    """Built-in docs_url should be None — Scalar docs are served via a custom /docs route."""
+    from app import create_app
 
-
-def test_docs_url_production() -> None:
-    """docs_url should return None for production."""
-    with patch.dict(os.environ, {"ENV": "production"}, clear=False):
-        settings = AppSettings()
-        assert settings.docs_url is None
+    app = create_app()
+    assert app.docs_url is None
