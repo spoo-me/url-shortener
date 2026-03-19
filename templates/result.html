@@ -49,7 +49,7 @@
 
 {% block scripts %}
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-    <script src="{{ url_for('static', path='js/result-script.js') }}?v=1"></script>
+    <script src="{{ url_for('static', path='js/result-script.js') }}?v=2"></script>
     <script src="{{ url_for('static', path='js/confetti.js') }}?v=2" defer></script>
     <script>
         function viewStats() { window.location.href = "/stats/{{ short_code }}"; }

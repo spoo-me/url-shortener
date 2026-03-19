@@ -374,7 +374,7 @@
                     <div class="qr-block">
                         <div class="qr-container" id="qr-container">
                             <img id="created-link-qr" class="qr-image" src="" alt="QR code for the short link"
-                                loading="lazy">
+                                crossorigin="anonymous" loading="lazy">
                             <div id="qr-overlay" class="qr-overlay">
                                 <i class="ti ti-download"></i>
                                 <span>Download</span>
@@ -934,39 +934,24 @@
         }
     }
 
-    // QR Code download function (similar to result.html)
+    // QR Code download — uses the already-loaded image via canvas to avoid CORS
     function downloadQRCodeFromModal() {
         const qrImg = document.getElementById("created-link-qr");
-        if (!qrImg || !qrImg.src) return;
+        if (!qrImg || !qrImg.naturalWidth === 0) return;
 
-        const qrCodeSrc = qrImg.src;
+        const canvas = document.createElement("canvas");
+        canvas.width = qrImg.naturalWidth;
+        canvas.height = qrImg.naturalHeight;
+        canvas.getContext("2d").drawImage(qrImg, 0, 0);
+
         const link = document.createElement("a");
+        link.href = canvas.toDataURL("image/png");
+        link.download = "qrcode.png";
+        link.click();
 
-        const xhr = new XMLHttpRequest();
-        xhr.responseType = "blob";
-        xhr.onload = function () {
-            const reader = new FileReader();
-            reader.onloadend = function () {
-                link.href = reader.result;
-                link.download = "qrcode.png";
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-                // Show success notification
-                if (typeof showNotification === 'function') {
-                    showNotification('QR code downloaded successfully!', 'success');
-                }
-            };
-            reader.readAsDataURL(xhr.response);
-        };
-        xhr.onerror = function () {
-            if (typeof showNotification === 'function') {
-                showNotification('Failed to download QR code', 'error');
-            }
-        };
-        xhr.open("GET", qrCodeSrc);
-        xhr.send();
+        if (typeof showNotification === 'function') {
+            showNotification('QR code downloaded successfully!', 'success');
+        }
     }
 
     // Form Validation Functions
