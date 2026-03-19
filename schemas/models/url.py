@@ -14,9 +14,9 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Optional
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, field_validator
 
-from schemas.models.base import MongoBaseModel, PyObjectId
+from schemas.models.base import ANONYMOUS_OWNER_ID, MongoBaseModel, PyObjectId
 
 
 class UrlV2Doc(MongoBaseModel):
@@ -29,7 +29,14 @@ class UrlV2Doc(MongoBaseModel):
     """
 
     alias: str
-    owner_id: PyObjectId
+    owner_id: PyObjectId = Field(default=ANONYMOUS_OWNER_ID)
+
+    @field_validator("owner_id", mode="before")
+    @classmethod
+    def _coerce_null_owner(cls, v: Any) -> Any:
+        """Legacy v2 URLs may have null owner_id — treat as anonymous."""
+        return v if v is not None else ANONYMOUS_OWNER_ID
+
     created_at: datetime
     creation_ip: Optional[str] = None
     long_url: str
