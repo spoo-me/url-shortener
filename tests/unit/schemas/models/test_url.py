@@ -1,5 +1,8 @@
 """Unit tests for UrlV2Doc, LegacyUrlDoc, and EmojiUrlDoc."""
 
+from bson import ObjectId
+
+from schemas.models.base import ANONYMOUS_OWNER_ID
 from schemas.models.url import EmojiUrlDoc, LegacyUrlDoc, UrlV2Doc
 
 from .conftest import now, oid
@@ -41,6 +44,22 @@ class TestUrlV2Doc:
         assert restored.alias == doc.alias
         assert restored.max_clicks == 10
         assert str(restored.id) == str(o)
+
+    def test_null_owner_id_coerced_to_anonymous(self):
+        doc = self._make(owner_id=None)
+        assert doc.owner_id == ANONYMOUS_OWNER_ID
+        assert isinstance(doc.owner_id, ObjectId)
+
+    def test_missing_owner_id_defaults_to_anonymous(self):
+        base = {
+            "_id": oid(),
+            "alias": "abc1234",
+            "created_at": now(),
+            "long_url": "https://example.com",
+        }
+        doc = UrlV2Doc.from_mongo(base)
+        assert doc.owner_id == ANONYMOUS_OWNER_ID
+        assert isinstance(doc.owner_id, ObjectId)
 
     def test_from_mongo_none_returns_none(self):
         assert UrlV2Doc.from_mongo(None) is None
