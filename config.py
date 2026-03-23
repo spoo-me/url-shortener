@@ -120,6 +120,9 @@ class AppSettings(BaseSettings):
     geoip_country_db: str = "misc/GeoLite2-Country.mmdb"
     geoip_city_db: str = "misc/GeoLite2-City.mmdb"
 
+    # GitHub repository (owner/repo) — used for star count + outbound links
+    github_repo: str = "spoo-me/spoo"
+
     # External service URLs
     contact_webhook: str = ""
     url_report_webhook: str = ""
