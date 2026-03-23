@@ -21,7 +21,9 @@ function get_metrics() {
         .then(data => {
             document.querySelector('#total-urls').textContent = data["total-shortlinks"];
             document.querySelector('#total-clicks').textContent = data["total-clicks"];
-            document.querySelector('#github-stars').textContent = data["github-stars"];
+            if (data["github-stars"] > 0) {
+                document.querySelector('#github-stars').textContent = data["github-stars"];
+            }
         })
         .catch(err => {
             console.warn('Failed to load metrics:', err);

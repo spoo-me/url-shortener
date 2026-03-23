@@ -565,7 +565,7 @@ async def metric(
         github_stars = 0
         try:
             resp = await http_client.get(
-                "https://api.github.com/repos/spoo-me/url-shortener", timeout=5
+                "https://api.github.com/repos/spoo-me/spoo", timeout=5
             )
             if resp.status_code == 200:
                 github_stars = resp.json().get("stargazers_count", 0)

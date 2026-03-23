@@ -17,10 +17,12 @@ async function fetchGitHubStars() {
         if (response.ok) {
             const data = await response.json();
             const stars = data['github-stars'];
-            const formatted = stars >= 1000 ? (stars / 1000).toFixed(1) + 'k' : stars;
-            const starEl = document.getElementById('github-star-count');
-            if (starEl) {
-                starEl.textContent = formatted;
+            if (stars > 0) {
+                const formatted = stars >= 1000 ? (stars / 1000).toFixed(1) + 'k' : stars;
+                const starEl = document.getElementById('github-star-count');
+                if (starEl) {
+                    starEl.textContent = formatted;
+                }
             }
         }
     } catch (error) {
