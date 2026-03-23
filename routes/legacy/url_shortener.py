@@ -542,10 +542,12 @@ async def metric(
     request: Request,
     db=Depends(get_db),
     redis=Depends(get_redis),
+    settings=Depends(get_settings),
 ) -> Response:
     """Return global platform metrics, cached for 24 hours via DualCache."""
     dual_cache = DualCache(redis)
     http_client = request.app.state.http_client
+    github_repo = settings.github_repo
 
     async def query() -> dict:
         start = time.time()
@@ -565,7 +567,7 @@ async def metric(
         github_stars = 0
         try:
             resp = await http_client.get(
-                "https://api.github.com/repos/spoo-me/url-shortener", timeout=5
+                f"https://api.github.com/repos/{github_repo}", timeout=5
             )
             if resp.status_code == 200:
                 github_stars = resp.json().get("stargazers_count", 0)
