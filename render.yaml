@@ -2,7 +2,7 @@ services:
   - type: web
     runtime: python
     name: url-shortener
-    repo: https://github.com/spoo-me/url-shortener
+    repo: https://github.com/spoo-me/spoo
     plan: free
     buildCommand: pip install uv && uv sync --frozen
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --no-access-log
