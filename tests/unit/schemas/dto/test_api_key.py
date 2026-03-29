@@ -10,7 +10,6 @@ from schemas.dto.responses.api_key import (
     ApiKeyCreatedResponse,
 )
 
-
 # ── CreateApiKeyRequest ────────────────────────────────────────────────────────
 
 

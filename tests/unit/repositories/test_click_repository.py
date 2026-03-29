@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock
 
+import pytest
 from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
 
-from .conftest import make_collection, URL_OID, USER_OID
+from .conftest import URL_OID, USER_OID, make_collection
 
 
 class TestClickRepository:

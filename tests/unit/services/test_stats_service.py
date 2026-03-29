@@ -551,6 +551,7 @@ class TestTimezone:
 class TestClickQueryBuilding:
     def test_scope_all_produces_owner_id_filter(self):
         from bson import ObjectId
+
         from services.stats_service import StatsService
 
         q = StatsService._build_click_query("all", OWNER_ID, None, START, NOW, {})

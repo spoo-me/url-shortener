@@ -7,7 +7,6 @@ from schemas.models.base import MongoBaseModel, PyObjectId
 
 from .conftest import oid
 
-
 # ── PyObjectId ────────────────────────────────────────────────────────────────
 
 

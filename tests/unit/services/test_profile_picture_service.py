@@ -11,6 +11,7 @@ import pytest
 os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
 
 from bson import ObjectId
+
 from errors import NotFoundError
 from services.profile_picture_service import ProfilePictureService
 

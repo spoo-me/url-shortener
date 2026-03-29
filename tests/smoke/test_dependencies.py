@@ -13,7 +13,6 @@ from fastapi.testclient import TestClient
 import dependencies
 from config import AppSettings
 
-
 # All dependency functions that should be importable from dependencies.py
 _DEPENDENCY_NAMES = [
     "get_settings",

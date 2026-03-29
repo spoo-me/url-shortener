@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock
-from bson import ObjectId
 
 import jwt as pyjwt
 import pytest
+from bson import ObjectId
 
 from errors import (
     AuthenticationError,
@@ -291,7 +291,7 @@ class TestRegister:
         svc._token_repo.create.return_value = ObjectId()
         svc._email.send_verification_email.side_effect = Exception("email server down")
 
-        user_doc, access, refresh, verification_sent = await svc.register(
+        user_doc, _access, _refresh, verification_sent = await svc.register(
             "new@example.com", "ValidPass1!", None, None
         )
         assert user_doc is not None
@@ -372,8 +372,8 @@ class TestRefreshToken:
 
 class TestVerifyEmail:
     def _make_token_doc(self, user_id, otp_code, expired=False, used=False, attempts=0):
+        from schemas.models.token import TOKEN_TYPE_EMAIL_VERIFY, VerificationTokenDoc
         from shared.crypto import hash_token
-        from schemas.models.token import VerificationTokenDoc, TOKEN_TYPE_EMAIL_VERIFY
 
         now = datetime.now(timezone.utc)
         expires = now - timedelta(seconds=1) if expired else now + timedelta(minutes=10)
@@ -479,7 +479,7 @@ class TestVerifyEmail:
         svc._email.send_welcome_email.side_effect = Exception("server down")
 
         # Should NOT raise — welcome email is best-effort
-        access, refresh = await svc.verify_email(str(USER_OID), "123456")
+        access, _refresh = await svc.verify_email(str(USER_OID), "123456")
         assert access is not None
 
 
@@ -644,8 +644,8 @@ class TestRequestPasswordReset:
 
 class TestResetPassword:
     def _make_token_doc(self, user_id, otp_code, expired=False):
+        from schemas.models.token import TOKEN_TYPE_PASSWORD_RESET, VerificationTokenDoc
         from shared.crypto import hash_token
-        from schemas.models.token import VerificationTokenDoc, TOKEN_TYPE_PASSWORD_RESET
 
         now = datetime.now(timezone.utc)
         expires = now - timedelta(seconds=1) if expired else now + timedelta(minutes=10)

@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock
 
-from .conftest import make_collection, _token_doc, USER_OID, TOKEN_OID
+import pytest
+
+from .conftest import TOKEN_OID, USER_OID, _token_doc, make_collection
 
 
 class TestTokenRepository:

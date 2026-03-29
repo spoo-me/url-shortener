@@ -144,11 +144,13 @@ def test_oauth_initiate_redirects_to_provider():
         oauth_providers={"google": mock_oauth_client},
     )
 
-    with patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}):
-        with TestClient(
+    with (
+        patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}),
+        TestClient(
             app, raise_server_exceptions=False, follow_redirects=False
-        ) as client:
-            resp = client.get("/oauth/google")
+        ) as client,
+    ):
+        resp = client.get("/oauth/google")
 
     assert resp.status_code == 302
     assert "accounts.google.com" in resp.headers.get("location", "")
@@ -184,11 +186,13 @@ def test_oauth_callback_new_user_creates_account():
         oauth_providers={"google": mock_oauth_client},
     )
 
-    with patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}):
-        with TestClient(
+    with (
+        patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}),
+        TestClient(
             app, raise_server_exceptions=False, follow_redirects=False
-        ) as client:
-            resp = client.get(f"/oauth/google/callback?state={state}&code=auth_code")
+        ) as client,
+    ):
+        resp = client.get(f"/oauth/google/callback?state={state}&code=auth_code")
 
     assert resp.status_code == 302
     assert "/dashboard" in resp.headers.get("location", "")
@@ -228,11 +232,13 @@ def test_oauth_callback_existing_user_logs_in():
         oauth_providers={"google": mock_oauth_client},
     )
 
-    with patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}):
-        with TestClient(
+    with (
+        patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}),
+        TestClient(
             app, raise_server_exceptions=False, follow_redirects=False
-        ) as client:
-            resp = client.get(f"/oauth/google/callback?state={state}&code=auth_code")
+        ) as client,
+    ):
+        resp = client.get(f"/oauth/google/callback?state={state}&code=auth_code")
 
     assert resp.status_code == 302
     mock_oauth_svc.handle_callback.assert_called_once()
@@ -269,11 +275,13 @@ def test_oauth_callback_email_collision_auto_links():
         oauth_providers={"google": mock_oauth_client},
     )
 
-    with patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}):
-        with TestClient(
+    with (
+        patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}),
+        TestClient(
             app, raise_server_exceptions=False, follow_redirects=False
-        ) as client:
-            resp = client.get(f"/oauth/google/callback?state={state}&code=auth_code")
+        ) as client,
+    ):
+        resp = client.get(f"/oauth/google/callback?state={state}&code=auth_code")
 
     assert resp.status_code == 302
     # Verify the service was called with the correct provider info
@@ -292,9 +300,11 @@ def test_oauth_link_requires_auth():
         oauth_providers={"google": mock_oauth_client},
     )
 
-    with patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}):
-        with TestClient(app, raise_server_exceptions=False) as client:
-            resp = client.get("/oauth/google/link")
+    with (
+        patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}),
+        TestClient(app, raise_server_exceptions=False) as client,
+    ):
+        resp = client.get("/oauth/google/link")
 
     assert resp.status_code == 401
 
@@ -316,11 +326,13 @@ def test_oauth_link_initiates_for_authenticated_user():
         oauth_providers={"google": mock_oauth_client},
     )
 
-    with patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}):
-        with TestClient(
+    with (
+        patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}),
+        TestClient(
             app, raise_server_exceptions=False, follow_redirects=False
-        ) as client:
-            resp = client.get("/oauth/google/link")
+        ) as client,
+    ):
+        resp = client.get("/oauth/google/link")
 
     assert resp.status_code == 302
     assert "accounts.google.com" in resp.headers.get("location", "")
@@ -427,9 +439,11 @@ def test_oauth_callback_missing_state_returns_400():
         oauth_providers={"google": mock_oauth_client},
     )
 
-    with patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}):
-        with TestClient(app, raise_server_exceptions=False) as client:
-            resp = client.get("/oauth/google/callback")
+    with (
+        patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}),
+        TestClient(app, raise_server_exceptions=False) as client,
+    ):
+        resp = client.get("/oauth/google/callback")
 
     assert resp.status_code == 400
 
@@ -447,12 +461,14 @@ def test_oauth_callback_provider_error_returns_400():
         oauth_providers={"google": mock_oauth_client},
     )
 
-    with patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}):
-        with TestClient(app, raise_server_exceptions=False) as client:
-            resp = client.get(
-                f"/oauth/google/callback?state={state}&error=access_denied"
-                "&error_description=User+denied+access"
-            )
+    with (
+        patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": mock_strategy}),
+        TestClient(app, raise_server_exceptions=False) as client,
+    ):
+        resp = client.get(
+            f"/oauth/google/callback?state={state}&error=access_denied"
+            "&error_description=User+denied+access"
+        )
 
     assert resp.status_code == 400
     assert "OAuth error" in resp.json().get("error", "")

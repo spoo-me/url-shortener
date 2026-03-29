@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import os
 from contextlib import asynccontextmanager
-from typing import Optional
 from unittest.mock import AsyncMock, MagicMock
 
 from fastapi import FastAPI
@@ -27,8 +26,8 @@ from errors import (
     NotFoundError,
     ValidationError,
 )
-from middleware.error_handler import register_error_handlers
 from infrastructure.cache.url_cache import UrlCacheData
+from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
 from routes.redirect_routes import router as redirect_router
 
@@ -67,9 +66,9 @@ def _make_url_cache(
     alias: str = "abc1234",
     long_url: str = "https://example.com",
     schema: str = "v2",
-    password_hash: Optional[str] = None,
+    password_hash: str | None = None,
     block_bots: bool = False,
-    max_clicks: Optional[int] = None,
+    max_clicks: int | None = None,
     total_clicks: int = 0,
     url_status: str = "ACTIVE",
 ) -> UrlCacheData:

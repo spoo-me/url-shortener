@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
 from pymongo.errors import (
     DuplicateKeyError,
     OperationFailure,
     ServerSelectionTimeoutError,
 )
 
-from .conftest import make_collection, USER_OID
+from .conftest import USER_OID, make_collection
 
 
 class TestUserRepository:

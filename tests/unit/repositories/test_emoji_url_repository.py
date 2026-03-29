@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from .conftest import make_collection, _legacy_url_doc
+import pytest
+
+from .conftest import _legacy_url_doc, make_collection
 
 
 class TestEmojiUrlRepository:

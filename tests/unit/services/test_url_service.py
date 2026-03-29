@@ -7,10 +7,10 @@ Tests verify behavior, not implementation details.
 
 from __future__ import annotations
 
-import pytest
 from datetime import datetime, timezone
-from typing import Optional
 from unittest.mock import AsyncMock
+
+import pytest
 from bson import ObjectId
 
 from errors import (
@@ -21,8 +21,8 @@ from errors import (
     ValidationError,
 )
 from infrastructure.cache.url_cache import UrlCacheData
-from schemas.models.url import UrlV2Doc, LegacyUrlDoc, EmojiUrlDoc
 from schemas.models.base import ANONYMOUS_OWNER_ID
+from schemas.models.url import EmojiUrlDoc, LegacyUrlDoc, UrlV2Doc
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Constants
@@ -43,10 +43,10 @@ def make_url_v2_doc(
     url_id: ObjectId = URL_OID,
     owner_id: ObjectId = USER_OID,
     status: str = "ACTIVE",
-    block_bots: Optional[bool] = None,
-    max_clicks: Optional[int] = None,
-    password: Optional[str] = None,
-    expire_after: Optional[datetime] = None,
+    block_bots: bool | None = None,
+    max_clicks: int | None = None,
+    password: str | None = None,
+    expire_after: datetime | None = None,
 ) -> UrlV2Doc:
     return UrlV2Doc.from_mongo(
         {
@@ -72,8 +72,8 @@ def make_legacy_doc(
     short_code: str = "abcdef",
     url: str = "https://legacy.example.com",
     block_bots: bool = False,
-    max_clicks: Optional[int] = None,
-    password: Optional[str] = None,
+    max_clicks: int | None = None,
+    password: str | None = None,
 ) -> LegacyUrlDoc:
     return LegacyUrlDoc.from_mongo(
         {
@@ -102,8 +102,8 @@ def make_active_cache(
     schema: str = "v2",
     alias: str = ALIAS,
     block_bots: bool = False,
-    max_clicks: Optional[int] = None,
-    password_hash: Optional[str] = None,
+    max_clicks: int | None = None,
+    password_hash: str | None = None,
 ) -> UrlCacheData:
     return UrlCacheData(
         _id=str(URL_OID),
@@ -240,7 +240,7 @@ class TestUrlServiceResolve:
         doc = make_legacy_doc(short_code="abc1234")
         legacy_repo.find_by_id.return_value = doc
 
-        result, schema = await svc.resolve("abc1234")
+        _result, schema = await svc.resolve("abc1234")
 
         assert schema == "v1"
         url_repo.find_by_alias.assert_called_once_with("abc1234")
@@ -257,7 +257,7 @@ class TestUrlServiceResolve:
         doc = make_legacy_doc(short_code="abcdef")
         legacy_repo.find_by_id.return_value = doc
 
-        result, schema = await svc.resolve("abcdef")
+        _result, schema = await svc.resolve("abcdef")
 
         assert schema == "v1"
         legacy_repo.find_by_id.assert_called_once_with("abcdef")
@@ -275,7 +275,7 @@ class TestUrlServiceResolve:
         doc = make_url_v2_doc(alias="abcdef")
         url_repo.find_by_alias.return_value = doc
 
-        result, schema = await svc.resolve("abcdef")
+        _result, schema = await svc.resolve("abcdef")
 
         assert schema == "v2"
         legacy_repo.find_by_id.assert_called_once_with("abcdef")
@@ -292,7 +292,7 @@ class TestUrlServiceResolve:
         emoji_doc = make_emoji_doc("🐍🔥💎")
         emoji_repo.find_by_id.return_value = emoji_doc
 
-        result, schema = await svc.resolve("🐍🔥💎")
+        _result, schema = await svc.resolve("🐍🔥💎")
 
         assert schema == "emoji"
         emoji_repo.find_by_id.assert_called_once_with("🐍🔥💎")
@@ -310,7 +310,7 @@ class TestUrlServiceResolve:
         doc = make_url_v2_doc(alias="customalias")
         url_repo.find_by_alias.return_value = doc
 
-        result, schema = await svc.resolve("customalias")
+        _result, schema = await svc.resolve("customalias")
 
         assert schema == "v2"
         url_repo.find_by_alias.assert_called_once_with("customalias")

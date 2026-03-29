@@ -3,10 +3,10 @@
 import json
 from unittest.mock import AsyncMock
 
-from infrastructure.cache.url_cache import UrlCache
 from infrastructure.cache.dual_cache import DualCache
+from infrastructure.cache.url_cache import UrlCache
 
-from .conftest import _url_data, _fake_redis
+from .conftest import _fake_redis, _url_data
 
 
 class TestUrlCache:

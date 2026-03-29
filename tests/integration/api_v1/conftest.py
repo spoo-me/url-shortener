@@ -10,7 +10,6 @@ from __future__ import annotations
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Optional
 from unittest.mock import MagicMock
 
 from bson import ObjectId
@@ -52,9 +51,7 @@ def _build_test_app(overrides: dict) -> FastAPI:
     return application
 
 
-def _make_url_doc(
-    alias: str = "testme", owner_id: Optional[ObjectId] = None
-) -> UrlV2Doc:
+def _make_url_doc(alias: str = "testme", owner_id: ObjectId | None = None) -> UrlV2Doc:
     oid = owner_id or ObjectId()
     return UrlV2Doc(
         **{
@@ -70,9 +67,9 @@ def _make_url_doc(
 
 
 def _make_user(
-    user_id: Optional[ObjectId] = None,
+    user_id: ObjectId | None = None,
     email_verified: bool = True,
-    api_key_doc: Optional[ApiKeyDoc] = None,
+    api_key_doc: ApiKeyDoc | None = None,
 ) -> CurrentUser:
     return CurrentUser(
         user_id=user_id or ObjectId(),
@@ -82,7 +79,7 @@ def _make_user(
 
 
 def _make_api_key_doc(
-    user_id: Optional[ObjectId] = None, scopes: Optional[list] = None
+    user_id: ObjectId | None = None, scopes: list | None = None
 ) -> ApiKeyDoc:
     return ApiKeyDoc(
         **{
