@@ -21,7 +21,7 @@ from dependencies import (
 )
 from errors import NotFoundError, ValidationError
 from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES
-from middleware.rate_limiter import limiter
+from middleware.rate_limiter import Limits, limiter
 from schemas.dto.requests.api_key import CreateApiKeyRequest
 from schemas.dto.responses.api_key import (
     ApiKeyActionResponse,
@@ -42,7 +42,7 @@ router = APIRouter(tags=["API Keys"])
     operation_id="createApiKey",
     summary="Create API Key",
 )
-@limiter.limit("5 per hour")
+@limiter.limit(Limits.API_KEY_CREATE)
 async def create_api_key(
     request: Request,
     body: CreateApiKeyRequest,
@@ -111,7 +111,7 @@ async def create_api_key(
     operation_id="listApiKeys",
     summary="List API Keys",
 )
-@limiter.limit("60 per minute")
+@limiter.limit(Limits.API_KEY_READ)
 async def list_api_keys(
     request: Request,
     user: JwtUser,
@@ -151,7 +151,7 @@ async def list_api_keys(
     operation_id="deleteApiKey",
     summary="Delete/Revoke API Key",
 )
-@limiter.limit("30 per minute")
+@limiter.limit(Limits.API_KEY_DELETE)
 async def delete_api_key(
     request: Request,
     key_id: str,

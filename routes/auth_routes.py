@@ -92,7 +92,7 @@ async def signup_redirect() -> RedirectResponse:
     operation_id="loginUser",
     summary="Login",
 )
-@limiter.limit("5 per minute; 50 per day")
+@limiter.limit(Limits.LOGIN)
 async def login(
     request: Request,
     response: Response,
@@ -130,7 +130,7 @@ async def login(
     operation_id="registerUser",
     summary="Register",
 )
-@limiter.limit("5 per minute; 50 per day")
+@limiter.limit(Limits.SIGNUP)
 async def register(
     request: Request,
     response: Response,
@@ -174,7 +174,7 @@ async def register(
     operation_id="refreshTokens",
     summary="Refresh Tokens",
 )
-@limiter.limit("20 per minute")
+@limiter.limit(Limits.TOKEN_REFRESH)
 async def refresh(
     request: Request,
     auth_service: AuthService = Depends(get_auth_service),
@@ -228,7 +228,7 @@ async def refresh(
     operation_id="logout",
     summary="Logout",
 )
-@limiter.limit("60 per hour")
+@limiter.limit(Limits.LOGOUT)
 async def logout(
     request: Request,
     response: Response,
@@ -253,7 +253,7 @@ async def logout(
     operation_id="getCurrentUser",
     summary="Get Current User",
 )
-@limiter.limit("60 per minute")
+@limiter.limit(Limits.AUTH_READ)
 async def me(
     request: Request,
     user: AuthUser,
@@ -279,7 +279,7 @@ async def me(
     operation_id="setPassword",
     summary="Set Password",
 )
-@limiter.limit("5 per minute")
+@limiter.limit(Limits.SET_PASSWORD)
 async def set_password(
     request: Request,
     body: SetPasswordRequest,
@@ -301,7 +301,7 @@ async def set_password(
 
 
 @router.get("/auth/verify", include_in_schema=False)
-@limiter.limit("60 per minute")
+@limiter.limit(Limits.DASHBOARD_READ)
 async def verify_page(
     request: Request,
     user: AuthUser,
@@ -357,7 +357,7 @@ async def send_verification(
     operation_id="verifyEmail",
     summary="Verify Email",
 )
-@limiter.limit("10 per hour")
+@limiter.limit(Limits.EMAIL_VERIFY)
 async def verify_email(
     request: Request,
     response: Response,
@@ -426,7 +426,7 @@ async def request_password_reset(
     operation_id="resetPassword",
     summary="Reset Password",
 )
-@limiter.limit("5 per hour")
+@limiter.limit(Limits.PASSWORD_RESET_CONFIRM)
 async def reset_password(
     request: Request,
     body: ResetPasswordRequest,

@@ -27,7 +27,7 @@ from dependencies import (
     get_profile_picture_service,
 )
 from errors import NotFoundError
-from middleware.rate_limiter import limiter
+from middleware.rate_limiter import Limits, limiter
 from services.profile_picture_service import ProfilePictureService
 from shared.logging import get_logger
 
@@ -68,7 +68,7 @@ async def _render_dashboard_page(
 
 @router.get("")
 @router.get("/")
-@limiter.limit("30 per minute")
+@limiter.limit(Limits.DASHBOARD_WRITE)
 async def dashboard_root(
     request: Request,
     user: OptionalUser,
@@ -79,7 +79,7 @@ async def dashboard_root(
 
 
 @router.get("/links")
-@limiter.limit("30 per minute")
+@limiter.limit(Limits.DASHBOARD_WRITE)
 async def dashboard_links(
     request: Request,
     user: OptionalUser,
@@ -89,7 +89,7 @@ async def dashboard_links(
 
 
 @router.get("/keys")
-@limiter.limit("30 per minute")
+@limiter.limit(Limits.DASHBOARD_WRITE)
 async def dashboard_keys(
     request: Request,
     user: OptionalUser,
@@ -99,7 +99,7 @@ async def dashboard_keys(
 
 
 @router.get("/statistics")
-@limiter.limit("30 per minute")
+@limiter.limit(Limits.DASHBOARD_WRITE)
 async def dashboard_statistics(
     request: Request,
     user: OptionalUser,
@@ -109,7 +109,7 @@ async def dashboard_statistics(
 
 
 @router.get("/settings")
-@limiter.limit("30 per minute")
+@limiter.limit(Limits.DASHBOARD_WRITE)
 async def dashboard_settings(
     request: Request,
     user: OptionalUser,
@@ -119,7 +119,7 @@ async def dashboard_settings(
 
 
 @router.get("/billing")
-@limiter.limit("30 per minute")
+@limiter.limit(Limits.DASHBOARD_WRITE)
 async def dashboard_billing(
     request: Request,
     user: OptionalUser,
@@ -136,7 +136,7 @@ class SetProfilePictureRequest(BaseModel):
 
 
 @router.get("/profile-pictures")
-@limiter.limit("30 per minute")
+@limiter.limit(Limits.DASHBOARD_WRITE)
 async def get_profile_pictures(
     request: Request,
     user: AuthUser,
@@ -147,7 +147,7 @@ async def get_profile_pictures(
 
 
 @router.post("/profile-pictures")
-@limiter.limit("10 per minute")
+@limiter.limit(Limits.PROFILE_PICTURE_SET)
 async def set_profile_picture(
     request: Request,
     body: SetProfilePictureRequest,
