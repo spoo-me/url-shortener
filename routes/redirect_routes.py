@@ -17,7 +17,7 @@ from fastapi.templating import Jinja2Templates
 
 from dependencies import get_click_service, get_url_service
 from errors import ForbiddenError, GoneError, NotFoundError, ValidationError
-from middleware.rate_limiter import limiter
+from middleware.rate_limiter import Limits, limiter
 from services.click import ClickService
 from services.url_service import UrlService
 from shared.crypto import verify_password
@@ -141,7 +141,7 @@ async def redirect_url(
 
 
 @router.post("/{short_code}/password", include_in_schema=False)
-@limiter.limit("10 per minute; 30 per hour")
+@limiter.limit(Limits.PASSWORD_CHECK)
 async def check_password(
     short_code: str,
     request: Request,

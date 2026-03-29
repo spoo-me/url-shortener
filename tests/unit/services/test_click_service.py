@@ -15,7 +15,7 @@ Tests verify:
 
 from __future__ import annotations
 
-from typing import Optional
+from dataclasses import dataclass
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -54,8 +54,8 @@ BOT_UA = (
 
 def make_v2_cache(
     block_bots: bool = False,
-    max_clicks: Optional[int] = None,
-    owner_id: Optional[str] = None,
+    max_clicks: int | None = None,
+    owner_id: str | None = None,
 ) -> UrlCacheData:
     return UrlCacheData(
         _id=str(URL_OID),
@@ -89,22 +89,34 @@ def make_v1_cache(
     )
 
 
-def make_repos_and_geoip():
-    click_repo = AsyncMock()
-    url_repo = AsyncMock()
-    legacy_repo = AsyncMock()
-    emoji_repo = AsyncMock()
-    geoip = AsyncMock()
-    url_cache = AsyncMock()
+@dataclass
+class TestDeps:
+    click_repo: AsyncMock
+    url_repo: AsyncMock
+    legacy_repo: AsyncMock
+    emoji_repo: AsyncMock
+    geoip: AsyncMock
+    url_cache: AsyncMock
+
+
+def make_deps() -> TestDeps:
+    deps = TestDeps(
+        click_repo=AsyncMock(),
+        url_repo=AsyncMock(),
+        legacy_repo=AsyncMock(),
+        emoji_repo=AsyncMock(),
+        geoip=AsyncMock(),
+        url_cache=AsyncMock(),
+    )
 
     # sensible defaults
-    geoip.get_country.return_value = "United States"
-    geoip.get_city.return_value = "New York"
-    url_repo.increment_clicks.return_value = None
-    url_repo.expire_if_max_clicks.return_value = False
-    click_repo.insert.return_value = None
+    deps.geoip.get_country.return_value = "United States"
+    deps.geoip.get_city.return_value = "New York"
+    deps.url_repo.increment_clicks.return_value = None
+    deps.url_repo.expire_if_max_clicks.return_value = False
+    deps.click_repo.insert.return_value = None
 
-    return click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache
+    return deps
 
 
 def make_v2_handler(click_repo, url_repo, geoip, url_cache) -> V2ClickHandler:
@@ -130,9 +142,9 @@ def make_context(
     client_ip: str = CLIENT_IP,
     start_time: float = START_TIME,
     user_agent: str = NORMAL_UA,
-    referrer: Optional[str] = None,
+    referrer: str | None = None,
     is_emoji: bool = False,
-    cf_city: Optional[str] = None,
+    cf_city: str | None = None,
 ) -> ClickContext:
     return ClickContext(
         url_data=url_data,
@@ -154,28 +166,24 @@ def make_context(
 class TestV2ClickHandler:
     @pytest.mark.asyncio
     async def test_inserts_click_and_increments_url(self):
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_v2_handler(click_repo, url_repo, geoip, url_cache)
+        d = make_deps()
+        handler = make_v2_handler(d.click_repo, d.url_repo, d.geoip, d.url_cache)
         url_data = make_v2_cache()
 
         await handler.handle(make_context(url_data))
 
-        click_repo.insert.assert_called_once()
-        url_repo.increment_clicks.assert_called_once()
+        d.click_repo.insert.assert_called_once()
+        d.url_repo.increment_clicks.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_click_doc_has_correct_fields(self):
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_v2_handler(click_repo, url_repo, geoip, url_cache)
+        d = make_deps()
+        handler = make_v2_handler(d.click_repo, d.url_repo, d.geoip, d.url_cache)
         url_data = make_v2_cache()
 
         await handler.handle(make_context(url_data))
 
-        doc = click_repo.insert.call_args[0][0]
+        doc = d.click_repo.insert.call_args[0][0]
         assert "clicked_at" in doc
         assert "meta" in doc
         assert doc["meta"]["short_code"] == ALIAS
@@ -185,98 +193,86 @@ class TestV2ClickHandler:
     @pytest.mark.asyncio
     async def test_blocked_bot_skips_analytics_no_error(self):
         """v2: blocked bot → skip analytics, no exception raised (redirect proceeds)."""
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_v2_handler(click_repo, url_repo, geoip, url_cache)
+        d = make_deps()
+        handler = make_v2_handler(d.click_repo, d.url_repo, d.geoip, d.url_cache)
         url_data = make_v2_cache(block_bots=True)
 
         with patch("shared.bot_detection.is_bot_request", return_value=True):
             # Should NOT raise
             await handler.handle(make_context(url_data, user_agent=BOT_UA))
 
-        click_repo.insert.assert_not_called()
-        url_repo.increment_clicks.assert_not_called()
+        d.click_repo.insert.assert_not_called()
+        d.url_repo.increment_clicks.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_unblocked_bot_still_tracked(self):
         """v2 with block_bots=False: bot is still tracked normally."""
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_v2_handler(click_repo, url_repo, geoip, url_cache)
+        d = make_deps()
+        handler = make_v2_handler(d.click_repo, d.url_repo, d.geoip, d.url_cache)
         url_data = make_v2_cache(block_bots=False)
 
-        with patch("shared.bot_detection.is_bot_request", return_value=True):
-            with patch("shared.bot_detection.get_bot_name", return_value="Googlebot"):
-                await handler.handle(make_context(url_data, user_agent=BOT_UA))
+        with (
+            patch("shared.bot_detection.is_bot_request", return_value=True),
+            patch("shared.bot_detection.get_bot_name", return_value="Googlebot"),
+        ):
+            await handler.handle(make_context(url_data, user_agent=BOT_UA))
 
-        click_repo.insert.assert_called_once()
-        url_repo.increment_clicks.assert_called_once()
+        d.click_repo.insert.assert_called_once()
+        d.url_repo.increment_clicks.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_max_clicks_expiry_invalidates_cache(self):
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_v2_handler(click_repo, url_repo, geoip, url_cache)
+        d = make_deps()
+        handler = make_v2_handler(d.click_repo, d.url_repo, d.geoip, d.url_cache)
         url_data = make_v2_cache(max_clicks=100)
-        url_repo.expire_if_max_clicks.return_value = True  # URL just expired
+        d.url_repo.expire_if_max_clicks.return_value = True  # URL just expired
 
         await handler.handle(make_context(url_data))
 
-        url_repo.expire_if_max_clicks.assert_called_once_with(URL_OID, 100)
-        url_cache.invalidate.assert_called_once_with(ALIAS)
+        d.url_repo.expire_if_max_clicks.assert_called_once_with(URL_OID, 100)
+        d.url_cache.invalidate.assert_called_once_with(ALIAS)
 
     @pytest.mark.asyncio
     async def test_max_clicks_not_reached_no_cache_invalidation(self):
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_v2_handler(click_repo, url_repo, geoip, url_cache)
+        d = make_deps()
+        handler = make_v2_handler(d.click_repo, d.url_repo, d.geoip, d.url_cache)
         url_data = make_v2_cache(max_clicks=100)
-        url_repo.expire_if_max_clicks.return_value = False
+        d.url_repo.expire_if_max_clicks.return_value = False
 
         await handler.handle(make_context(url_data))
 
-        url_cache.invalidate.assert_not_called()
+        d.url_cache.invalidate.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_geoip_failure_falls_back_to_unknown(self):
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        geoip.get_country.return_value = "Unknown"
-        geoip.get_city.return_value = None
-        handler = make_v2_handler(click_repo, url_repo, geoip, url_cache)
+        d = make_deps()
+        d.geoip.get_country.return_value = "Unknown"
+        d.geoip.get_city.return_value = None
+        handler = make_v2_handler(d.click_repo, d.url_repo, d.geoip, d.url_cache)
         url_data = make_v2_cache()
 
         await handler.handle(make_context(url_data))
 
-        doc = click_repo.insert.call_args[0][0]
+        doc = d.click_repo.insert.call_args[0][0]
         assert doc["country"] == "Unknown"
         assert doc["city"] == "Unknown"
 
     @pytest.mark.asyncio
     async def test_cf_city_fallback_when_geoip_returns_none(self):
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        geoip.get_city.return_value = None  # GeoIP city unavailable
-        handler = make_v2_handler(click_repo, url_repo, geoip, url_cache)
+        d = make_deps()
+        d.geoip.get_city.return_value = None  # GeoIP city unavailable
+        handler = make_v2_handler(d.click_repo, d.url_repo, d.geoip, d.url_cache)
         url_data = make_v2_cache()
 
         await handler.handle(make_context(url_data, cf_city="London"))
 
-        doc = click_repo.insert.call_args[0][0]
+        doc = d.click_repo.insert.call_args[0][0]
         assert doc["city"] == "London"
 
     @pytest.mark.asyncio
     async def test_empty_user_agent_raises_validation_error(self):
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_v2_handler(click_repo, url_repo, geoip, url_cache)
+        d = make_deps()
+        handler = make_v2_handler(d.click_repo, d.url_repo, d.geoip, d.url_cache)
         url_data = make_v2_cache()
 
         with pytest.raises(ValidationError):
@@ -284,10 +280,8 @@ class TestV2ClickHandler:
 
     @pytest.mark.asyncio
     async def test_referrer_is_sanitized_in_click_doc(self):
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_v2_handler(click_repo, url_repo, geoip, url_cache)
+        d = make_deps()
+        handler = make_v2_handler(d.click_repo, d.url_repo, d.geoip, d.url_cache)
         url_data = make_v2_cache()
 
         await handler.handle(
@@ -297,22 +291,20 @@ class TestV2ClickHandler:
             )
         )
 
-        doc = click_repo.insert.call_args[0][0]
+        doc = d.click_repo.insert.call_args[0][0]
         # referrer should be domain only, sanitized
         assert doc["referrer"] == "google.com"
 
     @pytest.mark.asyncio
     async def test_anonymous_owner_uses_sentinel(self):
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_v2_handler(click_repo, url_repo, geoip, url_cache)
+        d = make_deps()
+        handler = make_v2_handler(d.click_repo, d.url_repo, d.geoip, d.url_cache)
         url_data = make_v2_cache(owner_id=None)
         url_data.owner_id = None  # override
 
         await handler.handle(make_context(url_data))
 
-        doc = click_repo.insert.call_args[0][0]
+        doc = d.click_repo.insert.call_args[0][0]
         assert doc["meta"]["owner_id"] == ANONYMOUS_OWNER_ID
 
 
@@ -324,10 +316,8 @@ class TestV2ClickHandler:
 class TestLegacyClickHandler:
     @pytest.mark.asyncio
     async def test_builds_update_doc_and_calls_legacy_repo(self):
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_legacy_handler(legacy_repo, emoji_repo, geoip)
+        d = make_deps()
+        handler = make_legacy_handler(d.legacy_repo, d.emoji_repo, d.geoip)
         url_data = make_v1_cache(short_code="abcdef")
 
         with patch("shared.bot_detection.is_bot_request", return_value=False):
@@ -335,8 +325,8 @@ class TestLegacyClickHandler:
                 make_context(url_data, short_code="abcdef", is_emoji=False)
             )
 
-        legacy_repo.update.assert_called_once()
-        update_doc = legacy_repo.update.call_args[0][1]
+        d.legacy_repo.update.assert_called_once()
+        update_doc = d.legacy_repo.update.call_args[0][1]
         assert "$inc" in update_doc
         assert "$set" in update_doc
         assert "$addToSet" in update_doc
@@ -344,10 +334,8 @@ class TestLegacyClickHandler:
 
     @pytest.mark.asyncio
     async def test_emoji_url_calls_emoji_repo(self):
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_legacy_handler(legacy_repo, emoji_repo, geoip)
+        d = make_deps()
+        handler = make_legacy_handler(d.legacy_repo, d.emoji_repo, d.geoip)
         url_data = make_v1_cache(short_code="🐍🔥💎")
         url_data.schema_version = "emoji"
 
@@ -356,59 +344,57 @@ class TestLegacyClickHandler:
                 make_context(url_data, short_code="🐍🔥💎", is_emoji=True)
             )
 
-        emoji_repo.update.assert_called_once()
-        legacy_repo.update.assert_not_called()
+        d.emoji_repo.update.assert_called_once()
+        d.legacy_repo.update.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_blocked_bot_v1_raises_forbidden(self):
         """v1: blocked bot → ForbiddenError (redirect is also blocked)."""
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_legacy_handler(legacy_repo, emoji_repo, geoip)
+        d = make_deps()
+        handler = make_legacy_handler(d.legacy_repo, d.emoji_repo, d.geoip)
         url_data = make_v1_cache(block_bots=True, short_code="abcdef")
 
-        with patch("shared.bot_detection.is_bot_request", return_value=True):
-            with pytest.raises(ForbiddenError):
-                await handler.handle(
-                    make_context(
-                        url_data,
-                        short_code="abcdef",
-                        user_agent=BOT_UA,
-                        is_emoji=False,
-                    )
+        with (
+            patch("shared.bot_detection.is_bot_request", return_value=True),
+            pytest.raises(ForbiddenError),
+        ):
+            await handler.handle(
+                make_context(
+                    url_data,
+                    short_code="abcdef",
+                    user_agent=BOT_UA,
+                    is_emoji=False,
                 )
+            )
 
-        legacy_repo.update.assert_not_called()
+        d.legacy_repo.update.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_unblocked_bot_v1_tracked_no_error(self):
         """v1 with block_bots=False: bot is counted but no exception."""
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_legacy_handler(legacy_repo, emoji_repo, geoip)
+        d = make_deps()
+        handler = make_legacy_handler(d.legacy_repo, d.emoji_repo, d.geoip)
         url_data = make_v1_cache(block_bots=False, short_code="abcdef")
 
-        with patch("shared.bot_detection.is_bot_request", return_value=True):
-            with patch("shared.bot_detection.get_bot_name", return_value="Googlebot"):
-                await handler.handle(
-                    make_context(
-                        url_data,
-                        short_code="abcdef",
-                        user_agent=BOT_UA,
-                        is_emoji=False,
-                    )
+        with (
+            patch("shared.bot_detection.is_bot_request", return_value=True),
+            patch("shared.bot_detection.get_bot_name", return_value="Googlebot"),
+        ):
+            await handler.handle(
+                make_context(
+                    url_data,
+                    short_code="abcdef",
+                    user_agent=BOT_UA,
+                    is_emoji=False,
                 )
+            )
 
-        legacy_repo.update.assert_called_once()
+        d.legacy_repo.update.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_empty_user_agent_raises_validation_error(self):
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_legacy_handler(legacy_repo, emoji_repo, geoip)
+        d = make_deps()
+        handler = make_legacy_handler(d.legacy_repo, d.emoji_repo, d.geoip)
         url_data = make_v1_cache()
 
         with pytest.raises(ValidationError):
@@ -416,10 +402,8 @@ class TestLegacyClickHandler:
 
     @pytest.mark.asyncio
     async def test_referrer_added_to_update_doc(self):
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_legacy_handler(legacy_repo, emoji_repo, geoip)
+        d = make_deps()
+        handler = make_legacy_handler(d.legacy_repo, d.emoji_repo, d.geoip)
         url_data = make_v1_cache(short_code="abcdef")
 
         with patch("shared.bot_detection.is_bot_request", return_value=False):
@@ -432,17 +416,15 @@ class TestLegacyClickHandler:
                 )
             )
 
-        update_doc = legacy_repo.update.call_args[0][1]
+        update_doc = d.legacy_repo.update.call_args[0][1]
         inc_keys = list(update_doc["$inc"].keys())
         referrer_keys = [k for k in inc_keys if k.startswith("referrer.")]
         assert len(referrer_keys) > 0
 
     @pytest.mark.asyncio
     async def test_last_click_metadata_in_set(self):
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_legacy_handler(legacy_repo, emoji_repo, geoip)
+        d = make_deps()
+        handler = make_legacy_handler(d.legacy_repo, d.emoji_repo, d.geoip)
         url_data = make_v1_cache(short_code="abcdef")
 
         with patch("shared.bot_detection.is_bot_request", return_value=False):
@@ -450,7 +432,7 @@ class TestLegacyClickHandler:
                 make_context(url_data, short_code="abcdef", is_emoji=False)
             )
 
-        update_doc = legacy_repo.update.call_args[0][1]
+        update_doc = d.legacy_repo.update.call_args[0][1]
         assert "last-click" in update_doc["$set"]
         assert "last-click-browser" in update_doc["$set"]
         assert "last-click-os" in update_doc["$set"]
@@ -459,10 +441,8 @@ class TestLegacyClickHandler:
     @pytest.mark.asyncio
     async def test_unique_click_counter_incremented(self):
         """Every click is treated as unique since ips are not tracked in UrlCacheData."""
-        click_repo, url_repo, legacy_repo, emoji_repo, geoip, url_cache = (
-            make_repos_and_geoip()
-        )
-        handler = make_legacy_handler(legacy_repo, emoji_repo, geoip)
+        d = make_deps()
+        handler = make_legacy_handler(d.legacy_repo, d.emoji_repo, d.geoip)
         url_data = make_v1_cache(short_code="abcdef")
 
         with patch("shared.bot_detection.is_bot_request", return_value=False):
@@ -470,7 +450,7 @@ class TestLegacyClickHandler:
                 make_context(url_data, short_code="abcdef", is_emoji=False)
             )
 
-        update_doc = legacy_repo.update.call_args[0][1]
+        update_doc = d.legacy_repo.update.call_args[0][1]
         unique_keys = [k for k in update_doc["$inc"] if k.startswith("unique_counter.")]
         assert len(unique_keys) == 1
 

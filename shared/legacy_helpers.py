@@ -6,15 +6,13 @@ and utils/pipeline_utils.py. They are used only by routes/legacy/ endpoints.
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import Any
 
 
 def is_positive_integer(value) -> bool:
     try:
         int(value)
-        if int(value) < 0:
-            return False
-        return True
+        return not int(value) < 0
     except ValueError:
         return False
     except TypeError:
@@ -26,10 +24,10 @@ def humanize_number(num) -> str:
     while abs(num) >= 1000:
         magnitude += 1
         num /= 1000.0
-    return "%d%s+" % (num, ["", "K", "M", "B", "T", "P"][magnitude])
+    return f"{int(num)}{['', 'K', 'M', 'B', 'T', 'P'][magnitude]}+"
 
 
-def convert_country_data(data) -> List[Dict[str, Any]]:
+def convert_country_data(data) -> list[dict[str, Any]]:
     from shared.aggregation_strategies import convert_country_name
 
     return [{"id": convert_country_name(k), "value": v} for k, v in data.items()]

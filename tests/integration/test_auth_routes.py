@@ -23,10 +23,10 @@ os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
 
 from config import AppSettings
 from dependencies import (
+    CurrentUser,
     get_auth_service,
     get_oauth_service,
     require_auth,
-    CurrentUser,
 )
 from errors import (
     AuthenticationError,
@@ -591,11 +591,12 @@ def test_oauth_callback_missing_state_returns_400():
     app = _build_test_app({get_oauth_service: lambda: mock_oauth_svc})
 
     # Patch PROVIDER_STRATEGIES so provider lookup succeeds
-    with patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": MagicMock()}):
-        # We need oauth_providers on app.state too
-        with TestClient(app, raise_server_exceptions=False) as client:
-            # No providers configured → 404 before state check
-            resp = client.get("/oauth/google/callback")
+    with (
+        patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": MagicMock()}),
+        TestClient(app, raise_server_exceptions=False) as client,
+    ):
+        # No providers configured → 404 before state check
+        resp = client.get("/oauth/google/callback")
     # Without a configured client we get 404 (provider not configured)
     assert resp.status_code in (400, 404)
 
@@ -622,7 +623,9 @@ def test_oauth_callback_invalid_state_returns_400():
     application.include_router(oauth_router)
     application.dependency_overrides[get_oauth_service] = lambda: mock_oauth_svc
 
-    with patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": MagicMock()}):
-        with TestClient(application, raise_server_exceptions=False) as client:
-            resp = client.get("/oauth/google/callback?state=malformed")
+    with (
+        patch("routes.oauth_routes.PROVIDER_STRATEGIES", {"google": MagicMock()}),
+        TestClient(application, raise_server_exceptions=False) as client,
+    ):
+        resp = client.get("/oauth/google/callback?state=malformed")
     assert resp.status_code == 400

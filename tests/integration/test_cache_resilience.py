@@ -13,7 +13,6 @@ import asyncio
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Optional
 from unittest.mock import AsyncMock, MagicMock
 
 from bson import ObjectId
@@ -79,9 +78,9 @@ def _make_url_cache_data(
     alias: str = "abc1234",
     long_url: str = "https://example.com",
     schema: str = "v2",
-    password_hash: Optional[str] = None,
+    password_hash: str | None = None,
     block_bots: bool = False,
-    max_clicks: Optional[int] = None,
+    max_clicks: int | None = None,
     total_clicks: int = 0,
     url_status: str = "ACTIVE",
 ) -> UrlCacheData:
@@ -102,7 +101,7 @@ def _make_url_cache_data(
 
 def _make_url_service(
     cache: UrlCache,
-    v2_doc_from_db: Optional[object] = None,
+    v2_doc_from_db: object | None = None,
 ) -> UrlService:
     """Build a real UrlService with mock repos but the given cache."""
     url_repo = AsyncMock()
@@ -159,7 +158,7 @@ def _make_v2_doc_mock(
 def _make_real_v2_doc(
     alias: str = "abc1234",
     long_url: str = "https://example.com",
-    owner_id: Optional[ObjectId] = None,
+    owner_id: ObjectId | None = None,
 ) -> UrlV2Doc:
     """Create a real UrlV2Doc instance for update/delete tests."""
     oid = owner_id or ObjectId("000000000000000000000001")

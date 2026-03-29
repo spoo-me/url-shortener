@@ -19,8 +19,6 @@ from fastapi.responses import RedirectResponse
 
 from dependencies import AuthUser, get_oauth_service
 from errors import AppError, NotFoundError, ValidationError
-from schemas.dto.responses.auth import OAuthProvidersResponse
-from schemas.dto.responses.common import MessageResponse
 from infrastructure.oauth_clients import (
     PROVIDER_STRATEGIES,
     generate_oauth_state,
@@ -28,8 +26,10 @@ from infrastructure.oauth_clients import (
     verify_oauth_state,
 )
 from middleware.openapi import ERROR_RESPONSES, PUBLIC_SECURITY
-from middleware.rate_limiter import limiter
+from middleware.rate_limiter import Limits, limiter
 from routes.cookie_helpers import set_auth_cookies
+from schemas.dto.responses.auth import OAuthProvidersResponse
+from schemas.dto.responses.common import MessageResponse
 from services.oauth_service import OAuthService
 from shared.ip_utils import get_client_ip
 from shared.logging import get_logger
@@ -50,7 +50,7 @@ _DASHBOARD_URL = "/dashboard"
     operation_id="listOAuthProviders",
     summary="List OAuth Providers",
 )
-@limiter.limit("60 per minute")
+@limiter.limit(Limits.AUTH_READ)
 async def list_providers(
     request: Request,
     user: AuthUser,
@@ -76,7 +76,7 @@ async def list_providers(
     operation_id="unlinkOAuthProvider",
     summary="Unlink OAuth Provider",
 )
-@limiter.limit("5 per minute")
+@limiter.limit(Limits.OAUTH_DISCONNECT)
 async def unlink_provider(
     provider_name: str,
     request: Request,
@@ -108,7 +108,7 @@ async def unlink_provider(
     operation_id="initiateOAuthLogin",
     summary="OAuth Login",
 )
-@limiter.limit("10 per minute")
+@limiter.limit(Limits.OAUTH_INIT)
 async def oauth_login(
     provider: str,
     request: Request,
@@ -143,7 +143,7 @@ async def oauth_login(
     operation_id="oauthCallback",
     summary="OAuth Callback",
 )
-@limiter.limit("20 per minute")
+@limiter.limit(Limits.OAUTH_CALLBACK)
 async def oauth_callback(
     provider: str,
     request: Request,
@@ -205,7 +205,7 @@ async def oauth_callback(
     # ── Delegate to service ───────────────────────────────────────────────────
     action = state_data.get("action", "login")
     client_ip = get_client_ip(request)
-    user, access_token, refresh_token = await oauth_service.handle_callback(
+    _user, access_token, refresh_token = await oauth_service.handle_callback(
         provider, provider_info, action, state_data, client_ip
     )
 
@@ -222,7 +222,7 @@ async def oauth_callback(
     operation_id="linkOAuthProvider",
     summary="Link OAuth Provider",
 )
-@limiter.limit("5 per minute")
+@limiter.limit(Limits.OAUTH_LINK)
 async def oauth_link(
     provider: str,
     request: Request,

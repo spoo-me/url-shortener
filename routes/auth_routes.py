@@ -28,7 +28,7 @@ from fastapi.templating import Jinja2Templates
 from dependencies import AuthUser, get_auth_service
 from errors import AuthenticationError
 from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES, PUBLIC_SECURITY
-from middleware.rate_limiter import limiter
+from middleware.rate_limiter import Limits, limiter
 from routes.cookie_helpers import clear_auth_cookies, set_auth_cookies
 from schemas.dto.requests.auth import (
     LoginRequest,
@@ -92,7 +92,7 @@ async def signup_redirect() -> RedirectResponse:
     operation_id="loginUser",
     summary="Login",
 )
-@limiter.limit("5 per minute; 50 per day")
+@limiter.limit(Limits.LOGIN)
 async def login(
     request: Request,
     response: Response,
@@ -130,7 +130,7 @@ async def login(
     operation_id="registerUser",
     summary="Register",
 )
-@limiter.limit("5 per minute; 50 per day")
+@limiter.limit(Limits.SIGNUP)
 async def register(
     request: Request,
     response: Response,
@@ -174,7 +174,7 @@ async def register(
     operation_id="refreshTokens",
     summary="Refresh Tokens",
 )
-@limiter.limit("20 per minute")
+@limiter.limit(Limits.TOKEN_REFRESH)
 async def refresh(
     request: Request,
     auth_service: AuthService = Depends(get_auth_service),
@@ -203,7 +203,7 @@ async def refresh(
         return resp
 
     try:
-        user, new_access, new_refresh = await auth_service.refresh_token(
+        _user, new_access, new_refresh = await auth_service.refresh_token(
             refresh_token_str
         )
     except AuthenticationError as exc:
@@ -228,7 +228,7 @@ async def refresh(
     operation_id="logout",
     summary="Logout",
 )
-@limiter.limit("60 per hour")
+@limiter.limit(Limits.LOGOUT)
 async def logout(
     request: Request,
     response: Response,
@@ -253,7 +253,7 @@ async def logout(
     operation_id="getCurrentUser",
     summary="Get Current User",
 )
-@limiter.limit("60 per minute")
+@limiter.limit(Limits.AUTH_READ)
 async def me(
     request: Request,
     user: AuthUser,
@@ -279,7 +279,7 @@ async def me(
     operation_id="setPassword",
     summary="Set Password",
 )
-@limiter.limit("5 per minute")
+@limiter.limit(Limits.SET_PASSWORD)
 async def set_password(
     request: Request,
     body: SetPasswordRequest,
@@ -301,7 +301,7 @@ async def set_password(
 
 
 @router.get("/auth/verify", include_in_schema=False)
-@limiter.limit("60 per minute")
+@limiter.limit(Limits.DASHBOARD_READ)
 async def verify_page(
     request: Request,
     user: AuthUser,
@@ -325,7 +325,7 @@ async def verify_page(
     operation_id="sendVerification",
     summary="Send Verification Email",
 )
-@limiter.limit("3 per hour")
+@limiter.limit(Limits.RESEND_VERIFICATION)
 async def send_verification(
     request: Request,
     user: AuthUser,
@@ -334,12 +334,11 @@ async def send_verification(
     """Send a 6-digit OTP verification code to the user's email.
 
     The code expires after the duration returned in ``expires_in`` (seconds).
-    If the user is already verified, the request still succeeds but no email
-    is sent.
+    Returns 400 if the user's email is already verified.
 
     **Authentication**: Required (JWT or API key)
 
-    **Rate Limits**: 3/hour
+    **Rate Limits**: 1/minute, 3/hour
 
     **Notes**: Previous unused OTPs are invalidated when a new one is sent.
     """
@@ -357,7 +356,7 @@ async def send_verification(
     operation_id="verifyEmail",
     summary="Verify Email",
 )
-@limiter.limit("10 per hour")
+@limiter.limit(Limits.EMAIL_VERIFY)
 async def verify_email(
     request: Request,
     response: Response,
@@ -395,7 +394,7 @@ async def verify_email(
     operation_id="requestPasswordReset",
     summary="Request Password Reset",
 )
-@limiter.limit("3 per hour")
+@limiter.limit(Limits.PASSWORD_RESET_REQUEST)
 async def request_password_reset(
     request: Request,
     body: RequestPasswordResetRequest,
@@ -426,7 +425,7 @@ async def request_password_reset(
     operation_id="resetPassword",
     summary="Reset Password",
 )
-@limiter.limit("5 per hour")
+@limiter.limit(Limits.PASSWORD_RESET_CONFIRM)
 async def reset_password(
     request: Request,
     body: ResetPasswordRequest,

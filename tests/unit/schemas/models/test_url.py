@@ -7,7 +7,6 @@ from schemas.models.url import EmojiUrlDoc, LegacyUrlDoc, UrlV2Doc
 
 from .conftest import now, oid
 
-
 # ── UrlV2Doc ──────────────────────────────────────────────────────────────────
 
 

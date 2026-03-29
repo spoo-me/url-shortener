@@ -8,7 +8,6 @@ import pytest
 
 from errors import AppError, ForbiddenError, ValidationError
 
-
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 
@@ -69,7 +68,7 @@ class TestSendContactMessage:
     @pytest.mark.asyncio
     async def test_captcha_verified_before_webhook(self):
         """Captcha must be checked before the webhook is called."""
-        svc, contact_webhook, _, captcha = make_service(captcha_ok=False)
+        svc, contact_webhook, _, _captcha = make_service(captcha_ok=False)
 
         with pytest.raises(ForbiddenError):
             await svc.send_contact_message(
@@ -189,7 +188,7 @@ class TestSendReport:
     @pytest.mark.asyncio
     async def test_captcha_checked_before_existence(self):
         """Captcha must fail fast before the url_exists check matters."""
-        svc, _, report_webhook, captcha = make_service(captcha_ok=False)
+        svc, _, report_webhook, _captcha = make_service(captcha_ok=False)
 
         with pytest.raises(ForbiddenError):
             await svc.send_report(

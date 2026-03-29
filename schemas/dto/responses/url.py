@@ -13,8 +13,6 @@ endpoints exactly, including the camelCase keys in UrlListResponse
 
 from __future__ import annotations
 
-from typing import Optional
-
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -35,7 +33,7 @@ class UrlResponse(BaseModel):
         description="Original destination URL.",
         examples=["https://example.com/long/url"],
     )
-    owner_id: Optional[str] = Field(
+    owner_id: str | None = Field(
         default=None,
         description="User ID if authenticated, null for anonymous URLs.",
         examples=["507f1f77bcf86cd799439011"],
@@ -45,7 +43,7 @@ class UrlResponse(BaseModel):
         examples=[1704067200],
     )
     status: str = Field(description="URL status.", examples=["ACTIVE"])
-    private_stats: Optional[bool] = Field(
+    private_stats: bool | None = Field(
         default=None,
         description="Whether statistics are private (owner-only).",
     )
@@ -65,30 +63,30 @@ class UpdateUrlResponse(BaseModel):
         description="MongoDB ObjectId of the URL.",
         examples=["507f1f77bcf86cd799439011"],
     )
-    alias: Optional[str] = Field(
+    alias: str | None = Field(
         default=None, description="Short code.", examples=["mylink"]
     )
-    long_url: Optional[str] = Field(
+    long_url: str | None = Field(
         default=None,
         description="Destination URL.",
         examples=["https://example.com/long/url"],
     )
-    status: Optional[str] = Field(
+    status: str | None = Field(
         default=None, description="URL status.", examples=["ACTIVE"]
     )
     password_set: bool = Field(description="Whether the URL is password-protected.")
-    max_clicks: Optional[int] = Field(
+    max_clicks: int | None = Field(
         default=None, description="Click limit, or null if unlimited.", examples=[100]
     )
-    expire_after: Optional[int] = Field(
+    expire_after: int | None = Field(
         default=None,
         description="Expiration as Unix timestamp, or null.",
         examples=[1735689599],
     )
-    block_bots: Optional[bool] = Field(
+    block_bots: bool | None = Field(
         default=None, description="Whether bot blocking is enabled."
     )
-    private_stats: Optional[bool] = Field(
+    private_stats: bool | None = Field(
         default=None, description="Whether statistics are private."
     )
     updated_at: int = Field(
@@ -107,17 +105,17 @@ class UrlListItem(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     id: str
-    alias: Optional[str] = None
-    long_url: Optional[str] = None
-    status: Optional[str] = None
-    created_at: Optional[str] = None  # ISO 8601 string
-    expire_after: Optional[int] = None  # Unix timestamp or null
-    max_clicks: Optional[int] = None
-    private_stats: Optional[bool] = None
-    block_bots: Optional[bool] = None
+    alias: str | None = None
+    long_url: str | None = None
+    status: str | None = None
+    created_at: str | None = None  # ISO 8601 string
+    expire_after: int | None = None  # Unix timestamp or null
+    max_clicks: int | None = None
+    private_stats: bool | None = None
+    block_bots: bool | None = None
     password_set: bool
-    total_clicks: Optional[int] = None
-    last_click: Optional[str] = None  # ISO 8601 string or null
+    total_clicks: int | None = None
+    last_click: str | None = None  # ISO 8601 string or null
 
 
 class DeleteUrlResponse(BaseModel):

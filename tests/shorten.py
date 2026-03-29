@@ -1,7 +1,8 @@
-import sys
-import requests
 import random
 import string
+import sys
+
+import requests
 
 BASE_URL = "http://localhost:8000"
 

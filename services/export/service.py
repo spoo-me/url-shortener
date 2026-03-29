@@ -16,7 +16,6 @@ utils/export_utils.py directly — that path is unaffected by this service.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 from errors import ValidationError
 from services.export.protocol import ExportFormatter
@@ -46,11 +45,11 @@ class ExportService:
     async def export(
         self,
         fmt: str,
-        owner_id: Optional[str],
+        owner_id: str | None,
         scope: str,
-        short_code: Optional[str],
-        start_date: Optional[datetime],
-        end_date: Optional[datetime],
+        short_code: str | None,
+        start_date: datetime | None,
+        end_date: datetime | None,
         filters: dict[str, list[str]],
         group_by: list[str],
         metrics: list[str],

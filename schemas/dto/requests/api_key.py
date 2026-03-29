@@ -6,8 +6,6 @@ CreateApiKeyRequest — POST /api/v1/keys
 
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 ALLOWED_SCOPES = frozenset(
@@ -30,7 +28,7 @@ class CreateApiKeyRequest(BaseModel):
         description="Human-readable key name",
         examples=["My Production Key"],
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         default=None,
         description="Optional description of what this key is used for",
         examples=["Used by the mobile app for URL shortening"],
@@ -39,7 +37,7 @@ class CreateApiKeyRequest(BaseModel):
         description="Permission scopes for the key",
         examples=[["shorten:create", "stats:read"]],
     )
-    expires_at: Optional[Union[str, int]] = Field(
+    expires_at: str | int | None = Field(
         default=None,
         description="Expiration time. ISO 8601 string (e.g. `2026-01-01T00:00:00Z`) or Unix epoch seconds (e.g. `1735689599`). Omit for non-expiring key.",
         examples=["2026-01-01T00:00:00Z", 1735689599],

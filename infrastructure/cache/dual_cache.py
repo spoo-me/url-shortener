@@ -12,7 +12,8 @@ errors are logged and swallowed so the request is never affected.
 
 import asyncio
 import json
-from typing import Any, Awaitable, Callable, Optional
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 import redis.asyncio as aioredis
 
@@ -24,7 +25,7 @@ log = get_logger(__name__)
 class DualCache:
     def __init__(
         self,
-        redis_client: Optional[aioredis.Redis],
+        redis_client: aioredis.Redis | None,
         primary_ttl: int = 300,
         stale_ttl: int = 900,
         lock_ttl: int = 30,
@@ -33,6 +34,7 @@ class DualCache:
         self.primary_ttl = primary_ttl
         self.stale_ttl = stale_ttl
         self.lock_ttl = lock_ttl
+        self._background_tasks: set[asyncio.Task] = set()
 
     async def _lock(self, key: str) -> bool:
         """Acquire a Redis SET NX EX lock. Returns True if acquired."""
@@ -45,9 +47,9 @@ class DualCache:
         self,
         base_key: str,
         query_fn: Callable[[], Awaitable[Any]],
-        serializer_fn: Optional[Callable[[Any], Any]] = None,
-        primary_ttl: Optional[int] = None,
-        stale_ttl: Optional[int] = None,
+        serializer_fn: Callable[[Any], Any] | None = None,
+        primary_ttl: int | None = None,
+        stale_ttl: int | None = None,
     ) -> Any:
         """Return cached data, or call query_fn and populate the cache.
 
@@ -77,7 +79,7 @@ class DualCache:
         stale = await self._redis.get(stale_key)
         if stale:
             if await self._lock(lock_key):
-                asyncio.create_task(
+                task = asyncio.create_task(
                     self._refresh(
                         base_key,
                         query_fn,
@@ -86,6 +88,8 @@ class DualCache:
                         effective_stale_ttl,
                     )
                 )
+                self._background_tasks.add(task)
+                task.add_done_callback(self._background_tasks.discard)
             return json.loads(stale)
 
         # 3. Full miss — fetch from DB
@@ -116,9 +120,9 @@ class DualCache:
         self,
         base_key: str,
         query_fn: Callable[[], Awaitable[Any]],
-        serializer_fn: Optional[Callable[[Any], Any]] = None,
-        primary_ttl: Optional[int] = None,
-        stale_ttl: Optional[int] = None,
+        serializer_fn: Callable[[Any], Any] | None = None,
+        primary_ttl: int | None = None,
+        stale_ttl: int | None = None,
     ) -> None:
         """Background refresh — errors are logged and swallowed."""
         effective_primary_ttl = (

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
 from unittest.mock import AsyncMock
 
 from fastapi.testclient import TestClient
@@ -39,7 +40,7 @@ _BASE_STATS_RESULT = {
 
 
 class TestStats:
-    _STATS_RESULT = {
+    _STATS_RESULT: ClassVar[dict] = {
         **_BASE_STATS_RESULT,
         "scope": "anon",
         "short_code": "abc123",

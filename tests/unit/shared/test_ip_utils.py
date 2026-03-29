@@ -8,7 +8,6 @@ from shared.ip_utils import get_client_ip
 
 from .conftest import _make_request
 
-
 # ---------------------------------------------------------------------------
 # shared.ip_utils — get_client_ip
 # ---------------------------------------------------------------------------

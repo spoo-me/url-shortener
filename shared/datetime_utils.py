@@ -9,10 +9,10 @@ canonical implementation.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
 
-def parse_datetime(value: Any) -> Optional[datetime]:
+def parse_datetime(value: Any) -> datetime | None:
     """Parse a date/time value into a timezone-aware UTC datetime.
 
     Accepts:
@@ -30,7 +30,7 @@ def parse_datetime(value: Any) -> Optional[datetime]:
     if value is None:
         return None
     try:
-        if isinstance(value, (int, float)):
+        if isinstance(value, int | float):
             return datetime.fromtimestamp(int(value), tz=timezone.utc)
         raw = str(value)
         if raw.endswith("Z"):
@@ -43,9 +43,7 @@ def parse_datetime(value: Any) -> Optional[datetime]:
         return None
 
 
-def to_unix_timestamp(
-    dt: Optional[datetime], default: Optional[int] = None
-) -> Optional[int]:
+def to_unix_timestamp(dt: datetime | None, default: int | None = None) -> int | None:
     """Convert a datetime to a Unix timestamp integer.
 
     Naive datetimes are assumed to be UTC.  Returns *default* if *dt* is ``None``.
@@ -64,7 +62,7 @@ def to_unix_timestamp(
     return int(dt.timestamp())
 
 
-def convert_to_gmt(expiration_time: str) -> Optional[datetime]:
+def convert_to_gmt(expiration_time: str) -> datetime | None:
     """Parse an ISO 8601 string and convert to UTC.
 
     Returns ``None`` for naive (timezone-unaware) strings because an

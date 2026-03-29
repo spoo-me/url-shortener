@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import time
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from typing import Any
 from zoneinfo import ZoneInfo, available_timezones
 
 from bson import ObjectId
@@ -60,7 +60,7 @@ class StatsService:
     # ── Private: timezone helpers ─────────────────────────────────────────────
 
     @staticmethod
-    def _to_user_tz(dt: Optional[datetime], tz_name: str) -> Optional[datetime]:
+    def _to_user_tz(dt: datetime | None, tz_name: str) -> datetime | None:
         """Convert a UTC datetime to the user's timezone."""
         if dt is None:
             return None
@@ -78,7 +78,7 @@ class StatsService:
             return dt
 
     @staticmethod
-    def _fmt_tz(dt: Optional[datetime], tz_name: str) -> Optional[str]:
+    def _fmt_tz(dt: datetime | None, tz_name: str) -> str | None:
         """Format a UTC datetime as an ISO 8601 string in the user's timezone."""
         converted = StatsService._to_user_tz(dt, tz_name)
         return converted.isoformat() if converted else None
@@ -88,8 +88,8 @@ class StatsService:
     @staticmethod
     def _build_click_query(
         scope: str,
-        owner_id: Optional[str],
-        short_code: Optional[str],
+        owner_id: str | None,
+        short_code: str | None,
         start_date: datetime,
         end_date: datetime,
         filters: dict[str, list[str]],
@@ -269,7 +269,7 @@ class StatsService:
     def _format_results(
         self,
         scope: str,
-        short_code: Optional[str],
+        short_code: str | None,
         start_date: datetime,
         end_date: datetime,
         filters: dict[str, list[str]],
@@ -364,7 +364,7 @@ class StatsService:
 
         # Add percentage fields to each metric dimension
         metrics = response.get("metrics", {})
-        for metric_key, metric_data in metrics.items():
+        for _metric_key, metric_data in metrics.items():
             if isinstance(metric_data, list) and metric_data:
                 total = sum(
                     item.get(list(item.keys())[-1], 0)
@@ -386,11 +386,11 @@ class StatsService:
 
     async def query(
         self,
-        owner_id: Optional[str],
+        owner_id: str | None,
         scope: str,
-        short_code: Optional[str],
-        start_date: Optional[datetime],
-        end_date: Optional[datetime],
+        short_code: str | None,
+        start_date: datetime | None,
+        end_date: datetime | None,
         filters: dict[str, list[str]],
         group_by: list[str],
         metrics: list[str],

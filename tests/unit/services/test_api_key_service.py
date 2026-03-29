@@ -98,7 +98,7 @@ class TestApiKeyServiceCreate:
         svc = make_service(repo)
         expires = datetime(2030, 1, 1, tzinfo=timezone.utc)
 
-        doc, raw_token = await svc.create(
+        doc, _raw_token = await svc.create(
             name="Named Key",
             scopes=["url:write"],
             user_id=USER_OID,

@@ -10,11 +10,10 @@ from __future__ import annotations
 import re
 import time as time_module
 from datetime import datetime, timezone
-from typing import Optional
 
+import tldextract
 from bson import ObjectId
 from ua_parser import parse as ua_parse
-import tldextract
 
 from errors import ForbiddenError, ValidationError
 from infrastructure.cache.url_cache import UrlCache
@@ -80,7 +79,7 @@ class V2ClickHandler:
             )
             raise ValidationError(
                 "An internal error occurred while processing the User-Agent"
-            )
+            ) from None
 
         if not ua or not ua.user_agent or not ua.os:
             log.debug("ua_invalid", schema="v2", user_agent=user_agent[:200])
@@ -90,7 +89,7 @@ class V2ClickHandler:
         browser = ua.user_agent.family
 
         # Referrer sanitization (v2 style)
-        sanitized_referrer: Optional[str] = None
+        sanitized_referrer: str | None = None
         if referrer:
             ext = _tld_extractor(referrer)
             domain = f"{ext.domain}.{ext.suffix}" if ext.suffix else ext.domain
@@ -215,7 +214,7 @@ class LegacyClickHandler:
         browser = ua.user_agent.family
 
         # Referrer extraction (v1 style — less sanitization than v2)
-        referrer_domain: Optional[str] = None
+        referrer_domain: str | None = None
         if referrer:
             ext = _tld_extractor(referrer)
             domain = f"{ext.domain}.{ext.suffix}" if ext.suffix else ext.domain

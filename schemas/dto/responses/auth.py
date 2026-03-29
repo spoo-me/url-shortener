@@ -13,7 +13,7 @@ VerifyEmailResponse — POST /auth/verify-email  (200)
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -26,15 +26,15 @@ class AuthProviderInfo(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    provider: Optional[str] = Field(
+    provider: str | None = Field(
         default=None, description="OAuth provider name", examples=["google"]
     )
-    email: Optional[str] = Field(
+    email: str | None = Field(
         default=None,
         description="Email address from the OAuth provider",
         examples=["user@gmail.com"],
     )
-    linked_at: Optional[str] = Field(
+    linked_at: str | None = Field(
         default=None,
         description="ISO 8601 timestamp when the provider was linked",
         examples=["2025-01-15T10:30:00+00:00"],
@@ -46,12 +46,12 @@ class UserPfp(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    url: Optional[str] = Field(
+    url: str | None = Field(
         default=None,
         description="Profile picture URL",
         examples=["https://lh3.googleusercontent.com/a/photo"],
     )
-    source: Optional[str] = Field(
+    source: str | None = Field(
         default=None, description="Source of the profile picture", examples=["google"]
     )
 
@@ -62,20 +62,20 @@ class UserProfileResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     id: str = Field(description="User ID", examples=["507f1f77bcf86cd799439011"])
-    email: Optional[str] = Field(
+    email: str | None = Field(
         default=None, description="User's email address", examples=["user@example.com"]
     )
     email_verified: bool = Field(
         description="Whether the email address has been verified"
     )
-    user_name: Optional[str] = Field(
+    user_name: str | None = Field(
         default=None, description="Display name", examples=["Jane Doe"]
     )
     plan: str = Field(description="Subscription plan", examples=["free"])
     password_set: bool = Field(description="Whether the user has set a password")
     auth_providers: list[AuthProviderInfo] = Field(description="Linked OAuth providers")
     # pfp is absent from the JSON when None (route handlers use exclude_none=True)
-    pfp: Optional[UserPfp] = Field(
+    pfp: UserPfp | None = Field(
         default=None, description="Profile picture (absent when not set)"
     )
 

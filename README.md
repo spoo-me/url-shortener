@@ -108,7 +108,7 @@ To self-host spoo.me on your server, follow the this **detailed** guide:
 ### 📂 Clone the repository (Docker Method)
 
 ```bash
-git clone https://github.com/spoo-me/url-shortener.git
+git clone https://github.com/spoo-me/spoo.git
 ```
 
 ### Rename .env.example to .env
@@ -164,7 +164,7 @@ docker-compose up -d
 ### 📂 Clone the repository
 
 ```bash
-git clone https://github.com/spoo-me/url-shortener.git
+git clone https://github.com/spoo-me/spoo.git
 ```
 
 ### Installing `uv` for tooling
@@ -212,9 +212,9 @@ Open your browser and go to `http://localhost:8000` to access the **spoo.me** UR
 
 **Contributions are always welcome!** 🎉 Here's how you can contribute:
 
-- Bugs are logged using the github issue system. To report a bug, simply [open a new issue](https://github.com/spoo-me/url-shortener/issues/new).
+- Bugs are logged using the github issue system. To report a bug, simply [open a new issue](https://github.com/spoo-me/spoo/issues/new).
 - Follow the [contribution guidelines](contributing.md) to get started.
-- Make a [pull request](https://github.com/spoo-me/url-shortener/pull) for any feature or bug fix.
+- Make a [pull request](https://github.com/spoo-me/spoo/pull) for any feature or bug fix.
 
 > [!IMPORTANT]
 > For any type of support or queries, feel free to reach out to us at <kbd>[✉️ support@spoo.me](mailto:support@spoo.me)</kbd>
@@ -229,5 +229,5 @@ Open your browser and go to `http://localhost:8000` to access the **spoo.me** UR
 All Rights Reserved</h6>
 
 <p align="center">
- <a href="https://github.com/spoo-me/url-shortener/blob/master/LICENSE.txt"><img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=APACHE-2.0&logoColor=d9e0ee&colorA=363a4f&colorB=b7bdf8"/></a>
+ <a href="https://github.com/spoo-me/spoo/blob/master/LICENSE.txt"><img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=APACHE-2.0&logoColor=d9e0ee&colorA=363a4f&colorB=b7bdf8"/></a>
 </p>

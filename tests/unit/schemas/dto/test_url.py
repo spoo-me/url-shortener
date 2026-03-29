@@ -17,7 +17,6 @@ from schemas.dto.responses.url import (
     UrlResponse,
 )
 
-
 # ── CreateUrlRequest ───────────────────────────────────────────────────────────
 
 

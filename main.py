@@ -6,6 +6,7 @@ Run with:
 """
 
 import logging
+
 from dotenv import load_dotenv
 
 load_dotenv()  # Must run before any module reads os.environ

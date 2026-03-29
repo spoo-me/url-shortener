@@ -12,7 +12,7 @@ Three separate schemas map to three MongoDB collections:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import ConfigDict, Field, field_validator
 
@@ -38,14 +38,14 @@ class UrlV2Doc(MongoBaseModel):
         return v if v is not None else ANONYMOUS_OWNER_ID
 
     created_at: datetime
-    creation_ip: Optional[str] = None
+    creation_ip: str | None = None
     long_url: str
-    password: Optional[str] = None
-    block_bots: Optional[bool] = None
-    max_clicks: Optional[int] = None
-    expire_after: Optional[datetime] = None
+    password: str | None = None
+    block_bots: bool | None = None
+    max_clicks: int | None = None
+    expire_after: datetime | None = None
     status: str = "ACTIVE"
-    private_stats: Optional[bool] = True  # None for anonymous/unowned URLs
+    private_stats: bool | None = True  # None for anonymous/unowned URLs
     total_clicks: int = 0
     last_click: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -76,20 +76,20 @@ class LegacyUrlDoc(MongoBaseModel):
     )
 
     # _id is the short code string for v1 — override base type
-    id: Optional[Any] = Field(default=None, alias="_id")
+    id: Any | None = Field(default=None, alias="_id")
 
     url: str
-    password: Optional[str] = None
+    password: str | None = None
 
     # Hyphenated field names — use aliases matching exact MongoDB keys
-    max_clicks: Optional[int] = Field(default=None, alias="max-clicks")
+    max_clicks: int | None = Field(default=None, alias="max-clicks")
     total_clicks: int = Field(default=0, alias="total-clicks")
-    block_bots: Optional[bool] = Field(default=None, alias="block-bots")
-    expiration_time: Optional[datetime] = Field(default=None, alias="expiration-time")
-    last_click: Optional[str] = Field(default=None, alias="last-click")
-    last_click_browser: Optional[str] = Field(default=None, alias="last-click-browser")
-    last_click_os: Optional[str] = Field(default=None, alias="last-click-os")
-    last_click_country: Optional[str] = Field(default=None, alias="last-click-country")
+    block_bots: bool | None = Field(default=None, alias="block-bots")
+    expiration_time: datetime | None = Field(default=None, alias="expiration-time")
+    last_click: str | None = Field(default=None, alias="last-click")
+    last_click_browser: str | None = Field(default=None, alias="last-click-browser")
+    last_click_os: str | None = Field(default=None, alias="last-click-os")
+    last_click_country: str | None = Field(default=None, alias="last-click-country")
 
     # Embedded analytics (dynamic dict fields — not typed further to preserve
     # the arbitrary key structure used for country/browser/os/referrer tracking)

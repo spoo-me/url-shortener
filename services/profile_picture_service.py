@@ -7,7 +7,6 @@ Extracts user profile building and profile picture logic from the route layer.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional
 
 from bson import ObjectId
 
@@ -22,7 +21,7 @@ class ProfilePictureService:
     def __init__(self, user_repo: UserRepository) -> None:
         self._user_repo = user_repo
 
-    async def get_dashboard_profile(self, user_id: ObjectId) -> Optional[dict]:
+    async def get_dashboard_profile(self, user_id: ObjectId) -> dict | None:
         """Fetch a minimal user profile for dashboard template rendering.
 
         Returns None if the user is not found.

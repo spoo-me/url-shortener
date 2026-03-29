@@ -10,7 +10,7 @@ All methods are async. Errors are logged and re-raised.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from pymongo.asynchronous.collection import AsyncCollection
 from pymongo.errors import DuplicateKeyError, PyMongoError
@@ -25,7 +25,7 @@ class EmojiUrlRepository:
     def __init__(self, collection: AsyncCollection) -> None:
         self._col = collection
 
-    async def find_by_id(self, alias: str) -> Optional[EmojiUrlDoc]:
+    async def find_by_id(self, alias: str) -> EmojiUrlDoc | None:
         """Find an emoji URL document by its alias (_id)."""
         try:
             doc = await self._col.find_one({"_id": alias})
@@ -91,7 +91,7 @@ class EmojiUrlRepository:
             )
             raise
 
-    async def aggregate(self, pipeline: list[dict]) -> Optional[dict[str, Any]]:
+    async def aggregate(self, pipeline: list[dict]) -> dict[str, Any] | None:
         """
         Run an aggregation pipeline and return the first result document.
 

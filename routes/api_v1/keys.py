@@ -10,7 +10,7 @@ other API keys — only JWT Bearer auth is accepted here, matching the original)
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional
+
 from bson import ObjectId
 from fastapi import APIRouter, Depends, Query, Request
 
@@ -21,7 +21,7 @@ from dependencies import (
 )
 from errors import NotFoundError, ValidationError
 from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES
-from middleware.rate_limiter import limiter
+from middleware.rate_limiter import Limits, limiter
 from schemas.dto.requests.api_key import CreateApiKeyRequest
 from schemas.dto.responses.api_key import (
     ApiKeyActionResponse,
@@ -42,7 +42,7 @@ router = APIRouter(tags=["API Keys"])
     operation_id="createApiKey",
     summary="Create API Key",
 )
-@limiter.limit("5 per hour")
+@limiter.limit(Limits.API_KEY_CREATE)
 async def create_api_key(
     request: Request,
     body: CreateApiKeyRequest,
@@ -70,7 +70,7 @@ async def create_api_key(
     - Omit `expires_at` for a non-expiring key
     """
     # Parse expires_at from the raw value in the DTO
-    expires_at: Optional[datetime] = None
+    expires_at: datetime | None = None
     if body.expires_at is not None:
         expires_at = parse_datetime(body.expires_at)
         if expires_at is None:
@@ -111,7 +111,7 @@ async def create_api_key(
     operation_id="listApiKeys",
     summary="List API Keys",
 )
-@limiter.limit("60 per minute")
+@limiter.limit(Limits.API_KEY_READ)
 async def list_api_keys(
     request: Request,
     user: JwtUser,
@@ -151,7 +151,7 @@ async def list_api_keys(
     operation_id="deleteApiKey",
     summary="Delete/Revoke API Key",
 )
-@limiter.limit("30 per minute")
+@limiter.limit(Limits.API_KEY_DELETE)
 async def delete_api_key(
     request: Request,
     key_id: str,
@@ -178,7 +178,7 @@ async def delete_api_key(
     try:
         key_oid = ObjectId(key_id)
     except Exception:
-        raise NotFoundError("key not found or access denied")
+        raise NotFoundError("key not found or access denied") from None
 
     ok = await api_key_service.revoke(user.user_id, key_oid, hard_delete=not revoke)
     if not ok:

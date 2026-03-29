@@ -1,20 +1,20 @@
-from shared.validators import (
-    validate_alias,
-    validate_emoji_alias,
-)
-from shared.generators import generate_short_code
-from shared.legacy_helpers import (
-    humanize_number,
-    is_positive_integer,
-    add_missing_dates,
-    top_four,
-    calculate_click_averages,
-)
-from shared.aggregation_strategies import convert_country_name
 import string
 from datetime import datetime, timedelta
 from urllib.parse import unquote
 
+from shared.aggregation_strategies import convert_country_name
+from shared.generators import generate_short_code
+from shared.legacy_helpers import (
+    add_missing_dates,
+    calculate_click_averages,
+    humanize_number,
+    is_positive_integer,
+    top_four,
+)
+from shared.validators import (
+    validate_alias,
+    validate_emoji_alias,
+)
 
 # Test humanize_number
 

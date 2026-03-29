@@ -11,7 +11,7 @@ IANA timezone names.  The JSON ``filters`` string is parsed into a typed dict.
 from __future__ import annotations
 
 import json
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from pydantic import (
     BaseModel,
@@ -69,29 +69,29 @@ class StatsQuery(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     scope: Literal["all", "anon"] = Field(default="all", description=STATS_SCOPE_DESC)
-    short_code: Optional[str] = Field(
+    short_code: str | None = Field(
         default=None,
         description=STATS_SHORT_CODE_DESC,
         examples=["mylink"],
     )
 
-    start_date: Optional[str] = Field(
+    start_date: str | None = Field(
         default=None,
         description=STATS_START_DATE_DESC,
         examples=["2025-01-01T00:00:00Z"],
     )
-    end_date: Optional[str] = Field(
+    end_date: str | None = Field(
         default=None,
         description=STATS_END_DATE_DESC,
         examples=["2025-12-31T23:59:59Z"],
     )
 
-    group_by: Optional[str] = Field(
+    group_by: str | None = Field(
         default=None,
         description=STATS_GROUP_BY_DESC,
         examples=["time,browser", "country", "time,country,browser"],
     )
-    metrics: Optional[str] = Field(
+    metrics: str | None = Field(
         default=None,
         description=STATS_METRICS_DESC,
         examples=["clicks,unique_clicks", "clicks"],
@@ -103,7 +103,7 @@ class StatsQuery(BaseModel):
         examples=["UTC", "America/New_York"],
     )
 
-    filters: Optional[str] = Field(
+    filters: str | None = Field(
         default=None,
         description=STATS_FILTERS_DESC,
         examples=[
@@ -111,19 +111,19 @@ class StatsQuery(BaseModel):
             '{"country":["United States","Canada"],"browser":["Chrome"]}',
         ],
     )
-    browser: Optional[str] = Field(
+    browser: str | None = Field(
         default=None, description=STATS_BROWSER_DESC, examples=["Chrome,Firefox"]
     )
-    os: Optional[str] = Field(
+    os: str | None = Field(
         default=None, description=STATS_OS_DESC, examples=["Windows,macOS"]
     )
-    country: Optional[str] = Field(
+    country: str | None = Field(
         default=None, description=STATS_COUNTRY_DESC, examples=["United States,Germany"]
     )
-    city: Optional[str] = Field(
+    city: str | None = Field(
         default=None, description=STATS_CITY_DESC, examples=["San Francisco,Berlin"]
     )
-    referrer: Optional[str] = Field(
+    referrer: str | None = Field(
         default=None,
         description=STATS_REFERRER_DESC,
         examples=["https://google.com,https://twitter.com"],
@@ -152,7 +152,7 @@ class StatsQuery(BaseModel):
         return v.strip().lower() if isinstance(v, str) else v
 
     @model_validator(mode="after")
-    def _parse_multi_value_fields(self) -> "StatsQuery":
+    def _parse_multi_value_fields(self) -> StatsQuery:
         # group_by
         raw_group = _parse_comma_separated(self.group_by)
         invalid = set(raw_group) - ALLOWED_GROUP_BY

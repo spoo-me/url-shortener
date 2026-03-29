@@ -5,9 +5,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 from unittest.mock import AsyncMock
-from bson import ObjectId
 
 import pytest
+from bson import ObjectId
 
 from errors import ConflictError, NotFoundError, ValidationError
 from schemas.models.user import UserDoc
@@ -163,7 +163,7 @@ class TestHandleCallbackNewUser:
         svc._user_repo.find_by_id.return_value = new_user
         svc._email.send_welcome_email.return_value = True
 
-        result_user, access, refresh = await svc.handle_callback(
+        result_user, _access, _refresh = await svc.handle_callback(
             provider_key="google",
             provider_info=make_provider_info(),
             action="login",
@@ -184,7 +184,7 @@ class TestHandleCallbackNewUser:
         svc._user_repo.find_by_id.return_value = new_user
         svc._email.send_welcome_email.side_effect = Exception("email down")
 
-        result_user, access, refresh = await svc.handle_callback(
+        result_user, _access, _refresh = await svc.handle_callback(
             provider_key="google",
             provider_info=make_provider_info(),
             action="login",
@@ -212,7 +212,7 @@ class TestHandleCallbackAutoLink:
             email="test@example.com",
             email_verified=True,  # required for auto-link
         )
-        result_user, access, refresh = await svc.handle_callback(
+        result_user, _access, _refresh = await svc.handle_callback(
             provider_key="google",
             provider_info=provider_info,
             action="login",
@@ -291,7 +291,7 @@ class TestHandleCallbackLink:
         # Second find_by_id call after linking returns updated_user
         svc._user_repo.find_by_id.side_effect = [current_user, updated_user]
 
-        result_user, access, refresh = await svc.handle_callback(
+        result_user, _access, _refresh = await svc.handle_callback(
             provider_key="google",
             provider_info=make_provider_info(email="test@example.com"),
             action="link",
