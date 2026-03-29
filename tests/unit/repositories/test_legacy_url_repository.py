@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
 from pymongo.errors import WriteError
@@ -91,9 +91,12 @@ class TestLegacyUrlRepository:
             side_effect=[WriteError("too large", code=10334), MagicMock()]
         )
         await self._repo(col).update("abc123", update_ops)
-        assert col.update_one.await_count == 2
-        col.update_one.assert_awaited_with(
-            {"_id": "abc123"}, {"$inc": {"total-clicks": 1}}
+        col.update_one.assert_has_awaits(
+            [
+                call({"_id": "abc123"}, update_ops),
+                call({"_id": "abc123"}, {"$inc": {"total-clicks": 1}}),
+            ],
+            any_order=False,
         )
 
     @pytest.mark.asyncio

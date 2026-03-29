@@ -69,8 +69,7 @@ class EmojiUrlRepository:
         $inc/$set/$addToSet pattern from the legacy handle_legacy_click().
 
         If the update exceeds MongoDB's 16 MB document limit (due to
-        unbounded $addToSet IP arrays), the update is retried without
-        $addToSet so that counters and metadata are still recorded.
+        unbounded $addToSet IP arrays), only total-clicks is incremented.
         """
         try:
             await self._col.update_one({"_id": alias}, update_ops)
@@ -78,7 +77,19 @@ class EmojiUrlRepository:
             if exc.code != _DOCUMENT_TOO_LARGE_CODE:
                 raise
             # $inc on an existing integer never changes BSON size.
-            await self._col.update_one({"_id": alias}, {"$inc": {"total-clicks": 1}})
+            inc = update_ops.get("$inc", {}).get("total-clicks", 1)
+            try:
+                await self._col.update_one(
+                    {"_id": alias}, {"$inc": {"total-clicks": inc}}
+                )
+            except PyMongoError as retry_exc:
+                log.error(
+                    "emoji_url_repo_overflow_retry_failed",
+                    alias=alias,
+                    error=str(retry_exc),
+                    error_type=type(retry_exc).__name__,
+                )
+                raise
             log.info(
                 "emoji_url_repo_document_overflow",
                 alias=alias,

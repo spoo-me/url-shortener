@@ -81,8 +81,7 @@ class LegacyUrlRepository:
         executes it as-is to preserve the exact embedded analytics format.
 
         If the update exceeds MongoDB's 16 MB document limit (due to
-        unbounded $addToSet IP arrays), the update is retried without
-        $addToSet so that counters and metadata are still recorded.
+        unbounded $addToSet IP arrays), only total-clicks is incremented.
         """
         try:
             await self._col.update_one({"_id": short_code}, update_ops)
@@ -90,9 +89,19 @@ class LegacyUrlRepository:
             if exc.code != _DOCUMENT_TOO_LARGE_CODE:
                 raise
             # $inc on an existing integer never changes BSON size.
-            await self._col.update_one(
-                {"_id": short_code}, {"$inc": {"total-clicks": 1}}
-            )
+            inc = update_ops.get("$inc", {}).get("total-clicks", 1)
+            try:
+                await self._col.update_one(
+                    {"_id": short_code}, {"$inc": {"total-clicks": inc}}
+                )
+            except PyMongoError as retry_exc:
+                log.error(
+                    "legacy_url_repo_overflow_retry_failed",
+                    short_code=short_code,
+                    error=str(retry_exc),
+                    error_type=type(retry_exc).__name__,
+                )
+                raise
             log.info(
                 "legacy_url_repo_document_overflow",
                 short_code=short_code,
