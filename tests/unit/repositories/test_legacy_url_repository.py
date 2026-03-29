@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pymongo.errors import WriteError
 
 from .conftest import _legacy_url_doc, make_collection
 
@@ -69,6 +70,31 @@ class TestLegacyUrlRepository:
         }
         await self._repo(col).update("abc123", update_ops)
         col.update_one.assert_awaited_once_with({"_id": "abc123"}, update_ops)
+
+    @pytest.mark.asyncio
+    async def test_update_retries_with_inc_only_on_document_overflow(self):
+        col = make_collection()
+        update_ops = {
+            "$inc": {
+                "total-clicks": 1,
+                "counter.2024-01-15": 1,
+                "country.US.counts": 1,
+            },
+            "$set": {
+                "last-click": "2024-01-15 12:00:00",
+                "last-click-browser": "Chrome",
+            },
+            "$addToSet": {"ips": "1.2.3.4", "country.US.ips": "1.2.3.4"},
+        }
+        # First call raises WriteError with code 10334 (document too large), retry succeeds
+        col.update_one = AsyncMock(
+            side_effect=[WriteError("too large", code=10334), MagicMock()]
+        )
+        await self._repo(col).update("abc123", update_ops)
+        assert col.update_one.await_count == 2
+        col.update_one.assert_awaited_with(
+            {"_id": "abc123"}, {"$inc": {"total-clicks": 1}}
+        )
 
     @pytest.mark.asyncio
     async def test_check_exists_true(self):
