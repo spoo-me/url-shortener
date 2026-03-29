@@ -15,7 +15,7 @@ from dependencies import (
     CurrentUser,
     SHORTEN_SCOPES,
     get_url_service,
-    optional_scopes,
+    optional_scopes_verified,
 )
 from middleware.openapi import AUTH_RESPONSES, OPTIONAL_AUTH_SECURITY
 from middleware.rate_limiter import Limits, dynamic_limit, limiter
@@ -42,7 +42,7 @@ _shorten_limit, _shorten_key = dynamic_limit(Limits.API_AUTHED, Limits.API_ANON)
 async def shorten_v1(
     request: Request,
     body: CreateUrlRequest,
-    user: Optional[CurrentUser] = Depends(optional_scopes(SHORTEN_SCOPES)),
+    user: Optional[CurrentUser] = Depends(optional_scopes_verified(SHORTEN_SCOPES)),
     url_service: UrlService = Depends(get_url_service),
 ) -> UrlResponse:
     """Create a new shortened URL.

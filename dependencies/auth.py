@@ -229,6 +229,28 @@ def optional_scopes(scopes: set[str]):
     return _dep
 
 
+# ── Composed dependencies ────────────────────────────────────────────────────
+
+
+def optional_scopes_verified(scopes: set[str]):
+    """Like ``optional_scopes`` but requires email verification when authenticated.
+
+    Anonymous requests pass through. Authenticated users without a verified
+    email are rejected with ``EmailNotVerifiedError``.
+
+    Use for optional-auth endpoints that create resources.
+    """
+
+    async def _dep(
+        user: Optional[CurrentUser] = Depends(optional_scopes(scopes)),
+    ) -> Optional[CurrentUser]:
+        if user is not None and not user.email_verified:
+            raise EmailNotVerifiedError("Email verification required")
+        return user
+
+    return _dep
+
+
 # ── Annotated type aliases — community-standard Depends shortcuts ─────────────
 
 AuthUser = Annotated[CurrentUser, Depends(require_auth)]

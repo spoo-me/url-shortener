@@ -24,6 +24,7 @@ from dependencies.auth import (
     require_jwt_verified,
     require_scopes,
     require_verified_email,
+    optional_scopes_verified,
 )
 from dependencies.infra import (
     get_db,
@@ -65,6 +66,7 @@ __all__ = [
     "require_jwt_verified",
     "require_scopes",
     "require_verified_email",
+    "optional_scopes_verified",
     # infra
     "get_db",
     "get_email_provider",

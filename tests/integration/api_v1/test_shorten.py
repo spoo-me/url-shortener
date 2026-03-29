@@ -13,6 +13,56 @@ from errors import ConflictError, ValidationError
 from .conftest import _build_test_app, _make_api_key_doc, _make_url_doc, _make_user
 
 
+class TestShortenEmailVerification:
+    """Unverified authenticated users must not be able to create URLs."""
+
+    def test_shorten_unverified_email_returns_403(self):
+        user = _make_user(email_verified=False)
+
+        application = _build_test_app(
+            {get_current_user: lambda: user, get_url_service: lambda: AsyncMock()}
+        )
+        with TestClient(application, raise_server_exceptions=False) as client:
+            resp = client.post(
+                "/api/v1/shorten", json={"long_url": "https://example.com"}
+            )
+
+        assert resp.status_code == 403
+        assert resp.json()["code"] == "EMAIL_NOT_VERIFIED"
+
+    def test_shorten_verified_email_returns_201(self):
+        user = _make_user(email_verified=True)
+        url_doc = _make_url_doc(owner_id=user.user_id)
+        mock_svc = AsyncMock()
+        mock_svc.create = AsyncMock(return_value=url_doc)
+
+        application = _build_test_app(
+            {get_current_user: lambda: user, get_url_service: lambda: mock_svc}
+        )
+        with TestClient(application, raise_server_exceptions=True) as client:
+            resp = client.post(
+                "/api/v1/shorten", json={"long_url": "https://example.com"}
+            )
+
+        assert resp.status_code == 201
+
+    def test_shorten_anon_still_allowed(self):
+        """Anonymous (unauthenticated) shortening must remain available."""
+        url_doc = _make_url_doc()
+        mock_svc = AsyncMock()
+        mock_svc.create = AsyncMock(return_value=url_doc)
+
+        application = _build_test_app(
+            {get_current_user: lambda: None, get_url_service: lambda: mock_svc}
+        )
+        with TestClient(application, raise_server_exceptions=True) as client:
+            resp = client.post(
+                "/api/v1/shorten", json={"long_url": "https://example.com"}
+            )
+
+        assert resp.status_code == 201
+
+
 class TestShorten:
     def test_shorten_anon_returns_201(self):
         url_doc = _make_url_doc()
