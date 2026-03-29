@@ -152,16 +152,11 @@ class AuthService:
     ) -> None:
         """Verify an OTP code and mark it as used.
 
-        NOTE: Attempts are checked but NOT incremented (preserves existing
-        behavior from utils/verification_utils.py — the increment was never
-        implemented in the original code).
-
         Raises:
             ValidationError: On any verification failure.
             AppError: If marking the token as used fails.
         """
-        otp_hash = hash_token(otp_code)
-        token_doc = await self._token_repo.find_by_hash(otp_hash, token_type)
+        token_doc = await self._token_repo.find_latest_by_user(user_id, token_type)
 
         if not token_doc:
             log.warning(
@@ -171,15 +166,6 @@ class AuthService:
                 token_type=token_type,
             )
             raise ValidationError("Invalid or expired verification code")
-
-        if str(token_doc.user_id) != str(user_id):
-            log.warning(
-                "otp_verification_failed",
-                user_id=str(user_id),
-                reason="user_mismatch",
-                token_type=token_type,
-            )
-            raise ValidationError("Invalid verification code")
 
         expires_at = token_doc.expires_at
         if not expires_at.tzinfo:
@@ -194,16 +180,6 @@ class AuthService:
             )
             raise ValidationError("Verification code has expired")
 
-        if token_doc.used_at is not None:
-            log.warning(
-                "otp_verification_failed",
-                user_id=str(user_id),
-                reason="already_used",
-                token_type=token_type,
-            )
-            raise ValidationError("Verification code has already been used")
-
-        # Check max attempts (but do NOT increment — preserves original behavior)
         if token_doc.attempts >= MAX_VERIFICATION_ATTEMPTS:
             log.warning(
                 "otp_verification_failed",
@@ -214,6 +190,19 @@ class AuthService:
             raise ValidationError(
                 "Too many failed attempts. Please request a new code."
             )
+
+        # Compare hash — increment attempts on mismatch
+        otp_hash = hash_token(otp_code)
+        if token_doc.token_hash != otp_hash:
+            await self._token_repo.increment_attempts(token_doc.id)
+            log.warning(
+                "otp_verification_failed",
+                user_id=str(user_id),
+                reason="wrong_code",
+                token_type=token_type,
+                attempts=token_doc.attempts + 1,
+            )
+            raise ValidationError("Invalid or expired verification code")
 
         marked = await self._token_repo.mark_as_used(token_doc.id)
         if not marked:
@@ -509,8 +498,6 @@ class AuthService:
             AppError:        DB update failure.
         """
         user = await self._user_repo.find_by_email(email)
-        if not user:
-            raise ValidationError("invalid email or code")
 
         is_valid, missing, _ = validate_account_password(new_password)
         if not is_valid:
@@ -518,6 +505,11 @@ class AuthService:
                 "password does not meet requirements",
                 details={"missing_requirements": missing},
             )
+
+        if not user:
+            # Simulate OTP verification timing to prevent user enumeration
+            _dummy_hash = hash_token(otp_code)
+            raise ValidationError("invalid email or code")
 
         await self._verify_otp(user.id, otp_code, TOKEN_TYPE_PASSWORD_RESET)
 

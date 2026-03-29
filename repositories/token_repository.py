@@ -84,6 +84,50 @@ class TokenRepository:
             )
             raise
 
+    async def find_latest_by_user(
+        self, user_id: ObjectId, token_type: str
+    ) -> VerificationTokenDoc | None:
+        """Find the most recent non-used token for a user and type."""
+        try:
+            doc = await self._col.find_one(
+                {
+                    "user_id": user_id,
+                    "token_type": token_type,
+                    "used_at": None,
+                },
+                sort=[("created_at", -1)],
+            )
+            return VerificationTokenDoc.from_mongo(doc)
+        except PyMongoError as exc:
+            log.error(
+                "token_repo_find_latest_by_user_failed",
+                user_id=str(user_id),
+                token_type=token_type,
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
+            raise
+
+    async def increment_attempts(self, token_id: ObjectId) -> bool:
+        """Atomically increment the ``attempts`` counter on a token.
+
+        Returns True if a document was modified.
+        """
+        try:
+            result = await self._col.update_one(
+                {"_id": token_id},
+                {"$inc": {"attempts": 1}},
+            )
+            return result.modified_count > 0
+        except PyMongoError as exc:
+            log.error(
+                "token_repo_increment_attempts_failed",
+                token_id=str(token_id),
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
+            raise
+
     async def delete_by_user(
         self, user_id: ObjectId, token_type: str | None = None
     ) -> int:

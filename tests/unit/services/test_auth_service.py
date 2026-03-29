@@ -396,7 +396,7 @@ class TestVerifyEmail:
         user = make_user_doc(email_verified=False)
         token_doc = self._make_token_doc(USER_OID, "123456")
         svc._user_repo.find_by_id.return_value = user
-        svc._token_repo.find_by_hash.return_value = token_doc
+        svc._token_repo.find_latest_by_user.return_value = token_doc
         svc._token_repo.mark_as_used.return_value = True
         svc._user_repo.update.return_value = True
         svc._email.send_welcome_email.return_value = True
@@ -429,7 +429,7 @@ class TestVerifyEmail:
         svc = make_auth_service()
         user = make_user_doc(email_verified=False)
         svc._user_repo.find_by_id.return_value = user
-        svc._token_repo.find_by_hash.return_value = None  # token not found
+        svc._token_repo.find_latest_by_user.return_value = None  # token not found
 
         with pytest.raises(ValidationError):
             await svc.verify_email(str(USER_OID), "000000")
@@ -440,20 +440,9 @@ class TestVerifyEmail:
         user = make_user_doc(email_verified=False)
         token_doc = self._make_token_doc(USER_OID, "123456", expired=True)
         svc._user_repo.find_by_id.return_value = user
-        svc._token_repo.find_by_hash.return_value = token_doc
+        svc._token_repo.find_latest_by_user.return_value = token_doc
 
         with pytest.raises(ValidationError, match="expired"):
-            await svc.verify_email(str(USER_OID), "123456")
-
-    @pytest.mark.asyncio
-    async def test_verify_email_used_otp_raises(self):
-        svc = make_auth_service()
-        user = make_user_doc(email_verified=False)
-        token_doc = self._make_token_doc(USER_OID, "123456", used=True)
-        svc._user_repo.find_by_id.return_value = user
-        svc._token_repo.find_by_hash.return_value = token_doc
-
-        with pytest.raises(ValidationError, match="already been used"):
             await svc.verify_email(str(USER_OID), "123456")
 
     @pytest.mark.asyncio
@@ -462,10 +451,23 @@ class TestVerifyEmail:
         user = make_user_doc(email_verified=False)
         token_doc = self._make_token_doc(USER_OID, "123456", attempts=5)
         svc._user_repo.find_by_id.return_value = user
-        svc._token_repo.find_by_hash.return_value = token_doc
+        svc._token_repo.find_latest_by_user.return_value = token_doc
 
         with pytest.raises(ValidationError, match="Too many failed attempts"):
             await svc.verify_email(str(USER_OID), "123456")
+
+    @pytest.mark.asyncio
+    async def test_verify_email_wrong_code_increments_attempts(self):
+        svc = make_auth_service()
+        user = make_user_doc(email_verified=False)
+        token_doc = self._make_token_doc(USER_OID, "123456")
+        svc._user_repo.find_by_id.return_value = user
+        svc._token_repo.find_latest_by_user.return_value = token_doc
+        svc._token_repo.increment_attempts.return_value = True
+
+        with pytest.raises(ValidationError, match="Invalid or expired"):
+            await svc.verify_email(str(USER_OID), "999999")  # wrong code
+        svc._token_repo.increment_attempts.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_verify_email_welcome_email_failure_is_non_fatal(self):
@@ -473,7 +475,7 @@ class TestVerifyEmail:
         user = make_user_doc(email_verified=False)
         token_doc = self._make_token_doc(USER_OID, "123456")
         svc._user_repo.find_by_id.return_value = user
-        svc._token_repo.find_by_hash.return_value = token_doc
+        svc._token_repo.find_latest_by_user.return_value = token_doc
         svc._token_repo.mark_as_used.return_value = True
         svc._user_repo.update.return_value = True
         svc._email.send_welcome_email.side_effect = Exception("server down")
@@ -668,7 +670,7 @@ class TestResetPassword:
         user = make_user_doc(password_set=True)
         token_doc = self._make_token_doc(USER_OID, "654321")
         svc._user_repo.find_by_email.return_value = user
-        svc._token_repo.find_by_hash.return_value = token_doc
+        svc._token_repo.find_latest_by_user.return_value = token_doc
         svc._token_repo.mark_as_used.return_value = True
         svc._user_repo.update.return_value = True
 
@@ -699,10 +701,23 @@ class TestResetPassword:
         svc = make_auth_service()
         user = make_user_doc(password_set=True)
         svc._user_repo.find_by_email.return_value = user
-        svc._token_repo.find_by_hash.return_value = None  # token not found
+        svc._token_repo.find_latest_by_user.return_value = None  # token not found
 
         with pytest.raises(ValidationError):
             await svc.reset_password("test@example.com", "wrong-code", "NewValidPass1!")
+
+    @pytest.mark.asyncio
+    async def test_reset_password_wrong_code_increments_attempts(self):
+        svc = make_auth_service()
+        user = make_user_doc(password_set=True)
+        token_doc = self._make_token_doc(USER_OID, "654321")
+        svc._user_repo.find_by_email.return_value = user
+        svc._token_repo.find_latest_by_user.return_value = token_doc
+        svc._token_repo.increment_attempts.return_value = True
+
+        with pytest.raises(ValidationError, match="Invalid or expired"):
+            await svc.reset_password("test@example.com", "000000", "NewValidPass1!")
+        svc._token_repo.increment_attempts.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_request_password_reset_deletes_old_tokens_before_creating(self):

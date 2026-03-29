@@ -120,6 +120,20 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
 
         await ensure_indexes(app.state.db)
 
+        # Warn if JWT config is weak (auth is optional, so don't crash)
+        if settings.jwt and not settings.jwt.use_rs256:
+            if not settings.jwt.jwt_secret:
+                log.warning(
+                    "jwt_config_insecure",
+                    detail="RS256 keys not set and JWT_SECRET is empty — tokens can be forged. "
+                    "Set JWT_PRIVATE_KEY + JWT_PUBLIC_KEY or a strong JWT_SECRET.",
+                )
+            elif len(settings.jwt.jwt_secret) < 32:
+                log.warning(
+                    "jwt_secret_weak",
+                    detail="JWT_SECRET is shorter than 32 characters — consider using RS256 keys or a longer secret.",
+                )
+
         yield
 
         # ── Shutdown ─────────────────────────────────────────────────────────
