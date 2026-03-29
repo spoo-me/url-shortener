@@ -508,8 +508,6 @@ class TestSendVerification:
 
     @pytest.mark.asyncio
     async def test_send_verification_user_not_found_raises(self):
-        from errors import NotFoundError
-
         svc = make_auth_service()
         svc._user_repo.find_by_id.return_value = None
 
@@ -547,6 +545,8 @@ class TestOTPRateLimit:
 
         with pytest.raises(RateLimitError):
             await svc._create_otp(USER_OID, "test@example.com", TOKEN_TYPE_EMAIL_VERIFY)
+
+        svc._token_repo.create.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_create_otp_below_limit_succeeds(self):

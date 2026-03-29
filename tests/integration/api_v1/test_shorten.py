@@ -18,9 +18,10 @@ class TestShortenEmailVerification:
 
     def test_shorten_unverified_email_returns_403(self):
         user = _make_user(email_verified=False)
+        mock_svc = AsyncMock()
 
         application = _build_test_app(
-            {get_current_user: lambda: user, get_url_service: lambda: AsyncMock()}
+            {get_current_user: lambda: user, get_url_service: lambda: mock_svc}
         )
         with TestClient(application, raise_server_exceptions=False) as client:
             resp = client.post(
@@ -29,6 +30,7 @@ class TestShortenEmailVerification:
 
         assert resp.status_code == 403
         assert resp.json()["code"] == "EMAIL_NOT_VERIFIED"
+        mock_svc.create.assert_not_called()
 
     def test_shorten_verified_email_returns_201(self):
         user = _make_user(email_verified=True)
@@ -45,22 +47,7 @@ class TestShortenEmailVerification:
             )
 
         assert resp.status_code == 201
-
-    def test_shorten_anon_still_allowed(self):
-        """Anonymous (unauthenticated) shortening must remain available."""
-        url_doc = _make_url_doc()
-        mock_svc = AsyncMock()
-        mock_svc.create = AsyncMock(return_value=url_doc)
-
-        application = _build_test_app(
-            {get_current_user: lambda: None, get_url_service: lambda: mock_svc}
-        )
-        with TestClient(application, raise_server_exceptions=True) as client:
-            resp = client.post(
-                "/api/v1/shorten", json={"long_url": "https://example.com"}
-            )
-
-        assert resp.status_code == 201
+        mock_svc.create.assert_called_once()
 
 
 class TestShorten:

@@ -68,7 +68,7 @@ async def _render_dashboard_page(
 
 @router.get("")
 @router.get("/")
-@limiter.limit(Limits.DASHBOARD_WRITE)
+@limiter.limit(Limits.DASHBOARD_READ)
 async def dashboard_root(
     request: Request,
     user: OptionalUser,
@@ -79,7 +79,7 @@ async def dashboard_root(
 
 
 @router.get("/links")
-@limiter.limit(Limits.DASHBOARD_WRITE)
+@limiter.limit(Limits.DASHBOARD_READ)
 async def dashboard_links(
     request: Request,
     user: OptionalUser,
@@ -89,7 +89,7 @@ async def dashboard_links(
 
 
 @router.get("/keys")
-@limiter.limit(Limits.DASHBOARD_WRITE)
+@limiter.limit(Limits.DASHBOARD_READ)
 async def dashboard_keys(
     request: Request,
     user: OptionalUser,
@@ -99,7 +99,7 @@ async def dashboard_keys(
 
 
 @router.get("/statistics")
-@limiter.limit(Limits.DASHBOARD_WRITE)
+@limiter.limit(Limits.DASHBOARD_READ)
 async def dashboard_statistics(
     request: Request,
     user: OptionalUser,
@@ -109,7 +109,7 @@ async def dashboard_statistics(
 
 
 @router.get("/settings")
-@limiter.limit(Limits.DASHBOARD_WRITE)
+@limiter.limit(Limits.DASHBOARD_READ)
 async def dashboard_settings(
     request: Request,
     user: OptionalUser,
@@ -119,7 +119,7 @@ async def dashboard_settings(
 
 
 @router.get("/billing")
-@limiter.limit(Limits.DASHBOARD_WRITE)
+@limiter.limit(Limits.DASHBOARD_READ)
 async def dashboard_billing(
     request: Request,
     user: OptionalUser,
@@ -136,7 +136,7 @@ class SetProfilePictureRequest(BaseModel):
 
 
 @router.get("/profile-pictures")
-@limiter.limit(Limits.DASHBOARD_WRITE)
+@limiter.limit(Limits.DASHBOARD_READ)
 async def get_profile_pictures(
     request: Request,
     user: AuthUser,

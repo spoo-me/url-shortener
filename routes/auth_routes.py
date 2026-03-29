@@ -334,12 +334,11 @@ async def send_verification(
     """Send a 6-digit OTP verification code to the user's email.
 
     The code expires after the duration returned in ``expires_in`` (seconds).
-    If the user is already verified, the request still succeeds but no email
-    is sent.
+    Returns 400 if the user's email is already verified.
 
     **Authentication**: Required (JWT or API key)
 
-    **Rate Limits**: 3/hour
+    **Rate Limits**: 1/minute, 3/hour
 
     **Notes**: Previous unused OTPs are invalidated when a new one is sent.
     """
