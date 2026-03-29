@@ -351,3 +351,100 @@ body {
         font-size: 13px;
     }
 }
+
+/* ── Manage Token Banner ───────────────────────────────────────── */
+
+#claim-token-banner {
+    margin-top: 30px;
+    width: 100%;
+    justify-content: center;
+}
+
+#claim-token-inner {
+    width: 100%;
+    max-width: 600px;
+    background: rgba(255, 200, 60, 0.08);
+    border: 1px solid rgba(255, 200, 60, 0.35);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#claim-token-label {
+    margin: 0;
+    font-size: 13px;
+    color: rgba(255, 220, 100, 0.9);
+    line-height: 1.5;
+}
+
+#claim-token-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+#claim-token-value {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-family: monospace;
+    color: #fff;
+    word-break: break-all;
+    letter-spacing: 0.3px;
+}
+
+#claim-token-copy-btn {
+    background: rgba(255, 200, 60, 0.15);
+    border: 1px solid rgba(255, 200, 60, 0.4);
+    color: rgba(255, 220, 100, 1);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    transition: background 0.2s ease;
+    white-space: nowrap;
+}
+
+#claim-token-copy-btn:hover {
+    background: rgba(255, 200, 60, 0.25);
+}
+
+#claim-token-hint {
+    margin: 0;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+#claim-token-hint a {
+    color: rgba(255, 200, 60, 0.85);
+    text-decoration: none;
+    font-size: 12px;
+}
+
+#claim-token-hint a:hover {
+    text-decoration: underline;
+}
+
+@media screen and (max-width: 800px) {
+    #claim-token-inner {
+        padding: 14px 16px;
+    }
+
+    #claim-token-value {
+        font-size: 11px;
+    }
+
+    #claim-token-copy-btn {
+        width: 100%;
+        text-align: center;
+    }
+}

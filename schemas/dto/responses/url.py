@@ -49,6 +49,12 @@ class UrlResponse(BaseModel):
         default=None,
         description="Whether statistics are private (owner-only).",
     )
+    manage_token: Optional[str] = Field(
+        default=None,
+        description="Returned once for anonymous URLs only. Never stored in plaintext.",
+        examples=["kS9_x1z..."],
+    )
+
 
 
 class UpdateUrlResponse(BaseModel):

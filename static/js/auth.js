@@ -292,7 +292,14 @@ async function submitAuth() {
         }
 
         closeAuthModal();
-        window.location.href = '/dashboard';
+        await sweepAndClaimTokens();
+        const claimRedirect = sessionStorage.getItem('spoo_claim_redirect');
+        if (claimRedirect) {
+            sessionStorage.removeItem('spoo_claim_redirect');
+            window.location.href = claimRedirect;
+        } else {
+            window.location.href = '/dashboard';
+        }
     } catch (e) {
         showAuthError('Something went wrong');
     }
@@ -461,4 +468,31 @@ function handlePasswordInput(password) {
     }
 }
 
+async function sweepAndClaimTokens() {
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem('recentURLs')) || []; } catch (_) { return; }
 
+    const unclaimed = list.filter(item => typeof item === 'object' && item.manage_token);
+    if (unclaimed.length === 0) return;
+
+    for (const item of unclaimed) {
+        try {
+            const res = await fetch('/api/v1/claim', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ alias: item.alias, manage_token: item.manage_token })
+            });
+            // Clear token on success, already-claimed (403/409), or not-found (404)
+            // Leave token intact on server error (500) so user can retry
+            if (res.ok || res.status === 403 || res.status === 404 || res.status === 409) {
+                item.manage_token = null;
+            }
+        } catch (e) {
+            console.warn('Token claim failed for', item.alias, e);
+        }
+    }
+
+    // Write back updated list (tokens cleared for claimed URLs)
+    localStorage.setItem('recentURLs', JSON.stringify(list));
+}

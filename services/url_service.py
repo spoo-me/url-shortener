@@ -17,6 +17,7 @@ Dispatch heuristic (get_url_by_length_and_type) is preserved exactly:
 from __future__ import annotations
 
 import re
+import secrets
 import time
 from datetime import datetime, timezone
 from typing import Optional
@@ -39,7 +40,7 @@ from repositories.url_repository import UrlRepository
 from schemas.dto.requests.url import CreateUrlRequest, ListUrlsQuery, UpdateUrlRequest
 from schemas.models.base import ANONYMOUS_OWNER_ID
 from schemas.models.url import EmojiUrlDoc, LegacyUrlDoc, UrlV2Doc
-from shared.crypto import hash_password
+from shared.crypto import hash_password, hash_token
 from shared.datetime_utils import parse_datetime
 from shared.generators import generate_short_code_v2
 from shared.logging import get_logger, should_sample
@@ -165,7 +166,7 @@ class UrlService:
         request: CreateUrlRequest,
         owner_id: Optional[ObjectId],
         client_ip: str,
-    ) -> UrlV2Doc:
+    ) -> tuple[UrlV2Doc, Optional[str]]:
         """
         Create a new shortened URL.
 
@@ -252,6 +253,13 @@ class UrlService:
             "total_clicks": 0,
             "last_click": None,
         }
+ 
+        raw_token: Optional[str] = None
+        if owner_id is None:
+            raw_token = secrets.token_urlsafe(32)
+            doc["manage_token"] = hash_token(raw_token)
+        else:
+            doc["manage_token"] = None
 
         # 8. Insert
         inserted_id = await self._url_repo.insert(doc)
@@ -270,7 +278,7 @@ class UrlService:
             private_stats=private_stats,
         )
 
-        return UrlV2Doc.from_mongo(doc)
+        return UrlV2Doc.from_mongo(doc), raw_token
 
     async def update(
         self,
@@ -506,6 +514,11 @@ class UrlService:
             "sortBy": query.sort_by,
             "sortOrder": "descending" if sort_order == -1 else "ascending",
         }
+
+    async def claim_url(self, alias: str, raw_token: str, new_owner_id: ObjectId) -> bool:
+        """Transfer ownership of an anonymous URL to an authenticated user."""
+        token_hash = hash_token(raw_token)
+        return await self._url_repo.claim_by_manage_token(alias, token_hash, new_owner_id)
 
     # ── Private helpers ───────────────────────────────────────────────────────
 

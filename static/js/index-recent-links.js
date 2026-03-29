@@ -70,7 +70,10 @@ function renderRecentURLs() {
     try { list = JSON.parse(localStorage.getItem('recentURLs')) || []; } catch (_) { list = []; }
     container.innerHTML = '';
 
-    list.forEach((alias) => {
+    list.forEach((item) => {
+        // Support both old string format and new object format
+        const alias = typeof item === 'string' ? item : item.alias;
+        const hasToken = typeof item === 'object' && item.manage_token;
         const shortUrl = `${window.location.origin}/${alias}`;
 
         const wrapper = document.createElement('div');
@@ -81,6 +84,7 @@ function renderRecentURLs() {
                     <span class="short-url">
                         <a href="/${alias}" target="_blank">${shortUrl.replace(/^https?:\/\//, '')}</a>
                     </span>
+                    ${hasToken ? '<span class="unclaimed-badge">Unclaimed</span>' : ''}
                 </div>
             </div>
             <div class="section-2">
@@ -93,9 +97,31 @@ function renderRecentURLs() {
         `;
         container.appendChild(wrapper);
     });
+
+    // Show Claim All button if there are unclaimed URLs
+    const hasUnclaimed = list.some(item => typeof item === 'object' && item.manage_token);
+    if (hasUnclaimed) {
+        const claimAllWrapper = document.createElement('div');
+        claimAllWrapper.id = 'claim-all-wrapper';
+        claimAllWrapper.innerHTML = `
+            <button id="claim-all-btn" onclick="claimAllAnonymousURLs()">
+                Sign in to claim all your links
+            </button>
+        `;
+        container.appendChild(claimAllWrapper);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', renderRecentURLs);
 
 // Re-render when authentication state changes
 document.addEventListener('auth:init', renderRecentURLs);
+
+function claimAllAnonymousURLs() {
+    sessionStorage.setItem('spoo_claim_redirect', window.location.href);
+    if (typeof openAuthModal === 'function') {
+        openAuthModal();
+    } else {
+        window.location.href = '/';
+    }
+}

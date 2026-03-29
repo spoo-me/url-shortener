@@ -49,6 +49,8 @@ class UrlV2Doc(MongoBaseModel):
     total_clicks: int = 0
     last_click: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    manage_token: Optional[str] = None
+
 
 
 class LegacyUrlDoc(MongoBaseModel):

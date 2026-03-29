@@ -14,6 +14,7 @@ from bson import ObjectId
 from pymongo.asynchronous.collection import AsyncCollection
 from pymongo.errors import DuplicateKeyError, PyMongoError
 
+from schemas.models.base import ANONYMOUS_OWNER_ID
 from schemas.models.url import UrlV2Doc
 from shared.logging import get_logger
 
@@ -235,3 +236,39 @@ class UrlRepository:
                 error_type=type(exc).__name__,
             )
             raise
+    async def claim_by_manage_token(
+        self,
+        alias: str,
+        token_hash: str,
+        new_owner_id: ObjectId,
+    ) -> bool:
+        """
+        Atomically claim an anonymous URL if the token hash matches and it has no owner.
+
+        Returns True if the claim succeeded (document was modified), False otherwise.
+        """
+        try:
+            result = await self._col.update_one(
+                {
+                    "alias": alias,
+                    "owner_id": ANONYMOUS_OWNER_ID,
+                    "manage_token": token_hash,
+                },
+                {
+                    "$set": {
+                        "owner_id": new_owner_id,
+                        "manage_token": None,
+                        "updated_at": datetime.now(timezone.utc),
+                    }
+                },
+            )
+            return result.modified_count > 0
+        except PyMongoError as exc:
+            log.error(
+                "url_repo_claim_by_manage_token_failed",
+                alias=alias,
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
+            raise
+

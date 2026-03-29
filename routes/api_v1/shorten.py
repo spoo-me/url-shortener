@@ -69,7 +69,7 @@ async def shorten_v1(
     owner_id = user.user_id if user is not None else None
     client_ip = get_client_ip(request)
 
-    doc = await url_service.create(body, owner_id, client_ip)
+    doc, raw_token = await url_service.create(body, owner_id, client_ip)
 
     settings = request.app.state.settings
     return UrlResponse(
@@ -80,4 +80,5 @@ async def shorten_v1(
         created_at=to_unix_timestamp(doc.created_at, default=0),
         status=doc.status,
         private_stats=doc.private_stats,
+        manage_token=raw_token,
     )
