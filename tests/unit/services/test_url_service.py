@@ -397,8 +397,7 @@ class TestUrlServiceCreate:
         from schemas.dto.requests.url import CreateUrlRequest
 
         req = CreateUrlRequest(long_url="https://example.com")
-        result = await svc.create(req, owner_id=USER_OID, client_ip="1.2.3.4")
-
+        result, _ = await svc.create(req, owner_id=USER_OID, client_ip="1.2.3.4")
         assert result.long_url == "https://example.com"
         url_repo.insert.assert_called_once()
 

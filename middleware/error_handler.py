@@ -69,7 +69,7 @@ def register_error_handlers(app: FastAPI) -> None:
     ) -> JSONResponse:
         # Validation errors only occur on typed API/auth routes — always JSON
         return JSONResponse(
-            status_code=400,
+            status_code=422,
             content={"error": "Validation error", "code": "validation_error"},
         )
 
@@ -78,7 +78,7 @@ def register_error_handlers(app: FastAPI) -> None:
         request: Request, exc: PydanticValidationError
     ) -> JSONResponse:
         return JSONResponse(
-            status_code=400,
+            status_code=422,
             content={"error": "Validation error", "code": "validation_error"},
         )
 
