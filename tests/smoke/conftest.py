@@ -18,7 +18,11 @@ from config import AppSettings
 from middleware.error_handler import register_error_handlers
 from middleware.logging import RequestLoggingMiddleware
 from middleware.rate_limiter import limiter
-from middleware.security import MaxContentLengthMiddleware, configure_cors
+from middleware.security import (
+    MaxContentLengthMiddleware,
+    SecurityHeadersMiddleware,
+    configure_cors,
+)
 from routes.api_v1 import router as api_v1_router
 from routes.auth_routes import router as auth_router
 from routes.dashboard_routes import router as dashboard_router
@@ -56,6 +60,7 @@ def _build_smoke_app() -> FastAPI:
         SessionMiddleware, secret_key=settings.secret_key or "test-secret"
     )
     configure_cors(app, settings)
+    app.add_middleware(SecurityHeadersMiddleware, hsts_enabled=False)
     app.add_middleware(
         MaxContentLengthMiddleware, max_content_length=settings.max_content_length
     )

@@ -33,7 +33,11 @@ from middleware.openapi import (
     configure_openapi,
 )
 from middleware.rate_limiter import limiter
-from middleware.security import MaxContentLengthMiddleware, configure_cors
+from middleware.security import (
+    MaxContentLengthMiddleware,
+    SecurityHeadersMiddleware,
+    configure_cors,
+)
 from repositories.indexes import ensure_indexes
 from routes.api_v1 import router as api_v1_router
 from routes.auth_routes import router as auth_router
@@ -120,6 +124,14 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
 
         await ensure_indexes(app.state.db)
 
+        # Warn if CORS private origins not configured in production
+        if settings.is_production and not settings.cors_private_origins:
+            log.warning(
+                "cors_private_origins_empty",
+                detail="CORS_PRIVATE_ORIGINS is empty — auth/oauth/dashboard routes "
+                "will reject all cross-origin requests. Set to your frontend domain(s).",
+            )
+
         # Warn if JWT config is weak (auth is optional, so don't crash)
         if settings.jwt and not settings.jwt.use_rs256:
             if not settings.jwt.jwt_secret:
@@ -180,11 +192,13 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
     app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
     # 2. CORS — must wrap everything
     configure_cors(app, settings)
-    # 3. Body size limit
+    # 3. Security headers
+    app.add_middleware(SecurityHeadersMiddleware, hsts_enabled=settings.is_production)
+    # 4. Body size limit
     app.add_middleware(
         MaxContentLengthMiddleware, max_content_length=settings.max_content_length
     )
-    # 4. Request logging — innermost, logs all requests with request_id
+    # 5. Request logging — innermost, logs all requests with request_id
     app.add_middleware(RequestLoggingMiddleware)
 
     # ── Error handlers + rate limiter ────────────────────────────────────

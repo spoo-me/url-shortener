@@ -45,6 +45,12 @@ def test_default_cors_origins() -> None:
     assert settings.cors_origins == ["*"]
 
 
+def test_default_cors_private_origins_empty() -> None:
+    """Default CORS private origins should be empty (no cross-origin auth by default)."""
+    settings = AppSettings()
+    assert settings.cors_private_origins == []
+
+
 def test_default_max_content_length() -> None:
     """Default max content length should be 1 MB."""
     settings = AppSettings()
