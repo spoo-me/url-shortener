@@ -97,6 +97,22 @@ ignore = [
 "tests/test_urls.py" = ["T20"]
 "tests/test_utils.py" = ["T20"]
 
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Header",
+    "fastapi.Form",
+    "fastapi.File",
+    "fastapi.Cookie",
+    "fastapi.Security",
+    "dependencies.auth.require_scopes",
+    "dependencies.auth.optional_scopes",
+    "dependencies.auth.optional_scopes_verified",
+]
+
 [tool.ruff.lint.isort]
 known-first-party = ["app", "config", "errors", "routes", "services", "schemas", "dependencies", "middleware", "infrastructure"]
 

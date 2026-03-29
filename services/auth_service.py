@@ -10,7 +10,7 @@ through the injected repositories and email provider.
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from typing import Any
 
 from bson import ObjectId
 from pymongo.errors import DuplicateKeyError
@@ -263,8 +263,8 @@ class AuthService:
         self,
         email: str,
         password: str,
-        user_name: Optional[str],
-        signup_ip: Optional[str],
+        user_name: str | None,
+        signup_ip: str | None,
     ) -> tuple[UserDoc, str, str, bool]:
         """Register a new user with email + password.
 
@@ -309,7 +309,7 @@ class AuthService:
             user_id = await self._user_repo.create(user_data)
         except DuplicateKeyError:
             log.warning("registration_failed", reason="race_condition_duplicate")
-            raise ConflictError("email already registered")
+            raise ConflictError("email already registered") from None
 
         user_data["_id"] = user_id
         user_doc = UserDoc.from_mongo(user_data)

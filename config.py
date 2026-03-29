@@ -10,8 +10,6 @@ FLASK_SECRET_KEY is also accepted as an alias for backward compatibility
 
 from __future__ import annotations
 
-from typing import Optional
-
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -29,7 +27,7 @@ class RedisSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # Optional — self-hosters without Redis get degraded-but-functional behaviour
-    redis_uri: Optional[str] = None
+    redis_uri: str | None = None
     redis_ttl_seconds: int = 3600
 
 
@@ -84,7 +82,7 @@ class LoggingSettings(BaseSettings):
     log_level: str = "INFO"
     log_format: str = "console"  # "json" in production
 
-    # Sampling rates (0.0–1.0)
+    # Sampling rates (0.0-1.0)
     sample_rate_redirect: float = 0.05
     sample_rate_stats: float = 0.20
     sample_rate_cache: float = 0.01
@@ -129,16 +127,16 @@ class AppSettings(BaseSettings):
     hcaptcha_secret: str = ""
 
     # Sub-configs (composed via model_validator below)
-    db: Optional[DatabaseSettings] = None
-    redis: Optional[RedisSettings] = None
-    jwt: Optional[JWTSettings] = None
-    oauth: Optional[OAuthProviderSettings] = None
-    email: Optional[EmailSettings] = None
-    logging: Optional[LoggingSettings] = None
-    sentry: Optional[SentrySettings] = None
+    db: DatabaseSettings | None = None
+    redis: RedisSettings | None = None
+    jwt: JWTSettings | None = None
+    oauth: OAuthProviderSettings | None = None
+    email: EmailSettings | None = None
+    logging: LoggingSettings | None = None
+    sentry: SentrySettings | None = None
 
     @model_validator(mode="after")
-    def _populate_sub_configs_and_secret(self) -> "AppSettings":
+    def _populate_sub_configs_and_secret(self) -> AppSettings:
         # Accept FLASK_SECRET_KEY as a fallback for backward compatibility
         if not self.secret_key and self.flask_secret_key:
             self.secret_key = self.flask_secret_key

@@ -6,7 +6,6 @@ debuggable and safe to deserialise across Python versions.
 
 import json
 from dataclasses import asdict, dataclass
-from typing import Optional
 
 import redis.asyncio as aioredis
 
@@ -23,18 +22,18 @@ class UrlCacheData:
     alias: str
     long_url: str
     block_bots: bool
-    password_hash: Optional[str]
-    expiration_time: Optional[int]  # Unix timestamp
-    max_clicks: Optional[int]
+    password_hash: str | None
+    expiration_time: int | None  # Unix timestamp
+    max_clicks: int | None
     url_status: str  # ACTIVE, INACTIVE, BLOCKED, EXPIRED
     schema_version: str  # "v1" or "v2"
-    owner_id: Optional[str]  # ObjectId as string; None for v1 URLs
+    owner_id: str | None  # ObjectId as string; None for v1 URLs
     total_clicks: int = 0  # Live click count for v1 max-clicks check
 
 
 class UrlCache:
     def __init__(
-        self, redis_client: Optional[aioredis.Redis], ttl_seconds: int = 300
+        self, redis_client: aioredis.Redis | None, ttl_seconds: int = 300
     ) -> None:
         self._redis = redis_client
         self.ttl_seconds = ttl_seconds
@@ -42,7 +41,7 @@ class UrlCache:
     def _key(self, short_code: str) -> str:
         return f"url_cache:{short_code}"
 
-    async def get(self, short_code: str) -> Optional[UrlCacheData]:
+    async def get(self, short_code: str) -> UrlCacheData | None:
         if self._redis is None:
             return None
         try:

@@ -9,7 +9,7 @@ caching and DB access.
 from __future__ import annotations
 
 import re
-from typing import Sequence
+from collections.abc import Sequence
 from urllib.parse import unquote
 
 import emoji
@@ -59,9 +59,7 @@ def validate_url_password(password: str) -> bool:
         return False
     if not re.search(r"[@.]", password):
         return False
-    if re.search(r"[@.]{2}", password):
-        return False
-    return True
+    return not re.search(r"[@.]{2}", password)
 
 
 def validate_alias(alias: str) -> bool:
@@ -78,9 +76,7 @@ def validate_emoji_alias(alias: str) -> bool:
     alias = unquote(alias)
     emoji_list = emoji.emoji_list(alias)
     extracted_emojis = "".join([data["emoji"] for data in emoji_list])
-    if len(extracted_emojis) != len(alias) or len(emoji_list) > 15:
-        return False
-    return True
+    return not (len(extracted_emojis) != len(alias) or len(emoji_list) > 15)
 
 
 def validate_account_password(password: str) -> tuple[bool, list[str], int]:

@@ -12,8 +12,6 @@ existing Flask endpoint exactly.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -29,7 +27,7 @@ class ApiKeyResponse(BaseModel):
     name: str = Field(
         description="Human-readable key name", examples=["My Production Key"]
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         default=None,
         description="Optional description",
         examples=["Used by the mobile app"],
@@ -38,18 +36,18 @@ class ApiKeyResponse(BaseModel):
         description="Permission scopes granted to this key",
         examples=[["shorten:create", "stats:read"]],
     )
-    created_at: Optional[int] = Field(
+    created_at: int | None = Field(
         default=None,
         description="Creation time as Unix timestamp",
         examples=[1704067200],
     )
-    expires_at: Optional[int] = Field(
+    expires_at: int | None = Field(
         default=None,
         description="Expiration time as Unix timestamp, or null if no expiration",
         examples=[1735689600],
     )
     revoked: bool = Field(description="Whether the key has been revoked")
-    token_prefix: Optional[str] = Field(
+    token_prefix: str | None = Field(
         default=None,
         description="First characters of the token for identification",
         examples=["spoo_abc1"],

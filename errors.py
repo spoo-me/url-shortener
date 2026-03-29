@@ -6,7 +6,7 @@ AppError is the base for all typed errors.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 
 class AppError(Exception):
@@ -19,8 +19,8 @@ class AppError(Exception):
         self,
         message: str,
         *,
-        field: Optional[str] = None,
-        details: Optional[Any] = None,
+        field: str | None = None,
+        details: Any | None = None,
     ) -> None:
         super().__init__(message)
         self.message = message

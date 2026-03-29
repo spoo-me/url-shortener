@@ -7,14 +7,14 @@ API key users require ``stats:read``, ``urls:read``, or ``admin:all``.
 
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import Response
 
 from dependencies import (
-    CurrentUser,
     STATS_SCOPES,
+    CurrentUser,
     get_export_service,
     optional_scopes,
 )
@@ -63,7 +63,7 @@ _export_limit, _export_key = dynamic_limit(
 async def export_v1(
     request: Request,
     query: Annotated[ExportQuery, Query()],
-    user: Optional[CurrentUser] = Depends(optional_scopes(STATS_SCOPES)),
+    user: CurrentUser | None = Depends(optional_scopes(STATS_SCOPES)),  # noqa: B008
     export_service: ExportService = Depends(get_export_service),
 ) -> Response:
     """Export URL click statistics as a downloadable file.

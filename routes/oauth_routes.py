@@ -19,8 +19,6 @@ from fastapi.responses import RedirectResponse
 
 from dependencies import AuthUser, get_oauth_service
 from errors import AppError, NotFoundError, ValidationError
-from schemas.dto.responses.auth import OAuthProvidersResponse
-from schemas.dto.responses.common import MessageResponse
 from infrastructure.oauth_clients import (
     PROVIDER_STRATEGIES,
     generate_oauth_state,
@@ -30,6 +28,8 @@ from infrastructure.oauth_clients import (
 from middleware.openapi import ERROR_RESPONSES, PUBLIC_SECURITY
 from middleware.rate_limiter import Limits, limiter
 from routes.cookie_helpers import set_auth_cookies
+from schemas.dto.responses.auth import OAuthProvidersResponse
+from schemas.dto.responses.common import MessageResponse
 from services.oauth_service import OAuthService
 from shared.ip_utils import get_client_ip
 from shared.logging import get_logger
@@ -205,7 +205,7 @@ async def oauth_callback(
     # ── Delegate to service ───────────────────────────────────────────────────
     action = state_data.get("action", "login")
     client_ip = get_client_ip(request)
-    user, access_token, refresh_token = await oauth_service.handle_callback(
+    _user, access_token, refresh_token = await oauth_service.handle_callback(
         provider, provider_info, action, state_data, client_ip
     )
 

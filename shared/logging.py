@@ -16,7 +16,6 @@ import logging
 import os
 import random
 import sys
-from typing import Optional
 
 import structlog
 from structlog.stdlib import BoundLogger
@@ -60,7 +59,7 @@ REDACTED_FIELDS = {
 # ---------------------------------------------------------------------------
 # IP hashing
 # ---------------------------------------------------------------------------
-def hash_ip(ip_address: Optional[str]) -> Optional[str]:
+def hash_ip(ip_address: str | None) -> str | None:
     """
     Hash IP address for privacy in production.
 
@@ -119,12 +118,14 @@ def redact_sensitive_fields(
 ) -> EventDict:
     """Redact sensitive fields from logs."""
     for key in list(event_dict.keys()):
-        if key.lower() in REDACTED_FIELDS or any(
-            sensitive in key.lower()
-            for sensitive in ["password", "token", "key", "secret"]
-        ):
-            if key not in ["level", "event", "timestamp", "logger"]:
-                event_dict[key] = "***REDACTED***"
+        if (
+            key.lower() in REDACTED_FIELDS
+            or any(
+                sensitive in key.lower()
+                for sensitive in ["password", "token", "key", "secret"]
+            )
+        ) and key not in ["level", "event", "timestamp", "logger"]:
+            event_dict[key] = "***REDACTED***"
     return event_dict
 
 
@@ -164,8 +165,8 @@ def configure_structlog() -> None:
 
     if LOG_FORMAT == "json":
         structlog.configure(
-            processors=shared_processors
-            + [
+            processors=[
+                *shared_processors,
                 structlog.processors.format_exc_info,
                 structlog.processors.JSONRenderer(),
             ],
@@ -178,8 +179,8 @@ def configure_structlog() -> None:
         _level_styles = structlog.dev.ConsoleRenderer.get_default_level_styles()
         _level_styles["debug"] = "\x1b[36m"  # cyan, distinct from info (green)
         structlog.configure(
-            processors=shared_processors
-            + [
+            processors=[
+                *shared_processors,
                 structlog.processors.format_exc_info,
                 structlog.dev.ConsoleRenderer(
                     colors=True,
@@ -256,11 +257,11 @@ def setup_logging() -> None:
 
 
 __all__ = [
+    "SAMPLING_RATES",
+    "configure_structlog",
     "get_logger",
     "hash_ip",
     "log_with_context",
-    "should_sample",
-    "SAMPLING_RATES",
-    "configure_structlog",
     "setup_logging",
+    "should_sample",
 ]

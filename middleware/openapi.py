@@ -11,7 +11,6 @@ from fastapi.openapi.utils import get_openapi
 
 from schemas.dto.responses.common import ErrorResponse
 
-
 # ── Shared response declarations for route decorators ─────────────────────────
 # Import these in route files: `from middleware.openapi import ERROR_RESPONSES, ...`
 

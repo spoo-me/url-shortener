@@ -16,7 +16,6 @@ to avoid bucket churn from mixed None/ObjectId types.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -47,5 +46,5 @@ class ClickDoc(MongoBaseModel):
     browser: str
     os: str
     redirect_ms: int
-    referrer: Optional[str] = None  # sanitised referrer domain, nullable
-    bot_name: Optional[str] = None  # nullable
+    referrer: str | None = None  # sanitised referrer domain, nullable
+    bot_name: str | None = None  # nullable

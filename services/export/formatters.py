@@ -51,11 +51,13 @@ class CsvFormatter:
             filename: str,
             rows: list[tuple[str, Any]],
         ) -> None:
-            with zipf.open(filename, "w") as f:
-                with io.TextIOWrapper(f, encoding="utf-8", newline="") as txt:
-                    writer = csv.writer(txt)
-                    for row in rows:
-                        writer.writerow(row)
+            with (
+                zipf.open(filename, "w") as f,
+                io.TextIOWrapper(f, encoding="utf-8", newline="") as txt,
+            ):
+                writer = csv.writer(txt)
+                for row in rows:
+                    writer.writerow(row)
 
         with zipfile.ZipFile(output, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
             summary = data.get("summary", {})

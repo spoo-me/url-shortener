@@ -8,7 +8,6 @@ Errors are logged and re-raised — the service layer decides recovery.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional
 
 from bson import ObjectId
 from pymongo.asynchronous.collection import AsyncCollection
@@ -24,7 +23,7 @@ class UrlRepository:
     def __init__(self, collection: AsyncCollection) -> None:
         self._col = collection
 
-    async def find_by_alias(self, alias: str) -> Optional[UrlV2Doc]:
+    async def find_by_alias(self, alias: str) -> UrlV2Doc | None:
         """Find a URL document by its short alias."""
         try:
             doc = await self._col.find_one({"alias": alias})
@@ -38,7 +37,7 @@ class UrlRepository:
             )
             raise
 
-    async def find_by_id(self, url_id: ObjectId) -> Optional[UrlV2Doc]:
+    async def find_by_id(self, url_id: ObjectId) -> UrlV2Doc | None:
         """Find a URL document by its ObjectId."""
         try:
             doc = await self._col.find_one({"_id": url_id})
@@ -120,7 +119,7 @@ class UrlRepository:
     async def increment_clicks(
         self,
         url_id: ObjectId,
-        last_click_time: Optional[datetime] = None,
+        last_click_time: datetime | None = None,
         increment: int = 1,
     ) -> None:
         """Atomically increment total_clicks and update last_click timestamp."""

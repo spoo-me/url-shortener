@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Annotated, Optional
+from typing import Annotated
 
 import jwt as pyjwt
 import structlog
@@ -38,13 +38,13 @@ class CurrentUser:
 
     user_id: ObjectId
     email_verified: bool
-    api_key_doc: Optional[ApiKeyDoc] = field(default=None)
+    api_key_doc: ApiKeyDoc | None = field(default=None)
 
 
 async def get_current_user(
     request: Request,
     db=Depends(get_db),
-) -> Optional[CurrentUser]:
+) -> CurrentUser | None:
     """Resolve the current user from the Authorization header or access_token cookie.
 
     Auth resolution order (mirrors the existing Flask implementation):
@@ -59,7 +59,7 @@ async def get_current_user(
     jwt_cfg = settings.jwt
 
     auth_header = request.headers.get("Authorization", "")
-    token: Optional[str] = None
+    token: str | None = None
 
     if auth_header.lower().startswith("bearer "):
         token = auth_header.split(" ", 1)[1].strip()
@@ -130,7 +130,7 @@ async def get_current_user(
 
 
 async def require_auth(
-    user: Optional[CurrentUser] = Depends(get_current_user),
+    user: CurrentUser | None = Depends(get_current_user),
 ) -> CurrentUser:
     """Raise 401 if the request is not authenticated."""
     if user is None:
@@ -170,14 +170,17 @@ async def require_jwt_verified(
     return user
 
 
-def check_api_key_scope(user: Optional[CurrentUser], required_scopes: set[str]) -> None:
+def check_api_key_scope(user: CurrentUser | None, required_scopes: set[str]) -> None:
     """Raise ForbiddenError if an API-key-authenticated user lacks a required scope.
 
     JWT-authenticated and anonymous requests are not scope-restricted.
     """
-    if user is not None and user.api_key_doc is not None:
-        if not set(user.api_key_doc.scopes) & required_scopes:
-            raise ForbiddenError("Insufficient scope for this operation")
+    if (
+        user is not None
+        and user.api_key_doc is not None
+        and not set(user.api_key_doc.scopes) & required_scopes
+    ):
+        raise ForbiddenError("Insufficient scope for this operation")
 
 
 # ── Named scope sets ─────────────────────────────────────────────────────────
@@ -221,8 +224,8 @@ def optional_scopes(scopes: set[str]):
     """
 
     async def _dep(
-        user: Optional[CurrentUser] = Depends(get_current_user),
-    ) -> Optional[CurrentUser]:
+        user: CurrentUser | None = Depends(get_current_user),
+    ) -> CurrentUser | None:
         check_api_key_scope(user, scopes)
         return user
 
@@ -242,8 +245,8 @@ def optional_scopes_verified(scopes: set[str]):
     """
 
     async def _dep(
-        user: Optional[CurrentUser] = Depends(optional_scopes(scopes)),
-    ) -> Optional[CurrentUser]:
+        user: CurrentUser | None = Depends(optional_scopes(scopes)),
+    ) -> CurrentUser | None:
         if user is not None and not user.email_verified:
             raise EmailNotVerifiedError("Email verification required")
         return user
@@ -255,6 +258,6 @@ def optional_scopes_verified(scopes: set[str]):
 
 AuthUser = Annotated[CurrentUser, Depends(require_auth)]
 VerifiedUser = Annotated[CurrentUser, Depends(require_verified_email)]
-OptionalUser = Annotated[Optional[CurrentUser], Depends(get_current_user)]
+OptionalUser = Annotated[CurrentUser | None, Depends(get_current_user)]
 JwtUser = Annotated[CurrentUser, Depends(require_jwt)]
 JwtVerifiedUser = Annotated[CurrentUser, Depends(require_jwt_verified)]

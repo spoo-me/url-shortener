@@ -7,7 +7,6 @@ Ported from utils/email_service.py:
 """
 
 import os
-from typing import Optional
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -44,10 +43,10 @@ class ZeptoMailProvider:
     async def _send(
         self,
         to_email: str,
-        to_name: Optional[str],
+        to_name: str | None,
         subject: str,
         html_body: str,
-        text_body: Optional[str] = None,
+        text_body: str | None = None,
     ) -> bool:
         if not self._settings.zepto_api_token:
             log.error("zepto_mail_send_failed", reason="token_not_configured")
@@ -104,7 +103,7 @@ class ZeptoMailProvider:
             return False
 
     async def send_verification_email(
-        self, email: str, user_name: Optional[str], otp_code: str
+        self, email: str, user_name: str | None, otp_code: str
     ) -> bool:
         subject = "Verify your email - spoo.me"
         template = self._jinja.get_template("verification.html")
@@ -120,7 +119,7 @@ class ZeptoMailProvider:
         )
         return await self._send(email, user_name, subject, html_body, text_body)
 
-    async def send_welcome_email(self, email: str, user_name: Optional[str]) -> bool:
+    async def send_welcome_email(self, email: str, user_name: str | None) -> bool:
         subject = "Welcome to spoo.me! 🎉"
         template = self._jinja.get_template("welcome.html")
         html_body = template.render(user_name=user_name, app_url=self._app_url)
@@ -132,7 +131,7 @@ class ZeptoMailProvider:
         return await self._send(email, user_name, subject, html_body, text_body)
 
     async def send_password_reset_email(
-        self, email: str, user_name: Optional[str], otp_code: str
+        self, email: str, user_name: str | None, otp_code: str
     ) -> bool:
         subject = "Reset your password - spoo.me"
         template = self._jinja.get_template("password_reset.html")

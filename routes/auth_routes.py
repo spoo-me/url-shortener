@@ -203,7 +203,7 @@ async def refresh(
         return resp
 
     try:
-        user, new_access, new_refresh = await auth_service.refresh_token(
+        _user, new_access, new_refresh = await auth_service.refresh_token(
             refresh_token_str
         )
     except AuthenticationError as exc:

@@ -7,8 +7,6 @@ Errors are logged and re-raised — the service layer decides recovery.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from bson import ObjectId
 from pymongo.asynchronous.collection import AsyncCollection
 from pymongo.errors import DuplicateKeyError, PyMongoError
@@ -23,7 +21,7 @@ class UserRepository:
     def __init__(self, collection: AsyncCollection) -> None:
         self._col = collection
 
-    async def find_by_email(self, email: str) -> Optional[UserDoc]:
+    async def find_by_email(self, email: str) -> UserDoc | None:
         """Find a user by email address."""
         try:
             doc = await self._col.find_one({"email": email})
@@ -36,7 +34,7 @@ class UserRepository:
             )
             raise
 
-    async def find_by_id(self, user_id: ObjectId) -> Optional[UserDoc]:
+    async def find_by_id(self, user_id: ObjectId) -> UserDoc | None:
         """Find a user by ObjectId."""
         try:
             doc = await self._col.find_one({"_id": user_id})
@@ -52,7 +50,7 @@ class UserRepository:
 
     async def find_by_oauth_provider(
         self, provider: str, provider_user_id: str
-    ) -> Optional[UserDoc]:
+    ) -> UserDoc | None:
         """
         Find a user by their OAuth provider and provider-issued user ID.
 

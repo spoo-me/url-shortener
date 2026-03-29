@@ -8,7 +8,6 @@ Framework-agnostic: no FastAPI imports.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional
 
 from bson import ObjectId
 
@@ -34,8 +33,8 @@ class ApiKeyService:
         scopes: list[str],
         user_id: ObjectId,
         email_verified: bool,
-        description: Optional[str] = None,
-        expires_at: Optional[datetime] = None,
+        description: str | None = None,
+        expires_at: datetime | None = None,
     ) -> tuple[ApiKeyDoc, str]:
         """Create a new API key.
 

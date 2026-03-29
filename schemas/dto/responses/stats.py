@@ -11,7 +11,7 @@ flexible dict rather than a rigid model.  The ``computed_metrics`` and
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -23,8 +23,8 @@ class StatsSummary(BaseModel):
 
     total_clicks: int
     unique_clicks: int
-    first_click: Optional[str] = None  # ISO 8601 string or null
-    last_click: Optional[str] = None  # ISO 8601 string or null
+    first_click: str | None = None  # ISO 8601 string or null
+    last_click: str | None = None  # ISO 8601 string or null
     avg_redirection_time: float
 
 
@@ -33,8 +33,8 @@ class StatsTimeRange(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    start_date: Optional[str] = None  # ISO 8601 string
-    end_date: Optional[str] = None  # ISO 8601 string
+    start_date: str | None = None  # ISO 8601 string
+    end_date: str | None = None  # ISO 8601 string
 
 
 class ComputedMetrics(BaseModel):
@@ -56,7 +56,7 @@ class TimeBucketInfo(BaseModel):
     mongo_format: str  # strftime format used in MongoDB $dateToString
     display_format: str  # strftime format used in the response labels
     timezone: str  # IANA timezone name
-    interval_minutes: Optional[int] = None  # only for fixed-interval strategies
+    interval_minutes: int | None = None  # only for fixed-interval strategies
 
 
 class StatsResponse(BaseModel):
@@ -87,14 +87,14 @@ class StatsResponse(BaseModel):
     )
 
     # Metadata fields added by format_stats_response_with_metadata
-    generated_at: Optional[str] = None  # ISO 8601 string
-    api_version: Optional[str] = None
+    generated_at: str | None = None  # ISO 8601 string
+    api_version: str | None = None
 
     # Only present when scope="anon"
-    short_code: Optional[str] = None
+    short_code: str | None = None
 
     # Only present when group_by includes "time"
-    time_bucket_info: Optional[TimeBucketInfo] = None
+    time_bucket_info: TimeBucketInfo | None = None
 
     # Only present when total_clicks > 0
-    computed_metrics: Optional[ComputedMetrics] = None
+    computed_metrics: ComputedMetrics | None = None

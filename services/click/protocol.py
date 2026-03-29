@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 from typing_extensions import Protocol
 
@@ -19,9 +18,9 @@ class ClickContext:
     client_ip: str
     start_time: float
     user_agent: str
-    referrer: Optional[str]
+    referrer: str | None
     is_emoji: bool = False
-    cf_city: Optional[str] = None
+    cf_city: str | None = None
 
 
 class ClickHandler(Protocol):

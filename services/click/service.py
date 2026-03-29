@@ -11,8 +11,6 @@ The ``"v1"`` handler is used as fallback for any unknown schema (covers
 
 from __future__ import annotations
 
-from typing import Optional
-
 from infrastructure.cache.url_cache import UrlCacheData
 from services.click.protocol import ClickContext, ClickHandler
 
@@ -37,8 +35,8 @@ class ClickService:
         client_ip: str,
         start_time: float,
         user_agent: str,
-        referrer: Optional[str],
-        cf_city: Optional[str] = None,
+        referrer: str | None,
+        cf_city: str | None = None,
     ) -> None:
         """
         Dispatch click tracking to the appropriate handler.
