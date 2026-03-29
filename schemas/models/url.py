@@ -12,7 +12,7 @@ Three separate schemas map to three MongoDB collections:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import ConfigDict, Field, field_validator
 
