@@ -52,7 +52,6 @@ class UrlV2Doc(MongoBaseModel):
     manage_token: Optional[str] = None
 
 
-
 class LegacyUrlDoc(MongoBaseModel):
     """
     Document model for the `urls` collection (v1 schema).

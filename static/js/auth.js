@@ -204,9 +204,19 @@ function updatePasswordStrength(password) {
 
         // Only show missing requirements
         if (missingReqs.length > 0) {
-            requirementsList.innerHTML = missingReqs.map(req => {
-                return `<li class="requirement-missing"><span class="requirement-icon">✗</span> ${req}</li>`;
-            }).join('');
+            requirementsList.innerHTML = '';
+            missingReqs.forEach(req => {
+                const li = document.createElement('li');
+                li.className = 'requirement-missing';
+
+                const icon = document.createElement('span');
+                icon.className = 'requirement-icon';
+                icon.textContent = '✗';
+
+                li.appendChild(icon);
+                li.appendChild(document.createTextNode(' ' + req));
+                requirementsList.appendChild(li);
+            });
             requirementsList.style.display = 'block';
         } else {
             requirementsList.style.display = 'none';
@@ -220,21 +230,41 @@ function showPasswordRequirements(missingRequirements) {
     if (missingRequirements.length === 0) return;
 
     const errorEl = document.getElementById('authError');
-    if (errorEl) {
-        const requirementsList = missingRequirements.map(req =>
-            `<li style="margin: 4px 0;"><span style="color: #ef4444; margin-right: 8px;">✗</span>${req}</li>`
-        ).join('');
+    if (!errorEl) return;
 
-        errorEl.innerHTML = `
-            <div style="text-align: left;">
-                <div style="margin-bottom: 8px; font-weight: 500;">Password requirements not met:</div>
-                <ul style="margin: 0; padding-left: 0; list-style: none;">
-                    ${requirementsList}
-                </ul>
-            </div>
-        `;
-        errorEl.style.display = 'block';
-    }
+    errorEl.innerHTML = '';
+    errorEl.style.display = 'block';
+
+    const container = document.createElement('div');
+    container.style.textAlign = 'left';
+
+    const title = document.createElement('div');
+    title.style.marginBottom = '8px';
+    title.style.fontWeight = '500';
+    title.textContent = 'Password requirements not met:';
+
+    const list = document.createElement('ul');
+    list.style.margin = '0';
+    list.style.paddingLeft = '0';
+    list.style.listStyle = 'none';
+
+    missingRequirements.forEach(req => {
+        const item = document.createElement('li');
+        item.style.margin = '4px 0';
+
+        const icon = document.createElement('span');
+        icon.style.color = '#ef4444';
+        icon.style.marginRight = '8px';
+        icon.textContent = '✗';
+
+        item.appendChild(icon);
+        item.appendChild(document.createTextNode(req));
+        list.appendChild(item);
+    });
+
+    container.appendChild(title);
+    container.appendChild(list);
+    errorEl.appendChild(container);
 }
 
 async function authFetch(input, init) {

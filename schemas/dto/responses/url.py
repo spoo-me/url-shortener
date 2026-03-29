@@ -56,7 +56,6 @@ class UrlResponse(BaseModel):
     )
 
 
-
 class UpdateUrlResponse(BaseModel):
     """Response body after a successful URL update (PATCH /api/v1/urls/{url_id})."""
 

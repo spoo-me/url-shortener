@@ -236,6 +236,7 @@ class UrlRepository:
                 error_type=type(exc).__name__,
             )
             raise
+
     async def claim_by_manage_token(
         self,
         alias: str,
@@ -271,4 +272,3 @@ class UrlRepository:
                 error_type=type(exc).__name__,
             )
             raise
-

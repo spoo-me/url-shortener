@@ -253,7 +253,7 @@ class UrlService:
             "total_clicks": 0,
             "last_click": None,
         }
- 
+
         raw_token: Optional[str] = None
         if owner_id is None:
             raw_token = secrets.token_urlsafe(32)
@@ -515,10 +515,14 @@ class UrlService:
             "sortOrder": "descending" if sort_order == -1 else "ascending",
         }
 
-    async def claim_url(self, alias: str, raw_token: str, new_owner_id: ObjectId) -> bool:
+    async def claim_url(
+        self, alias: str, raw_token: str, new_owner_id: ObjectId
+    ) -> bool:
         """Transfer ownership of an anonymous URL to an authenticated user."""
         token_hash = hash_token(raw_token)
-        return await self._url_repo.claim_by_manage_token(alias, token_hash, new_owner_id)
+        return await self._url_repo.claim_by_manage_token(
+            alias, token_hash, new_owner_id
+        )
 
     # ── Private helpers ───────────────────────────────────────────────────────
 

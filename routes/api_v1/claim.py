@@ -21,7 +21,9 @@ _claim_limit, _claim_key = dynamic_limit(Limits.API_AUTHED, Limits.API_AUTHED)
 
 class ClaimUrlRequest(BaseModel):
     alias: str = Field(..., description="The short alias to claim.")
-    manage_token: str = Field(..., description="The one-time token returned at creation.")
+    manage_token: str = Field(
+        ..., description="The one-time token returned at creation."
+    )
 
 
 class ClaimUrlResponse(BaseModel):
