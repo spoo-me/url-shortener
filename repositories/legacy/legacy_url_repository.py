@@ -19,12 +19,14 @@ from __future__ import annotations
 from typing import Any
 
 from pymongo.asynchronous.collection import AsyncCollection
-from pymongo.errors import DuplicateKeyError, PyMongoError
+from pymongo.errors import DuplicateKeyError, PyMongoError, WriteError
 
 from schemas.models.url import LegacyUrlDoc
 from shared.logging import get_logger
 
 log = get_logger(__name__)
+
+_DOCUMENT_TOO_LARGE_CODE = 10334
 
 
 class LegacyUrlRepository:
@@ -77,9 +79,34 @@ class LegacyUrlRepository:
         $inc/$set/$addToSet pattern from the legacy handle_legacy_click().
         The repository does not interpret or construct the update — it
         executes it as-is to preserve the exact embedded analytics format.
+
+        If the update exceeds MongoDB's 16 MB document limit (due to
+        unbounded $addToSet IP arrays), only total-clicks is incremented.
         """
         try:
             await self._col.update_one({"_id": short_code}, update_ops)
+        except WriteError as exc:
+            if exc.code != _DOCUMENT_TOO_LARGE_CODE:
+                raise
+            # $inc on an existing integer never changes BSON size.
+            inc = update_ops.get("$inc", {}).get("total-clicks", 1)
+            try:
+                await self._col.update_one(
+                    {"_id": short_code}, {"$inc": {"total-clicks": inc}}
+                )
+            except PyMongoError as retry_exc:
+                log.error(
+                    "legacy_url_repo_overflow_retry_failed",
+                    short_code=short_code,
+                    error=str(retry_exc),
+                    error_type=type(retry_exc).__name__,
+                )
+                raise
+            log.info(
+                "legacy_url_repo_document_overflow",
+                short_code=short_code,
+                msg="document exceeded 16 MB limit; click recorded with total-clicks only",
+            )
         except PyMongoError as exc:
             log.error(
                 "legacy_url_repo_update_failed",

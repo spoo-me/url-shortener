@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
+from pymongo.errors import WriteError
 
 from .conftest import _legacy_url_doc, make_collection
 
@@ -47,6 +48,33 @@ class TestEmojiUrlRepository:
         ops = {"$inc": {"total-clicks": 1}, "$set": {"last-click": "2024-01-01"}}
         await self._repo(col).update("\U0001f525\U0001f4af", ops)
         col.update_one.assert_awaited_once_with({"_id": "\U0001f525\U0001f4af"}, ops)
+
+    @pytest.mark.asyncio
+    async def test_update_retries_with_inc_only_on_document_overflow(self):
+        col = make_collection()
+        update_ops = {
+            "$inc": {
+                "total-clicks": 1,
+                "counter.2024-01-15": 1,
+                "country.US.counts": 1,
+            },
+            "$set": {
+                "last-click": "2024-01-15 12:00:00",
+                "last-click-browser": "Chrome",
+            },
+            "$addToSet": {"ips": "1.2.3.4", "country.US.ips": "1.2.3.4"},
+        }
+        col.update_one = AsyncMock(
+            side_effect=[WriteError("too large", code=10334), MagicMock()]
+        )
+        await self._repo(col).update("\U0001f525\U0001f4af", update_ops)
+        col.update_one.assert_has_awaits(
+            [
+                call({"_id": "\U0001f525\U0001f4af"}, update_ops),
+                call({"_id": "\U0001f525\U0001f4af"}, {"$inc": {"total-clicks": 1}}),
+            ],
+            any_order=False,
+        )
 
     @pytest.mark.asyncio
     async def test_check_exists_true(self):
