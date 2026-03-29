@@ -35,10 +35,11 @@ def convert_country_name(country_name: str) -> str:
     Returns:
         ISO 2-letter country code (e.g., "US", "DE") or "XX" if not found
     """
+    name = country_name.strip()
     try:
-        return pycountry.countries.lookup(country_name.strip()).alpha_2
+        return pycountry.countries.lookup(name).alpha_2
     except (LookupError, ImportError):
-        return {"Turkey": "TR", "Russia": "RU"}.get(country_name, "XX")
+        return {"Turkey": "TR", "Russia": "RU"}.get(name, "XX")
 
 
 class AggregationStrategy(ABC):
