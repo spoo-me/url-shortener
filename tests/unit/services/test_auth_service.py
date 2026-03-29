@@ -483,6 +483,100 @@ class TestVerifyEmail:
         assert access is not None
 
 
+# ── Send verification tests ──────────────────────────────────────────────────
+
+
+class TestSendVerification:
+    @pytest.mark.asyncio
+    async def test_send_verification_success(self):
+        svc = make_auth_service()
+        svc._user_repo.find_by_id.return_value = make_user_doc(email_verified=False)
+        svc._token_repo.count_recent.return_value = 0
+        svc._token_repo.create.return_value = ObjectId()
+        svc._email.send_verification_email.return_value = True
+
+        await svc.send_verification(str(USER_OID))
+        svc._email.send_verification_email.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_send_verification_already_verified_raises(self):
+        svc = make_auth_service()
+        svc._user_repo.find_by_id.return_value = make_user_doc(email_verified=True)
+
+        with pytest.raises(ValidationError, match="already verified"):
+            await svc.send_verification(str(USER_OID))
+
+    @pytest.mark.asyncio
+    async def test_send_verification_user_not_found_raises(self):
+        from errors import NotFoundError
+
+        svc = make_auth_service()
+        svc._user_repo.find_by_id.return_value = None
+
+        with pytest.raises(NotFoundError, match="user not found"):
+            await svc.send_verification(str(USER_OID))
+
+    @pytest.mark.asyncio
+    async def test_send_verification_rate_limited_by_service(self):
+        """Service-level rate limit: raises when MAX_TOKENS_PER_HOUR exceeded."""
+        from errors import RateLimitError
+
+        svc = make_auth_service()
+        svc._user_repo.find_by_id.return_value = make_user_doc(email_verified=False)
+        svc._token_repo.count_recent.return_value = 3  # MAX_TOKENS_PER_HOUR
+
+        with pytest.raises(RateLimitError, match="Too many verification attempts"):
+            await svc.send_verification(str(USER_OID))
+
+        # Email must NOT be sent when rate limited
+        svc._email.send_verification_email.assert_not_called()
+
+
+# ── OTP rate limit tests ─────────────────────────────────────────────────────
+
+
+class TestOTPRateLimit:
+    @pytest.mark.asyncio
+    async def test_create_otp_at_limit_raises(self):
+        """_create_otp raises RateLimitError when count_recent >= MAX_TOKENS_PER_HOUR."""
+        from errors import RateLimitError
+        from schemas.models.token import TOKEN_TYPE_EMAIL_VERIFY
+
+        svc = make_auth_service()
+        svc._token_repo.count_recent.return_value = 3
+
+        with pytest.raises(RateLimitError):
+            await svc._create_otp(USER_OID, "test@example.com", TOKEN_TYPE_EMAIL_VERIFY)
+
+    @pytest.mark.asyncio
+    async def test_create_otp_below_limit_succeeds(self):
+        from schemas.models.token import TOKEN_TYPE_EMAIL_VERIFY
+
+        svc = make_auth_service()
+        svc._token_repo.count_recent.return_value = 2
+        svc._token_repo.create.return_value = ObjectId()
+
+        otp = await svc._create_otp(
+            USER_OID, "test@example.com", TOKEN_TYPE_EMAIL_VERIFY
+        )
+        assert isinstance(otp, str)
+        assert len(otp) == 6
+
+    @pytest.mark.asyncio
+    async def test_create_otp_password_reset_rate_limit_message(self):
+        """Password reset rate limit has a different error message."""
+        from errors import RateLimitError
+        from schemas.models.token import TOKEN_TYPE_PASSWORD_RESET
+
+        svc = make_auth_service()
+        svc._token_repo.count_recent.return_value = 3
+
+        with pytest.raises(RateLimitError, match="password reset"):
+            await svc._create_otp(
+                USER_OID, "test@example.com", TOKEN_TYPE_PASSWORD_RESET
+            )
+
+
 # ── Request password reset tests ──────────────────────────────────────────────
 
 

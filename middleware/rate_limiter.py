@@ -42,7 +42,7 @@ class Limits:
     TOKEN_REFRESH = "20 per minute"
     AUTH_READ = "60 per minute"
     SET_PASSWORD = "5 per minute"
-    RESEND_VERIFICATION = "3 per hour"
+    RESEND_VERIFICATION = "1 per minute; 3 per hour"
     EMAIL_VERIFY = "10 per hour"
     PASSWORD_RESET_REQUEST = "3 per hour"
     PASSWORD_RESET_CONFIRM = "5 per hour"

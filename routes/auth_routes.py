@@ -28,7 +28,7 @@ from fastapi.templating import Jinja2Templates
 from dependencies import AuthUser, get_auth_service
 from errors import AuthenticationError
 from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES, PUBLIC_SECURITY
-from middleware.rate_limiter import limiter
+from middleware.rate_limiter import Limits, limiter
 from routes.cookie_helpers import clear_auth_cookies, set_auth_cookies
 from schemas.dto.requests.auth import (
     LoginRequest,
@@ -325,7 +325,7 @@ async def verify_page(
     operation_id="sendVerification",
     summary="Send Verification Email",
 )
-@limiter.limit("3 per hour")
+@limiter.limit(Limits.RESEND_VERIFICATION)
 async def send_verification(
     request: Request,
     user: AuthUser,
@@ -395,7 +395,7 @@ async def verify_email(
     operation_id="requestPasswordReset",
     summary="Request Password Reset",
 )
-@limiter.limit("3 per hour")
+@limiter.limit(Limits.PASSWORD_RESET_REQUEST)
 async def request_password_reset(
     request: Request,
     body: RequestPasswordResetRequest,
