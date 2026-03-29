@@ -54,7 +54,7 @@ propcache==0.4.1
 pycountry==26.2.16
 pycparser==3.0
 pydantic==2.12.5
-pydantic-core==2.41.5
+pydantic-core==2.44.0
 pydantic-settings==2.13.1
 pygments==2.19.2
 pyjwt==2.12.1
