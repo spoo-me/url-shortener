@@ -31,7 +31,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font
 
 from dependencies import get_db
-from middleware.rate_limiter import limiter
+from middleware.rate_limiter import Limits, limiter
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
 from repositories.legacy.legacy_url_repository import LegacyUrlRepository
 from shared.datetime_utils import convert_to_gmt
@@ -60,7 +60,7 @@ templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 
 @router.api_route("/stats", methods=["GET", "POST"], include_in_schema=False)
 @router.api_route("/stats/", methods=["GET", "POST"], include_in_schema=False)
-@limiter.limit("20 per minute; 1000 per day")
+@limiter.limit(Limits.STATS_LEGACY_PAGE)
 async def stats_route(request: Request, db=Depends(get_db)) -> Response:
     """Stats entry form — GET renders the form; POST redirects to /stats/<code>."""
     host_url = str(request.base_url)
@@ -141,7 +141,7 @@ async def stats_route(request: Request, db=Depends(get_db)) -> Response:
 @router.api_route(
     "/stats/{short_code}", methods=["GET", "POST"], include_in_schema=False
 )
-@limiter.limit("20 per minute; 1000 per day")
+@limiter.limit(Limits.STATS_LEGACY_PAGE)
 async def analytics(short_code: str, request: Request, db=Depends(get_db)) -> Response:
     """Analytics page — GET renders stats_view.html; POST returns JSON."""
     password = request.query_params.get("password") or (
@@ -268,7 +268,7 @@ async def analytics(short_code: str, request: Request, db=Depends(get_db)) -> Re
 @router.api_route(
     "/export/{short_code}/{fmt}", methods=["GET", "POST"], include_in_schema=False
 )
-@limiter.limit("10 per minute; 200 per day")
+@limiter.limit(Limits.STATS_LEGACY_EXPORT)
 async def export(
     short_code: str, fmt: str, request: Request, db=Depends(get_db)
 ) -> Response:

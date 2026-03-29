@@ -22,7 +22,7 @@ from dependencies import (
 )
 from errors import ValidationError
 from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES
-from middleware.rate_limiter import limiter
+from middleware.rate_limiter import Limits, limiter
 from shared.datetime_utils import to_unix_timestamp
 from schemas.dto.requests.url import UpdateUrlRequest, UpdateUrlStatusRequest
 from schemas.dto.responses.url import DeleteUrlResponse, UpdateUrlResponse
@@ -45,7 +45,7 @@ def _parse_url_id(url_id: str) -> ObjectId:
     operation_id="updateUrl",
     summary="Update URL",
 )
-@limiter.limit("120 per minute; 2000 per day")
+@limiter.limit(Limits.URL_MANAGE)
 async def update_url_v1(
     request: Request,
     url_id: Annotated[str, Path(description="Unique identifier of the URL")],
@@ -96,7 +96,7 @@ async def update_url_v1(
     operation_id="updateUrlStatus",
     summary="Update URL Status",
 )
-@limiter.limit("120 per minute; 2000 per day")
+@limiter.limit(Limits.URL_MANAGE)
 async def update_url_status_v1(
     request: Request,
     url_id: Annotated[str, Path(description="Unique identifier of the URL")],
@@ -149,7 +149,7 @@ async def update_url_status_v1(
     operation_id="deleteUrl",
     summary="Delete URL",
 )
-@limiter.limit("60 per minute; 1000 per day")
+@limiter.limit(Limits.URL_DELETE)
 async def delete_url_v1(
     request: Request,
     url_id: Annotated[str, Path(description="Unique identifier of the URL")],

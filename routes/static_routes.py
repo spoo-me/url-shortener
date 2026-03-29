@@ -16,7 +16,7 @@ from fastapi.templating import Jinja2Templates
 
 from dependencies import get_contact_service, get_url_service
 from errors import AppError, ForbiddenError, ValidationError
-from middleware.rate_limiter import limiter
+from middleware.rate_limiter import Limits, limiter
 from services.contact_service import ContactService
 from services.url_service import UrlService
 from shared.ip_utils import get_client_ip
@@ -138,7 +138,7 @@ async def docs_wildcard(path: str, request: Request) -> Response:
 
 
 @router.api_route("/contact", methods=["GET", "POST"], include_in_schema=False)
-@limiter.limit("5 per minute; 20 per hour; 50 per day")
+@limiter.limit(Limits.CONTACT)
 async def contact(
     request: Request,
     contact_service: ContactService = Depends(get_contact_service),
@@ -204,7 +204,7 @@ async def contact(
 
 
 @router.api_route("/report", methods=["GET", "POST"], include_in_schema=False)
-@limiter.limit("5 per minute; 20 per hour; 50 per day")
+@limiter.limit(Limits.CONTACT)
 async def report(
     request: Request,
     contact_service: ContactService = Depends(get_contact_service),

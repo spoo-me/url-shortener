@@ -350,7 +350,11 @@ document.addEventListener('DOMContentLoaded', function () {
     fetchKeys();
 
     // New key button
-    keyElements.newKeyBtn?.addEventListener('click', openCreateKeyModal);
+    keyElements.newKeyBtn?.addEventListener('click', function () {
+        if (checkVerificationBeforeAPIKey()) {
+            openCreateKeyModal();
+        }
+    });
 
     // Create key button
     keyElements.createBtn?.addEventListener('click', createKey);

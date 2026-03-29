@@ -23,7 +23,7 @@ from fastapi.templating import Jinja2Templates
 
 from dependencies import get_db, get_redis, get_settings, get_url_service
 from infrastructure.cache.dual_cache import DualCache
-from middleware.rate_limiter import limiter
+from middleware.rate_limiter import Limits, limiter
 from repositories.blocked_url_repository import BlockedUrlRepository
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
 from repositories.legacy.legacy_url_repository import LegacyUrlRepository
@@ -77,7 +77,7 @@ async def index(request: Request) -> Response:
 
 
 @router.post("/")
-@limiter.limit("100 per minute")
+@limiter.limit(Limits.SHORTEN_LEGACY)
 async def shorten_url(
     request: Request,
     db=Depends(get_db),
@@ -245,7 +245,7 @@ async def shorten_url(
 
 
 @router.api_route("/emoji", methods=["GET", "POST"], include_in_schema=False)
-@limiter.limit("100 per minute")
+@limiter.limit(Limits.SHORTEN_LEGACY)
 async def emoji(
     request: Request,
     db=Depends(get_db),
@@ -410,7 +410,7 @@ async def result(
 
 
 @router.get("/{short_code}+")
-@limiter.limit("100 per minute")
+@limiter.limit(Limits.SHORTEN_LEGACY)
 async def preview_url(
     short_code: str,
     request: Request,

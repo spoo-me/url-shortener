@@ -42,7 +42,7 @@ class Limits:
     TOKEN_REFRESH = "20 per minute"
     AUTH_READ = "60 per minute"
     SET_PASSWORD = "5 per minute"
-    RESEND_VERIFICATION = "3 per hour"
+    RESEND_VERIFICATION = "1 per minute; 3 per hour"
     EMAIL_VERIFY = "10 per hour"
     PASSWORD_RESET_REQUEST = "3 per hour"
     PASSWORD_RESET_CONFIRM = "5 per hour"
@@ -61,11 +61,17 @@ class Limits:
     # API keys
     API_KEY_CREATE = "5 per hour"
     API_KEY_READ = "60 per minute"
+    API_KEY_DELETE = "30 per minute"
+
+    # URL management
+    URL_MANAGE = "120 per minute; 2000 per day"
+    URL_DELETE = "60 per minute; 1000 per day"
+
+    # Dashboard — profile pictures
+    PROFILE_PICTURE_SET = "10 per minute"
 
     # Contact / report
-    CONTACT_MINUTE = "3 per minute"
-    CONTACT_HOUR = "10 per hour"
-    CONTACT_DAY = "20 per day"
+    CONTACT = "5 per minute; 20 per hour; 50 per day"
 
     # URL shortener (legacy endpoint)
     SHORTEN_LEGACY = "100 per minute"
