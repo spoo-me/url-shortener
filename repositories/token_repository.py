@@ -37,32 +37,6 @@ class TokenRepository:
             )
             raise
 
-    async def find_by_hash(
-        self, token_hash: str, token_type: str
-    ) -> VerificationTokenDoc | None:
-        """
-        Find a non-used token by its SHA-256 hash and type.
-
-        Only returns tokens where ``used_at`` is None (not yet consumed).
-        """
-        try:
-            doc = await self._col.find_one(
-                {
-                    "token_hash": token_hash,
-                    "token_type": token_type,
-                    "used_at": None,
-                }
-            )
-            return VerificationTokenDoc.from_mongo(doc)
-        except PyMongoError as exc:
-            log.error(
-                "token_repo_find_by_hash_failed",
-                token_type=token_type,
-                error=str(exc),
-                error_type=type(exc).__name__,
-            )
-            raise
-
     async def mark_as_used(self, token_id: ObjectId) -> bool:
         """
         Mark a token as consumed by setting ``used_at`` to now.
