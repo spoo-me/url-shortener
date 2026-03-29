@@ -9,7 +9,6 @@ Errors are logged and re-raised — the service layer decides recovery.
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 from bson import ObjectId
 from pymongo.asynchronous.collection import AsyncCollection
@@ -40,7 +39,7 @@ class TokenRepository:
 
     async def find_by_hash(
         self, token_hash: str, token_type: str
-    ) -> Optional[VerificationTokenDoc]:
+    ) -> VerificationTokenDoc | None:
         """
         Find a non-used token by its SHA-256 hash and type.
 
@@ -86,7 +85,7 @@ class TokenRepository:
             raise
 
     async def delete_by_user(
-        self, user_id: ObjectId, token_type: Optional[str] = None
+        self, user_id: ObjectId, token_type: str | None = None
     ) -> int:
         """
         Delete all tokens for a user, optionally filtered by token type.

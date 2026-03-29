@@ -6,7 +6,6 @@ import pytest
 
 from shared.datetime_utils import convert_to_gmt, parse_datetime
 
-
 # ---------------------------------------------------------------------------
 # shared.datetime_utils — parse_datetime
 # ---------------------------------------------------------------------------

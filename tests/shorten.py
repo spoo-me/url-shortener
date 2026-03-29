@@ -1,7 +1,8 @@
-import sys
-import requests
 import random
 import string
+import sys
+
+import requests
 
 BASE_URL = "http://localhost:8000"
 
@@ -129,7 +130,7 @@ def test_missing_url():
         f"{BASE_URL}/api/v1/shorten",
         json={},
     )
-    assert response.status_code == 400, f"Expected 400, got {response.status_code}"
+    assert response.status_code == 422, f"Expected 422, got {response.status_code}"
     print("✅ Missing URL rejected")
 
 

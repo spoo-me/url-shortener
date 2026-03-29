@@ -14,7 +14,6 @@ from schemas.dto.responses.stats import (
     StatsTimeRange,
 )
 
-
 # ── StatsQuery ─────────────────────────────────────────────────────────────────
 
 

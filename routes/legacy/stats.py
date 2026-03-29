@@ -35,8 +35,6 @@ from middleware.rate_limiter import Limits, limiter
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
 from repositories.legacy.legacy_url_repository import LegacyUrlRepository
 from shared.datetime_utils import convert_to_gmt
-from shared.logging import get_logger
-from shared.validators import validate_emoji_alias
 from shared.legacy_helpers import (
     add_missing_dates,
     calculate_click_averages,
@@ -44,6 +42,8 @@ from shared.legacy_helpers import (
     get_stats_pipeline,
     top_four,
 )
+from shared.logging import get_logger
+from shared.validators import validate_emoji_alias
 
 log = get_logger(__name__)
 
@@ -175,37 +175,34 @@ async def analytics(short_code: str, request: Request, db=Depends(get_db)) -> Re
             {"UrlError": "The requested Url never existed"}, status_code=404
         )
 
-    if url_data.get("password") is not None:
-        if password != url_data["password"]:
-            log.warning("legacy_analytics_password_incorrect", short_code=short_code)
-            if request.method == "POST":
-                return JSONResponse(
-                    {"PasswordError": "Invalid Password"}, status_code=400
-                )
-            if not password:
-                return templates.TemplateResponse(
-                    request,
-                    "stats.html",
-                    {
-                        "url": short_code,
-                        "password_error": (
-                            f"{host_url}{short_code} is a password protected Url,"
-                            " please enter the password to continue."
-                        ),
-                        "host_url": host_url,
-                    },
-                    status_code=400,
-                )
+    if url_data.get("password") is not None and password != url_data["password"]:
+        log.warning("legacy_analytics_password_incorrect", short_code=short_code)
+        if request.method == "POST":
+            return JSONResponse({"PasswordError": "Invalid Password"}, status_code=400)
+        if not password:
             return templates.TemplateResponse(
                 request,
                 "stats.html",
                 {
                     "url": short_code,
-                    "password_error": "Invalid Password! please enter the correct password to continue.",
+                    "password_error": (
+                        f"{host_url}{short_code} is a password protected Url,"
+                        " please enter the password to continue."
+                    ),
                     "host_url": host_url,
                 },
                 status_code=400,
             )
+        return templates.TemplateResponse(
+            request,
+            "stats.html",
+            {
+                "url": short_code,
+                "password_error": "Invalid Password! please enter the correct password to continue.",
+                "host_url": host_url,
+            },
+            status_code=400,
+        )
 
     # Expiry check
     if url_data.get("max-clicks") is not None:
@@ -381,14 +378,16 @@ def _export_csv(data: dict) -> Response:
     output = io.BytesIO()
 
     def write_dict(zipf, filename, dictionary, key_field, value_field):
-        with zipf.open(filename, "w") as f:
-            with io.TextIOWrapper(f, encoding="utf-8", newline="") as tf:
-                writer = csv.writer(tf)
-                writer.writerow([key_field, value_field])
-                for k, v in dictionary.items():
-                    if isinstance(v, dict):
-                        v = v.get("counts", 0)
-                    writer.writerow([k, v])
+        with (
+            zipf.open(filename, "w") as f,
+            io.TextIOWrapper(f, encoding="utf-8", newline="") as tf,
+        ):
+            writer = csv.writer(tf)
+            writer.writerow([key_field, value_field])
+            for k, v in dictionary.items():
+                if isinstance(v, dict):
+                    v = v.get("counts", 0)
+                writer.writerow([k, v])
 
     with zipfile.ZipFile(output, mode="w", compression=zipfile.ZIP_DEFLATED) as zipf:
         general_info = {
@@ -414,11 +413,13 @@ def _export_csv(data: dict) -> Response:
             "LAST CLICK COUNTRY": data.get("last-click-country", "N/A"),
             "LAST CLICK OS": data.get("last-click-os", "N/A"),
         }
-        with zipf.open("general_info.csv", "w") as f:
-            with io.TextIOWrapper(f, encoding="utf-8", newline="") as tf:
-                writer = csv.writer(tf)
-                for k, v in general_info.items():
-                    writer.writerow([k, v])
+        with (
+            zipf.open("general_info.csv", "w") as f,
+            io.TextIOWrapper(f, encoding="utf-8", newline="") as tf,
+        ):
+            writer = csv.writer(tf)
+            for k, v in general_info.items():
+                writer.writerow([k, v])
 
         fields = {
             "counter": ("Date", "Count"),

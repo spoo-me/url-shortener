@@ -15,6 +15,7 @@ from slowapi.errors import RateLimitExceeded
 os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
 
 from bson import ObjectId
+
 from config import AppSettings
 from dependencies import (
     CurrentUser,

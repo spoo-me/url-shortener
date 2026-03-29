@@ -7,8 +7,6 @@ Errors are logged and re-raised — the service layer decides recovery.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from bson import ObjectId
 from pymongo.asynchronous.collection import AsyncCollection
 from pymongo.errors import DuplicateKeyError, PyMongoError
@@ -39,7 +37,7 @@ class ApiKeyRepository:
             )
             raise
 
-    async def find_by_hash(self, token_hash: str) -> Optional[ApiKeyDoc]:
+    async def find_by_hash(self, token_hash: str) -> ApiKeyDoc | None:
         """Find an API key document by its SHA-256 token hash."""
         try:
             doc = await self._col.find_one({"token_hash": token_hash})

@@ -6,8 +6,8 @@ create_app() is the single entry point for building the app.
 from __future__ import annotations
 
 import os
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Optional
 
 import redis.asyncio as aioredis
 import sentry_sdk
@@ -35,8 +35,6 @@ from middleware.openapi import (
 from middleware.rate_limiter import limiter
 from middleware.security import MaxContentLengthMiddleware, configure_cors
 from repositories.indexes import ensure_indexes
-from shared.logging import get_logger
-
 from routes.api_v1 import router as api_v1_router
 from routes.auth_routes import router as auth_router
 from routes.dashboard_routes import router as dashboard_router
@@ -46,6 +44,7 @@ from routes.legacy.url_shortener import router as legacy_url_router
 from routes.oauth_routes import router as oauth_router
 from routes.redirect_routes import router as redirect_router
 from routes.static_routes import router as static_router
+from shared.logging import get_logger
 
 log = get_logger(__name__)
 
@@ -53,7 +52,7 @@ _SCALAR_CDN = "https://cdn.jsdelivr.net/npm/@scalar/api-reference"
 _DOCS_URL = "https://docs.spoo.me"
 
 
-def create_app(settings: Optional[AppSettings] = None) -> FastAPI:
+def create_app(settings: AppSettings | None = None) -> FastAPI:
     """Create and return a fully configured FastAPI application."""
     if settings is None:
         settings = AppSettings()

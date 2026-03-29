@@ -121,9 +121,8 @@ class TestFormatters:
 
     def test_csv_formatter_summary_contains_total_clicks(self):
         content = CsvFormatter().serialize(SAMPLE_STATS)
-        with zipfile.ZipFile(BytesIO(content)) as zf:
-            with zf.open("summary.csv") as f:
-                csv_text = f.read().decode("utf-8")
+        with zipfile.ZipFile(BytesIO(content)) as zf, zf.open("summary.csv") as f:
+            csv_text = f.read().decode("utf-8")
         assert "total_clicks" in csv_text
         assert "100" in csv_text
 
@@ -170,7 +169,7 @@ class TestFormatValidation:
     async def test_known_formats_do_not_raise(self):
         for fmt in ("json", "xml", "csv", "xlsx"):
             svc, _ = make_service()
-            content, mimetype, filename = await svc.export(fmt=fmt, **QUERY_KWARGS)
+            content, _mimetype, _filename = await svc.export(fmt=fmt, **QUERY_KWARGS)
             assert len(content) > 0, f"{fmt} produced empty content"
 
 

@@ -8,7 +8,7 @@ Python objects and raw MongoDB dicts.
 
 from __future__ import annotations
 
-from typing import Any, Optional, TypeVar
+from typing import Any, TypeVar
 
 from bson import ObjectId
 from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler
@@ -61,7 +61,7 @@ class MongoBaseModel(BaseModel):
         arbitrary_types_allowed=True,
     )
 
-    id: Optional[PyObjectId] = Field(default=None, alias="_id")
+    id: PyObjectId | None = Field(default=None, alias="_id")
 
     def to_mongo(self) -> dict:
         """Return a dict ready for MongoDB insertion.
@@ -77,7 +77,7 @@ class MongoBaseModel(BaseModel):
         return data
 
     @classmethod
-    def from_mongo(cls: type[_T], data: Optional[dict]) -> Optional[_T]:
+    def from_mongo(cls: type[_T], data: dict | None) -> _T | None:
         """Build a model instance from a raw MongoDB document dict.
 
         Returns None when data is None (e.g. find_one returns None).

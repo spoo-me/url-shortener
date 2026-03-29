@@ -10,7 +10,7 @@ other API keys — only JWT Bearer auth is accepted here, matching the original)
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional
+
 from bson import ObjectId
 from fastapi import APIRouter, Depends, Query, Request
 
@@ -70,7 +70,7 @@ async def create_api_key(
     - Omit `expires_at` for a non-expiring key
     """
     # Parse expires_at from the raw value in the DTO
-    expires_at: Optional[datetime] = None
+    expires_at: datetime | None = None
     if body.expires_at is not None:
         expires_at = parse_datetime(body.expires_at)
         if expires_at is None:
@@ -178,7 +178,7 @@ async def delete_api_key(
     try:
         key_oid = ObjectId(key_id)
     except Exception:
-        raise NotFoundError("key not found or access denied")
+        raise NotFoundError("key not found or access denied") from None
 
     ok = await api_key_service.revoke(user.user_id, key_oid, hard_delete=not revoke)
     if not ok:

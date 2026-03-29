@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from .conftest import make_collection, _api_key_doc, USER_OID, KEY_OID
+import pytest
+
+from .conftest import KEY_OID, USER_OID, _api_key_doc, make_collection
 
 
 class TestApiKeyRepository:

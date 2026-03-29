@@ -19,7 +19,6 @@ from __future__ import annotations
 import re
 import time
 from datetime import datetime, timezone
-from typing import Optional
 
 from bson import ObjectId
 
@@ -156,14 +155,12 @@ class UrlService:
         """Return True if alias is free in both urlsV2 and legacy urls collections."""
         if await self._url_repo.check_alias_exists(alias):
             return False
-        if await self._legacy_repo.check_exists(alias):
-            return False
-        return True
+        return not await self._legacy_repo.check_exists(alias)
 
     async def create(
         self,
         request: CreateUrlRequest,
-        owner_id: Optional[ObjectId],
+        owner_id: ObjectId | None,
         client_ip: str,
     ) -> UrlV2Doc:
         """
@@ -198,12 +195,12 @@ class UrlService:
             raise ValidationError("URL is blocked", field="long_url")
 
         # 3. Password hash (cheap — do before alias generation loop)
-        password_hash: Optional[str] = None
+        password_hash: str | None = None
         if request.password:
             password_hash = hash_password(request.password)
 
         # 4. expire_after (cheap — validate before alias generation loop)
-        expire_ts: Optional[datetime] = None
+        expire_ts: datetime | None = None
         if request.expire_after is not None:
             expire_ts = parse_datetime(request.expire_after)
             if expire_ts is None:
@@ -231,7 +228,7 @@ class UrlService:
             alias = await self._generate_unique_alias()
 
         # 6. private_stats default depends on auth state
-        private_stats: Optional[bool] = request.private_stats
+        private_stats: bool | None = request.private_stats
         if private_stats is None:
             private_stats = True if owner_id is not None else None
 
@@ -463,7 +460,7 @@ class UrlService:
                 except re.error:
                     raise ValidationError(
                         "Invalid search pattern", field="filter.search"
-                    )
+                    ) from None
 
         sort_order = (
             -1 if query.sort_order.lower() in ("desc", "descending", "-1") else 1
@@ -509,7 +506,7 @@ class UrlService:
 
     # ── Private helpers ───────────────────────────────────────────────────────
 
-    async def _dispatch(self, short_code: str) -> tuple[Optional[UrlCacheData], str]:
+    async def _dispatch(self, short_code: str) -> tuple[UrlCacheData | None, str]:
         """
         Determine URL schema and fetch from the appropriate collection.
 
@@ -533,9 +530,7 @@ class UrlService:
         else:
             return await self._try_v2_then_v1(short_code)
 
-    async def _try_v2_then_v1(
-        self, short_code: str
-    ) -> tuple[Optional[UrlCacheData], str]:
+    async def _try_v2_then_v1(self, short_code: str) -> tuple[UrlCacheData | None, str]:
         v2_doc = await self._url_repo.find_by_alias(short_code)
         if v2_doc is not None:
             return _v2_doc_to_cache(v2_doc), "v2"
@@ -544,9 +539,7 @@ class UrlService:
             return _legacy_doc_to_cache(short_code, v1_doc), "v1"
         return None, "v2"
 
-    async def _try_v1_then_v2(
-        self, short_code: str
-    ) -> tuple[Optional[UrlCacheData], str]:
+    async def _try_v1_then_v2(self, short_code: str) -> tuple[UrlCacheData | None, str]:
         v1_doc = await self._legacy_repo.find_by_id(short_code)
         if v1_doc is not None:
             return _legacy_doc_to_cache(short_code, v1_doc), "v1"
@@ -568,9 +561,7 @@ class UrlService:
           - v1 with max-clicks: do NOT cache (total-clicks must be live)
           - emoji: do NOT cache
         """
-        if schema == "v2":
-            await self._url_cache.set(short_code, url_cache_data)
-        elif schema == "v1" and url_cache_data.max_clicks is None:
+        if schema == "v2" or (schema == "v1" and url_cache_data.max_clicks is None):
             await self._url_cache.set(short_code, url_cache_data)
 
     async def _generate_unique_alias(self) -> str:

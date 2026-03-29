@@ -16,7 +16,6 @@ from schemas.dto.responses.auth import (
     UserProfileResponse,
 )
 
-
 # ── Auth request DTOs ──────────────────────────────────────────────────────────
 
 

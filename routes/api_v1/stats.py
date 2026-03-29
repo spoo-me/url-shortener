@@ -7,13 +7,13 @@ API key users require ``stats:read``, ``urls:read``, or ``admin:all``.
 
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request
 
 from dependencies import (
-    CurrentUser,
     STATS_SCOPES,
+    CurrentUser,
     get_stats_service,
     optional_scopes,
 )
@@ -40,7 +40,7 @@ _stats_limit, _stats_key = dynamic_limit(Limits.API_AUTHED, Limits.API_ANON)
 async def stats_v1(
     request: Request,
     query: Annotated[StatsQuery, Query()],
-    user: Optional[CurrentUser] = Depends(optional_scopes(STATS_SCOPES)),
+    user: CurrentUser | None = Depends(optional_scopes(STATS_SCOPES)),  # noqa: B008
     stats_service: StatsService = Depends(get_stats_service),
 ) -> StatsResponse:
     """Get click statistics for URLs.

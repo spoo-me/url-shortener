@@ -16,7 +16,7 @@ All methods are async. Errors are logged and re-raised.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from pymongo.asynchronous.collection import AsyncCollection
 from pymongo.errors import DuplicateKeyError, PyMongoError
@@ -31,7 +31,7 @@ class LegacyUrlRepository:
     def __init__(self, collection: AsyncCollection) -> None:
         self._col = collection
 
-    async def find_by_id(self, short_code: str) -> Optional[LegacyUrlDoc]:
+    async def find_by_id(self, short_code: str) -> LegacyUrlDoc | None:
         """Find a v1 URL document by its short code (_id)."""
         try:
             doc = await self._col.find_one({"_id": short_code})
@@ -103,7 +103,7 @@ class LegacyUrlRepository:
             )
             raise
 
-    async def aggregate(self, pipeline: list[dict]) -> Optional[dict[str, Any]]:
+    async def aggregate(self, pipeline: list[dict]) -> dict[str, Any] | None:
         """
         Run an aggregation pipeline and return the first result document.
 

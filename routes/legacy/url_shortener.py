@@ -22,6 +22,7 @@ from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from dependencies import get_db, get_redis, get_settings, get_url_service
+from errors import ForbiddenError, GoneError, NotFoundError
 from infrastructure.cache.dual_cache import DualCache
 from middleware.rate_limiter import Limits, limiter
 from repositories.blocked_url_repository import BlockedUrlRepository
@@ -30,6 +31,7 @@ from repositories.legacy.legacy_url_repository import LegacyUrlRepository
 from repositories.url_repository import UrlRepository
 from services.url_service import UrlService
 from shared.generators import generate_emoji_alias, generate_short_code
+from shared.legacy_helpers import humanize_number, is_positive_integer
 from shared.logging import get_logger
 from shared.validators import (
     validate_alias,
@@ -38,8 +40,6 @@ from shared.validators import (
     validate_url,
     validate_url_password,
 )
-from shared.legacy_helpers import humanize_number, is_positive_integer
-from errors import ForbiddenError, GoneError, NotFoundError
 
 log = get_logger(__name__)
 

@@ -18,7 +18,7 @@ all business logic from there.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
 from bson import ObjectId
 
@@ -118,7 +118,7 @@ class OAuthService:
         self,
         provider_info: dict[str, Any],
         provider: str,
-        signup_ip: Optional[str] = None,
+        signup_ip: str | None = None,
     ) -> ObjectId:
         """Create a brand-new user from OAuth provider information.
 
@@ -206,7 +206,7 @@ class OAuthService:
         provider_info: dict[str, Any],
         action: str,
         state_data: dict[str, Any],
-        signup_ip: Optional[str] = None,
+        signup_ip: str | None = None,
     ) -> tuple[UserDoc, str, str]:
         """Process an OAuth callback after the route has validated state and
         fetched user info from the provider.

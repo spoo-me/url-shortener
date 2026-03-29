@@ -53,7 +53,7 @@ class TestVerifyOAuthState:
         assert reason == "missing_timestamp"
 
     def test_malformed_state_returns_parse_error(self):
-        ok, _, reason = verify_oauth_state("not-valid-state!!!", "google")
+        ok, _, _reason = verify_oauth_state("not-valid-state!!!", "google")
         # Either parse_error or missing_timestamp/provider_mismatch — both are failures
         assert ok is False
 

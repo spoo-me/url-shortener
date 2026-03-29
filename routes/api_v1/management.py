@@ -15,18 +15,18 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, Path, Request
 
 from dependencies import (
-    CurrentUser,
     URL_MANAGEMENT_SCOPES,
+    CurrentUser,
     get_url_service,
     require_scopes,
 )
 from errors import ValidationError
 from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES
 from middleware.rate_limiter import Limits, limiter
-from shared.datetime_utils import to_unix_timestamp
 from schemas.dto.requests.url import UpdateUrlRequest, UpdateUrlStatusRequest
 from schemas.dto.responses.url import DeleteUrlResponse, UpdateUrlResponse
 from services.url_service import UrlService
+from shared.datetime_utils import to_unix_timestamp
 
 router = APIRouter(tags=["Link Management"])
 
@@ -36,7 +36,7 @@ def _parse_url_id(url_id: str) -> ObjectId:
     try:
         return ObjectId(url_id)
     except Exception:
-        raise ValidationError("Invalid URL ID format")
+        raise ValidationError("Invalid URL ID format") from None
 
 
 @router.patch(
@@ -50,7 +50,7 @@ async def update_url_v1(
     request: Request,
     url_id: Annotated[str, Path(description="Unique identifier of the URL")],
     body: UpdateUrlRequest,
-    user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),
+    user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),  # noqa: B008
     url_service: UrlService = Depends(get_url_service),
 ) -> UpdateUrlResponse:
     """Update an existing URL's properties.
@@ -101,7 +101,7 @@ async def update_url_status_v1(
     request: Request,
     url_id: Annotated[str, Path(description="Unique identifier of the URL")],
     body: UpdateUrlStatusRequest,
-    user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),
+    user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),  # noqa: B008
     url_service: UrlService = Depends(get_url_service),
 ) -> UpdateUrlResponse:
     """Update only the status of a URL (ACTIVE / INACTIVE).
@@ -153,7 +153,7 @@ async def update_url_status_v1(
 async def delete_url_v1(
     request: Request,
     url_id: Annotated[str, Path(description="Unique identifier of the URL")],
-    user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),
+    user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),  # noqa: B008
     url_service: UrlService = Depends(get_url_service),
 ) -> DeleteUrlResponse:
     """Delete a URL permanently.

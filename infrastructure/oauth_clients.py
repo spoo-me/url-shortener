@@ -12,7 +12,7 @@ For now they remain here to keep the migration non-breaking.
 import secrets
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from authlib.integrations.starlette_client import OAuth
 
@@ -78,7 +78,7 @@ PROVIDER_STRATEGIES: dict[str, OAuthProviderStrategy] = {
 # ── Authlib init ─────────────────────────────────────────────────────────────
 
 
-def init_oauth(settings: Any) -> Tuple[Optional[OAuth], Dict[str, Any]]:
+def init_oauth(settings: Any) -> tuple[OAuth | None, dict[str, Any]]:
     """Initialise Authlib OAuth clients for FastAPI/Starlette.
 
     Accepts an OAuthProviderSettings instance (from config.py).
@@ -86,7 +86,7 @@ def init_oauth(settings: Any) -> Tuple[Optional[OAuth], Dict[str, Any]]:
     Returns (None, {}) if no providers are configured.
     """
     oauth = OAuth()
-    providers: Dict[str, Any] = {}
+    providers: dict[str, Any] = {}
 
     if settings.google_oauth_client_id and settings.google_oauth_client_secret:
         try:
@@ -148,7 +148,7 @@ def init_oauth(settings: Any) -> Tuple[Optional[OAuth], Dict[str, Any]]:
 
 
 def generate_oauth_state(
-    provider: str, action: str = "login", user_id: Optional[str] = None
+    provider: str, action: str = "login", user_id: str | None = None
 ) -> str:
     """Generate a URL-safe state string for CSRF protection."""
     parts = [
@@ -164,7 +164,7 @@ def generate_oauth_state(
 
 def verify_oauth_state(
     state: str, expected_provider: str
-) -> Tuple[bool, Dict[str, Any], Optional[str]]:
+) -> tuple[bool, dict[str, Any], str | None]:
     """Verify and decode an OAuth state string.
 
     Returns (is_valid, state_data, failure_reason).
@@ -172,7 +172,7 @@ def verify_oauth_state(
     "missing_timestamp", "expired", or "parse_error" on failure.
     """
     try:
-        state_data: Dict[str, Any] = {}
+        state_data: dict[str, Any] = {}
         for part in state.split("&"):
             if "=" in part:
                 key, value = part.split("=", 1)
@@ -212,7 +212,7 @@ def get_oauth_redirect_url(provider: str, settings: Any) -> str:
 # ── User-info extractors ──────────────────────────────────────────────────────
 
 
-def extract_user_info_from_google(userinfo: Dict[str, Any]) -> Dict[str, Any]:
+def extract_user_info_from_google(userinfo: dict[str, Any]) -> dict[str, Any]:
     return {
         "provider_user_id": userinfo.get("sub", ""),
         "email": userinfo.get("email", "").lower().strip(),
@@ -225,8 +225,8 @@ def extract_user_info_from_google(userinfo: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def extract_user_info_from_github(
-    userinfo: Dict[str, Any], email_data: List[Dict[str, Any]]
-) -> Dict[str, Any]:
+    userinfo: dict[str, Any], email_data: list[dict[str, Any]]
+) -> dict[str, Any]:
     primary_email = ""
     email_verified = False
     for entry in email_data:
@@ -250,7 +250,7 @@ def extract_user_info_from_github(
     }
 
 
-def extract_user_info_from_discord(userinfo: Dict[str, Any]) -> Dict[str, Any]:
+def extract_user_info_from_discord(userinfo: dict[str, Any]) -> dict[str, Any]:
     email = userinfo.get("email", "").lower().strip()
     email_verified = userinfo.get("verified", False)
     name = (
@@ -277,7 +277,7 @@ def extract_user_info_from_discord(userinfo: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def can_auto_link_accounts(
-    existing_user: Dict[str, Any], provider_info: Dict[str, Any], provider: str
+    existing_user: dict[str, Any], provider_info: dict[str, Any], provider: str
 ) -> bool:
     """True only if provider email is verified, matches user email, and isn't already linked."""
     if not provider_info.get("email_verified", False):

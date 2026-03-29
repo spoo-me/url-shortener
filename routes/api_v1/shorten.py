@@ -7,13 +7,11 @@ Auth is optional; API key users require `shorten:create` or `admin:all` scope.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Depends, Request
 
 from dependencies import (
-    CurrentUser,
     SHORTEN_SCOPES,
+    CurrentUser,
     get_url_service,
     optional_scopes_verified,
 )
@@ -42,7 +40,7 @@ _shorten_limit, _shorten_key = dynamic_limit(Limits.API_AUTHED, Limits.API_ANON)
 async def shorten_v1(
     request: Request,
     body: CreateUrlRequest,
-    user: Optional[CurrentUser] = Depends(optional_scopes_verified(SHORTEN_SCOPES)),
+    user: CurrentUser | None = Depends(optional_scopes_verified(SHORTEN_SCOPES)),  # noqa: B008
     url_service: UrlService = Depends(get_url_service),
 ) -> UrlResponse:
     """Create a new shortened URL.

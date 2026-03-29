@@ -15,7 +15,7 @@ Please include the following details in your report:
 
 ## Security Updates
 
-We will notify users about security updates through our [GitHub repository](https://github.com/spoo-me/url-shortener) and our [Discord server](https://spoo.me/discord). Please ensure you are subscribed to notifications to stay informed about important updates.
+We will notify users about security updates through our [GitHub repository](https://github.com/spoo-me/spoo) and our [Discord server](https://spoo.me/discord). Please ensure you are subscribed to notifications to stay informed about important updates.
 
 ## Security Best Practices
 

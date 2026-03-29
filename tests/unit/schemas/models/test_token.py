@@ -27,7 +27,7 @@ class TestVerificationTokenDoc:
         assert doc.attempts == 0
 
     def test_negative_attempts_rejected(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             self._make(attempts=-1)
 
     def test_to_mongo_round_trip(self):

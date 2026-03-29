@@ -29,7 +29,6 @@ from errors import ForbiddenError, GoneError, NotFoundError, ValidationError
 from infrastructure.cache.url_cache import UrlCacheData
 from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
-
 from routes.redirect_routes import router as redirect_router
 
 # ── Helpers ──────────────────────────────────────────────────────────────────

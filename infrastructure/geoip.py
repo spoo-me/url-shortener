@@ -9,7 +9,6 @@ Preserves the exact fallback behaviour of utils/geoip.py:
 """
 
 import asyncio
-from typing import Optional
 
 import geoip2.database
 import geoip2.errors
@@ -24,13 +23,13 @@ class GeoIPService:
     def __init__(self, country_db_path: str, city_db_path: str) -> None:
         self._country_db_path = country_db_path
         self._city_db_path = city_db_path
-        self._country_reader: Optional[geoip2.database.Reader] = None
-        self._city_reader: Optional[geoip2.database.Reader] = None
+        self._country_reader: geoip2.database.Reader | None = None
+        self._city_reader: geoip2.database.Reader | None = None
         self._country_loaded = False
         self._city_loaded = False
         self._lock = asyncio.Lock()
 
-    async def _get_country_reader(self) -> Optional[geoip2.database.Reader]:
+    async def _get_country_reader(self) -> geoip2.database.Reader | None:
         if not self._country_loaded:
             async with self._lock:
                 if not self._country_loaded:
@@ -48,7 +47,7 @@ class GeoIPService:
                     self._country_loaded = True
         return self._country_reader
 
-    async def _get_city_reader(self) -> Optional[geoip2.database.Reader]:
+    async def _get_city_reader(self) -> geoip2.database.Reader | None:
         if not self._city_loaded:
             async with self._lock:
                 if not self._city_loaded:
@@ -80,7 +79,7 @@ class GeoIPService:
         ):
             return "Unknown"
 
-    async def get_city(self, ip_address: str) -> Optional[str]:
+    async def get_city(self, ip_address: str) -> str | None:
         reader = await self._get_city_reader()
         if reader is None:
             return None

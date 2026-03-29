@@ -8,8 +8,8 @@ This is a relocation of utils/time_bucket_utils.py with no functional changes.
 """
 
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
 from enum import Enum
+from typing import Any
 
 
 class TimeBucketStrategy(Enum):
@@ -30,7 +30,7 @@ class TimeBucketConfig:
         strategy: TimeBucketStrategy,
         mongo_format: str,
         interval_minutes: int,
-        display_format: str = None,
+        display_format: str | None = None,
     ):
         self.strategy = strategy
         self.mongo_format = mongo_format
@@ -137,7 +137,7 @@ def create_mongo_time_bucket_pipeline(
     bucket_config: TimeBucketConfig,
     clicked_at_field: str = "clicked_at",
     timezone: str = "UTC",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Create MongoDB aggregation pipeline stage for time bucketing.
 
@@ -259,7 +259,7 @@ def format_time_bucket_display(
 
 def generate_complete_time_buckets(
     start_date: datetime, end_date: datetime, bucket_config: TimeBucketConfig
-) -> List[str]:
+) -> list[str]:
     """
     Generate a complete list of time buckets for a given date range.
 
@@ -333,11 +333,11 @@ def generate_complete_time_buckets(
 
 
 def fill_missing_buckets(
-    actual_results: List[Dict[str, Any]],
+    actual_results: list[dict[str, Any]],
     start_date: datetime,
     end_date: datetime,
     bucket_config: TimeBucketConfig,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Fill in missing time buckets with zero values.
 

@@ -11,8 +11,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request
 
 from dependencies import (
-    CurrentUser,
     URL_READ_SCOPES,
+    CurrentUser,
     get_url_service,
     require_scopes,
 )
@@ -35,7 +35,7 @@ router = APIRouter(tags=["Link Management"])
 async def list_urls_v1(
     request: Request,
     query: Annotated[ListUrlsQuery, Query()],
-    user: CurrentUser = Depends(require_scopes(URL_READ_SCOPES)),
+    user: CurrentUser = Depends(require_scopes(URL_READ_SCOPES)),  # noqa: B008
     url_service: UrlService = Depends(get_url_service),
 ) -> UrlListResponse:
     """List all URLs owned by the authenticated user.

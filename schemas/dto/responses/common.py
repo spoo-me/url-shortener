@@ -8,7 +8,7 @@ MessageResponse  — generic {success, message} shape used by many endpoints
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -20,8 +20,8 @@ class ErrorResponse(BaseModel):
 
     error: str
     code: str
-    field: Optional[str] = None
-    details: Optional[Any] = None
+    field: str | None = None
+    details: Any | None = None
 
 
 class HealthChecks(BaseModel):
@@ -48,7 +48,7 @@ class MessageResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     success: bool
-    message: Optional[str] = None
+    message: str | None = None
 
 
 class PaginationMeta(BaseModel):

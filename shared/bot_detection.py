@@ -14,7 +14,6 @@ from __future__ import annotations
 import os
 import re
 from functools import lru_cache
-from typing import Optional
 
 from crawlerdetect import CrawlerDetect
 
@@ -33,7 +32,7 @@ def _load_bot_user_agents() -> list[str]:
     degrade gracefully rather than raising at import time.
     """
     try:
-        with open(_BOT_UA_PATH, "r") as fh:
+        with open(_BOT_UA_PATH) as fh:
             return [line.strip() for line in fh if line.strip()]
     except OSError:
         return []
@@ -59,7 +58,7 @@ def is_bot_request(user_agent: str) -> bool:
     )
 
 
-def get_bot_name(user_agent: str) -> Optional[str]:
+def get_bot_name(user_agent: str) -> str | None:
     """Return the name/pattern of the detected bot, or ``None`` for humans.
 
     Tries ``CrawlerDetect.getMatches()`` first, then falls back to the

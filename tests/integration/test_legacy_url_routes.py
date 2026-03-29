@@ -22,8 +22,8 @@ os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
 from config import AppSettings
 from dependencies import get_db, get_redis, get_settings, get_url_service
 from errors import NotFoundError
-from middleware.error_handler import register_error_handlers
 from infrastructure.cache.url_cache import UrlCacheData
+from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
 from routes.legacy.url_shortener import router as legacy_url_router
 

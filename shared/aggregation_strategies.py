@@ -6,25 +6,25 @@ helper (formerly in utils/analytics_utils.py) is now inlined here.
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional
 from datetime import datetime
-from functools import lru_cache
+from functools import cache
+from typing import Any, ClassVar
 from zoneinfo import ZoneInfo
 
 import pycountry
 
-from shared.time_bucket_utils import (
-    get_optimal_bucket_config,
-    create_mongo_time_bucket_pipeline,
-    format_time_bucket_display,
-    fill_missing_buckets,
-)
 from shared.logging import get_logger
+from shared.time_bucket_utils import (
+    create_mongo_time_bucket_pipeline,
+    fill_missing_buckets,
+    format_time_bucket_display,
+    get_optimal_bucket_config,
+)
 
 log = get_logger(__name__)
 
 
-@lru_cache(maxsize=None)
+@cache
 def convert_country_name(country_name: str) -> str:
     """
     Convert country name to ISO 2-letter country code with caching.
@@ -35,28 +35,23 @@ def convert_country_name(country_name: str) -> str:
     Returns:
         ISO 2-letter country code (e.g., "US", "DE") or "XX" if not found
     """
+    name = country_name.strip()
     try:
-        return pycountry.countries.lookup(country_name.strip()).alpha_2
+        return pycountry.countries.lookup(name).alpha_2
     except (LookupError, ImportError):
-        if country_name == "Turkey":
-            return "TR"
-        elif country_name == "Russia":
-            return "RU"
-        elif country_name == "Unknown":
-            return "XX"
-        return "XX"
+        return {"Turkey": "TR", "Russia": "RU"}.get(name, "XX")
 
 
 class AggregationStrategy(ABC):
     """Abstract base class for aggregation strategies"""
 
     @abstractmethod
-    def build_pipeline(self, base_query: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
         """Build aggregation pipeline for this strategy"""
         pass
 
     @abstractmethod
-    def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Format the aggregation results"""
         pass
 
@@ -72,9 +67,9 @@ class TimeAggregationStrategy(AggregationStrategy):
 
     def __init__(
         self,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-        time_format: Optional[str] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        time_format: str | None = None,
         timezone: str = "UTC",
     ):
         """
@@ -100,7 +95,7 @@ class TimeAggregationStrategy(AggregationStrategy):
             self.bucket_config = get_optimal_bucket_config(start_date, end_date)
             self.time_format = self.bucket_config.mongo_format
 
-    def build_pipeline(self, base_query: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
         """Build aggregation pipeline with dynamic time bucketing"""
 
         if self.bucket_config:
@@ -131,7 +126,7 @@ class TimeAggregationStrategy(AggregationStrategy):
             {"$sort": {"_id": 1}},
         ]
 
-    def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Format results with proper time bucket display and fill missing buckets"""
         formatted_results = []
 
@@ -241,7 +236,7 @@ class TimeAggregationStrategy(AggregationStrategy):
     def dimension_name(self) -> str:
         return "time"
 
-    def get_bucket_info(self) -> Dict[str, Any]:
+    def get_bucket_info(self) -> dict[str, Any]:
         """Get information about the current bucketing strategy"""
         if self.bucket_config:
             return {
@@ -263,7 +258,7 @@ class TimeAggregationStrategy(AggregationStrategy):
 class BrowserAggregationStrategy(AggregationStrategy):
     """Strategy for browser-based aggregation"""
 
-    def build_pipeline(self, base_query: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
         return [
             {"$match": base_query},
             {
@@ -278,7 +273,7 @@ class BrowserAggregationStrategy(AggregationStrategy):
             {"$limit": 20},
         ]
 
-    def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return [
             {
                 "browser": result["_id"],
@@ -296,7 +291,7 @@ class BrowserAggregationStrategy(AggregationStrategy):
 class OSAggregationStrategy(AggregationStrategy):
     """Strategy for operating system aggregation"""
 
-    def build_pipeline(self, base_query: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
         return [
             {"$match": base_query},
             {
@@ -311,7 +306,7 @@ class OSAggregationStrategy(AggregationStrategy):
             {"$limit": 20},
         ]
 
-    def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return [
             {
                 "os": result["_id"],
@@ -329,7 +324,7 @@ class OSAggregationStrategy(AggregationStrategy):
 class DeviceAggregationStrategy(AggregationStrategy):
     """Strategy for device type aggregation"""
 
-    def build_pipeline(self, base_query: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
         return [
             {"$match": base_query},
             {
@@ -344,7 +339,7 @@ class DeviceAggregationStrategy(AggregationStrategy):
             {"$limit": 20},
         ]
 
-    def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return [
             {
                 "device": result["_id"],
@@ -362,7 +357,7 @@ class DeviceAggregationStrategy(AggregationStrategy):
 class CountryAggregationStrategy(AggregationStrategy):
     """Strategy for country-based aggregation"""
 
-    def build_pipeline(self, base_query: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
         return [
             {"$match": base_query},
             {
@@ -377,7 +372,7 @@ class CountryAggregationStrategy(AggregationStrategy):
             {"$limit": 50},  # Top 50 countries
         ]
 
-    def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return [
             {
                 "country": convert_country_name(
@@ -397,7 +392,7 @@ class CountryAggregationStrategy(AggregationStrategy):
 class CityAggregationStrategy(AggregationStrategy):
     """Strategy for city-based aggregation"""
 
-    def build_pipeline(self, base_query: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
         return [
             {"$match": base_query},
             {
@@ -412,7 +407,7 @@ class CityAggregationStrategy(AggregationStrategy):
             {"$limit": 50},  # Top 50 cities
         ]
 
-    def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return [
             {
                 "city": result["_id"],
@@ -430,7 +425,7 @@ class CityAggregationStrategy(AggregationStrategy):
 class ReferrerAggregationStrategy(AggregationStrategy):
     """Strategy for referrer-based aggregation"""
 
-    def build_pipeline(self, base_query: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
         return [
             {"$match": base_query},
             {
@@ -445,7 +440,7 @@ class ReferrerAggregationStrategy(AggregationStrategy):
             {"$limit": 30},  # Top 30 referrers
         ]
 
-    def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return [
             {
                 "referrer": result["_id"],
@@ -463,7 +458,7 @@ class ReferrerAggregationStrategy(AggregationStrategy):
 class ShortCodeAggregationStrategy(AggregationStrategy):
     """Strategy for short_code-based aggregation (grouping by short codes/aliases)"""
 
-    def build_pipeline(self, base_query: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
         return [
             {"$match": base_query},
             {
@@ -478,7 +473,7 @@ class ShortCodeAggregationStrategy(AggregationStrategy):
             {"$limit": 100},  # Top 100 short codes
         ]
 
-    def format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return [
             {
                 "short_code": result["_id"],
@@ -496,7 +491,7 @@ class ShortCodeAggregationStrategy(AggregationStrategy):
 class AggregationStrategyFactory:
     """Factory for creating aggregation strategies"""
 
-    _strategies = {
+    _strategies: ClassVar[dict] = {
         "time": TimeAggregationStrategy,
         "browser": BrowserAggregationStrategy,
         "os": OSAggregationStrategy,
@@ -517,6 +512,6 @@ class AggregationStrategyFactory:
         return strategy_class(**kwargs)
 
     @classmethod
-    def get_available_strategies(cls) -> List[str]:
+    def get_available_strategies(cls) -> list[str]:
         """Get list of available strategy names"""
         return list(cls._strategies.keys())
