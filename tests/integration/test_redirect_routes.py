@@ -21,6 +21,7 @@ os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
 from config import AppSettings
 from dependencies import get_click_service, get_url_service
 from errors import (
+    BlockedUrlError,
     ForbiddenError,
     GoneError,
     NotFoundError,
@@ -132,16 +133,16 @@ def test_redirect_not_found_returns_404_html():
     assert "text/html" in resp.headers["content-type"]
 
 
-def test_redirect_blocked_url_returns_403_html():
+def test_redirect_blocked_url_returns_451_html():
     url_svc = MagicMock()
-    url_svc.resolve = AsyncMock(side_effect=ForbiddenError("blocked"))
+    url_svc.resolve = AsyncMock(side_effect=BlockedUrlError("blocked"))
     click_svc = _mock_click_service()
     app = _build_test_app(
         {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
     )
     with TestClient(app) as client:
         resp = client.get("/blocked1")
-    assert resp.status_code == 403
+    assert resp.status_code == 451
     assert "text/html" in resp.headers["content-type"]
 
 

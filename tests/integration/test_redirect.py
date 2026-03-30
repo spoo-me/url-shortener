@@ -25,7 +25,13 @@ os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
 
 from config import AppSettings
 from dependencies import get_click_service, get_url_service
-from errors import ForbiddenError, GoneError, NotFoundError, ValidationError
+from errors import (
+    BlockedUrlError,
+    ForbiddenError,
+    GoneError,
+    NotFoundError,
+    ValidationError,
+)
 from infrastructure.cache.url_cache import UrlCacheData
 from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
@@ -237,9 +243,9 @@ def test_redirect_wrong_password():
 
 
 def test_redirect_blocked_url():
-    """resolve raises ForbiddenError -> 403 HTML."""
+    """resolve raises BlockedUrlError -> 451 HTML."""
     mock_url_svc = AsyncMock()
-    mock_url_svc.resolve = AsyncMock(side_effect=ForbiddenError("Blocked"))
+    mock_url_svc.resolve = AsyncMock(side_effect=BlockedUrlError("Blocked"))
     mock_click_svc = AsyncMock()
 
     app = _build_test_app(
@@ -251,7 +257,7 @@ def test_redirect_blocked_url():
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/abc123", follow_redirects=False)
 
-    assert resp.status_code == 403
+    assert resp.status_code == 451
     assert "text/html" in resp.headers.get("content-type", "")
 
 

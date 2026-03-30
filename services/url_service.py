@@ -24,6 +24,7 @@ from bson import ObjectId
 
 from errors import (
     AppError,
+    BlockedUrlError,
     ConflictError,
     ForbiddenError,
     GoneError,
@@ -280,7 +281,7 @@ class UrlService:
 
         Raises:
             NotFoundError:  URL doesn't exist.
-            ForbiddenError: Caller doesn't own the URL.
+            ForbiddenError: Caller doesn't own the URL, or URL is blocked.
             ConflictError:  Requested alias is already taken.
             ValidationError: Invalid field values.
         """
@@ -398,7 +399,7 @@ class UrlService:
 
         Raises:
             NotFoundError:  URL doesn't exist.
-            ForbiddenError: Caller doesn't own the URL.
+            ForbiddenError: Caller doesn't own the URL, or URL is blocked.
         """
         existing = await self._url_repo.find_by_id(url_id)
         if existing is None:
@@ -586,7 +587,7 @@ class UrlService:
 
 def _raise_for_status(status: str) -> None:
     if status == "BLOCKED":
-        raise ForbiddenError("URL is blocked")
+        raise BlockedUrlError("URL is blocked")
     raise GoneError("URL has expired or is no longer active")
 
 
