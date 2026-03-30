@@ -12,6 +12,7 @@ Three separate schemas map to three MongoDB collections:
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 from typing import Any
 
 from pydantic import ConfigDict, Field, field_validator
@@ -19,11 +20,27 @@ from pydantic import ConfigDict, Field, field_validator
 from schemas.models.base import ANONYMOUS_OWNER_ID, MongoBaseModel, PyObjectId
 
 
+class UrlStatus(str, Enum):
+    """Status values for v2 URLs."""
+
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    EXPIRED = "EXPIRED"
+    BLOCKED = "BLOCKED"
+
+
+class SchemaVersion(str, Enum):
+    """URL collection / schema version identifiers."""
+
+    V2 = "v2"
+    V1 = "v1"
+    EMOJI = "emoji"
+
+
 class UrlV2Doc(MongoBaseModel):
     """
     Document model for the `urlsV2` collection.
 
-    Status values: ACTIVE | INACTIVE | EXPIRED | BLOCKED
     password stores an argon2 hash (None when no password set).
     owner_id is ANONYMOUS_OWNER_ID sentinel for unowned URLs.
     """
@@ -44,7 +61,7 @@ class UrlV2Doc(MongoBaseModel):
     block_bots: bool | None = None
     max_clicks: int | None = None
     expire_after: datetime | None = None
-    status: str = "ACTIVE"
+    status: str = UrlStatus.ACTIVE
     private_stats: bool | None = True  # None for anonymous/unowned URLs
     total_clicks: int = 0
     last_click: datetime | None = None

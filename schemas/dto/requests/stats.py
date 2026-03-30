@@ -11,6 +11,7 @@ IANA timezone names.  The JSON ``filters`` string is parsed into a typed dict.
 from __future__ import annotations
 
 import json
+from enum import Enum
 from typing import Any, Literal
 
 from pydantic import (
@@ -38,15 +39,56 @@ from schemas.dto.requests._descriptions import (
     STATS_TIMEZONE_DESC,
 )
 
-ALLOWED_SCOPES = frozenset({"all", "anon"})
-ALLOWED_GROUP_BY = frozenset(
-    {"time", "browser", "os", "country", "city", "referrer", "short_code"}
-)
-ALLOWED_METRICS = frozenset({"clicks", "unique_clicks"})
+
+class StatsScope(str, Enum):
+    """Stats query scope."""
+
+    ALL = "all"
+    ANON = "anon"
+
+
+class StatsDimension(str, Enum):
+    """Stats group-by dimensions."""
+
+    TIME = "time"
+    BROWSER = "browser"
+    OS = "os"
+    COUNTRY = "country"
+    CITY = "city"
+    REFERRER = "referrer"
+    SHORT_CODE = "short_code"
+
+
+class StatsMetric(str, Enum):
+    """Stats metric types."""
+
+    CLICKS = "clicks"
+    UNIQUE_CLICKS = "unique_clicks"
+
+
+class ExportFormat(str, Enum):
+    """Export file formats."""
+
+    CSV = "csv"
+    XLSX = "xlsx"
+    JSON = "json"
+    XML = "xml"
+
+
+ALLOWED_SCOPES = frozenset(StatsScope)
+ALLOWED_GROUP_BY = frozenset(StatsDimension)
+ALLOWED_METRICS = frozenset(StatsMetric)
 ALLOWED_FILTERS = frozenset(
-    {"browser", "os", "country", "city", "referrer", "short_code"}
+    {
+        StatsDimension.BROWSER,
+        StatsDimension.OS,
+        StatsDimension.COUNTRY,
+        StatsDimension.CITY,
+        StatsDimension.REFERRER,
+        StatsDimension.SHORT_CODE,
+    }
 )
-ALLOWED_EXPORT_FORMATS = frozenset({"csv", "xlsx", "json", "xml"})
+ALLOWED_EXPORT_FORMATS = frozenset(ExportFormat)
 
 
 def _parse_comma_separated(value: Any) -> list[str]:
@@ -68,7 +110,9 @@ class StatsQuery(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    scope: Literal["all", "anon"] = Field(default="all", description=STATS_SCOPE_DESC)
+    scope: Literal[StatsScope.ALL, StatsScope.ANON] = Field(
+        default=StatsScope.ALL, description=STATS_SCOPE_DESC
+    )
     short_code: str | None = Field(
         default=None,
         description=STATS_SHORT_CODE_DESC,
@@ -187,7 +231,7 @@ class StatsQuery(BaseModel):
             raw = getattr(self, dim, None)
             if raw:
                 # short_code filter is blocked when scope=anon (bypass prevention)
-                if dim == "short_code" and self.scope == "anon":
+                if dim == "short_code" and self.scope == StatsScope.ANON:
                     continue
                 parsed_filters[dim] = _parse_comma_separated(raw)
 
@@ -202,7 +246,9 @@ class ExportQuery(StatsQuery):
     Superset of StatsQuery — adds the required ``format`` parameter.
     """
 
-    format: Literal["csv", "xlsx", "json", "xml"] = Field(
+    format: Literal[
+        ExportFormat.CSV, ExportFormat.XLSX, ExportFormat.JSON, ExportFormat.XML
+    ] = Field(
         description="Export file format.",
     )
 

@@ -17,6 +17,7 @@ from pydantic import (
 )
 
 from schemas.dto.requests._descriptions import LIST_URLS_FILTER_DESC
+from schemas.models.url import UrlStatus
 
 ALLOWED_SORT_FIELDS = frozenset({"created_at", "last_click", "total_clicks"})
 
@@ -132,7 +133,7 @@ class UpdateUrlRequest(BaseModel):
         default=None,
         description="Make statistics private (only owner can view). Pass `null` to keep existing.",
     )
-    status: Literal["ACTIVE", "INACTIVE"] | None = Field(
+    status: Literal[UrlStatus.ACTIVE, UrlStatus.INACTIVE] | None = Field(
         default=None,
         description="URL status. ACTIVE enables redirects, INACTIVE disables them.",
         examples=["ACTIVE"],
@@ -142,7 +143,7 @@ class UpdateUrlRequest(BaseModel):
 class UpdateUrlStatusRequest(BaseModel):
     """Request body for updating only the status of a shortened URL."""
 
-    status: Literal["ACTIVE", "INACTIVE"] = Field(
+    status: Literal[UrlStatus.ACTIVE, UrlStatus.INACTIVE] = Field(
         description="New status for the URL. `ACTIVE` enables redirects, `INACTIVE` disables them.",
         examples=["ACTIVE"],
     )

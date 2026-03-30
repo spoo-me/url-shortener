@@ -13,10 +13,33 @@ Both paths are handled via Optional fields with sensible defaults.
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 
 from pydantic import BaseModel
 
 from schemas.models.base import MongoBaseModel
+
+
+class UserStatus(str, Enum):
+    """Status values for user accounts."""
+
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+
+
+class OAuthAction(str, Enum):
+    """OAuth flow action types."""
+
+    LOGIN = "login"
+    LINK = "link"
+
+
+class OAuthProvider(str, Enum):
+    """Supported OAuth providers."""
+
+    GOOGLE = "google"
+    GITHUB = "github"
+    DISCORD = "discord"
 
 
 class ProviderProfile(BaseModel):
@@ -29,7 +52,7 @@ class ProviderProfile(BaseModel):
 class AuthProviderEntry(BaseModel):
     """Single entry in the user's auth_providers array."""
 
-    provider: str
+    provider: OAuthProvider
     provider_user_id: str
     email: str | None = None
     email_verified: bool = False
@@ -41,7 +64,7 @@ class ProfilePicture(BaseModel):
     """Embedded profile picture sub-document."""
 
     url: str
-    source: str
+    source: OAuthProvider
     last_updated: datetime | None = None
 
 
@@ -65,4 +88,4 @@ class UserDoc(MongoBaseModel):
     created_at: datetime | None = None
     updated_at: datetime | None = None
     last_login_at: datetime | None = None
-    status: str = "ACTIVE"
+    status: str = UserStatus.ACTIVE
