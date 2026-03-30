@@ -27,7 +27,7 @@ class UrlFilter(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    status: str | None = None
+    status: UrlStatus | None = None
     created_after: str | int | None = Field(
         default=None,
         alias="createdAfter",

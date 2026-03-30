@@ -11,9 +11,12 @@ flexible dict rather than a rigid model.  The ``computed_metrics`` and
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from schemas.dto.requests.stats import StatsScope
 
 
 class StatsSummary(BaseModel):
@@ -23,8 +26,8 @@ class StatsSummary(BaseModel):
 
     total_clicks: int
     unique_clicks: int
-    first_click: str | None = None  # ISO 8601 string or null
-    last_click: str | None = None  # ISO 8601 string or null
+    first_click: datetime | None = None
+    last_click: datetime | None = None
     avg_redirection_time: float
 
 
@@ -33,8 +36,8 @@ class StatsTimeRange(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    start_date: str | None = None  # ISO 8601 string
-    end_date: str | None = None  # ISO 8601 string
+    start_date: datetime | None = None
+    end_date: datetime | None = None
 
 
 class ComputedMetrics(BaseModel):
@@ -69,8 +72,8 @@ class StatsResponse(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    scope: str
-    filters: dict[str, Any]
+    scope: StatsScope
+    filters: dict[str, list[str]]
     group_by: list[str]
     timezone: str
     time_range: StatsTimeRange
@@ -87,7 +90,7 @@ class StatsResponse(BaseModel):
     )
 
     # Metadata fields added by format_stats_response_with_metadata
-    generated_at: str | None = None  # ISO 8601 string
+    generated_at: datetime | None = None
     api_version: str | None = None
 
     # Only present when scope="anon"

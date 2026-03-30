@@ -25,7 +25,16 @@ from bson import ObjectId
 from errors import AppError, ConflictError, NotFoundError, ValidationError
 from infrastructure.email.protocol import EmailProvider
 from repositories.user_repository import UserRepository
-from schemas.models.user import OAuthAction, UserDoc, UserStatus
+from schemas.dto.responses.auth import OAuthProviderDetail
+from schemas.models.user import (
+    AuthProviderEntry,
+    OAuthAction,
+    ProfilePicture,
+    ProviderProfile,
+    UserDoc,
+    UserPlan,
+    UserStatus,
+)
 from services.auth_service import AuthService
 from shared.logging import get_logger
 
@@ -85,33 +94,36 @@ class OAuthService:
             True if the document was matched and updated.
         """
         now = datetime.now(timezone.utc)
-        provider_entry: dict[str, Any] = {
-            "provider": provider,
-            "provider_user_id": provider_info["provider_user_id"],
-            "email": provider_info["email"],
-            "email_verified": provider_info["email_verified"],
-            "profile": {
-                "name": provider_info["name"],
-                "picture": provider_info["picture"],
-            },
-            "linked_at": now,
-        }
+        provider_entry = AuthProviderEntry(
+            provider=provider,
+            provider_user_id=provider_info["provider_user_id"],
+            email=provider_info["email"],
+            email_verified=provider_info["email_verified"],
+            profile=ProviderProfile(
+                name=provider_info["name"],
+                picture=provider_info["picture"],
+            ),
+            linked_at=now,
+        )
 
         set_fields: dict[str, Any] = {"updated_at": now, "last_login_at": now}
 
         if provider_info.get("picture"):
-            set_fields["pfp"] = {
-                "url": provider_info["picture"],
-                "source": provider,
-                "last_updated": now,
-            }
+            set_fields["pfp"] = ProfilePicture(
+                url=provider_info["picture"],
+                source=provider,
+                last_updated=now,
+            ).model_dump()
 
         if provider_info.get("email_verified"):
             set_fields["email_verified"] = True
 
         return await self._user_repo.update(
             user_id,
-            {"$push": {"auth_providers": provider_entry}, "$set": set_fields},
+            {
+                "$push": {"auth_providers": provider_entry.model_dump()},
+                "$set": set_fields,
+            },
         )
 
     async def _create_oauth_user(
@@ -131,42 +143,43 @@ class OAuthService:
         now = datetime.now(timezone.utc)
         user_name = provider_info.get("name") or provider_info["email"].split("@")[0]
         pfp = (
-            {
-                "url": provider_info["picture"],
-                "source": provider,
-                "last_updated": now,
-            }
+            ProfilePicture(
+                url=provider_info["picture"],
+                source=provider,
+                last_updated=now,
+            )
             if provider_info.get("picture")
             else None
         )
 
-        user_data: dict[str, Any] = {
-            "email": provider_info["email"],
-            "email_verified": provider_info["email_verified"],
-            "user_name": user_name,
-            "pfp": pfp,
-            "password_hash": None,
-            "password_set": False,
-            "auth_providers": [
-                {
-                    "provider": provider,
-                    "provider_user_id": provider_info["provider_user_id"],
-                    "email": provider_info["email"],
-                    "email_verified": provider_info["email_verified"],
-                    "profile": {
-                        "name": provider_info["name"],
-                        "picture": provider_info["picture"],
-                    },
-                    "linked_at": now,
-                }
+        user_doc = UserDoc(
+            email=provider_info["email"],
+            email_verified=provider_info["email_verified"],
+            user_name=user_name,
+            pfp=pfp,
+            password_hash=None,
+            password_set=False,
+            auth_providers=[
+                AuthProviderEntry(
+                    provider=provider,
+                    provider_user_id=provider_info["provider_user_id"],
+                    email=provider_info["email"],
+                    email_verified=provider_info["email_verified"],
+                    profile=ProviderProfile(
+                        name=provider_info["name"],
+                        picture=provider_info["picture"],
+                    ),
+                    linked_at=now,
+                )
             ],
-            "plan": "free",
-            "signup_ip": signup_ip,
-            "created_at": now,
-            "updated_at": now,
-            "last_login_at": now,
-            "status": UserStatus.ACTIVE,
-        }
+            plan=UserPlan.FREE,
+            signup_ip=signup_ip,
+            created_at=now,
+            updated_at=now,
+            last_login_at=now,
+            status=UserStatus.ACTIVE,
+        )
+        user_data = user_doc.model_dump(by_alias=True, exclude={"id"})
 
         try:
             return await self._user_repo.create(user_data)
@@ -423,7 +436,9 @@ class OAuthService:
 
         log.info("oauth_provider_unlinked", user_id=user_id, provider=provider_name)
 
-    async def list_providers(self, user_id: str) -> tuple[list[dict[str, Any]], bool]:
+    async def list_providers(
+        self, user_id: str
+    ) -> tuple[list[OAuthProviderDetail], bool]:
         """Return the user's linked OAuth providers and password_set flag.
 
         Returns:
@@ -437,16 +452,13 @@ class OAuthService:
             raise NotFoundError("user not found")
 
         linked = [
-            {
-                "provider": p.provider,
-                "email": p.email,
-                "email_verified": p.email_verified,
-                "linked_at": p.linked_at.isoformat() if p.linked_at else None,
-                "profile": {
-                    "name": p.profile.name if p.profile else None,
-                    "picture": p.profile.picture if p.profile else None,
-                },
-            }
+            OAuthProviderDetail(
+                provider=p.provider,
+                email=p.email,
+                email_verified=p.email_verified,
+                linked_at=p.linked_at,
+                profile=p.profile if p.profile else ProviderProfile(),
+            )
             for p in user.auth_providers
         ]
 

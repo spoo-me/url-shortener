@@ -13,6 +13,8 @@ endpoints exactly, including the camelCase keys in UrlListResponse
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from schemas.models.url import UrlStatus
@@ -105,14 +107,14 @@ class UrlListItem(BaseModel):
     alias: str | None = None
     long_url: str | None = None
     status: UrlStatus | None = None
-    created_at: str | None = None  # ISO 8601 string
+    created_at: datetime | None = None
     expire_after: int | None = None  # Unix timestamp or null
     max_clicks: int | None = None
     private_stats: bool | None = None
     block_bots: bool | None = None
     password_set: bool
     total_clicks: int | None = None
-    last_click: str | None = None  # ISO 8601 string or null
+    last_click: datetime | None = None
 
 
 class DeleteUrlResponse(BaseModel):

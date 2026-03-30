@@ -644,37 +644,28 @@ def _emoji_doc_to_cache(short_code: str, doc: EmojiUrlDoc) -> UrlCacheData:
     return _legacy_doc_to_cache(short_code, doc, schema_version=SchemaVersion.EMOJI)
 
 
+def _ensure_utc(dt: datetime | None) -> datetime | None:
+    """Ensure a datetime is UTC-aware. Returns None for None input."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
 def _format_url_list_item(doc: UrlV2Doc) -> dict:
-    """Format a UrlV2Doc for the URL list response (matches legacy shape)."""
-    created_at_iso = None
-    if doc.created_at:
-        dt = doc.created_at
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        created_at_iso = dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
-
-    expire_after_ts = None
-    if doc.expire_after:
-        expire_after_ts = int(doc.expire_after.timestamp())
-
-    last_click_iso = None
-    if doc.last_click:
-        dt = doc.last_click
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        last_click_iso = dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
-
+    """Format a UrlV2Doc for the URL list response."""
     return {
         "id": str(doc.id),
         "alias": doc.alias,
         "long_url": doc.long_url,
         "status": doc.status,
-        "created_at": created_at_iso,
-        "expire_after": expire_after_ts,
+        "created_at": _ensure_utc(doc.created_at),
+        "expire_after": int(doc.expire_after.timestamp()) if doc.expire_after else None,
         "max_clicks": doc.max_clicks,
         "private_stats": doc.private_stats,
         "block_bots": bool(doc.block_bots),
         "password_set": doc.password is not None,
         "total_clicks": doc.total_clicks,
-        "last_click": last_click_iso,
+        "last_click": _ensure_utc(doc.last_click),
     }

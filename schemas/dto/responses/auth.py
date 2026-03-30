@@ -13,11 +13,12 @@ VerifyEmailResponse — POST /auth/verify-email  (200)
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from datetime import datetime
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from schemas.models.user import OAuthProvider
+from schemas.models.user import OAuthProvider, ProviderProfile
 
 if TYPE_CHECKING:
     from schemas.models.user import UserDoc
@@ -36,9 +37,9 @@ class AuthProviderInfo(BaseModel):
         description="Email address from the OAuth provider",
         examples=["user@gmail.com"],
     )
-    linked_at: str | None = Field(
+    linked_at: datetime | None = Field(
         default=None,
-        description="ISO 8601 timestamp when the provider was linked",
+        description="When the provider was linked",
         examples=["2025-01-15T10:30:00+00:00"],
     )
 
@@ -99,7 +100,7 @@ class UserProfileResponse(BaseModel):
                 AuthProviderInfo(
                     provider=p.provider,
                     email=p.email,
-                    linked_at=p.linked_at.isoformat() if p.linked_at else None,
+                    linked_at=p.linked_at,
                 )
                 for p in user.auth_providers
             ],
@@ -190,12 +191,30 @@ class SendVerificationResponse(BaseModel):
     )
 
 
+class OAuthProviderDetail(BaseModel):
+    """Detailed OAuth provider entry for the providers list endpoint."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    provider: OAuthProvider = Field(description="Provider name", examples=["google"])
+    email: str | None = Field(default=None, description="Email from provider")
+    email_verified: bool = Field(
+        default=False, description="Email verified by provider"
+    )
+    linked_at: datetime | None = Field(
+        default=None, description="When the provider was linked"
+    )
+    profile: ProviderProfile = Field(
+        default_factory=ProviderProfile, description="Provider profile (name, picture)"
+    )
+
+
 class OAuthProvidersResponse(BaseModel):
     """Response body for GET /oauth/providers (200)."""
 
     model_config = ConfigDict(populate_by_name=True)
 
-    providers: list[dict[str, Any]] = Field(
+    providers: list[OAuthProviderDetail] = Field(
         description="List of linked OAuth providers with name, email, and linked_at"
     )
     password_set: bool = Field(

@@ -79,10 +79,9 @@ class StatsService:
             return dt
 
     @staticmethod
-    def _fmt_tz(dt: datetime | None, tz_name: str) -> str | None:
-        """Format a UTC datetime as an ISO 8601 string in the user's timezone."""
-        converted = StatsService._to_user_tz(dt, tz_name)
-        return converted.isoformat() if converted else None
+    def _fmt_tz(dt: datetime | None, tz_name: str) -> datetime | None:
+        """Convert a UTC datetime to the user's timezone."""
+        return StatsService._to_user_tz(dt, tz_name)
 
     # ── Private: query building ───────────────────────────────────────────────
 
@@ -349,7 +348,7 @@ class StatsService:
         """
         response = response.copy()
 
-        response["generated_at"] = datetime.now(timezone.utc).isoformat()
+        response["generated_at"] = datetime.now(timezone.utc)
         response["api_version"] = "v1"
 
         summary = response.get("summary", {})

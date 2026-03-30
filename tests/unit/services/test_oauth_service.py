@@ -493,9 +493,9 @@ class TestListProviders:
 
         providers, password_set = await svc.list_providers(str(USER_OID))
         assert len(providers) == 1
-        assert providers[0]["provider"] == "google"
-        assert providers[0]["email"] == "test@gmail.com"
-        assert providers[0]["email_verified"] is True
+        assert providers[0].provider == "google"
+        assert providers[0].email == "test@gmail.com"
+        assert providers[0].email_verified is True
         assert password_set is True
 
     @pytest.mark.asyncio
