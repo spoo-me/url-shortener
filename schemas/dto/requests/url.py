@@ -52,17 +52,23 @@ class CreateUrlRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     long_url: str = Field(
+        max_length=8192,
         validation_alias=AliasChoices("long_url", "url"),
         description="The destination URL to shorten. Must be a valid http:// or https:// URL.",
         examples=["https://example.com/very/long/url/path"],
     )
     alias: str | None = Field(
         default=None,
+        min_length=3,
+        max_length=16,
+        pattern=r"^[a-zA-Z0-9_-]+$",
         description="Custom short code. Alphanumeric, hyphens, underscores. 3-16 chars. Auto-generated if omitted.",
         examples=["mylink"],
     )
     password: str | None = Field(
         default=None,
+        min_length=8,
+        max_length=128,
         description="Password to protect the URL. Min 8 chars, must contain letter + number + special char.",
         examples=["secure@123"],
     )
@@ -99,17 +105,23 @@ class UpdateUrlRequest(BaseModel):
 
     long_url: str | None = Field(
         default=None,
+        max_length=8192,
         validation_alias=AliasChoices("long_url", "url"),
         description="New destination URL. Must be a valid http:// or https:// URL.",
         examples=["https://example.com/updated/url"],
     )
     alias: str | None = Field(
         default=None,
+        min_length=3,
+        max_length=16,
+        pattern=r"^[a-zA-Z0-9_-]+$",
         description="New custom short code. Pass `null` to keep existing. Must be unique and available.",
         examples=["newlink"],
     )
     password: str | None = Field(
         default=None,
+        min_length=8,
+        max_length=128,
         description="New password. Pass `null` to remove password protection.",
         examples=["newPass@456"],
     )
@@ -186,6 +198,7 @@ class ListUrlsQuery(BaseModel):
     # Raw JSON string; also accepted as ``filterBy`` (the existing API supports both)
     filter: str | None = Field(
         default=None,
+        max_length=10000,
         description=LIST_URLS_FILTER_DESC,
         examples=[
             '{"status":"ACTIVE"}',
@@ -198,6 +211,7 @@ class ListUrlsQuery(BaseModel):
     )
     filter_by: str | None = Field(
         default=None,
+        max_length=10000,
         alias="filterBy",
         description="Alias for filter parameter.",
     )

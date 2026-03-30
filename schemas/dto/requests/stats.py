@@ -149,6 +149,7 @@ class StatsQuery(BaseModel):
 
     filters: str | None = Field(
         default=None,
+        max_length=5000,
         description=STATS_FILTERS_DESC,
         examples=[
             '{"browser":["Chrome","Firefox"]}',

@@ -30,11 +30,14 @@ class CreateApiKeyRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     name: str = Field(
+        min_length=1,
+        max_length=255,
         description="Human-readable key name",
         examples=["My Production Key"],
     )
     description: str | None = Field(
         default=None,
+        max_length=1000,
         description="Optional description of what this key is used for",
         examples=["Used by the mobile app for URL shortening"],
     )
