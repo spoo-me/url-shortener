@@ -25,7 +25,7 @@ from bson import ObjectId
 from errors import AppError, ConflictError, NotFoundError, ValidationError
 from infrastructure.email.protocol import EmailProvider
 from repositories.user_repository import UserRepository
-from schemas.models.user import UserDoc
+from schemas.models.user import OAuthAction, UserDoc, UserStatus
 from services.auth_service import AuthService
 from shared.logging import get_logger
 
@@ -165,7 +165,7 @@ class OAuthService:
             "created_at": now,
             "updated_at": now,
             "last_login_at": now,
-            "status": "ACTIVE",
+            "status": UserStatus.ACTIVE,
         }
 
         try:
@@ -236,7 +236,7 @@ class OAuthService:
         provider_display = provider_key.title()
 
         # ── Account-linking flow ──────────────────────────────────────────────
-        if action == "link":
+        if action == OAuthAction.LINK:
             link_user_id = state_data.get("user_id")
             if not link_user_id:
                 raise ValidationError("invalid linking request")

@@ -18,6 +18,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from errors import ValidationError
+from schemas.dto.requests.stats import StatsScope
 from services.export.protocol import ExportFormatter
 from services.stats_service import StatsService
 from shared.logging import get_logger
@@ -100,7 +101,7 @@ class ExportService:
             "export_generated",
             format=fmt,
             scope=scope,
-            short_code=short_code if scope == "anon" else None,
+            short_code=short_code if scope == StatsScope.ANON else None,
             size_bytes=len(content),
         )
         return content, formatter.mimetype, formatter.filename

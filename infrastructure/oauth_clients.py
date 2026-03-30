@@ -16,6 +16,7 @@ from typing import Any
 
 from authlib.integrations.starlette_client import OAuth
 
+from schemas.models.user import OAuthAction
 from shared.logging import get_logger
 
 log = get_logger(__name__)
@@ -148,7 +149,7 @@ def init_oauth(settings: Any) -> tuple[OAuth | None, dict[str, Any]]:
 
 
 def generate_oauth_state(
-    provider: str, action: str = "login", user_id: str | None = None
+    provider: str, action: str = OAuthAction.LOGIN, user_id: str | None = None
 ) -> str:
     """Generate a URL-safe state string for CSRF protection."""
     parts = [

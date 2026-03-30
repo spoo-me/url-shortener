@@ -20,6 +20,7 @@ from dependencies.infra import get_db, get_settings
 from errors import AuthenticationError, EmailNotVerifiedError, ForbiddenError
 from repositories.api_key_repository import ApiKeyRepository
 from repositories.user_repository import UserRepository
+from schemas.dto.requests.api_key import ApiKeyScope
 from schemas.models.api_key import ApiKeyDoc
 from shared.crypto import hash_token
 from shared.logging import get_logger
@@ -185,10 +186,18 @@ def check_api_key_scope(user: CurrentUser | None, required_scopes: set[str]) -> 
 
 # ── Named scope sets ─────────────────────────────────────────────────────────
 
-STATS_SCOPES: set[str] = {"stats:read", "urls:read", "admin:all"}
-URL_MANAGEMENT_SCOPES: set[str] = {"urls:manage", "admin:all"}
-URL_READ_SCOPES: set[str] = {"urls:manage", "urls:read", "admin:all"}
-SHORTEN_SCOPES: set[str] = {"shorten:create", "admin:all"}
+STATS_SCOPES: set[str] = {
+    ApiKeyScope.STATS_READ,
+    ApiKeyScope.URLS_READ,
+    ApiKeyScope.ADMIN_ALL,
+}
+URL_MANAGEMENT_SCOPES: set[str] = {ApiKeyScope.URLS_MANAGE, ApiKeyScope.ADMIN_ALL}
+URL_READ_SCOPES: set[str] = {
+    ApiKeyScope.URLS_MANAGE,
+    ApiKeyScope.URLS_READ,
+    ApiKeyScope.ADMIN_ALL,
+}
+SHORTEN_SCOPES: set[str] = {ApiKeyScope.SHORTEN_CREATE, ApiKeyScope.ADMIN_ALL}
 
 
 # ── Parameterised scope dependency factories ─────────────────────────────────

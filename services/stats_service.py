@@ -32,6 +32,7 @@ from errors import (
 )
 from repositories.click_repository import ClickRepository
 from repositories.url_repository import UrlRepository
+from schemas.dto.requests.stats import StatsDimension, StatsMetric, StatsScope
 from shared.aggregation_strategies import AggregationStrategyFactory
 from shared.logging import get_logger
 
@@ -106,11 +107,11 @@ class StatsService:
         query: dict[str, Any] = {}
 
         # Scope filter
-        if scope == "all" and owner_id:
+        if scope == StatsScope.ALL and owner_id:
             query["meta.owner_id"] = (
                 ObjectId(owner_id) if isinstance(owner_id, str) else owner_id
             )
-        elif scope == "anon" and short_code:
+        elif scope == StatsScope.ANON and short_code:
             query["meta.short_code"] = short_code
 
         # Time range
@@ -121,7 +122,7 @@ class StatsService:
             if not values:
                 continue
 
-            if dimension == "short_code":
+            if dimension == StatsDimension.SHORT_CODE:
                 # SECURITY: skip if scope already locks short_code (scope=anon)
                 if "meta.short_code" in query:
                     log.warning(
@@ -132,7 +133,7 @@ class StatsService:
                     )
                     continue
                 query["meta.short_code"] = {"$in": values}
-            elif dimension == "referrer":
+            elif dimension == StatsDimension.REFERRER:
                 # "Direct" means null/missing referrer
                 if "Direct" in values:
                     non_direct = [v for v in values if v != "Direct"]
@@ -290,7 +291,7 @@ class StatsService:
             "metrics": {},
         }
 
-        if scope == "anon":
+        if scope == StatsScope.ANON:
             response["short_code"] = short_code
 
         response["time_range"] = {
@@ -319,13 +320,13 @@ class StatsService:
         # Build metrics dict
         for dim, dim_results in aggregation_results.items():
             for metric in metrics:
-                result_key = "total_clicks" if metric == "clicks" else metric
+                result_key = "total_clicks" if metric == StatsMetric.CLICKS else metric
                 metric_key = f"{metric}_by_{dim}"
                 response["metrics"][metric_key] = []
                 for result in dim_results:
-                    if dim == "time":
+                    if dim == StatsDimension.TIME:
                         dim_value = result.get("date", "unknown")
-                    elif dim == "short_code":
+                    elif dim == StatsDimension.SHORT_CODE:
                         dim_value = result.get(
                             "short_code", result.get("alias", "unknown")
                         )
@@ -462,7 +463,7 @@ class StatsService:
             tz_name = "UTC"
 
         # ── Scope/target validation ───────────────────────────────────────────
-        if scope == "anon":
+        if scope == StatsScope.ANON:
             if not short_code:
                 raise ValidationError("short_code is required when scope=anon")
 
@@ -490,7 +491,7 @@ class StatsService:
                     )
                     raise ForbiddenError("access denied - private statistics")
 
-        elif scope == "all":
+        elif scope == StatsScope.ALL:
             if owner_id is None:
                 log.warning(
                     "stats_access_denied",
@@ -525,7 +526,7 @@ class StatsService:
         log.info(
             "stats_query",
             scope=scope,
-            short_code=short_code if scope == "anon" else None,
+            short_code=short_code if scope == StatsScope.ANON else None,
             group_by=group_by,
             metrics=metrics,
             start_date=start_date.isoformat(),

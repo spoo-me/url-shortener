@@ -13,7 +13,7 @@ from bson import ObjectId
 from pymongo.asynchronous.collection import AsyncCollection
 from pymongo.errors import DuplicateKeyError, PyMongoError
 
-from schemas.models.url import UrlV2Doc
+from schemas.models.url import UrlStatus, UrlV2Doc
 from shared.logging import get_logger
 
 log = get_logger(__name__)
@@ -151,7 +151,7 @@ class UrlRepository:
         try:
             result = await self._col.update_one(
                 {"_id": url_id, "total_clicks": {"$gte": max_clicks}},
-                {"$set": {"status": "EXPIRED"}},
+                {"$set": {"status": UrlStatus.EXPIRED}},
             )
             return result.modified_count > 0
         except PyMongoError as exc:

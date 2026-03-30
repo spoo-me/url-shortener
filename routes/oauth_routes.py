@@ -30,6 +30,7 @@ from middleware.rate_limiter import Limits, limiter
 from routes.cookie_helpers import set_auth_cookies
 from schemas.dto.responses.auth import OAuthProvidersResponse
 from schemas.dto.responses.common import MessageResponse
+from schemas.models.user import OAuthAction
 from services.oauth_service import OAuthService
 from shared.ip_utils import get_client_ip
 from shared.logging import get_logger
@@ -131,7 +132,7 @@ async def oauth_login(
         raise NotFoundError(f"'{provider}' OAuth not configured")
 
     log.info("oauth_flow_initiated", provider=provider)
-    state = generate_oauth_state(provider, "login")
+    state = generate_oauth_state(provider, OAuthAction.LOGIN)
     redirect_uri = get_oauth_redirect_url(provider, request.app.state.settings.oauth)
     return await client.authorize_redirect(request, redirect_uri, state=state)
 
@@ -203,7 +204,7 @@ async def oauth_callback(
         raise ValidationError("email not provided by OAuth provider")
 
     # ── Delegate to service ───────────────────────────────────────────────────
-    action = state_data.get("action", "login")
+    action = state_data.get("action", OAuthAction.LOGIN)
     client_ip = get_client_ip(request)
     _user, access_token, refresh_token = await oauth_service.handle_callback(
         provider, provider_info, action, state_data, client_ip
@@ -244,6 +245,6 @@ async def oauth_link(
         raise NotFoundError(f"'{provider}' OAuth not configured")
 
     log.info("oauth_link_initiated", provider=provider, user_id=str(user.user_id))
-    state = generate_oauth_state(provider, "link", user_id=str(user.user_id))
+    state = generate_oauth_state(provider, OAuthAction.LINK, user_id=str(user.user_id))
     redirect_uri = get_oauth_redirect_url(provider, request.app.state.settings.oauth)
     return await client.authorize_redirect(request, redirect_uri, state=state)

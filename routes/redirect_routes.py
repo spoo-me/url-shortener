@@ -24,6 +24,7 @@ from errors import (
     ValidationError,
 )
 from middleware.rate_limiter import Limits, limiter
+from schemas.models.url import SchemaVersion
 from services.click import ClickService
 from services.url_service import UrlService
 from shared.crypto import verify_password
@@ -54,7 +55,7 @@ def _error_page(request: Request, code: str, message: str, status: int) -> Respo
 
 def _check_url_password(password: str | None, password_hash: str, schema: str) -> bool:
     """Verify a URL password — bcrypt for v2, plaintext comparison for v1/emoji."""
-    if schema == "v2":
+    if schema == SchemaVersion.V2:
         return verify_password(password or "", password_hash)
     return password == password_hash
 
@@ -106,7 +107,7 @@ async def redirect_url(
         user_agent = request.headers.get("User-Agent", "")
         referrer = request.headers.get("Referer")
         cf_city = request.headers.get("CF-IPCity")
-        is_emoji = schema == "emoji"
+        is_emoji = schema == SchemaVersion.EMOJI
         try:
             await click_service.track_click(
                 url_data=url_data,

@@ -28,7 +28,7 @@ from infrastructure.email.protocol import EmailProvider
 from repositories.token_repository import TokenRepository
 from repositories.user_repository import UserRepository
 from schemas.models.token import TOKEN_TYPE_EMAIL_VERIFY, TOKEN_TYPE_PASSWORD_RESET
-from schemas.models.user import UserDoc
+from schemas.models.user import UserDoc, UserStatus
 from services.token_factory import TokenFactory
 from shared.crypto import hash_password, hash_token, verify_password
 from shared.generators import generate_otp_code
@@ -302,7 +302,7 @@ class AuthService:
             "signup_ip": signup_ip,
             "created_at": now,
             "updated_at": now,
-            "status": "ACTIVE",
+            "status": UserStatus.ACTIVE,
         }
 
         try:
@@ -359,7 +359,7 @@ class AuthService:
 
         user_id = claims.get("sub")
         user = await self._user_repo.find_by_id(ObjectId(user_id))
-        if not user or user.status != "ACTIVE":
+        if not user or user.status != UserStatus.ACTIVE:
             log.warning(
                 "token_refresh_failed",
                 reason="user_not_found_or_inactive",

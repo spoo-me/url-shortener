@@ -38,7 +38,13 @@ from repositories.legacy.legacy_url_repository import LegacyUrlRepository
 from repositories.url_repository import UrlRepository
 from schemas.dto.requests.url import CreateUrlRequest, ListUrlsQuery, UpdateUrlRequest
 from schemas.models.base import ANONYMOUS_OWNER_ID
-from schemas.models.url import EmojiUrlDoc, LegacyUrlDoc, UrlV2Doc
+from schemas.models.url import (
+    EmojiUrlDoc,
+    LegacyUrlDoc,
+    SchemaVersion,
+    UrlStatus,
+    UrlV2Doc,
+)
 from shared.crypto import hash_password
 from shared.datetime_utils import parse_datetime
 from shared.generators import generate_short_code_v2
@@ -88,10 +94,10 @@ class UrlService:
         cached = await self._url_cache.get(short_code)
         if cached is not None:
             schema = cached.schema_version
-            if schema == "v2" and cached.url_status in (
-                "BLOCKED",
-                "EXPIRED",
-                "INACTIVE",
+            if schema == SchemaVersion.V2 and cached.url_status in (
+                UrlStatus.BLOCKED,
+                UrlStatus.EXPIRED,
+                UrlStatus.INACTIVE,
             ):
                 log.info(
                     "url_resolve_non_active",
@@ -122,10 +128,10 @@ class UrlService:
         await self._populate_cache(short_code, url_cache_data, schema)
 
         # 4a. Raise for non-ACTIVE v2 (after caching minimal data)
-        if schema == "v2" and url_cache_data.url_status in (
-            "BLOCKED",
-            "EXPIRED",
-            "INACTIVE",
+        if schema == SchemaVersion.V2 and url_cache_data.url_status in (
+            UrlStatus.BLOCKED,
+            UrlStatus.EXPIRED,
+            UrlStatus.INACTIVE,
         ):
             log.info(
                 "url_resolve_non_active",
@@ -138,7 +144,7 @@ class UrlService:
 
         # 4b. Raise for v1 URLs whose max-clicks have been exhausted
         if (
-            schema == "v1"
+            schema == SchemaVersion.V1
             and url_cache_data.max_clicks is not None
             and url_cache_data.total_clicks >= url_cache_data.max_clicks
         ):
@@ -245,7 +251,7 @@ class UrlService:
             "block_bots": request.block_bots,
             "max_clicks": request.max_clicks,
             "expire_after": expire_ts,
-            "status": "ACTIVE",
+            "status": UrlStatus.ACTIVE,
             "private_stats": private_stats,
             "total_clicks": 0,
             "last_click": None,
@@ -260,7 +266,7 @@ class UrlService:
             alias=alias,
             long_url=request.long_url,
             owner_id=str(owner_id) if owner_id else None,
-            schema="v2",
+            schema=SchemaVersion.V2,
             has_password=bool(password_hash),
             max_clicks=request.max_clicks,
             block_bots=request.block_bots,
@@ -297,7 +303,7 @@ class UrlService:
             raise ForbiddenError("Access denied: you do not own this URL")
 
         # 2b. Admin-blocked URLs cannot be modified by the owner
-        if existing.status == "BLOCKED":
+        if existing.status == UrlStatus.BLOCKED:
             raise ForbiddenError("Cannot modify a blocked URL")
 
         # 3. Build update ops — only changed fields
@@ -408,7 +414,7 @@ class UrlService:
         if existing.owner_id != owner_id:
             raise ForbiddenError("Access denied: you do not own this URL")
 
-        if existing.status == "BLOCKED":
+        if existing.status == UrlStatus.BLOCKED:
             raise ForbiddenError("Cannot delete a blocked URL")
 
         await self._url_repo.delete(url_id)
@@ -527,8 +533,8 @@ class UrlService:
         if validate_emoji_alias(short_code):
             doc = await self._emoji_repo.find_by_id(short_code)
             if doc is not None:
-                return _emoji_doc_to_cache(short_code, doc), "emoji"
-            return None, "emoji"
+                return _emoji_doc_to_cache(short_code, doc), SchemaVersion.EMOJI
+            return None, SchemaVersion.EMOJI
 
         code_len = len(short_code)
         if code_len == 7:
@@ -541,20 +547,20 @@ class UrlService:
     async def _try_v2_then_v1(self, short_code: str) -> tuple[UrlCacheData | None, str]:
         v2_doc = await self._url_repo.find_by_alias(short_code)
         if v2_doc is not None:
-            return _v2_doc_to_cache(v2_doc), "v2"
+            return _v2_doc_to_cache(v2_doc), SchemaVersion.V2
         v1_doc = await self._legacy_repo.find_by_id(short_code)
         if v1_doc is not None:
-            return _legacy_doc_to_cache(short_code, v1_doc), "v1"
-        return None, "v2"
+            return _legacy_doc_to_cache(short_code, v1_doc), SchemaVersion.V1
+        return None, SchemaVersion.V2
 
     async def _try_v1_then_v2(self, short_code: str) -> tuple[UrlCacheData | None, str]:
         v1_doc = await self._legacy_repo.find_by_id(short_code)
         if v1_doc is not None:
-            return _legacy_doc_to_cache(short_code, v1_doc), "v1"
+            return _legacy_doc_to_cache(short_code, v1_doc), SchemaVersion.V1
         v2_doc = await self._url_repo.find_by_alias(short_code)
         if v2_doc is not None:
-            return _v2_doc_to_cache(v2_doc), "v2"
-        return None, "v2"
+            return _v2_doc_to_cache(v2_doc), SchemaVersion.V2
+        return None, SchemaVersion.V2
 
     async def _populate_cache(
         self,
@@ -569,7 +575,9 @@ class UrlService:
           - v1 with max-clicks: do NOT cache (total-clicks must be live)
           - emoji: do NOT cache
         """
-        if schema == "v2" or (schema == "v1" and url_cache_data.max_clicks is None):
+        if schema == SchemaVersion.V2 or (
+            schema == SchemaVersion.V1 and url_cache_data.max_clicks is None
+        ):
             await self._url_cache.set(short_code, url_cache_data)
 
     async def _generate_unique_alias(self) -> str:
@@ -586,7 +594,7 @@ class UrlService:
 
 
 def _raise_for_status(status: str) -> None:
-    if status == "BLOCKED":
+    if status == UrlStatus.BLOCKED:
         raise BlockedUrlError("URL is blocked")
     raise GoneError("URL has expired or is no longer active")
 
@@ -603,7 +611,7 @@ def _v2_doc_to_cache(doc: UrlV2Doc) -> UrlCacheData:
         ),
         max_clicks=doc.max_clicks,
         url_status=doc.status,
-        schema_version="v2",
+        schema_version=SchemaVersion.V2,
         owner_id=str(doc.owner_id) if doc.owner_id else None,
     )
 
@@ -611,7 +619,7 @@ def _v2_doc_to_cache(doc: UrlV2Doc) -> UrlCacheData:
 def _legacy_doc_to_cache(
     short_code: str,
     doc: LegacyUrlDoc | EmojiUrlDoc,
-    schema_version: str = "v1",
+    schema_version: str = SchemaVersion.V1,
 ) -> UrlCacheData:
     """Convert a LegacyUrlDoc or EmojiUrlDoc to UrlCacheData."""
     expiration_time = None
@@ -625,7 +633,7 @@ def _legacy_doc_to_cache(
         password_hash=doc.password,
         expiration_time=expiration_time,
         max_clicks=doc.max_clicks,
-        url_status="ACTIVE",
+        url_status=UrlStatus.ACTIVE,
         schema_version=schema_version,
         total_clicks=doc.total_clicks,
         owner_id=None,
@@ -633,7 +641,7 @@ def _legacy_doc_to_cache(
 
 
 def _emoji_doc_to_cache(short_code: str, doc: EmojiUrlDoc) -> UrlCacheData:
-    return _legacy_doc_to_cache(short_code, doc, schema_version="emoji")
+    return _legacy_doc_to_cache(short_code, doc, schema_version=SchemaVersion.EMOJI)
 
 
 def _format_url_list_item(doc: UrlV2Doc) -> dict:
