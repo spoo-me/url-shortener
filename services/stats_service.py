@@ -87,7 +87,7 @@ class StatsService:
 
     @staticmethod
     def _build_click_query(
-        scope: str,
+        scope: StatsScope,
         owner_id: str | None,
         short_code: str | None,
         start_date: datetime,
@@ -268,7 +268,7 @@ class StatsService:
 
     def _format_results(
         self,
-        scope: str,
+        scope: StatsScope,
         short_code: str | None,
         start_date: datetime,
         end_date: datetime,
@@ -390,7 +390,7 @@ class StatsService:
     async def query(
         self,
         owner_id: str | None,
-        scope: str,
+        scope: StatsScope,
         short_code: str | None,
         start_date: datetime | None,
         end_date: datetime | None,

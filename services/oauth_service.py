@@ -251,6 +251,8 @@ class OAuthService:
 
         # ── Account-linking flow ──────────────────────────────────────────────
         if action == OAuthAction.LINK:
+            if not provider_info.email:
+                raise ValidationError("email not provided by OAuth provider")
             link_user_id = state_data.get("user_id")
             if not link_user_id:
                 raise ValidationError("invalid linking request")
@@ -327,6 +329,10 @@ class OAuthService:
                 existing_oauth_user, provider_key
             )
             return existing_oauth_user, access_token, refresh_token
+
+        # Email is required for collision detection and new user creation
+        if not provider_info.email:
+            raise ValidationError("email not provided by OAuth provider")
 
         # ── Email collision ───────────────────────────────────────────────────
         existing_email_user = await self._user_repo.find_by_email(provider_info.email)

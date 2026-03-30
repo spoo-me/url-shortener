@@ -59,7 +59,7 @@ class UrlV2Doc(MongoBaseModel):
     long_url: str
     password: str | None = None
     block_bots: bool | None = None
-    max_clicks: int | None = Field(default=None, gt=0)
+    max_clicks: int | None = Field(default=None, ge=0)
     expire_after: datetime | None = None
     status: UrlStatus = UrlStatus.ACTIVE
     private_stats: bool | None = True  # None for anonymous/unowned URLs

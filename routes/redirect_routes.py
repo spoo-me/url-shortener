@@ -53,7 +53,9 @@ def _error_page(request: Request, code: str, message: str, status: int) -> Respo
     )
 
 
-def _check_url_password(password: str | None, password_hash: str, schema: str) -> bool:
+def _check_url_password(
+    password: str | None, password_hash: str, schema: SchemaVersion
+) -> bool:
     """Verify a URL password — bcrypt for v2, plaintext comparison for v1/emoji."""
     if schema == SchemaVersion.V2:
         return verify_password(password or "", password_hash)

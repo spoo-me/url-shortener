@@ -78,7 +78,7 @@ class UrlService:
 
     # ── Public API ────────────────────────────────────────────────────────────
 
-    async def resolve(self, short_code: str) -> tuple[UrlCacheData, str]:
+    async def resolve(self, short_code: str) -> tuple[UrlCacheData, SchemaVersion]:
         """
         Resolve a short code to UrlCacheData and schema version.
 
@@ -521,7 +521,9 @@ class UrlService:
 
     # ── Private helpers ───────────────────────────────────────────────────────
 
-    async def _dispatch(self, short_code: str) -> tuple[UrlCacheData | None, str]:
+    async def _dispatch(
+        self, short_code: str
+    ) -> tuple[UrlCacheData | None, SchemaVersion]:
         """
         Determine URL schema and fetch from the appropriate collection.
 
@@ -545,7 +547,9 @@ class UrlService:
         else:
             return await self._try_v2_then_v1(short_code)
 
-    async def _try_v2_then_v1(self, short_code: str) -> tuple[UrlCacheData | None, str]:
+    async def _try_v2_then_v1(
+        self, short_code: str
+    ) -> tuple[UrlCacheData | None, SchemaVersion]:
         v2_doc = await self._url_repo.find_by_alias(short_code)
         if v2_doc is not None:
             return _v2_doc_to_cache(v2_doc), SchemaVersion.V2
@@ -554,7 +558,9 @@ class UrlService:
             return _legacy_doc_to_cache(short_code, v1_doc), SchemaVersion.V1
         return None, SchemaVersion.V2
 
-    async def _try_v1_then_v2(self, short_code: str) -> tuple[UrlCacheData | None, str]:
+    async def _try_v1_then_v2(
+        self, short_code: str
+    ) -> tuple[UrlCacheData | None, SchemaVersion]:
         v1_doc = await self._legacy_repo.find_by_id(short_code)
         if v1_doc is not None:
             return _legacy_doc_to_cache(short_code, v1_doc), SchemaVersion.V1
@@ -620,7 +626,7 @@ def _v2_doc_to_cache(doc: UrlV2Doc) -> UrlCacheData:
 def _legacy_doc_to_cache(
     short_code: str,
     doc: LegacyUrlDoc | EmojiUrlDoc,
-    schema_version: str = SchemaVersion.V1,
+    schema_version: SchemaVersion = SchemaVersion.V1,
 ) -> UrlCacheData:
     """Convert a LegacyUrlDoc or EmojiUrlDoc to UrlCacheData."""
     expiration_time = None

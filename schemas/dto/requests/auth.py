@@ -77,7 +77,7 @@ class VerifyEmailRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     code: str = Field(
-        pattern=r"^\d{6}$",
+        pattern=r"^[0-9]{6}$",
         description="6-digit OTP from verification email",
         examples=["123456"],
     )
@@ -104,7 +104,7 @@ class ResetPasswordRequest(BaseModel):
         examples=["user@example.com"],
     )
     code: str = Field(
-        pattern=r"^\d{6}$",
+        pattern=r"^[0-9]{6}$",
         description="6-digit OTP from password reset email",
         examples=["123456"],
     )

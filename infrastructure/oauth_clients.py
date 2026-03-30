@@ -149,12 +149,13 @@ def init_oauth(settings: Any) -> tuple[OAuth | None, dict[str, Any]]:
 
 
 def generate_oauth_state(
-    provider: str, action: str = OAuthAction.LOGIN, user_id: str | None = None
+    provider: str, action: OAuthAction = OAuthAction.LOGIN, user_id: str | None = None
 ) -> str:
     """Generate a URL-safe state string for CSRF protection."""
+    action_str = action.value if isinstance(action, OAuthAction) else action
     parts = [
         f"provider={provider}",
-        f"action={action}",
+        f"action={action_str}",
         f"nonce={secrets.token_urlsafe(32)}",
         f"timestamp={datetime.now(timezone.utc).isoformat()}",
     ]
