@@ -83,12 +83,12 @@ class UrlService:
         Resolve a short code to UrlCacheData and schema version.
 
         Returns (UrlCacheData, schema_version) where schema_version is
-        "v2", "v1", or "emoji".
+        a SchemaVersion enum member (V2, V1, or EMOJI).
 
         Raises:
-            NotFoundError:  URL not found in any collection.
-            ForbiddenError: URL status is BLOCKED (v2 only).
-            GoneError:      URL status is EXPIRED or INACTIVE (v2 only).
+            NotFoundError:   URL not found in any collection.
+            BlockedUrlError: URL status is BLOCKED (v2 only).
+            GoneError:       URL status is EXPIRED or INACTIVE (v2 only).
         """
         # 1. Cache hit
         cached = await self._url_cache.get(short_code)

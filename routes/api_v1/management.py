@@ -130,10 +130,14 @@ async def update_url_status_v1(
 
     **Rate Limits**: 120/min, 2,000/day
 
-    **Status Values**:
+    **Status Values** (user-editable via this endpoint):
 
     - `ACTIVE` — URL is accessible and redirects normally
     - `INACTIVE` — URL is disabled and returns an error page
+
+    **Note**: `BLOCKED` is an admin-set status — blocked URLs cannot be modified
+    or deleted by the owner. `EXPIRED` URLs (auto-set on max clicks or expiry
+    time) can be reactivated by setting status back to `ACTIVE`.
 
     **Use Cases**:
 

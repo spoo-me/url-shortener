@@ -94,8 +94,8 @@ class UserDoc(MongoBaseModel):
     """
     Document model for the `users` collection.
 
-    status values: ACTIVE (only value currently in use)
-    plan values: "free" (only value currently in use)
+    status: UserStatus enum (ACTIVE, INACTIVE)
+    plan: UserPlan enum (FREE)
     """
 
     email: str

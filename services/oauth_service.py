@@ -11,7 +11,7 @@ The route layer is responsible for:
     - Provider-specific user-info fetch (strategy.fetch_user_info())
     - Redirecting with JWT cookies
 
-This service receives the already-extracted provider_info dict and handles
+This service receives the already-extracted ProviderInfo model and handles
 all business logic from there.
 """
 
@@ -233,7 +233,7 @@ class OAuthService:
 
         Args:
             provider_key:  e.g. ``"google"``, ``"github"``, ``"discord"``.
-            provider_info: Normalised user-info dict from the provider strategy.
+            provider_info: Normalised ProviderInfo model from the provider strategy.
             action:        ``"login"`` or ``"link"`` (from state).
             state_data:    Full state dict (may contain ``user_id`` for linking).
             signup_ip:     Client IP for new user creation.
