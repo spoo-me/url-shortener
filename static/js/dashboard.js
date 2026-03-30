@@ -89,6 +89,7 @@
 		const long = node.querySelector('.link-long');
 		const activeBadge = node.querySelector('.badge-active');
 		const inactiveBadge = node.querySelector('.badge-inactive');
+		const blockedBadge = node.querySelector('.badge-blocked');
 		const pwBadge = node.querySelector('.badge-password');
 		const mcBadge = node.querySelector('.badge-max-clicks');
 		const privBadge = node.querySelector('.badge-private');
@@ -113,13 +114,11 @@
 		// Status badges - show appropriate badge based on status
 		if (it.status === 'ACTIVE') {
 			activeBadge.style.display = 'inline-flex';
-			inactiveBadge.style.display = 'none';
 		} else if (it.status === 'INACTIVE') {
-			activeBadge.style.display = 'none';
 			inactiveBadge.style.display = 'inline-flex';
-		} else {
-			activeBadge.style.display = 'none';
-			inactiveBadge.style.display = 'none';
+		} else if (it.status === 'BLOCKED') {
+			blockedBadge.style.display = 'inline-flex';
+			node.classList.add('row-blocked');
 		}
 
 		// Password badge

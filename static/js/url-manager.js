@@ -186,6 +186,19 @@ class UrlManager {
 
         // Update deactivate button based on current status
         this.updateDeactivateButton(urlData.status);
+
+        // Blocked URLs: disable all editing
+        const isBlocked = urlData.status === 'BLOCKED';
+        if (this.deleteBtn) this.deleteBtn.disabled = isBlocked;
+        if (this.saveBtn) this.saveBtn.disabled = isBlocked;
+        if (this.aliasInput) this.aliasInput.disabled = isBlocked;
+        if (this.longUrlInput) this.longUrlInput.disabled = isBlocked;
+        if (this.passwordInput) this.passwordInput.disabled = isBlocked;
+        if (this.maxClicksInput) this.maxClicksInput.disabled = isBlocked;
+        if (this.expireAfterInput) this.expireAfterInput.disabled = isBlocked;
+        if (this.blockBotsCheckbox) this.blockBotsCheckbox.disabled = isBlocked;
+        if (this.privateStatsCheckbox) this.privateStatsCheckbox.disabled = isBlocked;
+        if (this.removePasswordCheckbox) this.removePasswordCheckbox.disabled = isBlocked;
     }
 
     handlePasswordCheckboxChange() {
@@ -210,12 +223,18 @@ class UrlManager {
 
     updateDeactivateButton(status) {
         if (this.deactivateBtn) {
-            if (status === 'ACTIVE') {
+            if (status === 'BLOCKED') {
+                this.deactivateBtn.innerHTML = '<i class="ti ti-ban"></i><span>Blocked</span>';
+                this.deactivateBtn.className = 'btn btn-danger';
+                this.deactivateBtn.disabled = true;
+            } else if (status === 'ACTIVE') {
                 this.deactivateBtn.innerHTML = '<i class="ti ti-player-pause"></i><span>Deactivate</span>';
                 this.deactivateBtn.className = 'btn btn-warning';
+                this.deactivateBtn.disabled = false;
             } else {
                 this.deactivateBtn.innerHTML = '<i class="ti ti-player-play"></i><span>Activate</span>';
                 this.deactivateBtn.className = 'btn btn-success';
+                this.deactivateBtn.disabled = false;
             }
         }
     }
@@ -675,17 +694,19 @@ class UrlManager {
                         // Update status badges
                         const activeBadge = row.querySelector('.badge-active');
                         const inactiveBadge = row.querySelector('.badge-inactive');
-                        if (activeBadge && inactiveBadge) {
-                            if (updatedUrlData.status === 'ACTIVE') {
-                                activeBadge.style.display = 'inline-flex';
-                                inactiveBadge.style.display = 'none';
-                            } else if (updatedUrlData.status === 'INACTIVE') {
-                                activeBadge.style.display = 'none';
-                                inactiveBadge.style.display = 'inline-flex';
-                            } else {
-                                activeBadge.style.display = 'none';
-                                inactiveBadge.style.display = 'none';
-                            }
+                        const blockedBadge = row.querySelector('.badge-blocked');
+                        if (activeBadge) activeBadge.style.display = 'none';
+                        if (inactiveBadge) inactiveBadge.style.display = 'none';
+                        if (blockedBadge) blockedBadge.style.display = 'none';
+                        row.classList.remove('row-blocked');
+
+                        if (updatedUrlData.status === 'ACTIVE' && activeBadge) {
+                            activeBadge.style.display = 'inline-flex';
+                        } else if (updatedUrlData.status === 'INACTIVE' && inactiveBadge) {
+                            inactiveBadge.style.display = 'inline-flex';
+                        } else if (updatedUrlData.status === 'BLOCKED' && blockedBadge) {
+                            blockedBadge.style.display = 'inline-flex';
+                            row.classList.add('row-blocked');
                         }
 
                         const passwordBadge = row.querySelector('.badge-password');
