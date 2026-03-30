@@ -88,4 +88,4 @@ class UserDoc(MongoBaseModel):
     created_at: datetime | None = None
     updated_at: datetime | None = None
     last_login_at: datetime | None = None
-    status: str = UserStatus.ACTIVE
+    status: UserStatus = UserStatus.ACTIVE

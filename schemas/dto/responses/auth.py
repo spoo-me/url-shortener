@@ -17,6 +17,8 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from schemas.models.user import OAuthProvider
+
 if TYPE_CHECKING:
     from schemas.models.user import UserDoc
 
@@ -26,7 +28,7 @@ class AuthProviderInfo(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    provider: str | None = Field(
+    provider: OAuthProvider | None = Field(
         default=None, description="OAuth provider name", examples=["google"]
     )
     email: str | None = Field(
@@ -51,7 +53,7 @@ class UserPfp(BaseModel):
         description="Profile picture URL",
         examples=["https://lh3.googleusercontent.com/a/photo"],
     )
-    source: str | None = Field(
+    source: OAuthProvider | None = Field(
         default=None, description="Source of the profile picture", examples=["google"]
     )
 

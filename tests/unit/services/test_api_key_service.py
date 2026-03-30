@@ -38,7 +38,7 @@ def make_key_doc(revoked=False):
             "token_prefix": "abcd1234",
             "token_hash": "x" * 64,
             "name": "My Key",
-            "scopes": ["url:read"],
+            "scopes": ["urls:read"],
             "revoked": revoked,
             "expires_at": None,
             "created_at": datetime.now(timezone.utc),
@@ -54,7 +54,7 @@ class TestApiKeyServiceCreate:
 
         doc, raw_token = await svc.create(
             name="Test Key",
-            scopes=["url:read"],
+            scopes=["urls:read"],
             user_id=USER_OID,
             email_verified=True,
         )
@@ -62,7 +62,7 @@ class TestApiKeyServiceCreate:
         assert isinstance(doc, ApiKeyDoc)
         assert raw_token.startswith("spoo_")
         assert doc.name == "Test Key"
-        assert doc.scopes == ["url:read"]
+        assert doc.scopes == ["urls:read"]
         repo.insert.assert_awaited_once()
 
     @pytest.mark.asyncio
@@ -100,7 +100,7 @@ class TestApiKeyServiceCreate:
 
         doc, _raw_token = await svc.create(
             name="Named Key",
-            scopes=["url:write"],
+            scopes=["urls:manage"],
             user_id=USER_OID,
             email_verified=True,
             description="My description",

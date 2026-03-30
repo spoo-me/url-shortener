@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from schemas.models.url import UrlStatus
+
 
 class UrlResponse(BaseModel):
     """Response body for a newly created shortened URL (POST /api/v1/shorten).
@@ -42,7 +44,7 @@ class UrlResponse(BaseModel):
         description="Creation time as Unix timestamp.",
         examples=[1704067200],
     )
-    status: str = Field(description="URL status.", examples=["ACTIVE"])
+    status: UrlStatus = Field(description="URL status.", examples=["ACTIVE"])
     private_stats: bool | None = Field(
         default=None,
         description="Whether statistics are private (owner-only).",
@@ -66,7 +68,7 @@ class UpdateUrlResponse(BaseModel):
         description="Destination URL.",
         examples=["https://example.com/long/url"],
     )
-    status: str | None = Field(
+    status: UrlStatus | None = Field(
         default=None, description="URL status.", examples=["ACTIVE"]
     )
     password_set: bool = Field(description="Whether the URL is password-protected.")
@@ -102,7 +104,7 @@ class UrlListItem(BaseModel):
     id: str
     alias: str | None = None
     long_url: str | None = None
-    status: str | None = None
+    status: UrlStatus | None = None
     created_at: str | None = None  # ISO 8601 string
     expire_after: int | None = None  # Unix timestamp or null
     max_clicks: int | None = None

@@ -61,7 +61,7 @@ class UrlV2Doc(MongoBaseModel):
     block_bots: bool | None = None
     max_clicks: int | None = None
     expire_after: datetime | None = None
-    status: str = UrlStatus.ACTIVE
+    status: UrlStatus = UrlStatus.ACTIVE
     private_stats: bool | None = True  # None for anonymous/unowned URLs
     total_clicks: int = 0
     last_click: datetime | None = None
