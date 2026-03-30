@@ -573,7 +573,7 @@ class UrlService:
         self,
         short_code: str,
         url_cache_data: UrlCacheData,
-        schema: str,
+        schema: SchemaVersion,
     ) -> None:
         """
         Cache the URL data according to caching rules:
@@ -600,7 +600,7 @@ class UrlService:
 # ── Module-level helpers ──────────────────────────────────────────────────────
 
 
-def _raise_for_status(status: str) -> None:
+def _raise_for_status(status: UrlStatus) -> None:
     if status == UrlStatus.BLOCKED:
         raise BlockedUrlError("URL is blocked")
     raise GoneError("URL has expired or is no longer active")
