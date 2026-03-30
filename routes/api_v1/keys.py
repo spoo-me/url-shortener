@@ -10,9 +10,10 @@ other API keys — only JWT Bearer auth is accepted here, matching the original)
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Annotated
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Path, Query, Request
 
 from dependencies import (
     JwtUser,
@@ -154,7 +155,9 @@ async def list_api_keys(
 @limiter.limit(Limits.API_KEY_DELETE)
 async def delete_api_key(
     request: Request,
-    key_id: str,
+    key_id: Annotated[
+        str, Path(min_length=24, max_length=24, pattern=r"^[0-9a-f]{24}$")
+    ],
     user: JwtUser,
     api_key_service: ApiKeyService = Depends(get_api_key_service),
     revoke: bool = Query(default=False),

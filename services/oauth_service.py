@@ -30,6 +30,7 @@ from schemas.models.user import (
     AuthProviderEntry,
     OAuthAction,
     ProfilePicture,
+    ProviderInfo,
     ProviderProfile,
     UserDoc,
     UserPlan,
@@ -63,16 +64,16 @@ class OAuthService:
     # ── Private helpers ───────────────────────────────────────────────────────
 
     def _can_auto_link(
-        self, existing_user: UserDoc, provider_info: dict[str, Any], provider_key: str
+        self, existing_user: UserDoc, provider_info: ProviderInfo, provider_key: str
     ) -> bool:
         """True only if provider email is verified, matches user email, and
         isn't already linked.
 
         Preserves exact logic from utils/oauth_utils.can_auto_link_accounts().
         """
-        if not provider_info.get("email_verified", False):
+        if not provider_info.email_verified:
             return False
-        if existing_user.email.lower() != provider_info.get("email", "").lower():
+        if existing_user.email.lower() != (provider_info.email or "").lower():
             return False
         for entry in existing_user.auth_providers:
             if entry.provider == provider_key:
@@ -82,7 +83,7 @@ class OAuthService:
     async def _link_provider(
         self,
         user_id: ObjectId,
-        provider_info: dict[str, Any],
+        provider_info: ProviderInfo,
         provider: str,
     ) -> bool:
         """Append an OAuth provider entry to a user's auth_providers array.
@@ -96,26 +97,26 @@ class OAuthService:
         now = datetime.now(timezone.utc)
         provider_entry = AuthProviderEntry(
             provider=provider,
-            provider_user_id=provider_info["provider_user_id"],
-            email=provider_info["email"],
-            email_verified=provider_info["email_verified"],
+            provider_user_id=provider_info.provider_user_id,
+            email=provider_info.email,
+            email_verified=provider_info.email_verified,
             profile=ProviderProfile(
-                name=provider_info["name"],
-                picture=provider_info["picture"],
+                name=provider_info.name,
+                picture=provider_info.picture,
             ),
             linked_at=now,
         )
 
         set_fields: dict[str, Any] = {"updated_at": now, "last_login_at": now}
 
-        if provider_info.get("picture"):
-            set_fields["pfp"] = ProfilePicture(
-                url=provider_info["picture"],
-                source=provider,
-                last_updated=now,
-            ).model_dump()
+        if provider_info.picture:
+            set_fields["pfp"] = {
+                "url": provider_info.picture,
+                "source": provider,
+                "last_updated": now,
+            }
 
-        if provider_info.get("email_verified"):
+        if provider_info.email_verified:
             set_fields["email_verified"] = True
 
         return await self._user_repo.update(
@@ -128,7 +129,7 @@ class OAuthService:
 
     async def _create_oauth_user(
         self,
-        provider_info: dict[str, Any],
+        provider_info: ProviderInfo,
         provider: str,
         signup_ip: str | None = None,
     ) -> ObjectId:
@@ -141,20 +142,20 @@ class OAuthService:
             AppError: On DB insertion failure.
         """
         now = datetime.now(timezone.utc)
-        user_name = provider_info.get("name") or provider_info["email"].split("@")[0]
+        user_name = provider_info.name or provider_info.email.split("@")[0]
         pfp = (
             ProfilePicture(
-                url=provider_info["picture"],
+                url=provider_info.picture,
                 source=provider,
                 last_updated=now,
             )
-            if provider_info.get("picture")
+            if provider_info.picture
             else None
         )
 
         user_doc = UserDoc(
-            email=provider_info["email"],
-            email_verified=provider_info["email_verified"],
+            email=provider_info.email,
+            email_verified=provider_info.email_verified,
             user_name=user_name,
             pfp=pfp,
             password_hash=None,
@@ -162,12 +163,12 @@ class OAuthService:
             auth_providers=[
                 AuthProviderEntry(
                     provider=provider,
-                    provider_user_id=provider_info["provider_user_id"],
-                    email=provider_info["email"],
-                    email_verified=provider_info["email_verified"],
+                    provider_user_id=provider_info.provider_user_id,
+                    email=provider_info.email,
+                    email_verified=provider_info.email_verified,
                     profile=ProviderProfile(
-                        name=provider_info["name"],
-                        picture=provider_info["picture"],
+                        name=provider_info.name,
+                        picture=provider_info.picture,
                     ),
                     linked_at=now,
                 )
@@ -216,7 +217,7 @@ class OAuthService:
     async def handle_callback(
         self,
         provider_key: str,
-        provider_info: dict[str, Any],
+        provider_info: ProviderInfo,
         action: str,
         state_data: dict[str, Any],
         signup_ip: str | None = None,
@@ -265,7 +266,7 @@ class OAuthService:
 
             # Ensure provider_user_id not already owned by another account
             existing_oauth_user = await self._user_repo.find_by_oauth_provider(
-                provider_key, provider_info["provider_user_id"]
+                provider_key, provider_info.provider_user_id
             )
             if existing_oauth_user and str(existing_oauth_user.id) != link_user_id:
                 raise ConflictError(
@@ -273,7 +274,7 @@ class OAuthService:
                 )
 
             # Require email match
-            if current_user.email.lower() != provider_info["email"].lower():
+            if current_user.email.lower() != provider_info.email.lower():
                 log.warning(
                     "oauth_email_mismatch",
                     user_id=link_user_id,
@@ -285,7 +286,7 @@ class OAuthService:
                     details={
                         "message": (
                             f"The email associated with this {provider_display} account "
-                            f"({provider_info['email']}) does not match your account email "
+                            f"({provider_info.email}) does not match your account email "
                             f"({current_user.email}). "
                             f"Please use a {provider_display} account with the same email address."
                         )
@@ -312,7 +313,7 @@ class OAuthService:
 
         # ── Existing OAuth user login ─────────────────────────────────────────
         existing_oauth_user = await self._user_repo.find_by_oauth_provider(
-            provider_key, provider_info["provider_user_id"]
+            provider_key, provider_info.provider_user_id
         )
         if existing_oauth_user:
             await self._update_last_login(existing_oauth_user.id)
@@ -328,9 +329,7 @@ class OAuthService:
             return existing_oauth_user, access_token, refresh_token
 
         # ── Email collision ───────────────────────────────────────────────────
-        existing_email_user = await self._user_repo.find_by_email(
-            provider_info["email"]
-        )
+        existing_email_user = await self._user_repo.find_by_email(provider_info.email)
         if existing_email_user:
             if self._can_auto_link(existing_email_user, provider_info, provider_key):
                 success = await self._link_provider(
@@ -375,13 +374,13 @@ class OAuthService:
             "user_registered",
             user_id=str(new_user_id),
             auth_method=f"{provider_key}_oauth",
-            email_verified=provider_info.get("email_verified", False),
+            email_verified=provider_info.email_verified,
         )
 
         # Send welcome email — non-fatal
         try:
             await self._email.send_welcome_email(
-                provider_info["email"], provider_info.get("name")
+                provider_info.email, provider_info.name
             )
         except Exception as exc:
             log.error(

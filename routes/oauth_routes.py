@@ -200,7 +200,7 @@ async def oauth_callback(
         )
         raise AppError("OAuth authentication failed") from exc
 
-    if not provider_info.get("email"):
+    if not provider_info.email:
         raise ValidationError("email not provided by OAuth provider")
 
     # ── Delegate to service ───────────────────────────────────────────────────

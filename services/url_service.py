@@ -239,27 +239,28 @@ class UrlService:
         if private_stats is None:
             private_stats = True if owner_id is not None else None
 
-        # 7. Build document
+        # 7. Build document model (validates fields via Pydantic)
         owner_oid = owner_id if owner_id is not None else ANONYMOUS_OWNER_ID
-        doc: dict = {
-            "alias": alias,
-            "owner_id": owner_oid,
-            "created_at": now,
-            "creation_ip": client_ip,
-            "long_url": request.long_url,
-            "password": password_hash,
-            "block_bots": request.block_bots,
-            "max_clicks": request.max_clicks,
-            "expire_after": expire_ts,
-            "status": UrlStatus.ACTIVE,
-            "private_stats": private_stats,
-            "total_clicks": 0,
-            "last_click": None,
-        }
+        url_doc = UrlV2Doc(
+            alias=alias,
+            owner_id=owner_oid,
+            created_at=now,
+            creation_ip=client_ip,
+            long_url=request.long_url,
+            password=password_hash,
+            block_bots=request.block_bots,
+            max_clicks=request.max_clicks,
+            expire_after=expire_ts,
+            status=UrlStatus.ACTIVE,
+            private_stats=private_stats,
+            total_clicks=0,
+            last_click=None,
+        )
+        doc = url_doc.model_dump(by_alias=True, exclude={"id"})
 
         # 8. Insert
         inserted_id = await self._url_repo.insert(doc)
-        doc["_id"] = inserted_id
+        url_doc.id = inserted_id
 
         log.info(
             "url_created",
@@ -274,7 +275,7 @@ class UrlService:
             private_stats=private_stats,
         )
 
-        return UrlV2Doc.from_mongo(doc)
+        return url_doc
 
     async def update(
         self,

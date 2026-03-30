@@ -40,7 +40,7 @@ class UrlFilter(BaseModel):
     )
     password_set: bool | None = Field(default=None, alias="passwordSet")
     max_clicks_set: bool | None = Field(default=None, alias="maxClicksSet")
-    search: str | None = None
+    search: str | None = Field(default=None, max_length=500)
 
 
 class CreateUrlRequest(BaseModel):

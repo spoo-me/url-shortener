@@ -75,9 +75,9 @@ class TestExtractUserInfo:
             "picture": "https://example.com/pic.jpg",
         }
         result = extract_user_info_from_google(userinfo)
-        assert result["provider_user_id"] == "123"
-        assert result["email"] == "user@google.com"
-        assert result["email_verified"] is True
+        assert result.provider_user_id == "123"
+        assert result.email == "user@google.com"
+        assert result.email_verified is True
 
     def test_github_extraction_uses_primary_email(self):
         user = {
@@ -90,8 +90,8 @@ class TestExtractUserInfo:
             {"email": "primary@github.com", "primary": True, "verified": True},
         ]
         result = extract_user_info_from_github(user, emails)
-        assert result["email"] == "primary@github.com"
-        assert result["email_verified"] is True
+        assert result.email == "primary@github.com"
+        assert result.email_verified is True
 
     def test_discord_builds_avatar_url(self):
         userinfo = {
@@ -102,8 +102,8 @@ class TestExtractUserInfo:
             "avatar": "abcdef",
         }
         result = extract_user_info_from_discord(userinfo)
-        assert "cdn.discordapp.com/avatars/9999/abcdef.png" in result["picture"]
-        assert result["email_verified"] is True
+        assert "cdn.discordapp.com/avatars/9999/abcdef.png" in result.picture
+        assert result.email_verified is True
 
     def test_discord_empty_avatar_when_no_hash(self):
         userinfo = {
@@ -113,7 +113,7 @@ class TestExtractUserInfo:
             "username": "user",
         }
         result = extract_user_info_from_discord(userinfo)
-        assert result["picture"] == ""
+        assert result.picture == ""
 
 
 class TestProviderStrategies:
@@ -133,9 +133,9 @@ class TestProviderStrategies:
         }
         result = await strategy.fetch_user_info(client, token)
 
-        assert result["provider_user_id"] == "g-123"
-        assert result["email"] == "user@google.com"
-        assert result["email_verified"] is True
+        assert result.provider_user_id == "g-123"
+        assert result.email == "user@google.com"
+        assert result.email_verified is True
         client.get.assert_not_called()
 
     @pytest.mark.asyncio
@@ -156,8 +156,8 @@ class TestProviderStrategies:
         result = await strategy.fetch_user_info(client, {})
 
         client.get.assert_awaited_once_with("userinfo", token={})
-        assert result["provider_user_id"] == "g-456"
-        assert result["email"] == "fetched@google.com"
+        assert result.provider_user_id == "g-456"
+        assert result.email == "fetched@google.com"
 
     @pytest.mark.asyncio
     async def test_github_fetches_user_and_emails(self):
@@ -182,9 +182,9 @@ class TestProviderStrategies:
 
         result = await strategy.fetch_user_info(client, {})
 
-        assert result["provider_user_id"] == "99"
-        assert result["email"] == "primary@gh.com"
-        assert result["email_verified"] is True
+        assert result.provider_user_id == "99"
+        assert result.email == "primary@gh.com"
+        assert result.email_verified is True
 
     @pytest.mark.asyncio
     async def test_github_falls_back_to_first_email_when_no_primary(self):
@@ -203,7 +203,7 @@ class TestProviderStrategies:
 
         result = await strategy.fetch_user_info(client, {})
 
-        assert result["email"] == "fallback@gh.com"
+        assert result.email == "fallback@gh.com"
 
     @pytest.mark.asyncio
     async def test_discord_fetches_me_and_builds_avatar_url(self):
@@ -224,9 +224,9 @@ class TestProviderStrategies:
         result = await strategy.fetch_user_info(client, {})
 
         client.get.assert_awaited_once_with("users/@me", token={})
-        assert result["provider_user_id"] == "777"
-        assert result["email"] == "d@discord.com"
-        assert "cdn.discordapp.com/avatars/777/hash123.png" in result["picture"]
+        assert result.provider_user_id == "777"
+        assert result.email == "d@discord.com"
+        assert "cdn.discordapp.com/avatars/777/hash123.png" in result.picture
 
 
 class TestCanAutoLinkAccounts:

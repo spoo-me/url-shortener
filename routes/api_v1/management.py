@@ -48,7 +48,15 @@ def _parse_url_id(url_id: str) -> ObjectId:
 @limiter.limit(Limits.URL_MANAGE)
 async def update_url_v1(
     request: Request,
-    url_id: Annotated[str, Path(description="Unique identifier of the URL")],
+    url_id: Annotated[
+        str,
+        Path(
+            description="Unique identifier of the URL",
+            min_length=24,
+            max_length=24,
+            pattern=r"^[0-9a-f]{24}$",
+        ),
+    ],
     body: UpdateUrlRequest,
     user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),  # noqa: B008
     url_service: UrlService = Depends(get_url_service),
@@ -99,7 +107,15 @@ async def update_url_v1(
 @limiter.limit(Limits.URL_MANAGE)
 async def update_url_status_v1(
     request: Request,
-    url_id: Annotated[str, Path(description="Unique identifier of the URL")],
+    url_id: Annotated[
+        str,
+        Path(
+            description="Unique identifier of the URL",
+            min_length=24,
+            max_length=24,
+            pattern=r"^[0-9a-f]{24}$",
+        ),
+    ],
     body: UpdateUrlStatusRequest,
     user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),  # noqa: B008
     url_service: UrlService = Depends(get_url_service),
@@ -152,7 +168,15 @@ async def update_url_status_v1(
 @limiter.limit(Limits.URL_DELETE)
 async def delete_url_v1(
     request: Request,
-    url_id: Annotated[str, Path(description="Unique identifier of the URL")],
+    url_id: Annotated[
+        str,
+        Path(
+            description="Unique identifier of the URL",
+            min_length=24,
+            max_length=24,
+            pattern=r"^[0-9a-f]{24}$",
+        ),
+    ],
     user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),  # noqa: B008
     url_service: UrlService = Depends(get_url_service),
 ) -> DeleteUrlResponse:

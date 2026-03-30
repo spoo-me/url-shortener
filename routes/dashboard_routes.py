@@ -18,7 +18,7 @@ import os
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from dependencies import (
     AuthUser,
@@ -28,7 +28,7 @@ from dependencies import (
 )
 from errors import NotFoundError
 from middleware.rate_limiter import Limits, limiter
-from services.profile_picture_service import ProfilePictureService
+from services.profile_picture_service import AvailablePicture, ProfilePictureService
 from shared.logging import get_logger
 
 log = get_logger(__name__)
@@ -132,7 +132,15 @@ async def dashboard_billing(
 
 
 class SetProfilePictureRequest(BaseModel):
-    picture_id: str
+    picture_id: str = Field(min_length=1, max_length=200)
+
+
+class AvailablePicturesResponse(BaseModel):
+    pictures: list[AvailablePicture]
+
+
+class ProfilePictureMessageResponse(BaseModel):
+    message: str
 
 
 @router.get("/profile-pictures")
@@ -141,9 +149,9 @@ async def get_profile_pictures(
     request: Request,
     user: AuthUser,
     svc: ProfilePictureService = Depends(get_profile_picture_service),
-) -> Response:
+) -> AvailablePicturesResponse:
     pictures = await svc.get_available_pictures(user.user_id)
-    return JSONResponse({"pictures": pictures})
+    return AvailablePicturesResponse(pictures=pictures)
 
 
 @router.post("/profile-pictures")
@@ -162,4 +170,4 @@ async def set_profile_picture(
         )
         return JSONResponse({"error": "Profile picture not found"}, status_code=404)
 
-    return JSONResponse({"message": "Profile picture updated successfully"})
+    return ProfilePictureMessageResponse(message="Profile picture updated successfully")

@@ -48,6 +48,22 @@ class OAuthProvider(str, Enum):
     DISCORD = "discord"
 
 
+class ProviderInfo(BaseModel):
+    """Normalised user-info returned by OAuth provider strategies.
+
+    All three providers (Google, GitHub, Discord) produce the same shape.
+    Pydantic will coerce a plain dict into this model automatically.
+    """
+
+    provider_user_id: str
+    email: str
+    email_verified: bool = False
+    name: str | None = None
+    picture: str | None = None
+    given_name: str | None = None
+    family_name: str | None = None
+
+
 class ProviderProfile(BaseModel):
     """Nested profile data stored per OAuth provider."""
 
