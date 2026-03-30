@@ -295,6 +295,10 @@ class UrlService:
         if existing.owner_id != owner_id:
             raise ForbiddenError("Access denied: you do not own this URL")
 
+        # 2b. Admin-blocked URLs cannot be modified by the owner
+        if existing.status == "BLOCKED":
+            raise ForbiddenError("Cannot modify a blocked URL")
+
         # 3. Build update ops — only changed fields
         update_ops: dict = {}
         fields_set = request.model_fields_set
@@ -402,6 +406,9 @@ class UrlService:
 
         if existing.owner_id != owner_id:
             raise ForbiddenError("Access denied: you do not own this URL")
+
+        if existing.status == "BLOCKED":
+            raise ForbiddenError("Cannot delete a blocked URL")
 
         await self._url_repo.delete(url_id)
         await self._url_cache.invalidate(existing.alias)

@@ -647,6 +647,42 @@ class TestUrlServiceUpdate:
         with pytest.raises(ConflictError):
             await svc.update(URL_OID, req, USER_OID)
 
+    @pytest.mark.asyncio
+    async def test_update_blocked_url_raises_forbidden(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = make_url_v2_doc(status="BLOCKED")
+        url_repo.find_by_id.return_value = existing
+
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        req = UpdateUrlRequest(long_url="https://new-url.com")
+        with pytest.raises(ForbiddenError, match="Cannot modify a blocked URL"):
+            await svc.update(URL_OID, req, USER_OID)
+
+        url_repo.update.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_update_blocked_url_status_change_raises_forbidden(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = make_url_v2_doc(status="BLOCKED")
+        url_repo.find_by_id.return_value = existing
+
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        req = UpdateUrlRequest(status="ACTIVE")
+        with pytest.raises(ForbiddenError, match="Cannot modify a blocked URL"):
+            await svc.update(URL_OID, req, USER_OID)
+
+        url_repo.update.assert_not_called()
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TestUrlServiceDelete
@@ -697,6 +733,21 @@ class TestUrlServiceDelete:
 
         with pytest.raises(NotFoundError):
             await svc.delete(URL_OID, USER_OID)
+
+    @pytest.mark.asyncio
+    async def test_delete_blocked_url_raises_forbidden(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = make_url_v2_doc(status="BLOCKED")
+        url_repo.find_by_id.return_value = existing
+
+        with pytest.raises(ForbiddenError, match="Cannot delete a blocked URL"):
+            await svc.delete(URL_OID, USER_OID)
+
+        url_repo.delete.assert_not_called()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
