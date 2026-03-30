@@ -177,7 +177,7 @@ class StatsService:
         # Build per-dimension strategies
         strategies: dict[str, Any] = {}
         for dim in group_by:
-            if dim == "time":
+            if dim == StatsDimension.TIME:
                 strategies[dim] = AggregationStrategyFactory.get(
                     dim,
                     start_date=start_date,
@@ -300,7 +300,10 @@ class StatsService:
         }
 
         # Add time bucket info when time aggregation is requested
-        if "time" in group_by and "time" in aggregation_results:
+        if (
+            StatsDimension.TIME in group_by
+            and StatsDimension.TIME in aggregation_results
+        ):
             try:
                 time_strategy = AggregationStrategyFactory.get(
                     "time",

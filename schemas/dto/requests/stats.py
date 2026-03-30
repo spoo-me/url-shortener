@@ -231,7 +231,7 @@ class StatsQuery(BaseModel):
             raw = getattr(self, dim, None)
             if raw:
                 # short_code filter is blocked when scope=anon (bypass prevention)
-                if dim == "short_code" and self.scope == StatsScope.ANON:
+                if dim == StatsDimension.SHORT_CODE and self.scope == StatsScope.ANON:
                     continue
                 parsed_filters[dim] = _parse_comma_separated(raw)
 
