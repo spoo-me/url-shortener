@@ -808,9 +808,23 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 }
 
 .badge-status.badge-inactive {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: rgba(249, 115, 22, 0.1);
+    color: #f97316;
+    border: 1px solid rgba(249, 115, 22, 0.2);
+}
+
+.badge-status.badge-blocked {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.table-row.row-blocked {
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.table-row.row-blocked:hover {
+    background: rgba(239, 68, 68, 0.08);
 }
 
 .badge-password {
@@ -826,9 +840,9 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 }
 
 .badge-private {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: rgba(100, 116, 139, 0.1);
+    color: #64748b;
+    border: 1px solid rgba(100, 116, 139, 0.2);
 }
 
 .badge-block-bots {

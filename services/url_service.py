@@ -24,6 +24,7 @@ from bson import ObjectId
 
 from errors import (
     AppError,
+    BlockedUrlError,
     ConflictError,
     ForbiddenError,
     GoneError,
@@ -280,7 +281,7 @@ class UrlService:
 
         Raises:
             NotFoundError:  URL doesn't exist.
-            ForbiddenError: Caller doesn't own the URL.
+            ForbiddenError: Caller doesn't own the URL, or URL is blocked.
             ConflictError:  Requested alias is already taken.
             ValidationError: Invalid field values.
         """
@@ -294,6 +295,10 @@ class UrlService:
         # 2. Ownership check
         if existing.owner_id != owner_id:
             raise ForbiddenError("Access denied: you do not own this URL")
+
+        # 2b. Admin-blocked URLs cannot be modified by the owner
+        if existing.status == "BLOCKED":
+            raise ForbiddenError("Cannot modify a blocked URL")
 
         # 3. Build update ops — only changed fields
         update_ops: dict = {}
@@ -394,7 +399,7 @@ class UrlService:
 
         Raises:
             NotFoundError:  URL doesn't exist.
-            ForbiddenError: Caller doesn't own the URL.
+            ForbiddenError: Caller doesn't own the URL, or URL is blocked.
         """
         existing = await self._url_repo.find_by_id(url_id)
         if existing is None:
@@ -402,6 +407,9 @@ class UrlService:
 
         if existing.owner_id != owner_id:
             raise ForbiddenError("Access denied: you do not own this URL")
+
+        if existing.status == "BLOCKED":
+            raise ForbiddenError("Cannot delete a blocked URL")
 
         await self._url_repo.delete(url_id)
         await self._url_cache.invalidate(existing.alias)
@@ -579,7 +587,7 @@ class UrlService:
 
 def _raise_for_status(status: str) -> None:
     if status == "BLOCKED":
-        raise ForbiddenError("URL is blocked")
+        raise BlockedUrlError("URL is blocked")
     raise GoneError("URL has expired or is no longer active")
 
 

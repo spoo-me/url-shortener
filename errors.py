@@ -75,6 +75,11 @@ class ConflictError(AppError):
     error_code = "conflict"
 
 
+class BlockedUrlError(AppError):
+    status_code = 451
+    error_code = "blocked"
+
+
 class GoneError(AppError):
     status_code = 410
     error_code = "gone"
