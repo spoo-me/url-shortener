@@ -153,9 +153,9 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
         if _is_prod:
             return RedirectResponse(_DOCS_URL)
         return _templates.TemplateResponse(
+            request,
             "scalar_docs.html",
             {
-                "request": request,
                 "app_name": settings.app_name,
                 "scalar_cdn": _SCALAR_CDN,
             },
