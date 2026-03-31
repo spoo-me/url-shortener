@@ -286,6 +286,10 @@ class UrlService:
         """
         Update an existing URL.
 
+        EXPIRED URLs are auto-reactivated when expiry conditions change
+        (max_clicks raised/cleared, expire_after extended/cleared), unless
+        the caller also provides an explicit status override.
+
         Raises:
             NotFoundError:  URL doesn't exist.
             ForbiddenError: Caller doesn't own the URL, or URL is blocked.
@@ -370,6 +374,27 @@ class UrlService:
 
         if request.status is not None and request.status != existing.status:
             update_ops["status"] = request.status
+
+        # Auto-reactivate EXPIRED URLs when expiry conditions are updated
+        if existing.status == UrlStatus.EXPIRED and "status" not in update_ops:
+            new_max = update_ops.get("max_clicks", existing.max_clicks)
+            new_expire = update_ops.get("expire_after", existing.expire_after)
+            max_clicks_cleared = "max_clicks" in update_ops and new_max is None
+            max_clicks_raised = (
+                new_max is not None
+                and existing.max_clicks is not None
+                and new_max > existing.total_clicks
+            )
+            expire_extended = new_expire is not None and new_expire > now
+            expire_cleared = "expire_after" in update_ops and new_expire is None
+
+            if (
+                max_clicks_cleared
+                or max_clicks_raised
+                or expire_extended
+                or expire_cleared
+            ):
+                update_ops["status"] = UrlStatus.ACTIVE
 
         if not update_ops:
             return existing  # No changes detected
