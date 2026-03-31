@@ -54,7 +54,7 @@ class TestShorten:
     def test_shorten_anon_returns_201(self):
         url_doc = _make_url_doc()
         mock_svc = AsyncMock()
-        mock_svc.create = AsyncMock(return_value=url_doc)
+        mock_svc.create = AsyncMock(return_value=(url_doc, None))
 
         application = _build_test_app(
             {get_current_user: lambda: None, get_url_service: lambda: mock_svc}
@@ -73,7 +73,7 @@ class TestShorten:
     def test_shorten_with_alias(self):
         url_doc = _make_url_doc(alias="myalias")
         mock_svc = AsyncMock()
-        mock_svc.create = AsyncMock(return_value=url_doc)
+        mock_svc.create = AsyncMock(return_value=(url_doc, None))
 
         application = _build_test_app(
             {get_current_user: lambda: None, get_url_service: lambda: mock_svc}
@@ -108,7 +108,7 @@ class TestShorten:
         user = _make_user(user_id=user_id, api_key_doc=key_doc)
 
         mock_svc = AsyncMock()
-        mock_svc.create = AsyncMock(return_value=url_doc)
+        mock_svc.create = AsyncMock(return_value=(url_doc, None))
 
         application = _build_test_app(
             {get_current_user: lambda: user, get_url_service: lambda: mock_svc}

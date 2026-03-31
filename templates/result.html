@@ -3,7 +3,7 @@
 {% block title %}URL Shortener Result{% endblock %}
 
 {% block head_css %}
-    <link rel="stylesheet" href="{{ url_for('static', path='css/result.css') }}?v=4">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/result.css') }}?v=6">
     <link rel="stylesheet" href="{{ url_for('static', path='css/confetti.css') }}">
     <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/16327/gsap-latest-beta.min.js"></script>
 {% endblock %}
@@ -43,6 +43,20 @@
                     <button id="short-another-button" onclick="shortenAnotherLink()">Shorten another link</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="claim-token-banner" style="display:none;" class="flex-container">
+        <div id="claim-token-inner">
+            <p id="claim-token-label">
+                ⚠️ Save this token to claim ownership of your link after signing in.
+                It will not be shown again.
+            </p>
+            <div id="claim-token-row">
+                <code id="claim-token-value"></code>
+                <button id="claim-token-copy-btn" onclick="copyManageToken()">Copy</button>
+            </div>
+            <p id="claim-token-hint">Already signed in? <a href="#" onclick="claimNow(); return false;">Claim this link now</a></p>
         </div>
     </div>
 {% endblock %}

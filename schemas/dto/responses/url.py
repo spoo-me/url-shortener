@@ -13,6 +13,8 @@ endpoints exactly, including the camelCase keys in UrlListResponse
 
 from __future__ import annotations
 
+from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -46,6 +48,11 @@ class UrlResponse(BaseModel):
     private_stats: bool | None = Field(
         default=None,
         description="Whether statistics are private (owner-only).",
+    )
+    manage_token: Optional[str] = Field(
+        default=None,
+        description="Returned once for anonymous URLs only. Never stored in plaintext.",
+        examples=["kS9_x1z..."],
     )
 
 

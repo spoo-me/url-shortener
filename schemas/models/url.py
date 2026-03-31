@@ -12,7 +12,7 @@ Three separate schemas map to three MongoDB collections:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import ConfigDict, Field, field_validator
 
@@ -47,8 +47,9 @@ class UrlV2Doc(MongoBaseModel):
     status: str = "ACTIVE"
     private_stats: bool | None = True  # None for anonymous/unowned URLs
     total_clicks: int = 0
-    last_click: datetime | None = None
-    updated_at: datetime | None = None
+    last_click: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    manage_token: Optional[str] = None
 
 
 class LegacyUrlDoc(MongoBaseModel):

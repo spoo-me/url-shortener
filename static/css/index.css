@@ -624,3 +624,44 @@ label.cbx {
         gap: 10px;
     }
 }
+
+/* ── Anonymous URL claim UI ───────────────────────────────── */
+
+.unclaimed-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: rgba(255, 200, 60, 0.9);
+    background: rgba(255, 200, 60, 0.1);
+    border: 1px solid rgba(255, 200, 60, 0.3);
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+#claim-all-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    padding: 0 10px;
+}
+
+#claim-all-btn {
+    background: rgba(255, 200, 60, 0.1);
+    border: 1px solid rgba(255, 200, 60, 0.35);
+    color: rgba(255, 220, 100, 0.95);
+    padding: 9px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    transition: background 0.2s ease;
+    width: 100%;
+    max-width: 340px;
+}
+
+#claim-all-btn:hover {
+    background: rgba(255, 200, 60, 0.2);
+}

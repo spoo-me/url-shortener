@@ -55,3 +55,51 @@ var copyButton = document.querySelector(".copy-button");
 copyButton.addEventListener("click", function () {
     copyShortUrl();
 });
+
+// ── Manage Token (anonymous URL claim) ────────────────────────────────────
+
+(function initManageTokenBanner() {
+    // Extract short code from current URL: /result/<alias>
+    const alias = window.location.pathname.split('/').pop();
+    if (!alias) return;
+
+    let token = null;
+    try {
+        const list = JSON.parse(localStorage.getItem('recentURLs')) || [];
+        const entry = list.find(item => typeof item === 'object' && item.alias === alias);
+        token = entry ? entry.manage_token : null;
+    } catch (_) { token = null; }
+    if (!token) return;
+
+    // Show the banner and populate it
+    const banner = document.getElementById('claim-token-banner');
+    const valueEl = document.getElementById('claim-token-value');
+    if (!banner || !valueEl) return;
+
+    valueEl.textContent = token;
+    banner.style.display = 'flex';
+})();
+
+function copyManageToken() {
+    const valueEl = document.getElementById('claim-token-value');
+    if (!valueEl) return;
+    navigator.clipboard.writeText(valueEl.textContent.trim()).then(() => {
+        const btn = document.getElementById('claim-token-copy-btn');
+        if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 2000); }
+    }).catch(console.error);
+}
+
+async function claimNow() {
+    // Redirect to home with a flag so the auth modal opens.
+    // sweepAndClaimTokens() in auth.js handles the actual claim after login.
+    const alias = window.location.pathname.split('/').pop();
+    if (alias) {
+        // Store current result page so we can redirect back after login
+        sessionStorage.setItem('spoo_claim_redirect', window.location.href);
+    }
+    if (typeof openAuthModal === 'function') {
+        openAuthModal();
+    } else {
+        window.location.href = '/';
+    }
+}

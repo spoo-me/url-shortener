@@ -26,7 +26,7 @@ function customTopNotification(Id, text, time, type="warning") {
     createNotification("customNotification"+Id, type);
 
     var newNotification = document.getElementById("customNotification"+Id);
-    newNotification.getElementsByTagName("p")[0].innerHTML = text;
+    newNotification.getElementsByTagName("p")[0].textContent = text;
     newNotification.style.display = "block";
 
     var progressbar = newNotification.getElementsByClassName("close-progress-bar")[0];

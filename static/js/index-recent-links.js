@@ -70,32 +70,99 @@ function renderRecentURLs() {
     try { list = JSON.parse(localStorage.getItem('recentURLs')) || []; } catch (_) { list = []; }
     container.innerHTML = '';
 
-    list.forEach((alias) => {
+    list.forEach((item) => {
+        // Support both old string format and new object format
+        const alias = typeof item === 'string' ? item : item.alias;
+        const hasToken = typeof item === 'object' && item.manage_token;
         const shortUrl = `${window.location.origin}/${alias}`;
 
         const wrapper = document.createElement('div');
         wrapper.className = 'url-container';
-        wrapper.innerHTML = `
-            <div class="section-1">
-                <div class="left-section">
-                    <span class="short-url">
-                        <a href="/${alias}" target="_blank">${shortUrl.replace(/^https?:\/\//, '')}</a>
-                    </span>
-                </div>
-            </div>
-            <div class="section-2">
-                <div class="button-container">
-                    <button class="copy-button" data-url="${shortUrl}">Copy</button>
-                    <button class="edit-button" data-alias="${alias}">Edit</button>
-                    <button class="stats-button">Stats</button>
-                </div>
-            </div>
-        `;
+
+        // Section 1
+        const section1 = document.createElement('div');
+        section1.className = 'section-1';
+
+        const leftSection = document.createElement('div');
+        leftSection.className = 'left-section';
+
+        const shortUrlSpan = document.createElement('span');
+        shortUrlSpan.className = 'short-url';
+
+        const link = document.createElement('a');
+        link.href = `/${alias}`;
+        link.target = '_blank';
+        link.textContent = shortUrl.replace(/^https?:\/\//, '');
+
+        shortUrlSpan.appendChild(link);
+        leftSection.appendChild(shortUrlSpan);
+
+        if (hasToken) {
+            const badge = document.createElement('span');
+            badge.className = 'unclaimed-badge';
+            badge.textContent = 'Unclaimed';
+            leftSection.appendChild(badge);
+        }
+
+        section1.appendChild(leftSection);
+
+        // Section 2
+        const section2 = document.createElement('div');
+        section2.className = 'section-2';
+
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'button-container';
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-button';
+        copyBtn.setAttribute('data-url', shortUrl);
+        copyBtn.textContent = 'Copy';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-button';
+        editBtn.setAttribute('data-alias', alias);
+        editBtn.textContent = 'Edit';
+
+        const statsBtn = document.createElement('button');
+        statsBtn.className = 'stats-button';
+        statsBtn.textContent = 'Stats';
+
+        buttonContainer.appendChild(copyBtn);
+        buttonContainer.appendChild(editBtn);
+        buttonContainer.appendChild(statsBtn);
+        section2.appendChild(buttonContainer);
+
+        wrapper.appendChild(section1);
+        wrapper.appendChild(section2);
         container.appendChild(wrapper);
     });
+
+    // Show Claim All button if there are unclaimed URLs
+    const hasUnclaimed = list.some(item => typeof item === 'object' && item.manage_token);
+    if (hasUnclaimed) {
+        const claimAllWrapper = document.createElement('div');
+        claimAllWrapper.id = 'claim-all-wrapper';
+
+        const claimAllBtn = document.createElement('button');
+        claimAllBtn.id = 'claim-all-btn';
+        claimAllBtn.onclick = claimAllAnonymousURLs;
+        claimAllBtn.textContent = 'Sign in to claim all your links';
+
+        claimAllWrapper.appendChild(claimAllBtn);
+        container.appendChild(claimAllWrapper);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', renderRecentURLs);
 
 // Re-render when authentication state changes
 document.addEventListener('auth:init', renderRecentURLs);
+
+function claimAllAnonymousURLs() {
+    sessionStorage.setItem('spoo_claim_redirect', window.location.href);
+    if (typeof openAuthModal === 'function') {
+        openAuthModal();
+    } else {
+        window.location.href = '/';
+    }
+}

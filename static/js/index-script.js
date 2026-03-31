@@ -83,9 +83,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const key = 'recentURLs';
             let list = [];
             try { list = JSON.parse(localStorage.getItem(key)) || []; } catch (_) { list = []; }
-            list.unshift(data.alias);
-            list = Array.from(new Set(list)).slice(0, 3);
+
+            // Remove any existing entry for this alias then prepend
+            list = list.filter(item => (typeof item === 'string' ? item : item.alias) !== data.alias);
+            list.unshift({
+                alias: data.alias,
+                manage_token: data.manage_token || null
+            });
+            list = list.slice(0, 3);
             localStorage.setItem(key, JSON.stringify(list));
+
 
             // Navigate to result page
             window.location.href = `/result/${encodeURIComponent(data.alias)}`;

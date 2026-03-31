@@ -61,6 +61,7 @@ def test_all_expected_paths_registered(smoke_app: FastAPI) -> None:
         "/api/v1/export",
         "/api/v1/keys",
         "/api/v1/keys/{key_id}",
+        "/api/v1/claim",
         # Dashboard
         "/dashboard",
         "/dashboard/",
@@ -127,6 +128,7 @@ def test_route_methods_correct(smoke_app: FastAPI) -> None:
         ("/api/v1/keys", "POST"),
         ("/api/v1/keys", "GET"),
         ("/api/v1/keys/{key_id}", "DELETE"),
+        ("/api/v1/claim", "POST"),
         ("/oauth/providers", "GET"),
         ("/oauth/providers/{provider_name}/unlink", "DELETE"),
         ("/oauth/{provider}", "GET"),
@@ -166,5 +168,5 @@ def test_api_v1_route_count(smoke_app: FastAPI) -> None:
     api_v1_paths = {
         r.path for r in _get_api_routes(smoke_app) if r.path.startswith("/api/v1/")
     }
-    # shorten, urls, urls/{id}, urls/{id}/status, stats, export, keys, keys/{id}
-    assert len(api_v1_paths) == 8
+    # shorten, urls, urls/{id}, urls/{id}/status, stats, export, keys, keys/{id}, claim
+    assert len(api_v1_paths) == 9

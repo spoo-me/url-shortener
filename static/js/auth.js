@@ -204,9 +204,19 @@ function updatePasswordStrength(password) {
 
         // Only show missing requirements
         if (missingReqs.length > 0) {
-            requirementsList.innerHTML = missingReqs.map(req => {
-                return `<li class="requirement-missing"><span class="requirement-icon">✗</span> ${req}</li>`;
-            }).join('');
+            requirementsList.innerHTML = '';
+            missingReqs.forEach(req => {
+                const li = document.createElement('li');
+                li.className = 'requirement-missing';
+
+                const icon = document.createElement('span');
+                icon.className = 'requirement-icon';
+                icon.textContent = '✗';
+
+                li.appendChild(icon);
+                li.appendChild(document.createTextNode(' ' + req));
+                requirementsList.appendChild(li);
+            });
             requirementsList.style.display = 'block';
         } else {
             requirementsList.style.display = 'none';
@@ -220,21 +230,41 @@ function showPasswordRequirements(missingRequirements) {
     if (missingRequirements.length === 0) return;
 
     const errorEl = document.getElementById('authError');
-    if (errorEl) {
-        const requirementsList = missingRequirements.map(req =>
-            `<li style="margin: 4px 0;"><span style="color: #ef4444; margin-right: 8px;">✗</span>${req}</li>`
-        ).join('');
+    if (!errorEl) return;
 
-        errorEl.innerHTML = `
-            <div style="text-align: left;">
-                <div style="margin-bottom: 8px; font-weight: 500;">Password requirements not met:</div>
-                <ul style="margin: 0; padding-left: 0; list-style: none;">
-                    ${requirementsList}
-                </ul>
-            </div>
-        `;
-        errorEl.style.display = 'block';
-    }
+    errorEl.innerHTML = '';
+    errorEl.style.display = 'block';
+
+    const container = document.createElement('div');
+    container.style.textAlign = 'left';
+
+    const title = document.createElement('div');
+    title.style.marginBottom = '8px';
+    title.style.fontWeight = '500';
+    title.textContent = 'Password requirements not met:';
+
+    const list = document.createElement('ul');
+    list.style.margin = '0';
+    list.style.paddingLeft = '0';
+    list.style.listStyle = 'none';
+
+    missingRequirements.forEach(req => {
+        const item = document.createElement('li');
+        item.style.margin = '4px 0';
+
+        const icon = document.createElement('span');
+        icon.style.color = '#ef4444';
+        icon.style.marginRight = '8px';
+        icon.textContent = '✗';
+
+        item.appendChild(icon);
+        item.appendChild(document.createTextNode(req));
+        list.appendChild(item);
+    });
+
+    container.appendChild(title);
+    container.appendChild(list);
+    errorEl.appendChild(container);
 }
 
 async function authFetch(input, init) {
@@ -292,7 +322,14 @@ async function submitAuth() {
         }
 
         closeAuthModal();
-        window.location.href = '/dashboard';
+        await sweepAndClaimTokens();
+        const claimRedirect = sessionStorage.getItem('spoo_claim_redirect');
+        if (claimRedirect) {
+            sessionStorage.removeItem('spoo_claim_redirect');
+            window.location.href = claimRedirect;
+        } else {
+            window.location.href = '/dashboard';
+        }
     } catch (e) {
         showAuthError('Something went wrong');
     }
@@ -461,4 +498,31 @@ function handlePasswordInput(password) {
     }
 }
 
+async function sweepAndClaimTokens() {
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem('recentURLs')) || []; } catch (_) { return; }
 
+    const unclaimed = list.filter(item => typeof item === 'object' && item.manage_token);
+    if (unclaimed.length === 0) return;
+
+    for (const item of unclaimed) {
+        try {
+            const res = await fetch('/api/v1/claim', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ alias: item.alias, manage_token: item.manage_token })
+            });
+            // Clear token on success, already-claimed (403/409), or not-found (404)
+            // Leave token intact on server error (500) so user can retry
+            if (res.ok || res.status === 403 || res.status === 404 || res.status === 409) {
+                item.manage_token = null;
+            }
+        } catch (e) {
+            console.warn('Token claim failed for', item.alias, e);
+        }
+    }
+
+    // Write back updated list (tokens cleared for claimed URLs)
+    localStorage.setItem('recentURLs', JSON.stringify(list));
+}
