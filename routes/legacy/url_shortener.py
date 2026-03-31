@@ -21,7 +21,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from dependencies import get_db, get_redis, get_settings, get_url_service
+from dependencies import OptionalUser, get_db, get_redis, get_settings, get_url_service
 from errors import ForbiddenError, GoneError, NotFoundError
 from infrastructure.cache.dual_cache import DualCache
 from middleware.rate_limiter import Limits, limiter
@@ -66,8 +66,10 @@ METRIC_PIPELINE_V1 = [
 
 @router.get("/")
 @limiter.exempt
-async def index(request: Request) -> Response:
-    """Render the index page."""
+async def index(request: Request, user: OptionalUser) -> Response:
+    """Render the index page. Redirect to dashboard if already logged in."""
+    if user is not None:
+        return RedirectResponse("/dashboard", status_code=302)
     return templates.TemplateResponse(
         request, "index.html", {"host_url": str(request.base_url)}
     )
