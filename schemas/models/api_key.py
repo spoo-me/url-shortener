@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from schemas.dto.requests.api_key import ApiKeyScope
 from schemas.models.base import MongoBaseModel, PyObjectId
 
 
@@ -22,7 +23,7 @@ class ApiKeyDoc(MongoBaseModel):
     token_hash: str
     name: str
     description: str | None = None
-    scopes: list[str] = []  # noqa: RUF012
+    scopes: list[ApiKeyScope] = []  # noqa: RUF012
     expires_at: datetime | None = None
     created_at: datetime | None = None
     revoked: bool = False

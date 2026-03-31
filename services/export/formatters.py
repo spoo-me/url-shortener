@@ -12,6 +12,7 @@ import csv
 import io
 import json
 import zipfile
+from datetime import datetime
 from typing import Any
 
 from dicttoxml import dicttoxml
@@ -19,6 +20,13 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font
 
 from services.export.protocol import ExportFormatter
+
+
+def _excel_safe(val: Any) -> Any:
+    """Strip timezone info from datetimes for Excel compatibility."""
+    if isinstance(val, datetime) and val.tzinfo is not None:
+        return val.replace(tzinfo=None)
+    return val
 
 
 class JsonFormatter:
@@ -100,7 +108,7 @@ class XlsxFormatter:
         summary = data.get("summary", {})
         ws.append(["Field", "Value"])
         for key, val in summary.items():
-            ws.append([key, val])
+            ws.append([key, _excel_safe(val)])
         for cell in ws[1]:
             cell.font = bold
             cell.alignment = center
@@ -114,7 +122,7 @@ class XlsxFormatter:
             headers = list(metric_data[0].keys())
             ws_dim.append(headers)
             for item in metric_data:
-                ws_dim.append([item.get(h, "") for h in headers])
+                ws_dim.append([_excel_safe(item.get(h, "")) for h in headers])
             for cell in ws_dim[1]:
                 cell.font = bold
                 cell.alignment = center

@@ -808,7 +808,7 @@ class TestGetUserProfile:
         profile = UserProfileResponse.from_user(user)
         assert len(profile.auth_providers) == 1
         assert profile.auth_providers[0].provider == "google"
-        assert profile.auth_providers[0].linked_at == now.isoformat()
+        assert profile.auth_providers[0].linked_at == now
 
     def test_profile_with_pfp(self):
         from schemas.dto.responses.auth import UserProfileResponse

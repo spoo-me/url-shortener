@@ -695,9 +695,11 @@ class UrlManager {
                         const activeBadge = row.querySelector('.badge-active');
                         const inactiveBadge = row.querySelector('.badge-inactive');
                         const blockedBadge = row.querySelector('.badge-blocked');
+                        const expiredBadge = row.querySelector('.badge-expired');
                         if (activeBadge) activeBadge.style.display = 'none';
                         if (inactiveBadge) inactiveBadge.style.display = 'none';
                         if (blockedBadge) blockedBadge.style.display = 'none';
+                        if (expiredBadge) expiredBadge.style.display = 'none';
                         row.classList.remove('row-blocked');
 
                         if (updatedUrlData.status === 'ACTIVE' && activeBadge) {
@@ -707,6 +709,8 @@ class UrlManager {
                         } else if (updatedUrlData.status === 'BLOCKED' && blockedBadge) {
                             blockedBadge.style.display = 'inline-flex';
                             row.classList.add('row-blocked');
+                        } else if (updatedUrlData.status === 'EXPIRED' && expiredBadge) {
+                            expiredBadge.style.display = 'inline-flex';
                         }
 
                         const passwordBadge = row.querySelector('.badge-password');

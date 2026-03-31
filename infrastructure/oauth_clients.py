@@ -16,6 +16,7 @@ from typing import Any
 
 from authlib.integrations.starlette_client import OAuth
 
+from schemas.models.user import OAuthAction, ProviderInfo
 from shared.logging import get_logger
 
 log = get_logger(__name__)
@@ -32,13 +33,13 @@ class OAuthProviderStrategy(ABC):
     def key(self) -> str: ...
 
     @abstractmethod
-    async def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]: ...
+    async def fetch_user_info(self, client: Any, token: Any) -> ProviderInfo: ...
 
 
 class GoogleStrategy(OAuthProviderStrategy):
     key = "google"
 
-    async def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]:
+    async def fetch_user_info(self, client: Any, token: Any) -> ProviderInfo:
         userinfo = token.get("userinfo")
         if userinfo is None:
             resp = await client.get("userinfo", token=token)
@@ -50,7 +51,7 @@ class GoogleStrategy(OAuthProviderStrategy):
 class GitHubStrategy(OAuthProviderStrategy):
     key = "github"
 
-    async def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]:
+    async def fetch_user_info(self, client: Any, token: Any) -> ProviderInfo:
         user_response = await client.get("user", token=token)
         user_response.raise_for_status()
         user = user_response.json()
@@ -64,7 +65,7 @@ class GitHubStrategy(OAuthProviderStrategy):
 class DiscordStrategy(OAuthProviderStrategy):
     key = "discord"
 
-    async def fetch_user_info(self, client: Any, token: Any) -> dict[str, Any]:
+    async def fetch_user_info(self, client: Any, token: Any) -> ProviderInfo:
         resp = await client.get("users/@me", token=token)
         resp.raise_for_status()
         return extract_user_info_from_discord(resp.json())
@@ -148,12 +149,13 @@ def init_oauth(settings: Any) -> tuple[OAuth | None, dict[str, Any]]:
 
 
 def generate_oauth_state(
-    provider: str, action: str = "login", user_id: str | None = None
+    provider: str, action: OAuthAction = OAuthAction.LOGIN, user_id: str | None = None
 ) -> str:
     """Generate a URL-safe state string for CSRF protection."""
+    action_str = action.value if isinstance(action, OAuthAction) else action
     parts = [
         f"provider={provider}",
-        f"action={action}",
+        f"action={action_str}",
         f"nonce={secrets.token_urlsafe(32)}",
         f"timestamp={datetime.now(timezone.utc).isoformat()}",
     ]
@@ -212,21 +214,21 @@ def get_oauth_redirect_url(provider: str, settings: Any) -> str:
 # ── User-info extractors ──────────────────────────────────────────────────────
 
 
-def extract_user_info_from_google(userinfo: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "provider_user_id": userinfo.get("sub", ""),
-        "email": userinfo.get("email", "").lower().strip(),
-        "email_verified": userinfo.get("email_verified", False),
-        "name": userinfo.get("name", ""),
-        "picture": userinfo.get("picture", ""),
-        "given_name": userinfo.get("given_name", ""),
-        "family_name": userinfo.get("family_name", ""),
-    }
+def extract_user_info_from_google(userinfo: dict[str, Any]) -> ProviderInfo:
+    return ProviderInfo(
+        provider_user_id=userinfo.get("sub", ""),
+        email=userinfo.get("email", "").lower().strip(),
+        email_verified=userinfo.get("email_verified", False),
+        name=userinfo.get("name", ""),
+        picture=userinfo.get("picture", ""),
+        given_name=userinfo.get("given_name", ""),
+        family_name=userinfo.get("family_name", ""),
+    )
 
 
 def extract_user_info_from_github(
     userinfo: dict[str, Any], email_data: list[dict[str, Any]]
-) -> dict[str, Any]:
+) -> ProviderInfo:
     primary_email = ""
     email_verified = False
     for entry in email_data:
@@ -239,18 +241,18 @@ def extract_user_info_from_github(
         email_verified = email_data[0].get("verified", False)
 
     name = userinfo.get("name", "") or userinfo.get("login", "")
-    return {
-        "provider_user_id": str(userinfo.get("id", "")),
-        "email": primary_email,
-        "email_verified": email_verified,
-        "name": name,
-        "picture": userinfo.get("avatar_url", ""),
-        "given_name": name.split(" ")[0] if name else "",
-        "family_name": " ".join(name.split(" ")[1:]) if name and " " in name else "",
-    }
+    return ProviderInfo(
+        provider_user_id=str(userinfo.get("id", "")),
+        email=primary_email,
+        email_verified=email_verified,
+        name=name,
+        picture=userinfo.get("avatar_url", ""),
+        given_name=name.split(" ")[0] if name else "",
+        family_name=" ".join(name.split(" ")[1:]) if name and " " in name else "",
+    )
 
 
-def extract_user_info_from_discord(userinfo: dict[str, Any]) -> dict[str, Any]:
+def extract_user_info_from_discord(userinfo: dict[str, Any]) -> ProviderInfo:
     email = userinfo.get("email", "").lower().strip()
     email_verified = userinfo.get("verified", False)
     name = (
@@ -265,15 +267,15 @@ def extract_user_info_from_discord(userinfo: dict[str, Any]) -> dict[str, Any]:
         if avatar_hash and user_id
         else ""
     )
-    return {
-        "provider_user_id": str(userinfo.get("id", "")),
-        "email": email,
-        "email_verified": email_verified,
-        "name": name,
-        "picture": avatar_url,
-        "given_name": name.split(" ")[0] if name and " " in name else name,
-        "family_name": " ".join(name.split(" ")[1:]) if name and " " in name else "",
-    }
+    return ProviderInfo(
+        provider_user_id=str(userinfo.get("id", "")),
+        email=email,
+        email_verified=email_verified,
+        name=name,
+        picture=avatar_url,
+        given_name=name.split(" ")[0] if name and " " in name else name,
+        family_name=" ".join(name.split(" ")[1:]) if name and " " in name else "",
+    )
 
 
 def can_auto_link_accounts(

@@ -48,7 +48,15 @@ def _parse_url_id(url_id: str) -> ObjectId:
 @limiter.limit(Limits.URL_MANAGE)
 async def update_url_v1(
     request: Request,
-    url_id: Annotated[str, Path(description="Unique identifier of the URL")],
+    url_id: Annotated[
+        str,
+        Path(
+            description="Unique identifier of the URL",
+            min_length=24,
+            max_length=24,
+            pattern=r"^[0-9a-f]{24}$",
+        ),
+    ],
     body: UpdateUrlRequest,
     user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),  # noqa: B008
     url_service: UrlService = Depends(get_url_service),
@@ -99,7 +107,15 @@ async def update_url_v1(
 @limiter.limit(Limits.URL_MANAGE)
 async def update_url_status_v1(
     request: Request,
-    url_id: Annotated[str, Path(description="Unique identifier of the URL")],
+    url_id: Annotated[
+        str,
+        Path(
+            description="Unique identifier of the URL",
+            min_length=24,
+            max_length=24,
+            pattern=r"^[0-9a-f]{24}$",
+        ),
+    ],
     body: UpdateUrlStatusRequest,
     user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),  # noqa: B008
     url_service: UrlService = Depends(get_url_service),
@@ -114,10 +130,14 @@ async def update_url_status_v1(
 
     **Rate Limits**: 120/min, 2,000/day
 
-    **Status Values**:
+    **Status Values** (user-editable via this endpoint):
 
     - `ACTIVE` — URL is accessible and redirects normally
     - `INACTIVE` — URL is disabled and returns an error page
+
+    **Note**: `BLOCKED` is an admin-set status — blocked URLs cannot be modified
+    or deleted by the owner. `EXPIRED` URLs (auto-set on max clicks or expiry
+    time) can be reactivated by setting status back to `ACTIVE`.
 
     **Use Cases**:
 
@@ -152,7 +172,15 @@ async def update_url_status_v1(
 @limiter.limit(Limits.URL_DELETE)
 async def delete_url_v1(
     request: Request,
-    url_id: Annotated[str, Path(description="Unique identifier of the URL")],
+    url_id: Annotated[
+        str,
+        Path(
+            description="Unique identifier of the URL",
+            min_length=24,
+            max_length=24,
+            pattern=r"^[0-9a-f]{24}$",
+        ),
+    ],
     user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),  # noqa: B008
     url_service: UrlService = Depends(get_url_service),
 ) -> DeleteUrlResponse:

@@ -10,7 +10,7 @@ import pytest
 from bson import ObjectId
 
 from errors import ConflictError, NotFoundError, ValidationError
-from schemas.models.user import UserDoc
+from schemas.models.user import ProviderInfo, UserDoc
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
@@ -65,16 +65,16 @@ def make_provider_info(
     email_verified=True,
     name="Test User",
     picture="https://pic.url",
-) -> dict[str, Any]:
-    return {
-        "provider_user_id": provider_user_id,
-        "email": email,
-        "email_verified": email_verified,
-        "name": name,
-        "picture": picture,
-        "given_name": "Test",
-        "family_name": "User",
-    }
+) -> ProviderInfo:
+    return ProviderInfo(
+        provider_user_id=provider_user_id,
+        email=email,
+        email_verified=email_verified,
+        name=name,
+        picture=picture,
+        given_name="Test",
+        family_name="User",
+    )
 
 
 def make_auth_service_mock():
@@ -493,9 +493,9 @@ class TestListProviders:
 
         providers, password_set = await svc.list_providers(str(USER_OID))
         assert len(providers) == 1
-        assert providers[0]["provider"] == "google"
-        assert providers[0]["email"] == "test@gmail.com"
-        assert providers[0]["email_verified"] is True
+        assert providers[0].provider == "google"
+        assert providers[0].email == "test@gmail.com"
+        assert providers[0].email_verified is True
         assert password_set is True
 
     @pytest.mark.asyncio

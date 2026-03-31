@@ -69,20 +69,21 @@ class ApiKeyService:
         token_hash = hash_token(raw)
         now = datetime.now(timezone.utc)
 
-        doc: dict = {
-            "user_id": user_id,
-            "token_prefix": token_prefix,
-            "token_hash": token_hash,
-            "name": name,
-            "description": description,
-            "scopes": scopes,
-            "expires_at": expires_at,
-            "created_at": now,
-            "revoked": False,
-        }
+        api_key_doc = ApiKeyDoc(
+            user_id=user_id,
+            token_prefix=token_prefix,
+            token_hash=token_hash,
+            name=name,
+            description=description,
+            scopes=scopes,
+            expires_at=expires_at,
+            created_at=now,
+            revoked=False,
+        )
+        doc_data = api_key_doc.model_dump(by_alias=True, exclude={"id"})
 
-        key_id = await self._repo.insert(doc)
-        doc["_id"] = key_id
+        key_id = await self._repo.insert(doc_data)
+        api_key_doc.id = key_id
 
         log.info(
             "api_key_created",
@@ -93,7 +94,7 @@ class ApiKeyService:
             expires_at=expires_at.isoformat() if expires_at else None,
         )
 
-        return ApiKeyDoc.from_mongo(doc), f"spoo_{raw}"
+        return api_key_doc, f"spoo_{raw}"
 
     async def list_by_user(self, user_id: ObjectId) -> list[ApiKeyDoc]:
         """Return all API keys for a user (active and revoked)."""

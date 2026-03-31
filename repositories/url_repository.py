@@ -8,15 +8,24 @@ Errors are logged and re-raised — the service layer decides recovery.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import TypedDict
 
 from bson import ObjectId
 from pymongo.asynchronous.collection import AsyncCollection
 from pymongo.errors import DuplicateKeyError, PyMongoError
 
-from schemas.models.url import UrlV2Doc
+from schemas.models.url import UrlStatus, UrlV2Doc
 from shared.logging import get_logger
 
 log = get_logger(__name__)
+
+
+class StatsPrivacyInfo(TypedDict):
+    """Return type for check_stats_privacy."""
+
+    exists: bool
+    private: bool
+    owner_id: str | None
 
 
 class UrlRepository:
@@ -151,7 +160,7 @@ class UrlRepository:
         try:
             result = await self._col.update_one(
                 {"_id": url_id, "total_clicks": {"$gte": max_clicks}},
-                {"$set": {"status": "EXPIRED"}},
+                {"$set": {"status": UrlStatus.EXPIRED}},
             )
             return result.modified_count > 0
         except PyMongoError as exc:
@@ -206,7 +215,7 @@ class UrlRepository:
             )
             raise
 
-    async def check_stats_privacy(self, alias: str) -> dict:
+    async def check_stats_privacy(self, alias: str) -> StatsPrivacyInfo:
         """Return privacy metadata for a URL alias.
 
         Returns a dict with keys:
