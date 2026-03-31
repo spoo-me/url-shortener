@@ -17,17 +17,12 @@
 {% endblock %}
 
 {% block head_css %}
-    <link rel="stylesheet" href="{{ url_for('static', path='css/error.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/error.css') }}?v=2">
 {% endblock %}
 
 {% block content %}
     <div class="gif-upper"><img class="gif" src="https://i.ibb.co/BBQgtVS/error.webp" alt="404 GIF" loading="lazy"></div>
     <div class="error-message">
-        <div class="glitch-wrapper">
-            <div class="glitch" data-glitch="{{ error_code }}, {{ error_message }}">{{ error_code }}, {{ error_message }}</div>
-        </div>
-    </div>
-    <div class="container">
-        <div class="btn"><a href="/"><pre>Home</pre></a></div>
+        <div class="error-text">{{ error_code }}, {{ error_message }}</div>
     </div>
 {% endblock %}
