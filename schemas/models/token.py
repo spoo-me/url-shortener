@@ -19,6 +19,7 @@ from schemas.models.base import MongoBaseModel, PyObjectId
 
 TOKEN_TYPE_EMAIL_VERIFY = "email_verify"
 TOKEN_TYPE_PASSWORD_RESET = "password_reset"
+TOKEN_TYPE_DEVICE_AUTH = "extension_auth"
 
 
 class VerificationTokenDoc(MongoBaseModel):

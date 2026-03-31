@@ -844,3 +844,87 @@ class TestGetUserProfile:
         profile = UserProfileResponse.from_user(user)
         assert profile.pfp.url == "https://img.url"
         assert profile.pfp.source == "google"
+
+
+# ── Extension auth flow tests ────────────────────────────────────────────────
+
+
+class TestExtensionAuth:
+    @pytest.mark.asyncio
+    async def test_create_device_auth_code(self):
+        svc = make_auth_service()
+        svc._token_repo.delete_by_user.return_value = 0
+        svc._token_repo.create.return_value = ObjectId()
+
+        code = await svc.create_device_auth_code(USER_OID, "test@example.com")
+        assert isinstance(code, str)
+        assert len(code) > 30  # secure token is long
+        svc._token_repo.create.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_exchange_device_code_success(self):
+        from datetime import timedelta
+
+        from schemas.models.token import TOKEN_TYPE_DEVICE_AUTH, VerificationTokenDoc
+        from shared.crypto import hash_token
+
+        svc = make_auth_service()
+        raw_code = "test-code-123"
+        now = datetime.now(timezone.utc)
+        token_doc = VerificationTokenDoc.from_mongo(
+            {
+                "_id": ObjectId(),
+                "user_id": USER_OID,
+                "email": "test@example.com",
+                "token_hash": hash_token(raw_code),
+                "token_type": TOKEN_TYPE_DEVICE_AUTH,
+                "expires_at": now + timedelta(minutes=5),
+                "created_at": now,
+                "used_at": None,
+                "attempts": 0,
+            }
+        )
+        svc._token_repo.find_by_hash_and_type.return_value = token_doc
+        svc._token_repo.mark_as_used.return_value = True
+        svc._user_repo.find_by_id.return_value = make_user_doc(email_verified=True)
+
+        _user, access, refresh = await svc.exchange_device_code(raw_code)
+        assert isinstance(access, str)
+        assert isinstance(refresh, str)
+        svc._token_repo.mark_as_used.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_exchange_device_code_invalid(self):
+        svc = make_auth_service()
+        svc._token_repo.find_by_hash_and_type.return_value = None
+
+        with pytest.raises(AuthenticationError, match="invalid or expired"):
+            await svc.exchange_device_code("bad-code")
+
+    @pytest.mark.asyncio
+    async def test_exchange_device_code_expired(self):
+        from datetime import timedelta
+
+        from schemas.models.token import TOKEN_TYPE_DEVICE_AUTH, VerificationTokenDoc
+        from shared.crypto import hash_token
+
+        svc = make_auth_service()
+        raw_code = "expired-code"
+        past = datetime(2020, 1, 1, tzinfo=timezone.utc)
+        token_doc = VerificationTokenDoc.from_mongo(
+            {
+                "_id": ObjectId(),
+                "user_id": USER_OID,
+                "email": "test@example.com",
+                "token_hash": hash_token(raw_code),
+                "token_type": TOKEN_TYPE_DEVICE_AUTH,
+                "expires_at": past,
+                "created_at": past - timedelta(minutes=5),
+                "used_at": None,
+                "attempts": 0,
+            }
+        )
+        svc._token_repo.find_by_hash_and_type.return_value = token_doc
+
+        with pytest.raises(AuthenticationError, match="expired"):
+            await svc.exchange_device_code(raw_code)

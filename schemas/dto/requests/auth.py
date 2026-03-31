@@ -8,6 +8,7 @@ VerifyEmailRequest            — POST /auth/verify-email
 SendVerificationRequest       — POST /auth/send-verification  (no body)
 RequestPasswordResetRequest   — POST /auth/request-password-reset
 ResetPasswordRequest          — POST /auth/reset-password
+DeviceTokenRequest            — POST /auth/device/token
 """
 
 from __future__ import annotations
@@ -101,4 +102,14 @@ class ResetPasswordRequest(BaseModel):
     password: str = Field(
         description="New password (min 8 chars, must contain letter + number + special char)",
         examples=["NewSecurePass456!"],
+    )
+
+
+class DeviceTokenRequest(BaseModel):
+    """Request body for POST /auth/device/token."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    code: str = Field(
+        description="One-time auth code from the device callback page",
     )

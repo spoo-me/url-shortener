@@ -27,11 +27,15 @@ from errors import (
 from infrastructure.email.protocol import EmailProvider
 from repositories.token_repository import TokenRepository
 from repositories.user_repository import UserRepository
-from schemas.models.token import TOKEN_TYPE_EMAIL_VERIFY, TOKEN_TYPE_PASSWORD_RESET
+from schemas.models.token import (
+    TOKEN_TYPE_DEVICE_AUTH,
+    TOKEN_TYPE_EMAIL_VERIFY,
+    TOKEN_TYPE_PASSWORD_RESET,
+)
 from schemas.models.user import UserDoc
 from services.token_factory import TokenFactory
 from shared.crypto import hash_password, hash_token, verify_password
-from shared.generators import generate_otp_code
+from shared.generators import generate_otp_code, generate_secure_token
 from shared.logging import get_logger
 from shared.validators import validate_account_password
 
@@ -42,6 +46,7 @@ log = get_logger(__name__)
 OTP_EXPIRY_SECONDS = 600  # 10 minutes
 MAX_TOKENS_PER_HOUR = 3
 MAX_VERIFICATION_ATTEMPTS = 5
+DEVICE_AUTH_EXPIRY_SECONDS = 300  # 5 minutes
 
 
 class AuthService:
@@ -580,3 +585,64 @@ class AuthService:
         if not user:
             raise NotFoundError("user not found")
         return user
+
+    # ── Device auth flow ─────────────────────────────────────────────────────
+
+    async def create_device_auth_code(self, user_id: ObjectId, email: str) -> str:
+        """Generate a one-time auth code for the device auth flow.
+
+        Returns the raw token (caller redirects to callback with it).
+        """
+        await self._token_repo.delete_by_user(user_id, TOKEN_TYPE_DEVICE_AUTH)
+
+        raw_token = generate_secure_token(48)
+        now = datetime.now(timezone.utc)
+        await self._token_repo.create(
+            {
+                "user_id": user_id,
+                "email": email,
+                "token_hash": hash_token(raw_token),
+                "token_type": TOKEN_TYPE_DEVICE_AUTH,
+                "expires_at": now + timedelta(seconds=DEVICE_AUTH_EXPIRY_SECONDS),
+                "created_at": now,
+                "used_at": None,
+                "attempts": 0,
+            }
+        )
+        log.info("device_auth_code_created", user_id=str(user_id))
+        return raw_token
+
+    async def exchange_device_code(self, code: str) -> tuple[UserDoc, str, str]:
+        """Exchange a one-time device auth code for JWT tokens.
+
+        Returns:
+            (user_doc, access_token, refresh_token)
+
+        Raises:
+            AuthenticationError: Code invalid, expired, or already used.
+        """
+        token_hash = hash_token(code)
+        token_doc = await self._token_repo.find_by_hash_and_type(
+            token_hash, TOKEN_TYPE_DEVICE_AUTH
+        )
+        if not token_doc:
+            raise AuthenticationError("invalid or expired device auth code")
+
+        expires_at = token_doc.expires_at
+        if not expires_at.tzinfo:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+        if expires_at <= datetime.now(timezone.utc):
+            raise AuthenticationError("device auth code has expired")
+
+        marked = await self._token_repo.mark_as_used(token_doc.id)
+        if not marked:
+            raise AppError("failed to consume device auth code")
+
+        user = await self._user_repo.find_by_id(token_doc.user_id)
+        if not user or user.status != "ACTIVE":
+            raise AuthenticationError("user not found or inactive")
+
+        log.info("device_auth_success", user_id=str(user.id))
+        access_token, refresh_token = self._tokens.issue_tokens(user, "ext")
+        return user, access_token, refresh_token

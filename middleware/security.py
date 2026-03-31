@@ -15,7 +15,7 @@ from config import AppSettings
 # ── Path-based CORS classification ──────────────────────────────────────────
 
 _PRIVATE_PREFIXES = ("/auth", "/oauth", "/dashboard")
-_PUBLIC_PREFIXES = ("/api/v1", "/stats", "/export", "/metric")
+_PUBLIC_PREFIXES = ("/api/v1", "/auth/device", "/stats", "/export", "/metric")
 
 _ALLOWED_METHODS = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
 _ALLOWED_HEADERS = "Authorization, Content-Type, Accept, X-Request-ID"

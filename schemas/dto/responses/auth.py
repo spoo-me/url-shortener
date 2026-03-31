@@ -188,6 +188,16 @@ class SendVerificationResponse(BaseModel):
     )
 
 
+class DeviceTokenResponse(BaseModel):
+    """Response body for POST /auth/device/token (200)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    access_token: str = Field(description="JWT access token")
+    refresh_token: str = Field(description="JWT refresh token")
+    user: UserProfileResponse = Field(description="User profile")
+
+
 class OAuthProvidersResponse(BaseModel):
     """Response body for GET /oauth/providers (200)."""
 

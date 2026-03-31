@@ -46,6 +46,10 @@ class Limits:
     PASSWORD_RESET_REQUEST = "3 per hour"
     PASSWORD_RESET_CONFIRM = "5 per hour"
 
+    # Device auth flow (extensions, apps, CLIs)
+    DEVICE_AUTH = "10 per minute"
+    DEVICE_TOKEN = "10 per minute"
+
     # OAuth
     OAUTH_INIT = "10 per minute"
     OAUTH_CALLBACK = "20 per minute"

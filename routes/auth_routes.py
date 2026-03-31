@@ -25,12 +25,13 @@ from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from dependencies import AuthUser, get_auth_service
+from dependencies import AuthUser, OptionalUser, get_auth_service
 from errors import AuthenticationError
 from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES, PUBLIC_SECURITY
 from middleware.rate_limiter import Limits, limiter
 from routes.cookie_helpers import clear_auth_cookies, set_auth_cookies
 from schemas.dto.requests.auth import (
+    DeviceTokenRequest,
     LoginRequest,
     RegisterRequest,
     RequestPasswordResetRequest,
@@ -39,6 +40,7 @@ from schemas.dto.requests.auth import (
     VerifyEmailRequest,
 )
 from schemas.dto.responses.auth import (
+    DeviceTokenResponse,
     LoginResponse,
     LogoutResponse,
     MeResponse,
@@ -446,3 +448,74 @@ async def reset_password(
         body.email.strip().lower(), body.code.strip(), body.password
     )
     return MessageResponse(success=True, message="password reset successfully")
+
+
+# ── Device auth flow (extensions, apps, CLIs) ────────────────────────────────
+
+
+@router.get("/auth/device/login", include_in_schema=False)
+@limiter.limit(Limits.DEVICE_AUTH)
+async def device_login(
+    request: Request,
+    user: OptionalUser,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> RedirectResponse:
+    """Initiate the device auth flow.
+
+    If the user already has a valid session, generates an auth code and
+    redirects to the callback page. Otherwise, redirects to the login page.
+    Used by browser extensions, mobile apps, and other third-party clients.
+    """
+    if user:
+        profile = await auth_service.get_user_profile(str(user.user_id))
+        code = await auth_service.create_device_auth_code(profile.id, profile.email)
+        return RedirectResponse(f"/auth/device/callback?code={code}", status_code=302)
+    return RedirectResponse("/?next=/auth/device/login", status_code=302)
+
+
+@router.get("/auth/device/callback", include_in_schema=False)
+@limiter.limit(Limits.DEVICE_AUTH)
+async def device_callback(
+    request: Request,
+    code: str = "",
+) -> Response:
+    """Render the device auth callback page.
+
+    The client reads the auth code from the data attribute on the page.
+    For browser extensions, the content script handles this automatically.
+    """
+    return templates.TemplateResponse(
+        "device_callback.html", {"request": request, "code": code}
+    )
+
+
+@router.post(
+    "/auth/device/token",
+    responses=ERROR_RESPONSES,
+    openapi_extra=PUBLIC_SECURITY,
+    operation_id="exchangeDeviceCode",
+    summary="Exchange Device Auth Code",
+)
+@limiter.limit(Limits.DEVICE_TOKEN)
+async def device_token(
+    request: Request,
+    body: DeviceTokenRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> DeviceTokenResponse:
+    """Exchange a one-time device auth code for JWT tokens.
+
+    The code is obtained from the callback page after the user authenticates
+    on spoo.me. Returns access and refresh tokens for the client.
+
+    **Authentication**: Not required (public endpoint)
+
+    **Rate Limits**: 10/min
+    """
+    user, access_token, refresh_token = await auth_service.exchange_device_code(
+        body.code.strip()
+    )
+    return DeviceTokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        user=UserProfileResponse.from_user(user),
+    )
