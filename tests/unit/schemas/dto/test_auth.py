@@ -22,13 +22,13 @@ from schemas.dto.responses.auth import (
 class TestLoginRequest:
     def test_valid(self):
         req = LoginRequest.model_validate(
-            {"email": "u@example.com", "password": "pass"}
+            {"email": "u@example.com", "password": "Pass123!x"}
         )
         assert req.email == "u@example.com"
 
     @pytest.mark.parametrize(
         "payload",
-        [{"password": "pass"}, {"email": "u@example.com"}, {}],
+        [{"password": "Pass123!x"}, {"email": "u@example.com"}, {}],
         ids=["missing_email", "missing_password", "missing_both"],
     )
     def test_missing_required_fields_rejected(self, payload):
@@ -39,13 +39,13 @@ class TestLoginRequest:
 class TestRegisterRequest:
     def test_valid_minimal(self):
         req = RegisterRequest.model_validate(
-            {"email": "u@example.com", "password": "pass"}
+            {"email": "u@example.com", "password": "Pass123!x"}
         )
         assert req.user_name is None
 
     def test_optional_user_name(self):
         req = RegisterRequest.model_validate(
-            {"email": "u@example.com", "password": "pass", "user_name": "Alice"}
+            {"email": "u@example.com", "password": "Pass123!x", "user_name": "Alice"}
         )
         assert req.user_name == "Alice"
 
@@ -62,7 +62,7 @@ class TestVerifyEmailRequest:
 class TestResetPasswordRequest:
     def test_valid(self):
         req = ResetPasswordRequest.model_validate(
-            {"email": "u@example.com", "code": "123456", "password": "newpass"}
+            {"email": "u@example.com", "code": "123456", "password": "NewPass1!"}
         )
         assert req.code == "123456"
 

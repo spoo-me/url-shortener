@@ -24,6 +24,7 @@ from bson import ObjectId
 
 from errors import (
     AppError,
+    BlockedUrlError,
     ConflictError,
     ForbiddenError,
     GoneError,
@@ -37,7 +38,13 @@ from repositories.legacy.legacy_url_repository import LegacyUrlRepository
 from repositories.url_repository import UrlRepository
 from schemas.dto.requests.url import CreateUrlRequest, ListUrlsQuery, UpdateUrlRequest
 from schemas.models.base import ANONYMOUS_OWNER_ID
-from schemas.models.url import EmojiUrlDoc, LegacyUrlDoc, UrlV2Doc
+from schemas.models.url import (
+    EmojiUrlDoc,
+    LegacyUrlDoc,
+    SchemaVersion,
+    UrlStatus,
+    UrlV2Doc,
+)
 from shared.crypto import hash_password
 from shared.datetime_utils import parse_datetime
 from shared.generators import generate_short_code_v2
@@ -71,26 +78,26 @@ class UrlService:
 
     # ── Public API ────────────────────────────────────────────────────────────
 
-    async def resolve(self, short_code: str) -> tuple[UrlCacheData, str]:
+    async def resolve(self, short_code: str) -> tuple[UrlCacheData, SchemaVersion]:
         """
         Resolve a short code to UrlCacheData and schema version.
 
         Returns (UrlCacheData, schema_version) where schema_version is
-        "v2", "v1", or "emoji".
+        a SchemaVersion enum member (V2, V1, or EMOJI).
 
         Raises:
-            NotFoundError:  URL not found in any collection.
-            ForbiddenError: URL status is BLOCKED (v2 only).
-            GoneError:      URL status is EXPIRED or INACTIVE (v2 only).
+            NotFoundError:   URL not found in any collection.
+            BlockedUrlError: URL status is BLOCKED (v2 only).
+            GoneError:       URL status is EXPIRED or INACTIVE (v2 only).
         """
         # 1. Cache hit
         cached = await self._url_cache.get(short_code)
         if cached is not None:
             schema = cached.schema_version
-            if schema == "v2" and cached.url_status in (
-                "BLOCKED",
-                "EXPIRED",
-                "INACTIVE",
+            if schema == SchemaVersion.V2 and cached.url_status in (
+                UrlStatus.BLOCKED,
+                UrlStatus.EXPIRED,
+                UrlStatus.INACTIVE,
             ):
                 log.info(
                     "url_resolve_non_active",
@@ -121,10 +128,10 @@ class UrlService:
         await self._populate_cache(short_code, url_cache_data, schema)
 
         # 4a. Raise for non-ACTIVE v2 (after caching minimal data)
-        if schema == "v2" and url_cache_data.url_status in (
-            "BLOCKED",
-            "EXPIRED",
-            "INACTIVE",
+        if schema == SchemaVersion.V2 and url_cache_data.url_status in (
+            UrlStatus.BLOCKED,
+            UrlStatus.EXPIRED,
+            UrlStatus.INACTIVE,
         ):
             log.info(
                 "url_resolve_non_active",
@@ -137,7 +144,7 @@ class UrlService:
 
         # 4b. Raise for v1 URLs whose max-clicks have been exhausted
         if (
-            schema == "v1"
+            schema == SchemaVersion.V1
             and url_cache_data.max_clicks is not None
             and url_cache_data.total_clicks >= url_cache_data.max_clicks
         ):
@@ -232,34 +239,35 @@ class UrlService:
         if private_stats is None:
             private_stats = True if owner_id is not None else None
 
-        # 7. Build document
+        # 7. Build document model (validates fields via Pydantic)
         owner_oid = owner_id if owner_id is not None else ANONYMOUS_OWNER_ID
-        doc: dict = {
-            "alias": alias,
-            "owner_id": owner_oid,
-            "created_at": now,
-            "creation_ip": client_ip,
-            "long_url": request.long_url,
-            "password": password_hash,
-            "block_bots": request.block_bots,
-            "max_clicks": request.max_clicks,
-            "expire_after": expire_ts,
-            "status": "ACTIVE",
-            "private_stats": private_stats,
-            "total_clicks": 0,
-            "last_click": None,
-        }
+        url_doc = UrlV2Doc(
+            alias=alias,
+            owner_id=owner_oid,
+            created_at=now,
+            creation_ip=client_ip,
+            long_url=request.long_url,
+            password=password_hash,
+            block_bots=request.block_bots,
+            max_clicks=request.max_clicks,
+            expire_after=expire_ts,
+            status=UrlStatus.ACTIVE,
+            private_stats=private_stats,
+            total_clicks=0,
+            last_click=None,
+        )
+        doc = url_doc.model_dump(by_alias=True, exclude={"id"})
 
         # 8. Insert
         inserted_id = await self._url_repo.insert(doc)
-        doc["_id"] = inserted_id
+        url_doc.id = inserted_id
 
         log.info(
             "url_created",
             alias=alias,
             long_url=request.long_url,
             owner_id=str(owner_id) if owner_id else None,
-            schema="v2",
+            schema=SchemaVersion.V2,
             has_password=bool(password_hash),
             max_clicks=request.max_clicks,
             block_bots=request.block_bots,
@@ -267,7 +275,7 @@ class UrlService:
             private_stats=private_stats,
         )
 
-        return UrlV2Doc.from_mongo(doc)
+        return url_doc
 
     async def update(
         self,
@@ -278,9 +286,13 @@ class UrlService:
         """
         Update an existing URL.
 
+        EXPIRED URLs are auto-reactivated when expiry conditions change
+        (max_clicks raised/cleared, expire_after extended/cleared), unless
+        the caller also provides an explicit status override.
+
         Raises:
             NotFoundError:  URL doesn't exist.
-            ForbiddenError: Caller doesn't own the URL.
+            ForbiddenError: Caller doesn't own the URL, or URL is blocked.
             ConflictError:  Requested alias is already taken.
             ValidationError: Invalid field values.
         """
@@ -294,6 +306,10 @@ class UrlService:
         # 2. Ownership check
         if existing.owner_id != owner_id:
             raise ForbiddenError("Access denied: you do not own this URL")
+
+        # 2b. Admin-blocked URLs cannot be modified by the owner
+        if existing.status == UrlStatus.BLOCKED:
+            raise ForbiddenError("Cannot modify a blocked URL")
 
         # 3. Build update ops — only changed fields
         update_ops: dict = {}
@@ -359,6 +375,27 @@ class UrlService:
         if request.status is not None and request.status != existing.status:
             update_ops["status"] = request.status
 
+        # Auto-reactivate EXPIRED URLs when expiry conditions are updated
+        if existing.status == UrlStatus.EXPIRED and "status" not in update_ops:
+            new_max = update_ops.get("max_clicks", existing.max_clicks)
+            new_expire = update_ops.get("expire_after", existing.expire_after)
+            max_clicks_cleared = "max_clicks" in update_ops and new_max is None
+            max_clicks_raised = (
+                new_max is not None
+                and existing.max_clicks is not None
+                and new_max > existing.total_clicks
+            )
+            expire_extended = new_expire is not None and new_expire > now
+            expire_cleared = "expire_after" in update_ops and new_expire is None
+
+            if (
+                max_clicks_cleared
+                or max_clicks_raised
+                or expire_extended
+                or expire_cleared
+            ):
+                update_ops["status"] = UrlStatus.ACTIVE
+
         if not update_ops:
             return existing  # No changes detected
 
@@ -394,7 +431,7 @@ class UrlService:
 
         Raises:
             NotFoundError:  URL doesn't exist.
-            ForbiddenError: Caller doesn't own the URL.
+            ForbiddenError: Caller doesn't own the URL, or URL is blocked.
         """
         existing = await self._url_repo.find_by_id(url_id)
         if existing is None:
@@ -402,6 +439,9 @@ class UrlService:
 
         if existing.owner_id != owner_id:
             raise ForbiddenError("Access denied: you do not own this URL")
+
+        if existing.status == UrlStatus.BLOCKED:
+            raise ForbiddenError("Cannot delete a blocked URL")
 
         await self._url_repo.delete(url_id)
         await self._url_cache.invalidate(existing.alias)
@@ -506,7 +546,9 @@ class UrlService:
 
     # ── Private helpers ───────────────────────────────────────────────────────
 
-    async def _dispatch(self, short_code: str) -> tuple[UrlCacheData | None, str]:
+    async def _dispatch(
+        self, short_code: str
+    ) -> tuple[UrlCacheData | None, SchemaVersion]:
         """
         Determine URL schema and fetch from the appropriate collection.
 
@@ -519,8 +561,8 @@ class UrlService:
         if validate_emoji_alias(short_code):
             doc = await self._emoji_repo.find_by_id(short_code)
             if doc is not None:
-                return _emoji_doc_to_cache(short_code, doc), "emoji"
-            return None, "emoji"
+                return _emoji_doc_to_cache(short_code, doc), SchemaVersion.EMOJI
+            return None, SchemaVersion.EMOJI
 
         code_len = len(short_code)
         if code_len == 7:
@@ -530,29 +572,33 @@ class UrlService:
         else:
             return await self._try_v2_then_v1(short_code)
 
-    async def _try_v2_then_v1(self, short_code: str) -> tuple[UrlCacheData | None, str]:
+    async def _try_v2_then_v1(
+        self, short_code: str
+    ) -> tuple[UrlCacheData | None, SchemaVersion]:
         v2_doc = await self._url_repo.find_by_alias(short_code)
         if v2_doc is not None:
-            return _v2_doc_to_cache(v2_doc), "v2"
+            return _v2_doc_to_cache(v2_doc), SchemaVersion.V2
         v1_doc = await self._legacy_repo.find_by_id(short_code)
         if v1_doc is not None:
-            return _legacy_doc_to_cache(short_code, v1_doc), "v1"
-        return None, "v2"
+            return _legacy_doc_to_cache(short_code, v1_doc), SchemaVersion.V1
+        return None, SchemaVersion.V2
 
-    async def _try_v1_then_v2(self, short_code: str) -> tuple[UrlCacheData | None, str]:
+    async def _try_v1_then_v2(
+        self, short_code: str
+    ) -> tuple[UrlCacheData | None, SchemaVersion]:
         v1_doc = await self._legacy_repo.find_by_id(short_code)
         if v1_doc is not None:
-            return _legacy_doc_to_cache(short_code, v1_doc), "v1"
+            return _legacy_doc_to_cache(short_code, v1_doc), SchemaVersion.V1
         v2_doc = await self._url_repo.find_by_alias(short_code)
         if v2_doc is not None:
-            return _v2_doc_to_cache(v2_doc), "v2"
-        return None, "v2"
+            return _v2_doc_to_cache(v2_doc), SchemaVersion.V2
+        return None, SchemaVersion.V2
 
     async def _populate_cache(
         self,
         short_code: str,
         url_cache_data: UrlCacheData,
-        schema: str,
+        schema: SchemaVersion,
     ) -> None:
         """
         Cache the URL data according to caching rules:
@@ -561,7 +607,9 @@ class UrlService:
           - v1 with max-clicks: do NOT cache (total-clicks must be live)
           - emoji: do NOT cache
         """
-        if schema == "v2" or (schema == "v1" and url_cache_data.max_clicks is None):
+        if schema == SchemaVersion.V2 or (
+            schema == SchemaVersion.V1 and url_cache_data.max_clicks is None
+        ):
             await self._url_cache.set(short_code, url_cache_data)
 
     async def _generate_unique_alias(self) -> str:
@@ -577,9 +625,9 @@ class UrlService:
 # ── Module-level helpers ──────────────────────────────────────────────────────
 
 
-def _raise_for_status(status: str) -> None:
-    if status == "BLOCKED":
-        raise ForbiddenError("URL is blocked")
+def _raise_for_status(status: UrlStatus) -> None:
+    if status == UrlStatus.BLOCKED:
+        raise BlockedUrlError("URL is blocked")
     raise GoneError("URL has expired or is no longer active")
 
 
@@ -595,7 +643,7 @@ def _v2_doc_to_cache(doc: UrlV2Doc) -> UrlCacheData:
         ),
         max_clicks=doc.max_clicks,
         url_status=doc.status,
-        schema_version="v2",
+        schema_version=SchemaVersion.V2,
         owner_id=str(doc.owner_id) if doc.owner_id else None,
     )
 
@@ -603,7 +651,7 @@ def _v2_doc_to_cache(doc: UrlV2Doc) -> UrlCacheData:
 def _legacy_doc_to_cache(
     short_code: str,
     doc: LegacyUrlDoc | EmojiUrlDoc,
-    schema_version: str = "v1",
+    schema_version: SchemaVersion = SchemaVersion.V1,
 ) -> UrlCacheData:
     """Convert a LegacyUrlDoc or EmojiUrlDoc to UrlCacheData."""
     expiration_time = None
@@ -617,7 +665,7 @@ def _legacy_doc_to_cache(
         password_hash=doc.password,
         expiration_time=expiration_time,
         max_clicks=doc.max_clicks,
-        url_status="ACTIVE",
+        url_status=UrlStatus.ACTIVE,
         schema_version=schema_version,
         total_clicks=doc.total_clicks,
         owner_id=None,
@@ -625,40 +673,31 @@ def _legacy_doc_to_cache(
 
 
 def _emoji_doc_to_cache(short_code: str, doc: EmojiUrlDoc) -> UrlCacheData:
-    return _legacy_doc_to_cache(short_code, doc, schema_version="emoji")
+    return _legacy_doc_to_cache(short_code, doc, schema_version=SchemaVersion.EMOJI)
+
+
+def _ensure_utc(dt: datetime | None) -> datetime | None:
+    """Ensure a datetime is UTC-aware. Returns None for None input."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 def _format_url_list_item(doc: UrlV2Doc) -> dict:
-    """Format a UrlV2Doc for the URL list response (matches legacy shape)."""
-    created_at_iso = None
-    if doc.created_at:
-        dt = doc.created_at
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        created_at_iso = dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
-
-    expire_after_ts = None
-    if doc.expire_after:
-        expire_after_ts = int(doc.expire_after.timestamp())
-
-    last_click_iso = None
-    if doc.last_click:
-        dt = doc.last_click
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        last_click_iso = dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
-
+    """Format a UrlV2Doc for the URL list response."""
     return {
         "id": str(doc.id),
         "alias": doc.alias,
         "long_url": doc.long_url,
         "status": doc.status,
-        "created_at": created_at_iso,
-        "expire_after": expire_after_ts,
+        "created_at": _ensure_utc(doc.created_at),
+        "expire_after": int(doc.expire_after.timestamp()) if doc.expire_after else None,
         "max_clicks": doc.max_clicks,
         "private_stats": doc.private_stats,
         "block_bots": bool(doc.block_bots),
         "password_set": doc.password is not None,
         "total_clicks": doc.total_clicks,
-        "last_click": last_click_iso,
+        "last_click": _ensure_utc(doc.last_click),
     }

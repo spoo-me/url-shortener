@@ -160,4 +160,4 @@ class TestApiKeys:
         with TestClient(application, raise_server_exceptions=False) as client:
             resp = client.delete("/api/v1/keys/not-an-objectid")
 
-        assert resp.status_code == 404
+        assert resp.status_code == 422

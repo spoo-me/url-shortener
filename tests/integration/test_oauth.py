@@ -31,7 +31,7 @@ from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
 from routes.auth_routes import router as auth_router
 from routes.oauth_routes import router as oauth_router
-from schemas.models.user import UserDoc
+from schemas.models.user import ProviderInfo, UserDoc
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -165,13 +165,13 @@ def test_oauth_callback_new_user_creates_account():
 
     mock_strategy = MagicMock()
     mock_strategy.fetch_user_info = AsyncMock(
-        return_value={
-            "email": _EMAIL,
-            "email_verified": True,
-            "provider_user_id": "google-123",
-            "name": "OAuth User",
-            "picture": "",
-        }
+        return_value=ProviderInfo(
+            email=_EMAIL,
+            email_verified=True,
+            provider_user_id="google-123",
+            name="OAuth User",
+            picture="",
+        )
     )
 
     mock_oauth_client = AsyncMock()
@@ -211,13 +211,13 @@ def test_oauth_callback_existing_user_logs_in():
 
     mock_strategy = MagicMock()
     mock_strategy.fetch_user_info = AsyncMock(
-        return_value={
-            "email": _EMAIL,
-            "email_verified": True,
-            "provider_user_id": "google-123",
-            "name": "OAuth User",
-            "picture": "",
-        }
+        return_value=ProviderInfo(
+            email=_EMAIL,
+            email_verified=True,
+            provider_user_id="google-123",
+            name="OAuth User",
+            picture="",
+        )
     )
 
     mock_oauth_client = AsyncMock()
@@ -254,13 +254,13 @@ def test_oauth_callback_email_collision_auto_links():
 
     mock_strategy = MagicMock()
     mock_strategy.fetch_user_info = AsyncMock(
-        return_value={
-            "email": _EMAIL,
-            "email_verified": True,
-            "provider_user_id": "google-new-456",
-            "name": "OAuth User",
-            "picture": "",
-        }
+        return_value=ProviderInfo(
+            email=_EMAIL,
+            email_verified=True,
+            provider_user_id="google-new-456",
+            name="OAuth User",
+            picture="",
+        )
     )
 
     mock_oauth_client = AsyncMock()
@@ -287,7 +287,7 @@ def test_oauth_callback_email_collision_auto_links():
     # Verify the service was called with the correct provider info
     call_args = mock_oauth_svc.handle_callback.call_args
     assert call_args[0][0] == "google"
-    assert call_args[0][1]["email"] == _EMAIL
+    assert call_args[0][1].email == _EMAIL
 
 
 def test_oauth_link_requires_auth():

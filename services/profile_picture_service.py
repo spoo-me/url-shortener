@@ -9,12 +9,25 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from bson import ObjectId
+from pydantic import BaseModel, ConfigDict, Field
 
 from errors import NotFoundError
 from repositories.user_repository import UserRepository
+from schemas.models.user import OAuthProvider, ProfilePicture
 from shared.logging import get_logger
 
 log = get_logger(__name__)
+
+
+class AvailablePicture(BaseModel):
+    """A profile picture option from a linked OAuth provider."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str = Field(description="Unique identifier (provider_providerUserId)")
+    url: str = Field(description="Picture URL")
+    source: OAuthProvider = Field(description="OAuth provider source")
+    is_current: bool = Field(description="Whether this is the active picture")
 
 
 class ProfilePictureService:
@@ -53,7 +66,7 @@ class ProfilePictureService:
 
         return profile
 
-    async def get_available_pictures(self, user_id: ObjectId) -> list[dict]:
+    async def get_available_pictures(self, user_id: ObjectId) -> list[AvailablePicture]:
         """Return profile pictures available from connected OAuth providers.
 
         Raises NotFoundError if the user is not found.
@@ -68,12 +81,12 @@ class ProfilePictureService:
             picture_url = provider.profile.picture if provider.profile else None
             if picture_url:
                 pictures.append(
-                    {
-                        "id": f"{provider.provider}_{provider.provider_user_id}",
-                        "url": picture_url,
-                        "source": provider.provider,
-                        "is_current": current_pfp_url == picture_url,
-                    }
+                    AvailablePicture(
+                        id=f"{provider.provider}_{provider.provider_user_id}",
+                        url=picture_url,
+                        source=provider.provider,
+                        is_current=current_pfp_url == picture_url,
+                    )
                 )
         return pictures
 
@@ -92,17 +105,14 @@ class ProfilePictureService:
             if provider_id == picture_id:
                 picture_url = provider.profile.picture if provider.profile else None
                 if picture_url:
+                    pfp = ProfilePicture(
+                        url=picture_url,
+                        source=provider.provider,
+                        last_updated=datetime.now(timezone.utc),
+                    )
                     await self._user_repo.update(
                         user_id,
-                        {
-                            "$set": {
-                                "pfp": {
-                                    "url": picture_url,
-                                    "source": provider.provider,
-                                    "last_updated": datetime.now(timezone.utc),
-                                }
-                            }
-                        },
+                        {"$set": {"pfp": pfp.model_dump()}},
                     )
                     log.info(
                         "profile_picture_updated",

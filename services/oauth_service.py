@@ -11,7 +11,7 @@ The route layer is responsible for:
     - Provider-specific user-info fetch (strategy.fetch_user_info())
     - Redirecting with JWT cookies
 
-This service receives the already-extracted provider_info dict and handles
+This service receives the already-extracted ProviderInfo model and handles
 all business logic from there.
 """
 
@@ -25,7 +25,17 @@ from bson import ObjectId
 from errors import AppError, ConflictError, NotFoundError, ValidationError
 from infrastructure.email.protocol import EmailProvider
 from repositories.user_repository import UserRepository
-from schemas.models.user import UserDoc
+from schemas.dto.responses.auth import OAuthProviderDetail
+from schemas.models.user import (
+    AuthProviderEntry,
+    OAuthAction,
+    ProfilePicture,
+    ProviderInfo,
+    ProviderProfile,
+    UserDoc,
+    UserPlan,
+    UserStatus,
+)
 from services.auth_service import AuthService
 from shared.logging import get_logger
 
@@ -54,16 +64,16 @@ class OAuthService:
     # ── Private helpers ───────────────────────────────────────────────────────
 
     def _can_auto_link(
-        self, existing_user: UserDoc, provider_info: dict[str, Any], provider_key: str
+        self, existing_user: UserDoc, provider_info: ProviderInfo, provider_key: str
     ) -> bool:
         """True only if provider email is verified, matches user email, and
         isn't already linked.
 
         Preserves exact logic from utils/oauth_utils.can_auto_link_accounts().
         """
-        if not provider_info.get("email_verified", False):
+        if not provider_info.email_verified:
             return False
-        if existing_user.email.lower() != provider_info.get("email", "").lower():
+        if existing_user.email.lower() != (provider_info.email or "").lower():
             return False
         for entry in existing_user.auth_providers:
             if entry.provider == provider_key:
@@ -73,7 +83,7 @@ class OAuthService:
     async def _link_provider(
         self,
         user_id: ObjectId,
-        provider_info: dict[str, Any],
+        provider_info: ProviderInfo,
         provider: str,
     ) -> bool:
         """Append an OAuth provider entry to a user's auth_providers array.
@@ -85,38 +95,41 @@ class OAuthService:
             True if the document was matched and updated.
         """
         now = datetime.now(timezone.utc)
-        provider_entry: dict[str, Any] = {
-            "provider": provider,
-            "provider_user_id": provider_info["provider_user_id"],
-            "email": provider_info["email"],
-            "email_verified": provider_info["email_verified"],
-            "profile": {
-                "name": provider_info["name"],
-                "picture": provider_info["picture"],
-            },
-            "linked_at": now,
-        }
+        provider_entry = AuthProviderEntry(
+            provider=provider,
+            provider_user_id=provider_info.provider_user_id,
+            email=provider_info.email,
+            email_verified=provider_info.email_verified,
+            profile=ProviderProfile(
+                name=provider_info.name,
+                picture=provider_info.picture,
+            ),
+            linked_at=now,
+        )
 
         set_fields: dict[str, Any] = {"updated_at": now, "last_login_at": now}
 
-        if provider_info.get("picture"):
+        if provider_info.picture:
             set_fields["pfp"] = {
-                "url": provider_info["picture"],
+                "url": provider_info.picture,
                 "source": provider,
                 "last_updated": now,
             }
 
-        if provider_info.get("email_verified"):
+        if provider_info.email_verified:
             set_fields["email_verified"] = True
 
         return await self._user_repo.update(
             user_id,
-            {"$push": {"auth_providers": provider_entry}, "$set": set_fields},
+            {
+                "$push": {"auth_providers": provider_entry.model_dump()},
+                "$set": set_fields,
+            },
         )
 
     async def _create_oauth_user(
         self,
-        provider_info: dict[str, Any],
+        provider_info: ProviderInfo,
         provider: str,
         signup_ip: str | None = None,
     ) -> ObjectId:
@@ -129,44 +142,45 @@ class OAuthService:
             AppError: On DB insertion failure.
         """
         now = datetime.now(timezone.utc)
-        user_name = provider_info.get("name") or provider_info["email"].split("@")[0]
+        user_name = provider_info.name or provider_info.email.split("@")[0]
         pfp = (
-            {
-                "url": provider_info["picture"],
-                "source": provider,
-                "last_updated": now,
-            }
-            if provider_info.get("picture")
+            ProfilePicture(
+                url=provider_info.picture,
+                source=provider,
+                last_updated=now,
+            )
+            if provider_info.picture
             else None
         )
 
-        user_data: dict[str, Any] = {
-            "email": provider_info["email"],
-            "email_verified": provider_info["email_verified"],
-            "user_name": user_name,
-            "pfp": pfp,
-            "password_hash": None,
-            "password_set": False,
-            "auth_providers": [
-                {
-                    "provider": provider,
-                    "provider_user_id": provider_info["provider_user_id"],
-                    "email": provider_info["email"],
-                    "email_verified": provider_info["email_verified"],
-                    "profile": {
-                        "name": provider_info["name"],
-                        "picture": provider_info["picture"],
-                    },
-                    "linked_at": now,
-                }
+        user_doc = UserDoc(
+            email=provider_info.email,
+            email_verified=provider_info.email_verified,
+            user_name=user_name,
+            pfp=pfp,
+            password_hash=None,
+            password_set=False,
+            auth_providers=[
+                AuthProviderEntry(
+                    provider=provider,
+                    provider_user_id=provider_info.provider_user_id,
+                    email=provider_info.email,
+                    email_verified=provider_info.email_verified,
+                    profile=ProviderProfile(
+                        name=provider_info.name,
+                        picture=provider_info.picture,
+                    ),
+                    linked_at=now,
+                )
             ],
-            "plan": "free",
-            "signup_ip": signup_ip,
-            "created_at": now,
-            "updated_at": now,
-            "last_login_at": now,
-            "status": "ACTIVE",
-        }
+            plan=UserPlan.FREE,
+            signup_ip=signup_ip,
+            created_at=now,
+            updated_at=now,
+            last_login_at=now,
+            status=UserStatus.ACTIVE,
+        )
+        user_data = user_doc.model_dump(by_alias=True, exclude={"id"})
 
         try:
             return await self._user_repo.create(user_data)
@@ -203,7 +217,7 @@ class OAuthService:
     async def handle_callback(
         self,
         provider_key: str,
-        provider_info: dict[str, Any],
+        provider_info: ProviderInfo,
         action: str,
         state_data: dict[str, Any],
         signup_ip: str | None = None,
@@ -219,7 +233,7 @@ class OAuthService:
 
         Args:
             provider_key:  e.g. ``"google"``, ``"github"``, ``"discord"``.
-            provider_info: Normalised user-info dict from the provider strategy.
+            provider_info: Normalised ProviderInfo model from the provider strategy.
             action:        ``"login"`` or ``"link"`` (from state).
             state_data:    Full state dict (may contain ``user_id`` for linking).
             signup_ip:     Client IP for new user creation.
@@ -236,7 +250,9 @@ class OAuthService:
         provider_display = provider_key.title()
 
         # ── Account-linking flow ──────────────────────────────────────────────
-        if action == "link":
+        if action == OAuthAction.LINK:
+            if not provider_info.email:
+                raise ValidationError("email not provided by OAuth provider")
             link_user_id = state_data.get("user_id")
             if not link_user_id:
                 raise ValidationError("invalid linking request")
@@ -252,7 +268,7 @@ class OAuthService:
 
             # Ensure provider_user_id not already owned by another account
             existing_oauth_user = await self._user_repo.find_by_oauth_provider(
-                provider_key, provider_info["provider_user_id"]
+                provider_key, provider_info.provider_user_id
             )
             if existing_oauth_user and str(existing_oauth_user.id) != link_user_id:
                 raise ConflictError(
@@ -260,7 +276,7 @@ class OAuthService:
                 )
 
             # Require email match
-            if current_user.email.lower() != provider_info["email"].lower():
+            if current_user.email.lower() != provider_info.email.lower():
                 log.warning(
                     "oauth_email_mismatch",
                     user_id=link_user_id,
@@ -272,7 +288,7 @@ class OAuthService:
                     details={
                         "message": (
                             f"The email associated with this {provider_display} account "
-                            f"({provider_info['email']}) does not match your account email "
+                            f"({provider_info.email}) does not match your account email "
                             f"({current_user.email}). "
                             f"Please use a {provider_display} account with the same email address."
                         )
@@ -299,7 +315,7 @@ class OAuthService:
 
         # ── Existing OAuth user login ─────────────────────────────────────────
         existing_oauth_user = await self._user_repo.find_by_oauth_provider(
-            provider_key, provider_info["provider_user_id"]
+            provider_key, provider_info.provider_user_id
         )
         if existing_oauth_user:
             await self._update_last_login(existing_oauth_user.id)
@@ -314,10 +330,12 @@ class OAuthService:
             )
             return existing_oauth_user, access_token, refresh_token
 
+        # Email is required for collision detection and new user creation
+        if not provider_info.email:
+            raise ValidationError("email not provided by OAuth provider")
+
         # ── Email collision ───────────────────────────────────────────────────
-        existing_email_user = await self._user_repo.find_by_email(
-            provider_info["email"]
-        )
+        existing_email_user = await self._user_repo.find_by_email(provider_info.email)
         if existing_email_user:
             if self._can_auto_link(existing_email_user, provider_info, provider_key):
                 success = await self._link_provider(
@@ -362,13 +380,13 @@ class OAuthService:
             "user_registered",
             user_id=str(new_user_id),
             auth_method=f"{provider_key}_oauth",
-            email_verified=provider_info.get("email_verified", False),
+            email_verified=provider_info.email_verified,
         )
 
         # Send welcome email — non-fatal
         try:
             await self._email.send_welcome_email(
-                provider_info["email"], provider_info.get("name")
+                provider_info.email, provider_info.name
             )
         except Exception as exc:
             log.error(
@@ -423,7 +441,9 @@ class OAuthService:
 
         log.info("oauth_provider_unlinked", user_id=user_id, provider=provider_name)
 
-    async def list_providers(self, user_id: str) -> tuple[list[dict[str, Any]], bool]:
+    async def list_providers(
+        self, user_id: str
+    ) -> tuple[list[OAuthProviderDetail], bool]:
         """Return the user's linked OAuth providers and password_set flag.
 
         Returns:
@@ -437,16 +457,13 @@ class OAuthService:
             raise NotFoundError("user not found")
 
         linked = [
-            {
-                "provider": p.provider,
-                "email": p.email,
-                "email_verified": p.email_verified,
-                "linked_at": p.linked_at.isoformat() if p.linked_at else None,
-                "profile": {
-                    "name": p.profile.name if p.profile else None,
-                    "picture": p.profile.picture if p.profile else None,
-                },
-            }
+            OAuthProviderDetail(
+                provider=p.provider,
+                email=p.email,
+                email_verified=p.email_verified,
+                linked_at=p.linked_at,
+                profile=p.profile if p.profile else ProviderProfile(),
+            )
             for p in user.auth_providers
         ]
 

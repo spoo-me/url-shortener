@@ -197,7 +197,7 @@ def test_register_weak_password_returns_400():
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/register",
-            json={"email": "user@example.com", "password": "weak"},
+            json={"email": "user@example.com", "password": "weakpassword"},
         )
     assert resp.status_code == 400
 
@@ -443,7 +443,11 @@ def test_reset_password_invalid_code_returns_400():
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/reset-password",
-            json={"email": "user@example.com", "code": "bad", "password": "New1!abc"},
+            json={
+                "email": "user@example.com",
+                "code": "999999",
+                "password": "New1!abc",
+            },
         )
     assert resp.status_code == 400
 

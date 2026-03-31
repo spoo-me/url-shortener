@@ -3,7 +3,7 @@
 {% block title %}Links | Dashboard | spoo.me{% endblock %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/links.css') }}?v=2">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/links.css') }}?v=4">
 <link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/url-modal.css') }}?v=1">
 <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
@@ -187,6 +187,14 @@
                 <span class="badge badge-status badge-inactive tooltip-trigger" data-tooltip="Inactive"
                     style="display:none">
                     <i class="ti ti-circle-x"></i>
+                </span>
+                <span class="badge badge-status badge-blocked tooltip-trigger" data-tooltip="Blocked by admin"
+                    style="display:none">
+                    <i class="ti ti-ban"></i>
+                </span>
+                <span class="badge badge-status badge-expired tooltip-trigger" data-tooltip="Expired"
+                    style="display:none">
+                    <i class="ti ti-clock-off"></i>
                 </span>
                 <span class="badge badge-password tooltip-trigger" data-tooltip="Password protected"
                     style="display:none">
@@ -606,8 +614,8 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', path='js/dashboard/smart-datetime.js') }}?v=1"></script>
-<script src="{{ url_for('static', path='js/dashboard.js') }}?v=1" defer></script>
-<script src="{{ url_for('static', path='js/url-manager.js') }}?v=1" defer></script>
+<script src="{{ url_for('static', path='js/dashboard.js') }}?v=3" defer></script>
+<script src="{{ url_for('static', path='js/url-manager.js') }}?v=3" defer></script>
 <script>
     // Initialize segmented controls for the options dropdown
     document.addEventListener('DOMContentLoaded', function () {

@@ -14,6 +14,7 @@ import pytest
 from bson import ObjectId
 
 from errors import (
+    BlockedUrlError,
     ConflictError,
     ForbiddenError,
     GoneError,
@@ -164,7 +165,7 @@ class TestUrlServiceResolve:
         url_repo.find_by_alias.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_cache_hit_blocked_v2_raises_forbidden(self):
+    async def test_cache_hit_blocked_v2_raises_blocked_url_error(self):
         url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
         svc = make_service(
             url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
@@ -184,7 +185,7 @@ class TestUrlServiceResolve:
         )
         url_cache.get.return_value = cached
 
-        with pytest.raises(ForbiddenError):
+        with pytest.raises(BlockedUrlError):
             await svc.resolve(ALIAS)
 
     @pytest.mark.asyncio
@@ -340,7 +341,7 @@ class TestUrlServiceResolve:
         blocked_doc = make_url_v2_doc(alias=ALIAS, status="BLOCKED")
         url_repo.find_by_alias.return_value = blocked_doc
 
-        with pytest.raises(ForbiddenError):
+        with pytest.raises(BlockedUrlError):
             await svc.resolve(ALIAS)
 
         # Cache should have been populated (even for blocked URLs)
@@ -647,6 +648,210 @@ class TestUrlServiceUpdate:
         with pytest.raises(ConflictError):
             await svc.update(URL_OID, req, USER_OID)
 
+    @pytest.mark.asyncio
+    async def test_update_blocked_url_raises_forbidden(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = make_url_v2_doc(status="BLOCKED")
+        url_repo.find_by_id.return_value = existing
+
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        req = UpdateUrlRequest(long_url="https://new-url.com")
+        with pytest.raises(ForbiddenError, match="Cannot modify a blocked URL"):
+            await svc.update(URL_OID, req, USER_OID)
+
+        url_repo.update.assert_not_called()
+        url_cache.invalidate.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_update_blocked_url_status_change_raises_forbidden(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = make_url_v2_doc(status="BLOCKED")
+        url_repo.find_by_id.return_value = existing
+
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        req = UpdateUrlRequest(status="ACTIVE")
+        with pytest.raises(ForbiddenError, match="Cannot modify a blocked URL"):
+            await svc.update(URL_OID, req, USER_OID)
+
+        url_repo.update.assert_not_called()
+        url_cache.invalidate.assert_not_called()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TestUrlServiceAutoReactivate
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class TestUrlServiceAutoReactivate:
+    """Expired URLs should auto-reactivate when expiry conditions are updated."""
+
+    @pytest.mark.asyncio
+    async def test_raising_max_clicks_reactivates_expired_url(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = UrlV2Doc.from_mongo(
+            {
+                "_id": URL_OID,
+                "alias": ALIAS,
+                "owner_id": USER_OID,
+                "created_at": datetime(2024, 1, 1, tzinfo=timezone.utc),
+                "long_url": "https://example.com",
+                "status": "EXPIRED",
+                "max_clicks": 3,
+                "total_clicks": 3,
+                "private_stats": True,
+            }
+        )
+        url_repo.find_by_id.return_value = existing
+        url_repo.update.return_value = True
+
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        req = UpdateUrlRequest(max_clicks=10)
+        await svc.update(URL_OID, req, USER_OID)
+
+        update_doc = url_repo.update.call_args[0][1]
+        assert update_doc["$set"]["status"] == "ACTIVE"
+        assert update_doc["$set"]["max_clicks"] == 10
+
+    @pytest.mark.asyncio
+    async def test_clearing_max_clicks_reactivates_expired_url(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = UrlV2Doc.from_mongo(
+            {
+                "_id": URL_OID,
+                "alias": ALIAS,
+                "owner_id": USER_OID,
+                "created_at": datetime(2024, 1, 1, tzinfo=timezone.utc),
+                "long_url": "https://example.com",
+                "status": "EXPIRED",
+                "max_clicks": 3,
+                "total_clicks": 3,
+                "private_stats": True,
+            }
+        )
+        url_repo.find_by_id.return_value = existing
+        url_repo.update.return_value = True
+
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        req = UpdateUrlRequest(max_clicks=0)
+        await svc.update(URL_OID, req, USER_OID)
+
+        update_doc = url_repo.update.call_args[0][1]
+        assert update_doc["$set"]["status"] == "ACTIVE"
+        assert update_doc["$set"]["max_clicks"] is None
+
+    @pytest.mark.asyncio
+    async def test_extending_expire_after_reactivates_expired_url(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = UrlV2Doc.from_mongo(
+            {
+                "_id": URL_OID,
+                "alias": ALIAS,
+                "owner_id": USER_OID,
+                "created_at": datetime(2024, 1, 1, tzinfo=timezone.utc),
+                "long_url": "https://example.com",
+                "status": "EXPIRED",
+                "expire_after": datetime(2024, 6, 1, tzinfo=timezone.utc),
+                "private_stats": True,
+            }
+        )
+        url_repo.find_by_id.return_value = existing
+        url_repo.update.return_value = True
+
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        req = UpdateUrlRequest(expire_after="2030-01-01T00:00:00Z")
+        await svc.update(URL_OID, req, USER_OID)
+
+        update_doc = url_repo.update.call_args[0][1]
+        assert update_doc["$set"]["status"] == "ACTIVE"
+
+    @pytest.mark.asyncio
+    async def test_explicit_status_overrides_auto_reactivate(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = UrlV2Doc.from_mongo(
+            {
+                "_id": URL_OID,
+                "alias": ALIAS,
+                "owner_id": USER_OID,
+                "created_at": datetime(2024, 1, 1, tzinfo=timezone.utc),
+                "long_url": "https://example.com",
+                "status": "EXPIRED",
+                "max_clicks": 3,
+                "total_clicks": 3,
+                "private_stats": True,
+            }
+        )
+        url_repo.find_by_id.return_value = existing
+        url_repo.update.return_value = True
+
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        req = UpdateUrlRequest(max_clicks=10, status="INACTIVE")
+        await svc.update(URL_OID, req, USER_OID)
+
+        update_doc = url_repo.update.call_args[0][1]
+        assert update_doc["$set"]["status"] == "INACTIVE"
+
+    @pytest.mark.asyncio
+    async def test_no_reactivate_when_max_clicks_still_exceeded(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = UrlV2Doc.from_mongo(
+            {
+                "_id": URL_OID,
+                "alias": ALIAS,
+                "owner_id": USER_OID,
+                "created_at": datetime(2024, 1, 1, tzinfo=timezone.utc),
+                "long_url": "https://example.com",
+                "status": "EXPIRED",
+                "max_clicks": 3,
+                "total_clicks": 5,
+                "private_stats": True,
+            }
+        )
+        url_repo.find_by_id.return_value = existing
+        url_repo.update.return_value = True
+
+        from schemas.dto.requests.url import UpdateUrlRequest
+
+        # Raising to 4 still below total_clicks of 5
+        req = UpdateUrlRequest(max_clicks=4)
+        await svc.update(URL_OID, req, USER_OID)
+
+        update_doc = url_repo.update.call_args[0][1]
+        assert "status" not in update_doc["$set"]
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TestUrlServiceDelete
@@ -697,6 +902,22 @@ class TestUrlServiceDelete:
 
         with pytest.raises(NotFoundError):
             await svc.delete(URL_OID, USER_OID)
+
+    @pytest.mark.asyncio
+    async def test_delete_blocked_url_raises_forbidden(self):
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        existing = make_url_v2_doc(status="BLOCKED")
+        url_repo.find_by_id.return_value = existing
+
+        with pytest.raises(ForbiddenError, match="Cannot delete a blocked URL"):
+            await svc.delete(URL_OID, USER_OID)
+
+        url_repo.delete.assert_not_called()
+        url_cache.invalidate.assert_not_called()
 
 
 # ─────────────────────────────────────────────────────────────────────────────

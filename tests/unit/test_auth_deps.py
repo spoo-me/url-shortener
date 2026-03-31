@@ -66,7 +66,7 @@ def make_key_doc(revoked: bool = False, expires_at=None, scopes=None):
             "token_prefix": "abcd1234",
             "token_hash": "x" * 64,
             "name": "Test Key",
-            "scopes": scopes or ["url:read"],
+            "scopes": scopes or ["urls:read"],
             "revoked": revoked,
             "expires_at": expires_at,
             "created_at": datetime.now(timezone.utc),
@@ -261,20 +261,20 @@ class TestRequireVerifiedEmail:
 
 class TestCheckApiKeyScope:
     def test_raises_when_scope_missing(self):
-        key_doc = make_key_doc(scopes=["url:read"])
+        key_doc = make_key_doc(scopes=["urls:read"])
         user = CurrentUser(user_id=USER_OID, email_verified=True, api_key_doc=key_doc)
         with pytest.raises(ForbiddenError):
-            check_api_key_scope(user, {"url:write"})
+            check_api_key_scope(user, {"urls:manage"})
 
     def test_passes_when_scope_present(self):
-        key_doc = make_key_doc(scopes=["url:write"])
+        key_doc = make_key_doc(scopes=["urls:manage"])
         user = CurrentUser(user_id=USER_OID, email_verified=True, api_key_doc=key_doc)
-        check_api_key_scope(user, {"url:write"})  # no raise
+        check_api_key_scope(user, {"urls:manage"})  # no raise
 
     def test_passes_when_scope_overlaps(self):
-        key_doc = make_key_doc(scopes=["url:read", "url:write"])
+        key_doc = make_key_doc(scopes=["urls:read", "urls:manage"])
         user = CurrentUser(user_id=USER_OID, email_verified=True, api_key_doc=key_doc)
-        check_api_key_scope(user, {"url:write", "admin"})  # intersection exists
+        check_api_key_scope(user, {"urls:manage", "admin:all"})  # intersection exists
 
     def test_jwt_user_bypasses_scope_check(self):
         user = CurrentUser(user_id=USER_OID, email_verified=True)  # no api_key_doc

@@ -32,7 +32,7 @@ from schemas.models.token import (
     TOKEN_TYPE_EMAIL_VERIFY,
     TOKEN_TYPE_PASSWORD_RESET,
 )
-from schemas.models.user import UserDoc
+from schemas.models.user import UserDoc, UserPlan, UserStatus
 from services.token_factory import TokenFactory
 from shared.crypto import hash_password, hash_token, verify_password
 from shared.generators import generate_otp_code, generate_secure_token
@@ -284,20 +284,21 @@ class AuthService:
 
         now = datetime.now(timezone.utc)
         password_hash = hash_password(password)
-        user_data: dict[str, Any] = {
-            "email": email,
-            "email_verified": False,
-            "password_hash": password_hash,
-            "password_set": True,
-            "user_name": user_name,
-            "pfp": None,
-            "auth_providers": [],
-            "plan": "free",
-            "signup_ip": signup_ip,
-            "created_at": now,
-            "updated_at": now,
-            "status": "ACTIVE",
-        }
+        user_doc = UserDoc(
+            email=email,
+            email_verified=False,
+            password_hash=password_hash,
+            password_set=True,
+            user_name=user_name,
+            pfp=None,
+            auth_providers=[],
+            plan=UserPlan.FREE,
+            signup_ip=signup_ip,
+            created_at=now,
+            updated_at=now,
+            status=UserStatus.ACTIVE,
+        )
+        user_data = user_doc.model_dump(by_alias=True, exclude={"id"})
 
         try:
             user_id = await self._user_repo.create(user_data)
@@ -305,8 +306,7 @@ class AuthService:
             log.warning("registration_failed", reason="race_condition_duplicate")
             raise ConflictError("email already registered") from None
 
-        user_data["_id"] = user_id
-        user_doc = UserDoc.from_mongo(user_data)
+        user_doc.id = user_id
 
         log.info(
             "user_registered",
@@ -353,7 +353,7 @@ class AuthService:
 
         user_id = claims.get("sub")
         user = await self._user_repo.find_by_id(ObjectId(user_id))
-        if not user or user.status != "ACTIVE":
+        if not user or user.status != UserStatus.ACTIVE:
             log.warning(
                 "token_refresh_failed",
                 reason="user_not_found_or_inactive",

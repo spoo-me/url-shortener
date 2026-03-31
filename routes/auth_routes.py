@@ -316,9 +316,7 @@ async def verify_page(
     profile = await auth_service.get_user_profile(str(user.user_id))
     if profile.email_verified:
         return RedirectResponse("/dashboard", status_code=302)
-    return templates.TemplateResponse(
-        "verify.html", {"request": request, "email": profile.email}
-    )
+    return templates.TemplateResponse(request, "verify.html", {"email": profile.email})
 
 
 @router.post(

@@ -34,6 +34,7 @@ from dependencies import get_db
 from middleware.rate_limiter import Limits, limiter
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
 from repositories.legacy.legacy_url_repository import LegacyUrlRepository
+from schemas.dto.requests.stats import ExportFormat
 from shared.datetime_utils import convert_to_gmt
 from shared.legacy_helpers import (
     add_missing_dates,
@@ -277,7 +278,12 @@ async def export(
     short_code = unquote(short_code)
     host_url = str(request.base_url)
 
-    if fmt not in ("csv", "json", "xlsx", "xml"):
+    if fmt not in (
+        ExportFormat.CSV,
+        ExportFormat.JSON,
+        ExportFormat.XLSX,
+        ExportFormat.XML,
+    ):
         if request.method == "GET":
             return templates.TemplateResponse(
                 request,
@@ -352,11 +358,11 @@ async def export(
     if url_data.get("unique_counter"):
         url_data = add_missing_dates("unique_counter", url_data)
 
-    if fmt == "json":
+    if fmt == ExportFormat.JSON:
         return _export_json(url_data)
-    elif fmt == "csv":
+    elif fmt == ExportFormat.CSV:
         return _export_csv(url_data)
-    elif fmt == "xlsx":
+    elif fmt == ExportFormat.XLSX:
         return _export_xlsx(url_data)
     else:
         return _export_xml(url_data)

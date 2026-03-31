@@ -31,11 +31,13 @@ def generate_short_code_v2(length: int = 7) -> str:
     """Generate an alphanumeric short code of configurable length (v2 schema).
 
     Args:
-        length: Number of characters (default 7).
+        length: Number of characters (default 7, must be 1-255).
 
     Returns:
         Random alphanumeric string of the requested length.
     """
+    if length < 1 or length > 255:
+        raise ValueError("length must be between 1 and 255")
     letters = string.ascii_lowercase + string.ascii_uppercase + string.digits
     return "".join(random.choice(letters) for _ in range(length))
 
@@ -49,11 +51,13 @@ def generate_otp_code(length: int = 6) -> str:
     """Generate a cryptographically secure numeric OTP.
 
     Args:
-        length: Number of digits (default 6).
+        length: Number of digits (default 6, must be 1-128).
 
     Returns:
         String of random decimal digits.
     """
+    if length < 1 or length > 128:
+        raise ValueError("length must be between 1 and 128")
     return "".join(secrets.choice(string.digits) for _ in range(length))
 
 

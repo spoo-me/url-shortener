@@ -16,8 +16,15 @@ from fastapi.responses import RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from dependencies import get_click_service, get_url_service
-from errors import ForbiddenError, GoneError, NotFoundError, ValidationError
+from errors import (
+    BlockedUrlError,
+    ForbiddenError,
+    GoneError,
+    NotFoundError,
+    ValidationError,
+)
 from middleware.rate_limiter import Limits, limiter
+from schemas.models.url import SchemaVersion
 from services.click import ClickService
 from services.url_service import UrlService
 from shared.crypto import verify_password
@@ -46,9 +53,11 @@ def _error_page(request: Request, code: str, message: str, status: int) -> Respo
     )
 
 
-def _check_url_password(password: str | None, password_hash: str, schema: str) -> bool:
+def _check_url_password(
+    password: str | None, password_hash: str, schema: SchemaVersion
+) -> bool:
     """Verify a URL password — bcrypt for v2, plaintext comparison for v1/emoji."""
-    if schema == "v2":
+    if schema == SchemaVersion.V2:
         return verify_password(password or "", password_hash)
     return password == password_hash
 
@@ -76,9 +85,9 @@ async def redirect_url(
     except NotFoundError:
         log.info("url_not_found", short_code=short_code)
         return _error_page(request, "404", "URL NOT FOUND", 404)
-    except ForbiddenError:
+    except BlockedUrlError:
         log.warning("url_blocked", short_code=short_code)
-        return _error_page(request, "403", "ACCESS DENIED", 403)
+        return _error_page(request, "451", "THIS URL HAS BEEN BLOCKED", 451)
     except GoneError:
         log.info("url_gone", short_code=short_code)
         return _error_page(request, "410", "SHORT URL EXPIRED", 410)
@@ -100,7 +109,7 @@ async def redirect_url(
         user_agent = request.headers.get("User-Agent", "")
         referrer = request.headers.get("Referer")
         cf_city = request.headers.get("CF-IPCity")
-        is_emoji = schema == "emoji"
+        is_emoji = schema == SchemaVersion.EMOJI
         try:
             await click_service.track_click(
                 url_data=url_data,
@@ -159,7 +168,7 @@ async def check_password(
 
     try:
         url_data, schema = await url_service.resolve(short_code)
-    except (NotFoundError, ForbiddenError, GoneError):
+    except (NotFoundError, BlockedUrlError, ForbiddenError, GoneError):
         return _error_page(
             request, "400", "Invalid short code or URL not password-protected", 400
         )

@@ -12,7 +12,7 @@ class HttpClient:
     """
 
     def __init__(self, timeout: float = 5.0) -> None:
-        self._client = httpx.AsyncClient(timeout=timeout)
+        self._client = httpx.AsyncClient(timeout=timeout, follow_redirects=True)
 
     async def post(self, url: str, **kwargs: Any) -> httpx.Response:
         return await self._client.post(url, **kwargs)

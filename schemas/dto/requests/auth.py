@@ -13,7 +13,7 @@ DeviceTokenRequest            — POST /auth/device/token
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class LoginRequest(BaseModel):
@@ -21,10 +21,14 @@ class LoginRequest(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    email: str = Field(
+    email: EmailStr = Field(
         description="Account email address", examples=["user@example.com"]
     )
-    password: str = Field(description="Account password", examples=["MySecurePass123!"])
+    password: str = Field(
+        max_length=255,
+        description="Account password",
+        examples=["MySecurePass123!"],
+    )
 
 
 class RegisterRequest(BaseModel):
@@ -32,16 +36,19 @@ class RegisterRequest(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    email: str = Field(
+    email: EmailStr = Field(
         description="Email address for the new account",
         examples=["newuser@example.com"],
     )
     password: str = Field(
+        max_length=128,
         description="Password (min 8 chars, must contain letter + number + special char)",
         examples=["MySecurePass123!"],
     )
     user_name: str | None = Field(
         default=None,
+        min_length=1,
+        max_length=255,
         description="Display name (optional)",
         examples=["Jane Doe"],
     )
@@ -56,6 +63,7 @@ class SetPasswordRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     password: str = Field(
+        max_length=128,
         description="New password (min 8 chars, must contain letter + number + special char)",
         examples=["MySecurePass123!"],
     )
@@ -70,6 +78,7 @@ class VerifyEmailRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     code: str = Field(
+        pattern=r"^[0-9]{6}$",
         description="6-digit OTP from verification email",
         examples=["123456"],
     )
@@ -80,7 +89,7 @@ class RequestPasswordResetRequest(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    email: str = Field(
+    email: EmailStr = Field(
         description="Email address of the account to reset",
         examples=["user@example.com"],
     )
@@ -91,15 +100,17 @@ class ResetPasswordRequest(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    email: str = Field(
+    email: EmailStr = Field(
         description="Email address of the account",
         examples=["user@example.com"],
     )
     code: str = Field(
+        pattern=r"^[0-9]{6}$",
         description="6-digit OTP from password reset email",
         examples=["123456"],
     )
     password: str = Field(
+        max_length=128,
         description="New password (min 8 chars, must contain letter + number + special char)",
         examples=["NewSecurePass456!"],
     )

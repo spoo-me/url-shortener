@@ -6,17 +6,22 @@ CreateApiKeyRequest — POST /api/v1/keys
 
 from __future__ import annotations
 
+from enum import Enum
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-ALLOWED_SCOPES = frozenset(
-    {
-        "shorten:create",
-        "urls:manage",
-        "urls:read",
-        "stats:read",
-        "admin:all",
-    }
-)
+
+class ApiKeyScope(str, Enum):
+    """Permission scopes for API keys."""
+
+    SHORTEN_CREATE = "shorten:create"
+    URLS_MANAGE = "urls:manage"
+    URLS_READ = "urls:read"
+    STATS_READ = "stats:read"
+    ADMIN_ALL = "admin:all"
+
+
+ALLOWED_SCOPES = frozenset(ApiKeyScope)
 
 
 class CreateApiKeyRequest(BaseModel):
@@ -25,11 +30,14 @@ class CreateApiKeyRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     name: str = Field(
+        min_length=1,
+        max_length=255,
         description="Human-readable key name",
         examples=["My Production Key"],
     )
     description: str | None = Field(
         default=None,
+        max_length=1000,
         description="Optional description of what this key is used for",
         examples=["Used by the mobile app for URL shortening"],
     )

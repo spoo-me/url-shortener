@@ -64,7 +64,7 @@ class TestManagement:
                 "/api/v1/urls/not-an-objectid", json={"status": "INACTIVE"}
             )
 
-        assert resp.status_code == 400
+        assert resp.status_code == 422
 
     def test_update_status_only_filters_other_fields(self):
         """PATCH .../status pre-filters: only status is passed to the service."""

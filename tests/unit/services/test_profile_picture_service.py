@@ -99,8 +99,8 @@ async def test_get_available_pictures_returns_provider_pictures():
     svc, _ = _make_service(user)
     pics = await svc.get_available_pictures(user.id)
     assert len(pics) == 2
-    assert pics[0]["source"] == "google"
-    assert pics[1]["source"] == "github"
+    assert pics[0].source == "google"
+    assert pics[1].source == "github"
 
 
 @pytest.mark.asyncio
@@ -109,7 +109,7 @@ async def test_get_available_pictures_marks_current():
     user = _make_user_doc(pfp_url="https://google.com/pic.jpg", providers=[p])
     svc, _ = _make_service(user)
     pics = await svc.get_available_pictures(user.id)
-    assert pics[0]["is_current"] is True
+    assert pics[0].is_current is True
 
 
 @pytest.mark.asyncio
