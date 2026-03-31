@@ -19,8 +19,16 @@ from slowapi.errors import RateLimitExceeded
 
 os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
 
+from bson import ObjectId
+
 from config import AppSettings
-from dependencies import get_db, get_redis, get_settings, get_url_service
+from dependencies import (
+    get_current_user,
+    get_db,
+    get_redis,
+    get_settings,
+    get_url_service,
+)
 from errors import NotFoundError
 from infrastructure.cache.url_cache import UrlCacheData
 from middleware.error_handler import register_error_handlers
@@ -108,6 +116,17 @@ def test_index_renders_html():
         resp = client.get("/")
     assert resp.status_code == 200
     assert "text/html" in resp.headers["content-type"]
+
+
+def test_index_redirects_authenticated_user_to_dashboard():
+    from dependencies.auth import CurrentUser
+
+    user = CurrentUser(user_id=ObjectId(), email_verified=True)
+    app = _build_test_app({get_current_user: lambda: user})
+    with TestClient(app, follow_redirects=False) as client:
+        resp = client.get("/")
+    assert resp.status_code == 302
+    assert resp.headers["location"] == "/dashboard"
 
 
 # ── POST / (legacy shorten) tests ────────────────────────────────────────────

@@ -66,7 +66,7 @@ METRIC_PIPELINE_V1 = [
 
 @router.get("/")
 @limiter.exempt
-async def index(request: Request, user: OptionalUser = None) -> Response:
+async def index(request: Request, user: OptionalUser) -> Response:
     """Render the index page. Redirect to dashboard if already logged in."""
     if user is not None:
         return RedirectResponse("/dashboard", status_code=302)
