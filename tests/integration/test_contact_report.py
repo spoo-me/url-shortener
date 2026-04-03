@@ -78,7 +78,12 @@ def _build_test_app(
     contact_svc: MagicMock | None = None,
     url_svc: MagicMock | None = None,
 ) -> FastAPI:
-    settings = AppSettings()
+    settings = AppSettings(
+        contact_webhook="https://test.webhook/contact",
+        url_report_webhook="https://test.webhook/report",
+        hcaptcha_sitekey="test-sitekey",
+        hcaptcha_secret="test-secret",
+    )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
