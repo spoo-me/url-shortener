@@ -122,5 +122,7 @@ class DeviceTokenRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     code: str = Field(
+        min_length=1,
+        max_length=128,
         description="One-time auth code from the device callback page",
     )

@@ -884,47 +884,27 @@ class TestExtensionAuth:
                 "attempts": 0,
             }
         )
-        svc._token_repo.find_by_hash_and_type.return_value = token_doc
-        svc._token_repo.mark_as_used.return_value = True
+        svc._token_repo.consume_by_hash.return_value = token_doc
         svc._user_repo.find_by_id.return_value = make_user_doc(email_verified=True)
 
         _user, access, refresh = await svc.exchange_device_code(raw_code)
         assert isinstance(access, str)
         assert isinstance(refresh, str)
-        svc._token_repo.mark_as_used.assert_awaited_once()
+        svc._token_repo.consume_by_hash.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_exchange_device_code_invalid(self):
         svc = make_auth_service()
-        svc._token_repo.find_by_hash_and_type.return_value = None
+        svc._token_repo.consume_by_hash.return_value = None
 
         with pytest.raises(AuthenticationError, match="invalid or expired"):
             await svc.exchange_device_code("bad-code")
 
     @pytest.mark.asyncio
     async def test_exchange_device_code_expired(self):
-        from datetime import timedelta
-
-        from schemas.models.token import TOKEN_TYPE_DEVICE_AUTH, VerificationTokenDoc
-        from shared.crypto import hash_token
-
+        """Expired codes are filtered out by consume_by_hash (expires_at in query)."""
         svc = make_auth_service()
-        raw_code = "expired-code"
-        past = datetime(2020, 1, 1, tzinfo=timezone.utc)
-        token_doc = VerificationTokenDoc.from_mongo(
-            {
-                "_id": ObjectId(),
-                "user_id": USER_OID,
-                "email": "test@example.com",
-                "token_hash": hash_token(raw_code),
-                "token_type": TOKEN_TYPE_DEVICE_AUTH,
-                "expires_at": past,
-                "created_at": past - timedelta(minutes=5),
-                "used_at": None,
-                "attempts": 0,
-            }
-        )
-        svc._token_repo.find_by_hash_and_type.return_value = token_doc
+        svc._token_repo.consume_by_hash.return_value = None
 
-        with pytest.raises(AuthenticationError, match="expired"):
-            await svc.exchange_device_code(raw_code)
+        with pytest.raises(AuthenticationError, match="invalid or expired"):
+            await svc.exchange_device_code("expired-code")

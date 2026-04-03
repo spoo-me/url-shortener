@@ -59,6 +59,34 @@ class TokenRepository:
             )
             raise
 
+    async def consume_by_hash(
+        self, token_hash: str, token_type: str
+    ) -> VerificationTokenDoc | None:
+        """Atomically find an unused, non-expired token and mark it as used.
+
+        Returns the pre-update document, or None if no matching token exists.
+        """
+        now = datetime.now(timezone.utc)
+        try:
+            doc = await self._col.find_one_and_update(
+                {
+                    "token_hash": token_hash,
+                    "token_type": token_type,
+                    "used_at": None,
+                    "expires_at": {"$gt": now},
+                },
+                {"$set": {"used_at": now}},
+            )
+            return VerificationTokenDoc.from_mongo(doc)
+        except PyMongoError as exc:
+            log.error(
+                "token_repo_consume_by_hash_failed",
+                token_type=token_type,
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
+            raise
+
     async def mark_as_used(self, token_id: ObjectId) -> bool:
         """
         Mark a token as consumed by setting ``used_at`` to now.

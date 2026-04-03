@@ -627,22 +627,11 @@ class AuthService:
             AuthenticationError: Code invalid, expired, or already used.
         """
         token_hash = hash_token(code)
-        token_doc = await self._token_repo.find_by_hash_and_type(
+        token_doc = await self._token_repo.consume_by_hash(
             token_hash, TOKEN_TYPE_DEVICE_AUTH
         )
         if not token_doc:
             raise AuthenticationError("invalid or expired device auth code")
-
-        expires_at = token_doc.expires_at
-        if not expires_at.tzinfo:
-            expires_at = expires_at.replace(tzinfo=timezone.utc)
-
-        if expires_at <= datetime.now(timezone.utc):
-            raise AuthenticationError("device auth code has expired")
-
-        marked = await self._token_repo.mark_as_used(token_doc.id)
-        if not marked:
-            raise AppError("failed to consume device auth code")
 
         user = await self._user_repo.find_by_id(token_doc.user_id)
         if not user or user.status != UserStatus.ACTIVE:

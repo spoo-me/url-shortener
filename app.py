@@ -124,6 +124,14 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
 
         await ensure_indexes(app.state.db)
 
+        # Warn if session secret is missing when auth is enabled
+        if settings.jwt and not settings.secret_key:
+            log.warning(
+                "secret_key_empty",
+                detail="SECRET_KEY is empty — session cookies are unsigned. "
+                "Set a strong SECRET_KEY when auth/OAuth is enabled.",
+            )
+
         # Warn if CORS private origins not configured in production
         if settings.is_production and not settings.cors_private_origins:
             log.warning(
