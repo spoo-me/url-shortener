@@ -37,6 +37,7 @@ from shared.validators import (
     validate_alias,
     validate_blocked_url,
     validate_emoji_alias,
+    validate_safe_redirect,
     validate_url,
     validate_url_password,
 )
@@ -69,7 +70,8 @@ METRIC_PIPELINE_V1 = [
 async def index(request: Request, user: OptionalUser) -> Response:
     """Render the index page. Redirect to dashboard if already logged in."""
     if user is not None:
-        return RedirectResponse("/dashboard", status_code=302)
+        next_url = validate_safe_redirect(request.query_params.get("next", ""))
+        return RedirectResponse(next_url, status_code=302)
     return templates.TemplateResponse(
         request, "index.html", {"host_url": str(request.base_url)}
     )

@@ -15,29 +15,39 @@
             background: #0a0a0a;
             color: #e5e5e5;
         }
-        .container {
-            text-align: center;
-            padding: 2rem;
-        }
+        .container { text-align: center; padding: 2rem; }
         .spinner {
-            width: 32px;
-            height: 32px;
-            border: 3px solid #333;
-            border-top-color: #fff;
+            width: 32px; height: 32px;
+            border: 3px solid #333; border-top-color: #fff;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin: 0 auto 1rem;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         p { color: #999; font-size: 0.9rem; }
+        a { color: #999; text-decoration: underline; }
+        #fallback { display: none; margin-top: 1rem; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div id="spoo-ext-auth" data-code="{{ code }}"></div>
-        <div class="spinner"></div>
-        <p>Signing you in...</p>
-        <p>You can close this tab once your app updates.</p>
+        <div id="spoo-ext-auth" data-code="{{ code }}" data-state="{{ state }}"></div>
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>Signing you in...</p>
+            <p>You can close this tab once your app updates.</p>
+        </div>
+        <div id="fallback">
+            <p>This tab didn't close automatically.</p>
+            <p>If your app is signed in, you can safely close this tab.</p>
+            <p>If not, <a href="/auth/device/login">try again</a>.</p>
+        </div>
     </div>
+    <script>
+        setTimeout(function() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('fallback').style.display = 'block';
+        }, 5000);
+    </script>
 </body>
 </html>

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Sequence
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse
 
 import emoji
 import regex
@@ -176,3 +176,17 @@ def validate_blocked_url(url: str, patterns: Sequence[str]) -> bool:
         except TimeoutError:
             pass  # Treat timed-out patterns as non-matching (fail open)
     return True
+
+
+def validate_safe_redirect(url: str, fallback: str = "/dashboard") -> str:
+    """Return *url* if it's a safe relative path, otherwise *fallback*.
+
+    Only allows paths starting with ``/`` that don't redirect to an external
+    host. Blocks ``//evil.com``, ``/\\evil.com``, and scheme-prefixed URLs.
+    """
+    if not url or not url.startswith("/"):
+        return fallback
+    parsed = urlparse(url)
+    if parsed.scheme or parsed.netloc:
+        return fallback
+    return url

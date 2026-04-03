@@ -528,19 +528,24 @@
             errorEl.style.display = 'none';
         }
 
+        function _oauthUrl(provider) {
+            const next = new URLSearchParams(window.location.search).get('next');
+            return next ? `/oauth/${provider}?next=${encodeURIComponent(next)}` : `/oauth/${provider}`;
+        }
+
         function loginWithGoogle() {
             closeAuthModal();
-            window.location.href = '/oauth/google';
+            window.location.href = _oauthUrl('google');
         }
 
         function loginWithGitHub() {
             closeAuthModal();
-            window.location.href = '/oauth/github';
+            window.location.href = _oauthUrl('github');
         }
 
         function loginWithDiscord() {
             closeAuthModal();
-            window.location.href = '/oauth/discord';
+            window.location.href = _oauthUrl('discord');
         }
 
         // Close on overlay/backdrop click
@@ -554,5 +559,10 @@
         document.addEventListener('keydown', function (ev) {
             if (ev.key === 'Escape') closeAuthModal();
         });
+
+        // Auto-open modal when ?next= is in the URL (device auth flow)
+        if (new URLSearchParams(window.location.search).has('next')) {
+            openAuthModal('login');
+        }
     </script>
 </div>

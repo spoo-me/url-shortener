@@ -113,6 +113,10 @@ class AppSettings(BaseSettings):
     cors_origins: list[str] = ["*"]  # deprecated — kept for backward compat
     cors_private_origins: list[str] = []
 
+    # Device auth flow - allowed redirect URIs for third-party clients
+    # (e.g., mobile apps, desktop apps). Browser extensions don't need this.
+    device_auth_redirect_uris: list[str] = []
+
     # Request body size limit (bytes); 1 MB default
     max_content_length: int = 1_048_576
 

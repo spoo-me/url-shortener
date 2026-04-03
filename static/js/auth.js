@@ -292,7 +292,9 @@ async function submitAuth() {
 
         closeAuthModal();
         const nextUrl = new URLSearchParams(window.location.search).get('next');
-        window.location.href = nextUrl || '/dashboard';
+        // Only allow relative paths to prevent open redirect
+        const safeUrl = (nextUrl && nextUrl.startsWith('/') && !nextUrl.startsWith('//')) ? nextUrl : '/dashboard';
+        window.location.href = safeUrl;
     } catch (e) {
         showAuthError('Something went wrong');
     }

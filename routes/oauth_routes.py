@@ -34,6 +34,7 @@ from schemas.models.user import OAuthAction
 from services.oauth_service import OAuthService
 from shared.ip_utils import get_client_ip
 from shared.logging import get_logger
+from shared.validators import validate_safe_redirect
 
 log = get_logger(__name__)
 
@@ -132,7 +133,8 @@ async def oauth_login(
         raise NotFoundError(f"'{provider}' OAuth not configured")
 
     log.info("oauth_flow_initiated", provider=provider)
-    state = generate_oauth_state(provider, OAuthAction.LOGIN)
+    next_url = request.query_params.get("next")
+    state = generate_oauth_state(provider, OAuthAction.LOGIN, next_url=next_url)
     redirect_uri = get_oauth_redirect_url(provider, request.app.state.settings.oauth)
     return await client.authorize_redirect(request, redirect_uri, state=state)
 
@@ -207,9 +209,10 @@ async def oauth_callback(
         provider, provider_info, action, state_data, client_ip
     )
 
-    # ── Redirect to dashboard with cookies ───────────────────────────────────
+    # ── Redirect with cookies ──────────────────────────────────────────────
+    next_url = validate_safe_redirect(state_data.get("next", ""))
     jwt_cfg = request.app.state.settings.jwt
-    resp = RedirectResponse(_DASHBOARD_URL, status_code=302)
+    resp = RedirectResponse(next_url, status_code=302)
     set_auth_cookies(resp, access_token, refresh_token, jwt_cfg)
     return resp
 

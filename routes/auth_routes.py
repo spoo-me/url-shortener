@@ -63,6 +63,13 @@ _TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templa
 templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 
 
+def _validate_redirect_uri(uri: str, allowed: list[str]) -> str | None:
+    """Return the URI if it's in the allowlist, None otherwise."""
+    if not uri or not allowed:
+        return None
+    return uri if uri in allowed else None
+
+
 # ── Redirect shortcuts ────────────────────────────────────────────────────────
 
 
@@ -457,18 +464,40 @@ async def device_login(
     request: Request,
     user: OptionalUser,
     auth_service: AuthService = Depends(get_auth_service),
+    redirect_uri: str = "",
+    state: str = "",
 ) -> RedirectResponse:
     """Initiate the device auth flow.
 
     If the user already has a valid session, generates an auth code and
-    redirects to the callback page. Otherwise, redirects to the login page.
+    redirects to the callback page (or a registered redirect_uri).
+    Otherwise, redirects to the login page.
     Used by browser extensions, mobile apps, and other third-party clients.
+
+    The ``state`` parameter is passed through for CSRF protection — the
+    client generates it, the server carries it, the client verifies it.
     """
     if user:
         profile = await auth_service.get_user_profile(str(user.user_id))
         code = await auth_service.create_device_auth_code(profile.id, profile.email)
-        return RedirectResponse(f"/auth/device/callback?code={code}", status_code=302)
-    return RedirectResponse("/?next=/auth/device/login", status_code=302)
+        allowed = request.app.state.settings.device_auth_redirect_uris
+        validated_uri = _validate_redirect_uri(redirect_uri, allowed)
+        if validated_uri:
+            separator = "&" if "?" in validated_uri else "?"
+            return RedirectResponse(
+                f"{validated_uri}{separator}code={code}&state={state}",
+                status_code=302,
+            )
+        return RedirectResponse(
+            f"/auth/device/callback?code={code}&state={state}", status_code=302
+        )
+
+    # Preserve params through the login flow
+    params = "state=" + state if state else ""
+    if redirect_uri:
+        params += ("&" if params else "") + f"redirect_uri={redirect_uri}"
+    next_url = "/auth/device/login" + (f"?{params}" if params else "")
+    return RedirectResponse(f"/?next={next_url}", status_code=302)
 
 
 @router.get("/auth/device/callback", include_in_schema=False)
@@ -476,14 +505,17 @@ async def device_login(
 async def device_callback(
     request: Request,
     code: str = "",
+    state: str = "",
 ) -> Response:
     """Render the device auth callback page.
 
-    The client reads the auth code from the data attribute on the page.
+    The client reads the auth code and state from data attributes on the page.
     For browser extensions, the content script handles this automatically.
     """
+    if not code:
+        return RedirectResponse("/", status_code=302)
     return templates.TemplateResponse(
-        "device_callback.html", {"request": request, "code": code}
+        request, "device_callback.html", {"code": code, "state": state}
     )
 
 
