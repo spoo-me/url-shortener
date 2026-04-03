@@ -14,7 +14,6 @@ from __future__ import annotations
 import csv
 import io
 import json
-import os
 import zipfile
 from datetime import datetime, timezone
 from urllib.parse import unquote
@@ -26,7 +25,6 @@ from fastapi.responses import (
     RedirectResponse,
     Response,
 )
-from fastapi.templating import Jinja2Templates
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font
 
@@ -44,16 +42,12 @@ from shared.legacy_helpers import (
     top_four,
 )
 from shared.logging import get_logger
+from shared.templates import templates
 from shared.validators import validate_emoji_alias
 
 log = get_logger(__name__)
 
 router = APIRouter(include_in_schema=False)
-
-_TEMPLATE_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "templates"
-)
-templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 
 
 # ── Stats entry form ──────────────────────────────────────────────────────────

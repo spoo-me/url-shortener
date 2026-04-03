@@ -13,11 +13,8 @@ POST /dashboard/profile-pictures  → set profile picture (JSON)
 
 from __future__ import annotations
 
-import os
-
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 from dependencies import (
@@ -30,13 +27,11 @@ from errors import NotFoundError
 from middleware.rate_limiter import Limits, limiter
 from services.profile_picture_service import AvailablePicture, ProfilePictureService
 from shared.logging import get_logger
+from shared.templates import templates
 
 log = get_logger(__name__)
 
 router = APIRouter(prefix="/dashboard", include_in_schema=False)
-
-_TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
-templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────

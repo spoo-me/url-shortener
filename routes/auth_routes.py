@@ -19,11 +19,8 @@ POST /auth/reset-password
 
 from __future__ import annotations
 
-import os
-
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 
 from dependencies import AuthUser, get_auth_service
 from errors import AuthenticationError
@@ -52,13 +49,11 @@ from schemas.dto.responses.common import MessageResponse
 from services.auth_service import OTP_EXPIRY_SECONDS, AuthService
 from shared.ip_utils import get_client_ip
 from shared.logging import get_logger
+from shared.templates import templates
 
 log = get_logger(__name__)
 
 router = APIRouter(tags=["Authentication"])
-
-_TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
-templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 
 
 # ── Redirect shortcuts ────────────────────────────────────────────────────────

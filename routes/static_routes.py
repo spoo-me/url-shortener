@@ -12,7 +12,6 @@ import os
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import FileResponse, RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
 
 from dependencies import get_contact_service, get_url_service
 from errors import AppError, ForbiddenError, ValidationError
@@ -21,6 +20,7 @@ from services.contact_service import ContactService
 from services.url_service import UrlService
 from shared.ip_utils import get_client_ip
 from shared.logging import get_logger
+from shared.templates import templates
 
 log = get_logger(__name__)
 
@@ -29,8 +29,6 @@ router = APIRouter(include_in_schema=False)
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 _MISC_DIR = os.path.join(_PROJECT_ROOT, "misc")
 _STATIC_DIR = os.path.join(_PROJECT_ROOT, "static")
-_TEMPLATE_DIR = os.path.join(_PROJECT_ROOT, "templates")
-templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 
 
 # ── SEO files ────────────────────────────────────────────────────────────────

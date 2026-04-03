@@ -7,13 +7,11 @@ POST /<short_code>/password → password form submission
 
 from __future__ import annotations
 
-import os
 import time
 from urllib.parse import unquote
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
 
 from dependencies import get_click_service, get_url_service
 from errors import (
@@ -30,13 +28,11 @@ from services.url_service import UrlService
 from shared.crypto import verify_password
 from shared.ip_utils import get_client_ip
 from shared.logging import get_logger, should_sample
+from shared.templates import templates
 
 log = get_logger(__name__)
 
 router = APIRouter()
-
-_TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
-templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 
 
 def _error_page(request: Request, code: str, message: str, status: int) -> Response:
