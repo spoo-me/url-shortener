@@ -32,7 +32,11 @@ from middleware.openapi import (
     configure_openapi,
 )
 from middleware.rate_limiter import limiter
-from middleware.security import MaxContentLengthMiddleware, configure_cors
+from middleware.security import (
+    MaxContentLengthMiddleware,
+    SecurityHeadersMiddleware,
+    configure_cors,
+)
 from repositories.indexes import ensure_indexes
 from routes.api_v1 import router as api_v1_router
 from routes.auth_routes import router as auth_router
@@ -120,6 +124,45 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
 
         await ensure_indexes(app.state.db)
 
+        # Warn if session secret is missing when auth is enabled
+        if settings.jwt and not settings.secret_key:
+            log.warning(
+                "secret_key_empty",
+                detail="SECRET_KEY is empty — session cookies are unsigned. "
+                "Set a strong SECRET_KEY when auth/OAuth is enabled.",
+            )
+
+        # Warn if CORS private origins not configured in production
+        if settings.is_production and not settings.cors_private_origins:
+            log.warning(
+                "cors_private_origins_empty",
+                detail="CORS_PRIVATE_ORIGINS is empty — auth/oauth/dashboard routes "
+                "will reject all cross-origin requests. Set to your frontend domain(s).",
+            )
+
+        # Warn if JWT config is weak (auth is optional, so don't crash)
+        if settings.jwt and bool(settings.jwt.jwt_private_key) != bool(
+            settings.jwt.jwt_public_key
+        ):
+            log.warning(
+                "jwt_rsa_half_configured",
+                detail="Only one of JWT_PRIVATE_KEY / JWT_PUBLIC_KEY is set — "
+                "both are required for RS256. Falling back to HS256.",
+            )
+
+        if settings.jwt and not settings.jwt.use_rs256:
+            if not settings.jwt.jwt_secret:
+                log.warning(
+                    "jwt_config_insecure",
+                    detail="RS256 keys not set and JWT_SECRET is empty — tokens can be forged. "
+                    "Set JWT_PRIVATE_KEY + JWT_PUBLIC_KEY or a strong JWT_SECRET.",
+                )
+            elif len(settings.jwt.jwt_secret) < 32:
+                log.warning(
+                    "jwt_secret_weak",
+                    detail="JWT_SECRET is shorter than 32 characters — consider using RS256 keys or a longer secret.",
+                )
+
         yield
 
         # ── Shutdown ─────────────────────────────────────────────────────────
@@ -168,13 +211,16 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
     # ── Middleware (registered in reverse execution order) ────────────────
     # 1. Session — outermost, needed by Authlib OAuth for state storage
     app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
-    # 2. CORS — must wrap everything
+    # 2. Security headers — must be outer so HSTS/CSP/nosniff apply to
+    #    all responses including CORS preflights (204) and body-limit (413)
+    app.add_middleware(SecurityHeadersMiddleware, hsts_enabled=settings.is_production)
+    # 3. CORS
     configure_cors(app, settings)
-    # 3. Body size limit
+    # 4. Body size limit
     app.add_middleware(
         MaxContentLengthMiddleware, max_content_length=settings.max_content_length
     )
-    # 4. Request logging — innermost, logs all requests with request_id
+    # 5. Request logging — innermost, logs all requests with request_id
     app.add_middleware(RequestLoggingMiddleware)
 
     # ── Error handlers + rate limiter ────────────────────────────────────

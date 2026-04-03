@@ -1,28 +1,129 @@
 """
-Security middleware — CORS configuration and request body size limit.
+Security middleware — CORS configuration, security headers, and request body size limit.
 """
 
 from __future__ import annotations
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import PlainTextResponse, Response
 
 from config import AppSettings
 
+# ── Path-based CORS classification ──────────────────────────────────────────
+
+_PRIVATE_PREFIXES = ("/auth", "/oauth", "/dashboard")
+_PUBLIC_PREFIXES = ("/api/v1", "/auth/device", "/stats", "/export", "/metric")
+
+_ALLOWED_METHODS = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+_ALLOWED_HEADERS = "Authorization, Content-Type, Accept, X-Request-ID"
+
+
+def _classify_path(path: str) -> str:
+    """Return 'public', 'private', or 'none' based on the request path."""
+    for prefix in _PUBLIC_PREFIXES:
+        if path == prefix or path.startswith(prefix + "/"):
+            return "public"
+    for prefix in _PRIVATE_PREFIXES:
+        if path == prefix or path.startswith(prefix + "/"):
+            return "private"
+    # Legacy root shortener endpoint (POST /) is public API
+    if path == "/":
+        return "public"
+    return "none"
+
+
+class SplitCORSMiddleware(BaseHTTPMiddleware):
+    """Apply different CORS policies based on the request path.
+
+    - Public routes (``/api/v1/*``, legacy API): ``Access-Control-Allow-Origin: *``,
+      no credentials.
+    - Private routes (``/auth/*``, ``/oauth/*``, ``/dashboard/*``): origin checked
+      against *private_origins* allowlist, credentials allowed.
+    - All other routes: no CORS headers.
+    """
+
+    def __init__(self, app, *, private_origins: list[str]) -> None:
+        super().__init__(app)
+        self._private_origins: set[str] = {o.rstrip("/") for o in private_origins}
+
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
+        origin = request.headers.get("origin")
+        path = request.url.path
+        classification = _classify_path(path)
+
+        # Handle preflight — only intercept routes that need CORS
+        if request.method == "OPTIONS" and origin and classification != "none":
+            return self._preflight(origin, classification)
+
+        response = await call_next(request)
+
+        if origin and classification != "none":
+            self._set_cors_headers(response, origin, classification)
+
+        return response
+
+    def _preflight(self, origin: str, classification: str) -> Response:
+        """Return a 204 preflight response with appropriate CORS headers."""
+        response = PlainTextResponse("", status_code=204)
+        if classification != "none":
+            self._set_cors_headers(response, origin, classification)
+            response.headers["Access-Control-Allow-Methods"] = _ALLOWED_METHODS
+            response.headers["Access-Control-Allow-Headers"] = _ALLOWED_HEADERS
+            response.headers["Access-Control-Max-Age"] = "86400"
+        return response
+
+    def _set_cors_headers(
+        self, response: Response, origin: str, classification: str
+    ) -> None:
+        """Set CORS headers based on route classification."""
+        if classification == "public":
+            response.headers["Access-Control-Allow-Origin"] = "*"
+        elif classification == "private" and origin in self._private_origins:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Vary"] = "Origin"
+
 
 def configure_cors(app: FastAPI, settings: AppSettings) -> None:
-    """Add CORS middleware from settings. Defaults to allow-all with credentials."""
+    """Add split CORS middleware — different policies for public vs private routes."""
     app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.cors_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        SplitCORSMiddleware,
+        private_origins=settings.cors_private_origins,
     )
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Set standard security headers on all responses."""
+
+    def __init__(self, app, *, hsts_enabled: bool = True) -> None:
+        super().__init__(app)
+        self.hsts_enabled = hsts_enabled
+
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
+        response = await call_next(request)
+        if self.hsts_enabled:
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains"
+            )
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = (
+            "camera=(), microphone=(), geolocation=()"
+        )
+        response.headers["Content-Security-Policy-Report-Only"] = (
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: https:; font-src 'self'; connect-src 'self'; "
+            "frame-ancestors 'none'"
+        )
+        return response
 
 
 class MaxContentLengthMiddleware(BaseHTTPMiddleware):

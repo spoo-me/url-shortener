@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from .conftest import TOKEN_OID, USER_OID, _token_doc, make_collection
+from .conftest import TOKEN_OID, USER_OID, make_collection
 
 
 class TestTokenRepository:
@@ -22,27 +22,6 @@ class TestTokenRepository:
         col.insert_one = AsyncMock(return_value=MagicMock(inserted_id=TOKEN_OID))
         oid = await self._repo(col).create({"token_hash": "abc"})
         assert oid == TOKEN_OID
-
-    @pytest.mark.asyncio
-    async def test_find_by_hash_queries_unused_token(self):
-        col = make_collection()
-        col.find_one = AsyncMock(return_value=_token_doc())
-        result = await self._repo(col).find_by_hash("cafebabe" * 8, "email_verify")
-        col.find_one.assert_awaited_once_with(
-            {
-                "token_hash": "cafebabe" * 8,
-                "token_type": "email_verify",
-                "used_at": None,
-            }
-        )
-        assert result is not None
-        assert result.token_type == "email_verify"
-
-    @pytest.mark.asyncio
-    async def test_find_by_hash_returns_none(self):
-        col = make_collection()
-        col.find_one = AsyncMock(return_value=None)
-        assert await self._repo(col).find_by_hash("nope", "email_verify") is None
 
     @pytest.mark.asyncio
     async def test_mark_as_used_sets_used_at(self):

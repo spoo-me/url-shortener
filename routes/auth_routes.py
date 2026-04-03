@@ -22,12 +22,13 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from dependencies import AuthUser, get_auth_service
+from dependencies import AuthUser, OptionalUser, get_auth_service
 from errors import AuthenticationError
 from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES, PUBLIC_SECURITY
 from middleware.rate_limiter import Limits, limiter
 from routes.cookie_helpers import clear_auth_cookies, set_auth_cookies
 from schemas.dto.requests.auth import (
+    DeviceTokenRequest,
     LoginRequest,
     RegisterRequest,
     RequestPasswordResetRequest,
@@ -36,6 +37,7 @@ from schemas.dto.requests.auth import (
     VerifyEmailRequest,
 )
 from schemas.dto.responses.auth import (
+    DeviceTokenResponse,
     LoginResponse,
     LogoutResponse,
     MeResponse,
@@ -54,6 +56,13 @@ from shared.templates import templates
 log = get_logger(__name__)
 
 router = APIRouter(tags=["Authentication"])
+
+
+def _validate_redirect_uri(uri: str, allowed: list[str]) -> str | None:
+    """Return the URI if it's in the allowlist, None otherwise."""
+    if not uri or not allowed:
+        return None
+    return uri if uri in allowed else None
 
 
 # ── Redirect shortcuts ────────────────────────────────────────────────────────
@@ -439,3 +448,99 @@ async def reset_password(
         body.email.strip().lower(), body.code.strip(), body.password
     )
     return MessageResponse(success=True, message="password reset successfully")
+
+
+# ── Device auth flow (extensions, apps, CLIs) ────────────────────────────────
+
+
+@router.get("/auth/device/login", include_in_schema=False)
+@limiter.limit(Limits.DEVICE_AUTH)
+async def device_login(
+    request: Request,
+    user: OptionalUser,
+    auth_service: AuthService = Depends(get_auth_service),
+    redirect_uri: str = "",
+    state: str = "",
+) -> RedirectResponse:
+    """Initiate the device auth flow.
+
+    If the user already has a valid session, generates an auth code and
+    redirects to the callback page (or a registered redirect_uri).
+    Otherwise, redirects to the login page.
+    Used by browser extensions, mobile apps, and other third-party clients.
+
+    The ``state`` parameter is passed through for CSRF protection — the
+    client generates it, the server carries it, the client verifies it.
+    """
+    if user:
+        profile = await auth_service.get_user_profile(str(user.user_id))
+        code = await auth_service.create_device_auth_code(profile.id, profile.email)
+        allowed = request.app.state.settings.device_auth_redirect_uris
+        validated_uri = _validate_redirect_uri(redirect_uri, allowed)
+        if validated_uri:
+            separator = "&" if "?" in validated_uri else "?"
+            return RedirectResponse(
+                f"{validated_uri}{separator}code={code}&state={state}",
+                status_code=302,
+            )
+        return RedirectResponse(
+            f"/auth/device/callback?code={code}&state={state}", status_code=302
+        )
+
+    # Preserve params through the login flow
+    params = "state=" + state if state else ""
+    if redirect_uri:
+        params += ("&" if params else "") + f"redirect_uri={redirect_uri}"
+    next_url = "/auth/device/login" + (f"?{params}" if params else "")
+    return RedirectResponse(f"/?next={next_url}", status_code=302)
+
+
+@router.get("/auth/device/callback", include_in_schema=False)
+@limiter.limit(Limits.DEVICE_AUTH)
+async def device_callback(
+    request: Request,
+    code: str = "",
+    state: str = "",
+) -> Response:
+    """Render the device auth callback page.
+
+    The client reads the auth code and state from data attributes on the page.
+    For browser extensions, the content script handles this automatically.
+    """
+    if not code:
+        return RedirectResponse("/", status_code=302)
+    return templates.TemplateResponse(
+        request, "device_callback.html", {"code": code, "state": state}
+    )
+
+
+@router.post(
+    "/auth/device/token",
+    responses=ERROR_RESPONSES,
+    openapi_extra=PUBLIC_SECURITY,
+    operation_id="exchangeDeviceCode",
+    summary="Exchange Device Auth Code",
+)
+@limiter.limit(Limits.DEVICE_TOKEN)
+async def device_token(
+    request: Request,
+    body: DeviceTokenRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> DeviceTokenResponse:
+    """Exchange a one-time device auth code for JWT tokens.
+
+    The code is obtained from the callback page after the user authenticates
+    on spoo.me. Returns access and refresh tokens for the client.
+
+    **Authentication**: Not required (public endpoint)
+
+    **Rate Limits**: 10/min
+    """
+    user, access_token, refresh_token = await auth_service.exchange_device_code(
+        body.code.strip()
+    )
+    return DeviceTokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        user=UserProfileResponse.from_user(user),
+    )

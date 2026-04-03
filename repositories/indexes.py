@@ -82,5 +82,9 @@ async def ensure_indexes(db: AsyncDatabase) -> None:
     await tokens_col.create_index([("token_hash", 1)])
     await tokens_col.create_index([("token_type", 1)])
     await tokens_col.create_index([("expires_at", 1)], expireAfterSeconds=0)
+    await tokens_col.create_index(
+        [("user_id", 1), ("token_type", 1), ("used_at", 1), ("created_at", -1)],
+        name="ix_latest_unused_by_user",
+    )
 
     log.info("mongodb_indexes_ensured")

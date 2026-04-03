@@ -17,7 +17,11 @@ from errors import ForbiddenError, NotFoundError
 from middleware.error_handler import register_error_handlers
 from middleware.logging import RequestLoggingMiddleware
 from middleware.rate_limiter import limiter
-from middleware.security import MaxContentLengthMiddleware, configure_cors
+from middleware.security import (
+    MaxContentLengthMiddleware,
+    SecurityHeadersMiddleware,
+    configure_cors,
+)
 
 _STATIC_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static"
@@ -27,6 +31,7 @@ _STATIC_DIR = os.path.join(
 def _build_test_app(
     include_logging=True,
     max_content_length=1_048_576,
+    hsts_enabled=True,
 ) -> FastAPI:
     settings = AppSettings()
 
@@ -43,6 +48,7 @@ def _build_test_app(
     app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None)
     app.state.limiter = limiter
     configure_cors(app, settings)
+    app.add_middleware(SecurityHeadersMiddleware, hsts_enabled=hsts_enabled)
     app.add_middleware(
         MaxContentLengthMiddleware, max_content_length=max_content_length
     )
@@ -152,26 +158,99 @@ def test_accept_json_header_overrides_to_json():
 # ── Security Middleware Tests ────────────────────────────────────────────────
 
 
-def test_cors_headers_on_preflight():
+def test_security_headers_present():
+    app = _build_test_app(include_logging=False)
+    app.include_router(_test_router)
+    with TestClient(app) as c:
+        resp = c.get("/test-ok")
+    assert resp.headers["x-content-type-options"] == "nosniff"
+    assert resp.headers["x-frame-options"] == "DENY"
+    assert resp.headers["referrer-policy"] == "strict-origin-when-cross-origin"
+    assert (
+        resp.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
+    )
+    assert "content-security-policy-report-only" in resp.headers
+    # HSTS enabled by default in test
+    assert (
+        resp.headers["strict-transport-security"]
+        == "max-age=31536000; includeSubDomains"
+    )
+
+
+def test_security_headers_hsts_disabled():
+    app = _build_test_app(include_logging=False, hsts_enabled=False)
+    app.include_router(_test_router)
+    with TestClient(app) as c:
+        resp = c.get("/test-ok")
+    assert "strict-transport-security" not in resp.headers
+    # Other headers still present
+    assert resp.headers["x-content-type-options"] == "nosniff"
+
+
+def test_cors_public_route_allows_any_origin():
+    app = _build_test_app(include_logging=False)
+    app.include_router(_test_router)
+    with TestClient(app) as c:
+        resp = c.get(
+            "/api/v1/test-404",
+            headers={"Origin": "https://evil.com"},
+        )
+    assert resp.headers.get("access-control-allow-origin") == "*"
+    assert "access-control-allow-credentials" not in resp.headers
+
+
+def test_cors_public_route_preflight():
     app = _build_test_app(include_logging=False)
     app.include_router(_test_router)
     with TestClient(app) as c:
         resp = c.options(
-            "/test-ok",
+            "/api/v1/test-404",
             headers={
                 "Origin": "https://example.com",
                 "Access-Control-Request-Method": "GET",
             },
         )
-    assert "access-control-allow-origin" in resp.headers
+    assert resp.status_code == 204
+    assert resp.headers.get("access-control-allow-origin") == "*"
+    assert "access-control-max-age" in resp.headers
 
 
-def test_cors_allow_credentials():
+def test_cors_private_route_allowed_origin():
+    app = _build_test_app(include_logging=False)
+    # Override private origins for this test
+    from middleware.security import SplitCORSMiddleware
+
+    for mw in app.user_middleware:
+        if mw.cls is SplitCORSMiddleware:
+            mw.kwargs["private_origins"] = ["https://spoo.me"]
+    app.include_router(_test_router)
+    with TestClient(app, base_url="http://testserver") as c:
+        resp = c.get(
+            "/auth/test-401",
+            headers={"Origin": "https://spoo.me"},
+        )
+    assert resp.headers.get("access-control-allow-origin") == "https://spoo.me"
+    assert resp.headers.get("access-control-allow-credentials") == "true"
+
+
+def test_cors_private_route_disallowed_origin():
+    app = _build_test_app(include_logging=False)
+    app.include_router(_test_router)
+    with TestClient(app) as c:
+        resp = c.get(
+            "/auth/test-401",
+            headers={"Origin": "https://evil.com"},
+        )
+    # No CORS headers — browser will block the response
+    assert "access-control-allow-origin" not in resp.headers
+
+
+def test_cors_unclassified_route_no_cors():
     app = _build_test_app(include_logging=False)
     app.include_router(_test_router)
     with TestClient(app) as c:
         resp = c.get("/test-ok", headers={"Origin": "https://example.com"})
-    assert resp.headers.get("access-control-allow-credentials") == "true"
+    assert "access-control-allow-origin" not in resp.headers
 
 
 def test_body_size_limit_rejects_large_payload():

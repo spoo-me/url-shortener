@@ -24,11 +24,13 @@ class TokenType(str, Enum):
 
     EMAIL_VERIFY = "email_verify"
     PASSWORD_RESET = "password_reset"
+    DEVICE_AUTH = "extension_auth"
 
 
 # Backward-compat aliases for existing imports
 TOKEN_TYPE_EMAIL_VERIFY = TokenType.EMAIL_VERIFY
 TOKEN_TYPE_PASSWORD_RESET = TokenType.PASSWORD_RESET
+TOKEN_TYPE_DEVICE_AUTH = TokenType.DEVICE_AUTH
 
 
 class VerificationTokenDoc(MongoBaseModel):

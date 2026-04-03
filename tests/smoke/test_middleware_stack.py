@@ -16,29 +16,26 @@ def test_x_request_id_header_present(smoke_client: TestClient) -> None:
     assert resp.headers["x-request-id"].startswith("req_")
 
 
-def test_cors_headers_on_options(smoke_client: TestClient) -> None:
-    """An OPTIONS request should receive CORS headers."""
+def test_cors_public_route_allows_any_origin(smoke_client: TestClient) -> None:
+    """Public API routes should allow any origin without credentials."""
     resp = smoke_client.options(
-        "/health",
-        headers={
-            "Origin": "https://example.com",
-            "Access-Control-Request-Method": "GET",
-        },
-    )
-    assert "access-control-allow-origin" in resp.headers
-
-
-def test_cors_allows_all_origins(smoke_client: TestClient) -> None:
-    """Default CORS config should allow any origin."""
-    resp = smoke_client.options(
-        "/health",
+        "/api/v1/shorten",
         headers={
             "Origin": "https://arbitrary-domain.test",
-            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Method": "POST",
         },
     )
-    allow_origin = resp.headers.get("access-control-allow-origin", "")
-    assert allow_origin in ("*", "https://arbitrary-domain.test")
+    assert resp.headers.get("access-control-allow-origin") == "*"
+    assert "access-control-allow-credentials" not in resp.headers
+
+
+def test_cors_unclassified_route_no_headers(smoke_client: TestClient) -> None:
+    """Routes outside public/private groups should not get CORS headers."""
+    resp = smoke_client.get(
+        "/health",
+        headers={"Origin": "https://example.com"},
+    )
+    assert "access-control-allow-origin" not in resp.headers
 
 
 def test_max_content_length_rejects_large_body(smoke_client: TestClient) -> None:
@@ -84,8 +81,8 @@ def test_middleware_ordering_correct(smoke_app) -> None:
     """Middleware should be stacked in the correct order.
 
     FastAPI registers middleware in reverse order (last added = outermost).
-    Registration order: Session, CORS, MaxContentLength, RequestLogging
-    Execution order (outermost first): Session -> CORS -> MaxContentLength -> RequestLogging
+    Registration order: Session, CORS, SecurityHeaders, MaxContentLength, RequestLogging
+    Execution order (outermost first): Session -> CORS -> SecurityHeaders -> MaxContentLength -> RequestLogging
     """
 
     # Walk the middleware stack from the app

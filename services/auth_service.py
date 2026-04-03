@@ -27,11 +27,15 @@ from errors import (
 from infrastructure.email.protocol import EmailProvider
 from repositories.token_repository import TokenRepository
 from repositories.user_repository import UserRepository
-from schemas.models.token import TOKEN_TYPE_EMAIL_VERIFY, TOKEN_TYPE_PASSWORD_RESET
+from schemas.models.token import (
+    TOKEN_TYPE_DEVICE_AUTH,
+    TOKEN_TYPE_EMAIL_VERIFY,
+    TOKEN_TYPE_PASSWORD_RESET,
+)
 from schemas.models.user import UserDoc, UserPlan, UserStatus
 from services.token_factory import TokenFactory
 from shared.crypto import hash_password, hash_token, verify_password
-from shared.generators import generate_otp_code
+from shared.generators import generate_otp_code, generate_secure_token
 from shared.logging import get_logger
 from shared.validators import validate_account_password
 
@@ -42,6 +46,7 @@ log = get_logger(__name__)
 OTP_EXPIRY_SECONDS = 600  # 10 minutes
 MAX_TOKENS_PER_HOUR = 3
 MAX_VERIFICATION_ATTEMPTS = 5
+DEVICE_AUTH_EXPIRY_SECONDS = 300  # 5 minutes
 
 
 class AuthService:
@@ -152,16 +157,11 @@ class AuthService:
     ) -> None:
         """Verify an OTP code and mark it as used.
 
-        NOTE: Attempts are checked but NOT incremented (preserves existing
-        behavior from utils/verification_utils.py — the increment was never
-        implemented in the original code).
-
         Raises:
             ValidationError: On any verification failure.
             AppError: If marking the token as used fails.
         """
-        otp_hash = hash_token(otp_code)
-        token_doc = await self._token_repo.find_by_hash(otp_hash, token_type)
+        token_doc = await self._token_repo.find_latest_by_user(user_id, token_type)
 
         if not token_doc:
             log.warning(
@@ -171,15 +171,6 @@ class AuthService:
                 token_type=token_type,
             )
             raise ValidationError("Invalid or expired verification code")
-
-        if str(token_doc.user_id) != str(user_id):
-            log.warning(
-                "otp_verification_failed",
-                user_id=str(user_id),
-                reason="user_mismatch",
-                token_type=token_type,
-            )
-            raise ValidationError("Invalid verification code")
 
         expires_at = token_doc.expires_at
         if not expires_at.tzinfo:
@@ -194,16 +185,6 @@ class AuthService:
             )
             raise ValidationError("Verification code has expired")
 
-        if token_doc.used_at is not None:
-            log.warning(
-                "otp_verification_failed",
-                user_id=str(user_id),
-                reason="already_used",
-                token_type=token_type,
-            )
-            raise ValidationError("Verification code has already been used")
-
-        # Check max attempts (but do NOT increment — preserves original behavior)
         if token_doc.attempts >= MAX_VERIFICATION_ATTEMPTS:
             log.warning(
                 "otp_verification_failed",
@@ -214,6 +195,19 @@ class AuthService:
             raise ValidationError(
                 "Too many failed attempts. Please request a new code."
             )
+
+        # Compare hash — increment attempts on mismatch
+        otp_hash = hash_token(otp_code)
+        if token_doc.token_hash != otp_hash:
+            await self._token_repo.increment_attempts(token_doc.id)
+            log.warning(
+                "otp_verification_failed",
+                user_id=str(user_id),
+                reason="wrong_code",
+                token_type=token_type,
+                attempts=token_doc.attempts + 1,
+            )
+            raise ValidationError("Invalid or expired verification code")
 
         marked = await self._token_repo.mark_as_used(token_doc.id)
         if not marked:
@@ -509,8 +503,6 @@ class AuthService:
             AppError:        DB update failure.
         """
         user = await self._user_repo.find_by_email(email)
-        if not user:
-            raise ValidationError("invalid email or code")
 
         is_valid, missing, _ = validate_account_password(new_password)
         if not is_valid:
@@ -519,7 +511,17 @@ class AuthService:
                 details={"missing_requirements": missing},
             )
 
-        await self._verify_otp(user.id, otp_code, TOKEN_TYPE_PASSWORD_RESET)
+        if not user:
+            # Simulate OTP verification timing to prevent user enumeration
+            _dummy_hash = hash_token(otp_code)
+            raise ValidationError("invalid email or code")
+
+        try:
+            await self._verify_otp(user.id, otp_code, TOKEN_TYPE_PASSWORD_RESET)
+        except ValidationError:
+            # Re-raise with generic message to prevent user enumeration
+            # via distinct error messages (_verify_otp already logs the details)
+            raise ValidationError("invalid email or code") from None
 
         new_hash = hash_password(new_password)
         updated = await self._user_repo.update(
@@ -588,3 +590,53 @@ class AuthService:
         if not user:
             raise NotFoundError("user not found")
         return user
+
+    # ── Device auth flow ─────────────────────────────────────────────────────
+
+    async def create_device_auth_code(self, user_id: ObjectId, email: str) -> str:
+        """Generate a one-time auth code for the device auth flow.
+
+        Returns the raw token (caller redirects to callback with it).
+        """
+        await self._token_repo.delete_by_user(user_id, TOKEN_TYPE_DEVICE_AUTH)
+
+        raw_token = generate_secure_token(48)
+        now = datetime.now(timezone.utc)
+        await self._token_repo.create(
+            {
+                "user_id": user_id,
+                "email": email,
+                "token_hash": hash_token(raw_token),
+                "token_type": TOKEN_TYPE_DEVICE_AUTH,
+                "expires_at": now + timedelta(seconds=DEVICE_AUTH_EXPIRY_SECONDS),
+                "created_at": now,
+                "used_at": None,
+                "attempts": 0,
+            }
+        )
+        log.info("device_auth_code_created", user_id=str(user_id))
+        return raw_token
+
+    async def exchange_device_code(self, code: str) -> tuple[UserDoc, str, str]:
+        """Exchange a one-time device auth code for JWT tokens.
+
+        Returns:
+            (user_doc, access_token, refresh_token)
+
+        Raises:
+            AuthenticationError: Code invalid, expired, or already used.
+        """
+        token_hash = hash_token(code)
+        token_doc = await self._token_repo.consume_by_hash(
+            token_hash, TOKEN_TYPE_DEVICE_AUTH
+        )
+        if not token_doc:
+            raise AuthenticationError("invalid or expired device auth code")
+
+        user = await self._user_repo.find_by_id(token_doc.user_id)
+        if not user or user.status != UserStatus.ACTIVE:
+            raise AuthenticationError("user not found or inactive")
+
+        log.info("device_auth_success", user_id=str(user.id))
+        access_token, refresh_token = self._tokens.issue_tokens(user, "ext")
+        return user, access_token, refresh_token

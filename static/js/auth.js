@@ -282,7 +282,6 @@ async function submitAuth() {
         const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-            // Handle password validation errors from backend
             if (data.missing_requirements && data.missing_requirements.length > 0) {
                 showPasswordRequirements(data.missing_requirements);
             } else {
@@ -292,7 +291,10 @@ async function submitAuth() {
         }
 
         closeAuthModal();
-        window.location.href = '/dashboard';
+        const nextUrl = new URLSearchParams(window.location.search).get('next');
+        // Only allow relative paths to prevent open redirect
+        const safeUrl = (nextUrl && nextUrl.startsWith('/') && !nextUrl.startsWith('//')) ? nextUrl : '/dashboard';
+        window.location.href = safeUrl;
     } catch (e) {
         showAuthError('Something went wrong');
     }
