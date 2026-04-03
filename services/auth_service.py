@@ -640,7 +640,7 @@ class AuthService:
             raise AppError("failed to consume device auth code")
 
         user = await self._user_repo.find_by_id(token_doc.user_id)
-        if not user or user.status != "ACTIVE":
+        if not user or user.status != UserStatus.ACTIVE:
             raise AuthenticationError("user not found or inactive")
 
         log.info("device_auth_success", user_id=str(user.id))
