@@ -51,7 +51,12 @@ def _mock_url_service(alias_available=True):
 
 
 def _build_test_app(contact_svc=None, url_svc=None):
-    settings = AppSettings()
+    settings = AppSettings(
+        contact_webhook="https://test.webhook/contact",
+        url_report_webhook="https://test.webhook/report",
+        hcaptcha_sitekey="test-sitekey",
+        hcaptcha_secret="test-secret",
+    )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):

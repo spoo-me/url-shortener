@@ -14,7 +14,6 @@ import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from pymongo.asynchronous.mongo_client import AsyncMongoClient
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -45,6 +44,7 @@ from routes.oauth_routes import router as oauth_router
 from routes.redirect_routes import router as redirect_router
 from routes.static_routes import router as static_router
 from shared.logging import get_logger
+from shared.templates import configure_template_globals, templates
 
 log = get_logger(__name__)
 
@@ -142,17 +142,21 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
 
     configure_openapi(app, app_url=settings.app_url)
 
+    # ── Template globals (tracking IDs available in every template) ─────
+    configure_template_globals(
+        clarity_id=settings.clarity_id,
+        sentry_client_key=settings.sentry.client_key,
+        hcaptcha_sitekey=settings.hcaptcha_sitekey,
+    )
+
     # ── /docs — Scalar in dev, redirect in prod ──────────────────────────
     _is_prod = settings.is_production
-    _templates = Jinja2Templates(
-        directory=os.path.join(os.path.dirname(__file__), "templates")
-    )
 
     @app.get("/docs", include_in_schema=False)
     async def docs(request: Request):
         if _is_prod:
             return RedirectResponse(_DOCS_URL)
-        return _templates.TemplateResponse(
+        return templates.TemplateResponse(
             request,
             "scalar_docs.html",
             {

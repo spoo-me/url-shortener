@@ -7,22 +7,17 @@ Browser/page requests get the error.html template.
 
 from __future__ import annotations
 
-import os
-
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
-from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError as PydanticValidationError
 from slowapi.errors import RateLimitExceeded
 
 from errors import AppError
 from shared.logging import get_logger
+from shared.templates import templates
 
 log = get_logger(__name__)
-
-_TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
-templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 
 
 def _wants_json(request: Request) -> bool:

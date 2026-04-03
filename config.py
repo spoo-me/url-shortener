@@ -10,6 +10,8 @@ FLASK_SECRET_KEY is also accepted as an alias for backward compatibility
 
 from __future__ import annotations
 
+from urllib.parse import urlparse
+
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -97,6 +99,16 @@ class SentrySettings(BaseSettings):
     sentry_traces_sample_rate: float = 0.1
     sentry_profile_sample_rate: float = 0.05
 
+    @property
+    def client_key(self) -> str:
+        """Extract the public key from the DSN for the frontend loader script."""
+        if not self.sentry_dsn:
+            return ""
+        try:
+            return urlparse(self.sentry_dsn).username or ""
+        except Exception:
+            return ""
+
 
 class AppSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
@@ -121,10 +133,14 @@ class AppSettings(BaseSettings):
     # GitHub repository (owner/repo) — used for star count + outbound links
     github_repo: str = "spoo-me/spoo"
 
+    # Analytics & tracking (leave empty to disable)
+    clarity_id: str = ""
+
     # External service URLs
     contact_webhook: str = ""
     url_report_webhook: str = ""
     hcaptcha_secret: str = ""
+    hcaptcha_sitekey: str = ""
 
     # Sub-configs (composed via model_validator below)
     db: DatabaseSettings | None = None

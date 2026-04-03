@@ -27,9 +27,9 @@ class TestHCaptchaProvider:
         http.post = AsyncMock(return_value=resp)
         assert await provider.verify("bad-token") is False
 
-    async def test_returns_false_when_secret_empty(self):
+    async def test_skips_verification_when_secret_empty(self):
         provider, _ = self._make(secret="")
-        assert await provider.verify("any-token") is False
+        assert await provider.verify("any-token") is True
 
     async def test_returns_false_on_http_error(self):
         provider, http = self._make()

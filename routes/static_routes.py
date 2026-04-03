@@ -12,15 +12,16 @@ import os
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import FileResponse, RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
 
-from dependencies import get_contact_service, get_url_service
+from config import AppSettings
+from dependencies import get_contact_service, get_settings, get_url_service
 from errors import AppError, ForbiddenError, ValidationError
 from middleware.rate_limiter import Limits, limiter
 from services.contact_service import ContactService
 from services.url_service import UrlService
 from shared.ip_utils import get_client_ip
 from shared.logging import get_logger
+from shared.templates import templates
 
 log = get_logger(__name__)
 
@@ -29,8 +30,6 @@ router = APIRouter(include_in_schema=False)
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 _MISC_DIR = os.path.join(_PROJECT_ROOT, "misc")
 _STATIC_DIR = os.path.join(_PROJECT_ROOT, "static")
-_TEMPLATE_DIR = os.path.join(_PROJECT_ROOT, "templates")
-templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 
 
 # ── SEO files ────────────────────────────────────────────────────────────────
@@ -142,8 +141,21 @@ async def docs_wildcard(path: str, request: Request) -> Response:
 async def contact(
     request: Request,
     contact_service: ContactService = Depends(get_contact_service),
+    settings: AppSettings = Depends(get_settings),
 ) -> Response:
     host_url = str(request.base_url)
+
+    if not settings.contact_webhook:
+        return templates.TemplateResponse(
+            request,
+            "error.html",
+            {
+                "error_code": "503",
+                "error_message": "CONTACT FORM NOT CONFIGURED",
+                "host_url": host_url,
+            },
+            status_code=503,
+        )
 
     if request.method == "GET":
         return templates.TemplateResponse(
@@ -155,9 +167,9 @@ async def contact(
     form = await request.form()
     email = form.get("email")
     message = form.get("message")
-    captcha_token = form.get("h-captcha-response")
+    captcha_token = form.get("h-captcha-response", "")
 
-    if not captcha_token:
+    if settings.hcaptcha_sitekey and not captcha_token:
         return templates.TemplateResponse(
             request,
             "contact.html",
@@ -209,8 +221,21 @@ async def report(
     request: Request,
     contact_service: ContactService = Depends(get_contact_service),
     url_service: UrlService = Depends(get_url_service),
+    settings: AppSettings = Depends(get_settings),
 ) -> Response:
     host_url = str(request.base_url)
+
+    if not settings.url_report_webhook:
+        return templates.TemplateResponse(
+            request,
+            "error.html",
+            {
+                "error_code": "503",
+                "error_message": "REPORT FORM NOT CONFIGURED",
+                "host_url": host_url,
+            },
+            status_code=503,
+        )
 
     if request.method == "GET":
         return templates.TemplateResponse(
@@ -222,9 +247,9 @@ async def report(
     form = await request.form()
     short_code = form.get("short_code")
     reason = form.get("reason")
-    captcha_token = form.get("h-captcha-response")
+    captcha_token = form.get("h-captcha-response", "")
 
-    if not captcha_token:
+    if settings.hcaptcha_sitekey and not captcha_token:
         return templates.TemplateResponse(
             request,
             "report.html",

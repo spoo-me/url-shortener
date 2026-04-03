@@ -37,7 +37,11 @@
         {% endif %}
         <input type="text" id="email" name="email" placeholder="Email" value="{{ email }}" required>
         <textarea id="message" name="message" placeholder="Message" required>{{ message }}</textarea>
-        <button type="submit" class="h-captcha" data-sitekey="ab2b86e1-0532-4971-87ce-26a0b1ea8712" data-callback="onSubmit"><img alt="hCapcha Logo" src="{{ url_for('static', path='images/hcaptcha.png') }}">Submit</button>
+        {% if hcaptcha_sitekey %}
+        <button type="submit" class="h-captcha" data-sitekey="{{ hcaptcha_sitekey }}" data-callback="onSubmit"><img alt="hCaptcha Logo" src="{{ url_for('static', path='images/hcaptcha.png') }}">Submit</button>
+        {% else %}
+        <button type="submit">Submit</button>
+        {% endif %}
     </form>
     <p id="opts">or connect with us via</p>
     <div class="button-container-upper" style="display: flex; justify-content: center; align-items: center;">
@@ -52,7 +56,9 @@
 {% endblock %}
 
 {% block scripts %}
+    {% if hcaptcha_sitekey %}
     <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+    {% endif %}
     <script>
         function onSubmit(token) {
             if (!validateEmail() || !validateMessage()) { return; }

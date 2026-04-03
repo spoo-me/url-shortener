@@ -12,14 +12,12 @@ GET  /metric        → global metrics (JSON, DualCache)
 
 from __future__ import annotations
 
-import os
 import time
 from datetime import datetime
 from urllib.parse import unquote, urlparse
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
 
 from dependencies import OptionalUser, get_db, get_redis, get_settings, get_url_service
 from errors import ForbiddenError, GoneError, NotFoundError
@@ -33,6 +31,7 @@ from services.url_service import UrlService
 from shared.generators import generate_emoji_alias, generate_short_code
 from shared.legacy_helpers import humanize_number, is_positive_integer
 from shared.logging import get_logger
+from shared.templates import templates
 from shared.validators import (
     validate_alias,
     validate_blocked_url,
@@ -44,11 +43,6 @@ from shared.validators import (
 log = get_logger(__name__)
 
 router = APIRouter(include_in_schema=False)
-
-_TEMPLATE_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "templates"
-)
-templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 
 METRIC_PIPELINE_V1 = [
     {
