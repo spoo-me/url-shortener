@@ -516,7 +516,12 @@ class AuthService:
             _dummy_hash = hash_token(otp_code)
             raise ValidationError("invalid email or code")
 
-        await self._verify_otp(user.id, otp_code, TOKEN_TYPE_PASSWORD_RESET)
+        try:
+            await self._verify_otp(user.id, otp_code, TOKEN_TYPE_PASSWORD_RESET)
+        except ValidationError:
+            # Re-raise with generic message to prevent user enumeration
+            # via distinct error messages (_verify_otp already logs the details)
+            raise ValidationError("invalid email or code") from None
 
         new_hash = hash_password(new_password)
         updated = await self._user_repo.update(

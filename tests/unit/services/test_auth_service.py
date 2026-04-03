@@ -715,7 +715,7 @@ class TestResetPassword:
         svc._token_repo.find_latest_by_user.return_value = token_doc
         svc._token_repo.increment_attempts.return_value = True
 
-        with pytest.raises(ValidationError, match="Invalid or expired"):
+        with pytest.raises(ValidationError, match="invalid email or code"):
             await svc.reset_password("test@example.com", "000000", "NewValidPass1!")
         svc._token_repo.increment_attempts.assert_awaited_once()
 

@@ -133,6 +133,15 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
             )
 
         # Warn if JWT config is weak (auth is optional, so don't crash)
+        if settings.jwt and bool(settings.jwt.jwt_private_key) != bool(
+            settings.jwt.jwt_public_key
+        ):
+            log.warning(
+                "jwt_rsa_half_configured",
+                detail="Only one of JWT_PRIVATE_KEY / JWT_PUBLIC_KEY is set — "
+                "both are required for RS256. Falling back to HS256.",
+            )
+
         if settings.jwt and not settings.jwt.use_rs256:
             if not settings.jwt.jwt_secret:
                 log.warning(
@@ -190,10 +199,11 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
     # ── Middleware (registered in reverse execution order) ────────────────
     # 1. Session — outermost, needed by Authlib OAuth for state storage
     app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
-    # 2. CORS — must wrap everything
-    configure_cors(app, settings)
-    # 3. Security headers
+    # 2. Security headers — must be outer so HSTS/CSP/nosniff apply to
+    #    all responses including CORS preflights (204) and body-limit (413)
     app.add_middleware(SecurityHeadersMiddleware, hsts_enabled=settings.is_production)
+    # 3. CORS
+    configure_cors(app, settings)
     # 4. Body size limit
     app.add_middleware(
         MaxContentLengthMiddleware, max_content_length=settings.max_content_length

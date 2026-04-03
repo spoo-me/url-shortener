@@ -56,8 +56,8 @@ class SplitCORSMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         classification = _classify_path(path)
 
-        # Handle preflight
-        if request.method == "OPTIONS" and origin:
+        # Handle preflight — only intercept routes that need CORS
+        if request.method == "OPTIONS" and origin and classification != "none":
             return self._preflight(origin, classification)
 
         response = await call_next(request)

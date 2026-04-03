@@ -41,14 +41,14 @@ def test_all_sub_configs_populated() -> None:
 
 def test_default_cors_origins() -> None:
     """Default CORS origins should be ["*"]."""
-    settings = AppSettings()
-    assert settings.cors_origins == ["*"]
+    field = AppSettings.model_fields["cors_origins"]
+    assert field.default == ["*"]
 
 
 def test_default_cors_private_origins_empty() -> None:
     """Default CORS private origins should be empty (no cross-origin auth by default)."""
-    settings = AppSettings()
-    assert settings.cors_private_origins == []
+    field = AppSettings.model_fields["cors_private_origins"]
+    assert field.default == []
 
 
 def test_default_max_content_length() -> None:
