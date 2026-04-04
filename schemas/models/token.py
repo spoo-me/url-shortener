@@ -3,7 +3,7 @@ Verification token document model.
 
 Maps to the `verification-tokens` MongoDB collection.
 
-Used for both email verification OTPs and password reset OTPs.
+Used for email verification OTPs, password reset OTPs, and device auth codes.
 token_hash stores SHA-256(otp_code) — the plain OTP is never stored.
 used_at is None until the token is consumed.
 attempts tracks failed verification tries (max 5 before the token is dead).
@@ -44,3 +44,4 @@ class VerificationTokenDoc(MongoBaseModel):
     created_at: datetime | None = None
     used_at: datetime | None = None
     attempts: int = Field(default=0, ge=0)
+    app_id: str | None = None  # set for device_auth tokens (consent flow)

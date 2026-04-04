@@ -201,6 +201,15 @@ class DeviceTokenResponse(BaseModel):
     user: UserProfileResponse = Field(description="User profile")
 
 
+class DeviceRefreshResponse(BaseModel):
+    """Response body for POST /auth/device/refresh (200)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    access_token: str = Field(description="New JWT access token")
+    refresh_token: str = Field(description="New JWT refresh token")
+
+
 class OAuthProviderDetail(BaseModel):
     """Detailed OAuth provider entry for the providers list endpoint."""
 

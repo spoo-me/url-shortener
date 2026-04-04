@@ -7,6 +7,7 @@ GET  /dashboard/keys        → API keys page
 GET  /dashboard/statistics  → statistics page
 GET  /dashboard/settings    → settings page
 GET  /dashboard/billing     → billing page
+GET  /dashboard/apps          → connected apps + ecosystem
 GET  /dashboard/profile-pictures  → available pictures (JSON)
 POST /dashboard/profile-pictures  → set profile picture (JSON)
 """
@@ -21,10 +22,13 @@ from dependencies import (
     AuthUser,
     CurrentUser,
     OptionalUser,
+    get_app_grant_repo,
     get_profile_picture_service,
 )
 from errors import NotFoundError
 from middleware.rate_limiter import Limits, limiter
+from repositories.app_grant_repository import AppGrantRepository
+from schemas.models.app import AppEntry, AppStatus
 from services.profile_picture_service import AvailablePicture, ProfilePictureService
 from shared.logging import get_logger
 from shared.templates import templates
@@ -121,6 +125,48 @@ async def dashboard_billing(
     svc: ProfilePictureService = Depends(get_profile_picture_service),
 ) -> Response:
     return await _render_dashboard_page("dashboard/billing.html", request, user, svc)
+
+
+@router.get("/apps")
+@limiter.limit(Limits.DASHBOARD_READ)
+async def dashboard_apps(
+    request: Request,
+    user: OptionalUser,
+    svc: ProfilePictureService = Depends(get_profile_picture_service),
+    grant_repo: AppGrantRepository = Depends(get_app_grant_repo),
+) -> Response:
+    if user is None:
+        return _unauth_redirect()
+    profile = await svc.get_dashboard_profile(user.user_id)
+    grants = await grant_repo.find_active_for_user(user.user_id)
+    app_registry: dict[str, AppEntry] = request.app.state.app_registry
+    grant_map = {g.app_id: g for g in grants}
+
+    connected: list[dict] = []
+    available: list[dict] = []
+    coming_soon: list[dict] = []
+
+    for app_id, app in app_registry.items():
+        entry = {"app_id": app_id, **app.model_dump()}
+        if app.status == AppStatus.COMING_SOON:
+            coming_soon.append(entry)
+        elif app_id in grant_map:
+            entry["grant"] = grant_map[app_id]
+            connected.append(entry)
+        else:
+            available.append(entry)
+
+    return templates.TemplateResponse(
+        request,
+        "dashboard/apps.html",
+        {
+            "host_url": str(request.base_url),
+            "user": profile,
+            "connected": connected,
+            "available": available,
+            "coming_soon": coming_soon,
+        },
+    )
 
 
 # ── Profile pictures (JSON API) ─────────────────────────────────────────────

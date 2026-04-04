@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spoo.me - Authorize App</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: #0a0a0a;
+            color: #e5e5e5;
+        }
+        .card {
+            background: #141414;
+            border: 1px solid #262626;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 400px;
+            width: 100%;
+            margin: 1rem;
+        }
+
+        /* Connecting as */
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid #262626;
+            margin-bottom: 1.25rem;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #262626;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #999;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .user-info { min-width: 0; }
+        .user-label { font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+        .user-name { font-size: 0.875rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-email { font-size: 0.75rem; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* App identity */
+        .app-section {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .app-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 0.75rem;
+            border-radius: 12px;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .app-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 8px;
+        }
+        .app-name-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            margin-bottom: 0.25rem;
+        }
+        .app-name { font-size: 1.1rem; font-weight: 600; }
+        .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            color: #3b82f6;
+            position: relative;
+            top: 2px;
+        }
+        .verified-badge svg {
+            width: 18px;
+            height: 18px;
+        }
+        .app-description { font-size: 0.8rem; color: #999; }
+
+        /* Permissions */
+        .permissions {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #1a1a1a;
+            border-radius: 8px;
+        }
+        .permissions-label {
+            font-size: 0.75rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .permissions ul {
+            list-style: none;
+            padding: 0;
+        }
+        .permissions li {
+            font-size: 0.8rem;
+            color: #ccc;
+            padding: 0.3rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .perm-check {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            color: #22c55e;
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .btn {
+            padding: 0.625rem 1rem;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-allow {
+            background: #fff;
+            color: #0a0a0a;
+        }
+        .btn-allow:hover {
+            background: #e5e5e5;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+        }
+        .btn-deny {
+            background: transparent;
+            color: #999;
+            border: 1px solid #333;
+        }
+        .btn-deny:hover {
+            color: #ef4444;
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #555;
+        }
+        .footer a { color: #888; text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <!-- Connecting as -->
+        <div class="user-section">
+            <div class="user-avatar">
+                {% if user.pfp and user.pfp.url %}
+                <img src="{{ user.pfp.url }}" alt="{{ user.user_name or user.email }}"
+                     onerror="this.style.display='none'; this.parentElement.textContent='{{ (user.user_name or user.email)[:2]|upper }}';">
+                {% else %}
+                {{ (user.user_name or user.email)[:2]|upper }}
+                {% endif %}
+            </div>
+            <div class="user-info">
+                <div class="user-label">Connecting as</div>
+                <div class="user-name">{{ user.user_name or user.email }}</div>
+                <div class="user-email">{{ user.email }}</div>
+            </div>
+        </div>
+
+        <!-- App identity -->
+        <div class="app-section">
+            <div class="app-icon">
+                {% if app.icon %}
+                <img src="{{ url_for('static', path='images/apps/' + app.icon) }}" alt="{{ app.name }}">
+                {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                {% endif %}
+            </div>
+            <div class="app-name-row">
+                <span class="app-name">{{ app.name }}</span>
+                {% if app.verified %}
+                <span class="verified-badge" title="Verified by spoo.me">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 7.2a2.2 2.2 0 0 1 2.2 -2.2h1a2.2 2.2 0 0 0 1.55 -.64l.7 -.7a2.2 2.2 0 0 1 3.12 0l.7 .7c.412 .41 .97 .64 1.55 .64h1a2.2 2.2 0 0 1 2.2 2.2v1c0 .58 .23 1.138 .64 1.55l.7 .7a2.2 2.2 0 0 1 0 3.12l-.7 .7a2.2 2.2 0 0 0 -.64 1.55v1a2.2 2.2 0 0 1 -2.2 2.2h-1a2.2 2.2 0 0 0 -1.55 .64l-.7 .7a2.2 2.2 0 0 1 -3.12 0l-.7 -.7a2.2 2.2 0 0 0 -1.55 -.64h-1a2.2 2.2 0 0 1 -2.2 -2.2v-1a2.2 2.2 0 0 0 -.64 -1.55l-.7 -.7a2.2 2.2 0 0 1 0 -3.12l.7 -.7a2.2 2.2 0 0 0 .64 -1.55v-1"/><path d="M9 12l2 2l4 -4"/></svg>
+                </span>
+                {% endif %}
+            </div>
+            <div class="app-description">{{ app.description }}</div>
+        </div>
+
+        <!-- Permissions -->
+        {% if app.permissions %}
+        <div class="permissions">
+            <div class="permissions-label">This app will be able to</div>
+            <ul>
+                {% for perm in app.permissions %}
+                <li>
+                    <svg class="perm-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    {{ perm }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <form method="POST" action="/auth/device/consent" class="actions">
+            <input type="hidden" name="app_id" value="{{ app_id }}">
+            <input type="hidden" name="state" value="{{ state }}">
+            <input type="hidden" name="redirect_uri" value="{{ redirect_uri }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-allow">Allow</button>
+            <a href="/" class="btn btn-deny" style="text-align: center; text-decoration: none;">Deny</a>
+        </form>
+
+        <!-- Footer -->
+        <div class="footer">
+            You can revoke access at any time in your <a href="/dashboard/apps">Apps settings</a>
+        </div>
+    </div>
+</body>
+</html>

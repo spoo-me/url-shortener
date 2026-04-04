@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from fastapi import Request
 
+from repositories.app_grant_repository import AppGrantRepository
 from services.api_key_service import ApiKeyService
 from services.auth_service import AuthService
 from services.click import ClickService
@@ -55,3 +56,7 @@ def get_contact_service(request: Request) -> ContactService:
 
 def get_click_service(request: Request) -> ClickService:
     return request.app.state.click_service
+
+
+def get_app_grant_repo(request: Request) -> AppGrantRepository:
+    return request.app.state.app_grant_repo
