@@ -47,6 +47,7 @@ from routes.legacy.url_shortener import router as legacy_url_router
 from routes.oauth_routes import router as oauth_router
 from routes.redirect_routes import router as redirect_router
 from routes.static_routes import router as static_router
+from shared.app_registry import load_app_registry
 from shared.logging import get_logger
 from shared.templates import configure_template_globals, templates
 
@@ -123,6 +124,9 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
         )
 
         await ensure_indexes(app.state.db)
+
+        # App registry for the consent/apps system
+        app.state.app_registry = load_app_registry()
 
         # Warn if session secret is missing when auth is enabled
         if settings.jwt and not settings.secret_key:

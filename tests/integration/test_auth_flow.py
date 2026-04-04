@@ -181,7 +181,7 @@ def test_login_then_refresh_rotates_tokens():
 
     mock_svc = AsyncMock()
     mock_svc.login.return_value = (user, _ACCESS_TOKEN, _REFRESH_TOKEN)
-    mock_svc.refresh_token.return_value = (user, "new.access", "new.refresh")
+    mock_svc.refresh_token.return_value = (user, "new.access", "new.refresh", None)
 
     app = _build_test_app({get_auth_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
@@ -344,6 +344,7 @@ def test_full_auth_journey():
         verified_user,
         "refreshed.access",
         "refreshed.refresh",
+        None,
     )
     mock_svc.get_user_profile.return_value = verified_user
     mock_svc.set_password.side_effect = ValidationError("password already set")

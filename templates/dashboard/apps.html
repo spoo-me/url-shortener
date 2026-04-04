@@ -1,0 +1,244 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Apps | Dashboard | spoo.me{% endblock %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/apps.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/url-modal.css') }}">
+<meta name="robots" content="noindex">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <div class="page-header-text">
+            <h1 class="page-title">Apps</h1>
+            <p class="page-subtitle">Manage connected apps and discover the spoo.me ecosystem.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Connected Apps -->
+<section class="apps-section">
+    <h2 class="section-title">Connected</h2>
+    {% if connected %}
+    <div class="apps-grid">
+        {% for app in connected %}
+        <div class="app-card">
+            <div class="app-card-header">
+                <div class="app-icon">
+                    {% if app.icon %}
+                    <img src="{{ url_for('static', path='images/apps/' + app.icon) }}" alt="{{ app.name }}">
+                    {% else %}
+                    <i class="ti ti-apps"></i>
+                    {% endif %}
+                </div>
+                <div class="app-info">
+                    <div class="app-name-row">
+                        <span class="app-name">{{ app.name }}</span>
+                        {% if app.verified %}
+                        <i class="ti ti-rosette-discount-check-filled verified-badge"></i>
+                        {% endif %}
+                        <span class="status-dot"></span>
+                    </div>
+                    <span class="app-description">{{ app.description }}</span>
+                </div>
+                <div class="kebab-menu">
+                    <button class="kebab-btn" onclick="toggleKebab(this)" title="Options">
+                        <i class="ti ti-dots-vertical"></i>
+                    </button>
+                    <div class="kebab-dropdown">
+                        <button class="kebab-item kebab-item--danger" onclick="revokeApp('{{ app.app_id }}', '{{ app.name }}')">
+                            <i class="ti ti-unlink"></i> Disconnect
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="app-card-footer">
+                <span class="meta-item">
+                    <i class="ti ti-clock"></i>
+                    {% if app.grant.last_used_at %}
+                    Last active {{ app.grant.last_used_at.strftime('%b %d, %Y') }}
+                    {% else %}
+                    Never used
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="ti ti-plug-connected-x"></i>
+        <p>No apps connected yet. Install an app below to get started.</p>
+    </div>
+    {% endif %}
+</section>
+
+<!-- Available Apps -->
+{% if available %}
+<section class="apps-section">
+    <h2 class="section-title">Available</h2>
+    <div class="apps-grid">
+        {% for app in available %}
+        <a class="app-card app-card--link"
+           {% if app.links %}
+           {% if app.links|length == 1 %}
+           href="{{ app.links.values()|list|first }}"
+           {% elif 'chrome' in app.links and 'firefox' in app.links %}
+           href="{{ app.links['chrome'] }}" data-firefox-href="{{ app.links['firefox'] }}"
+           {% else %}
+           href="{{ app.links.values()|list|first }}"
+           {% endif %}
+           {% endif %}
+           target="_blank" rel="noopener noreferrer">
+            <div class="app-card-header">
+                <div class="app-icon">
+                    {% if app.icon %}
+                    <img src="{{ url_for('static', path='images/apps/' + app.icon) }}" alt="{{ app.name }}">
+                    {% else %}
+                    <i class="ti ti-apps"></i>
+                    {% endif %}
+                </div>
+                <div class="app-info">
+                    <div class="app-name-row">
+                        <span class="app-name">{{ app.name }}</span>
+                        {% if app.verified %}
+                        <i class="ti ti-rosette-discount-check-filled verified-badge"></i>
+                        {% endif %}
+                    </div>
+                    <span class="app-description">{{ app.description }}</span>
+                </div>
+            </div>
+            <i class="ti ti-arrow-up-right app-card-arrow"></i>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Coming Soon -->
+{% if coming_soon %}
+<section class="apps-section">
+    <h2 class="section-title">Coming Soon</h2>
+    <div class="apps-grid">
+        {% for app in coming_soon %}
+        <div class="app-card app-card--muted">
+            <div class="app-card-header">
+                <div class="app-icon app-icon--muted">
+                    {% if app.icon %}
+                    <img src="{{ url_for('static', path='images/apps/' + app.icon) }}" alt="{{ app.name }}">
+                    {% else %}
+                    <i class="ti ti-apps"></i>
+                    {% endif %}
+                </div>
+                <div class="app-info">
+                    <div class="app-name-row">
+                        <span class="app-name">{{ app.name }}</span>
+                        <span class="badge badge-muted">Coming Soon</span>
+                    </div>
+                    <span class="app-description">{{ app.description }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Revoke confirmation modal -->
+<div id="revoke-dialog" class="modal">
+    <div class="modal-container modal-sm" onclick="if(event.target===this)closeRevokeDialog()">
+        <div class="modal-content modal-danger">
+            <div class="modal-header">
+                <div class="modal-title-section-delete">
+                    <div class="modal-icon"><i class="ti ti-unlink"></i></div>
+                    <div>
+                        <h2 class="modal-title">Disconnect App</h2>
+                        <p class="modal-subtitle">This action can be undone by reconnecting later.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="warning-content">
+                    <p>Are you sure you want to disconnect <strong id="revoke-app-name"></strong>? You'll need to sign in again through the app to reconnect.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRevokeDialog()">Cancel</button>
+                <button class="btn btn-danger" id="revoke-confirm-btn"><i class="ti ti-unlink"></i> Disconnect</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Route browser extension links to the right store
+if (typeof navigator !== 'undefined' && /Firefox\//.test(navigator.userAgent)) {
+    document.querySelectorAll('a[data-firefox-href]').forEach(function(el) {
+        el.href = el.dataset.firefoxHref;
+    });
+}
+
+// Kebab menu
+function toggleKebab(btn) {
+    const dropdown = btn.nextElementSibling;
+    const wasOpen = dropdown.classList.contains('open');
+    document.querySelectorAll('.kebab-dropdown.open').forEach(d => d.classList.remove('open'));
+    if (!wasOpen) dropdown.classList.add('open');
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.kebab-menu')) {
+        document.querySelectorAll('.kebab-dropdown.open').forEach(d => d.classList.remove('open'));
+    }
+});
+
+let pendingRevokeId = null;
+
+function revokeApp(appId, appName) {
+    pendingRevokeId = appId;
+    document.getElementById('revoke-app-name').textContent = appName;
+    document.getElementById('revoke-dialog').classList.add('active');
+}
+
+function closeRevokeDialog() {
+    pendingRevokeId = null;
+    document.getElementById('revoke-dialog').classList.remove('active');
+}
+
+document.getElementById('revoke-confirm-btn').addEventListener('click', async function() {
+    if (!pendingRevokeId) return;
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Disconnecting...';
+
+    const form = new FormData();
+    form.append('app_id', pendingRevokeId);
+
+    try {
+        const res = await fetch('/auth/device/revoke', {
+            method: 'POST',
+            body: form,
+            headers: { 'X-Requested-With': 'fetch' },
+        });
+        if (res.ok) {
+            window.location.reload();
+        } else {
+            const data = await res.json();
+            alert(data.error || 'Failed to disconnect app');
+            btn.disabled = false;
+            btn.textContent = 'Disconnect';
+        }
+    } catch {
+        alert('Failed to disconnect app');
+        btn.disabled = false;
+        btn.textContent = 'Disconnect';
+    }
+});
+
+document.getElementById('revoke-dialog').addEventListener('click', function(e) {
+    if (e.target === this) closeRevokeDialog();
+});
+</script>
+{% endblock %}

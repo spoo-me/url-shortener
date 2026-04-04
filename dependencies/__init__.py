@@ -36,6 +36,7 @@ from dependencies.infra import (
 )
 from dependencies.services import (
     get_api_key_service,
+    get_app_grant_repo,
     get_auth_service,
     get_click_service,
     get_contact_service,
@@ -61,6 +62,7 @@ __all__ = [
     "check_api_key_scope",
     # services
     "get_api_key_service",
+    "get_app_grant_repo",
     "get_auth_service",
     "get_click_service",
     "get_contact_service",
