@@ -208,7 +208,7 @@ def test_register_weak_password_returns_400():
 def test_refresh_rotates_tokens():
     user = _make_user_doc()
     mock_svc = AsyncMock()
-    mock_svc.refresh_token.return_value = (user, "new.access", "new.refresh")
+    mock_svc.refresh_token.return_value = (user, "new.access", "new.refresh", None)
 
     app = _build_test_app({get_auth_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:

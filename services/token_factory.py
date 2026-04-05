@@ -72,11 +72,16 @@ class TokenFactory:
         }
         return pyjwt.encode(payload, self._signing_key(), algorithm=self._algorithm())
 
-    def generate_refresh_token(self, user: UserDoc, *, amr: str) -> str:
+    def generate_refresh_token(
+        self, user: UserDoc, *, amr: str, app_id: str | None = None
+    ) -> str:
         """Issue a signed JWT refresh token for *user*.
 
         Identical to the access token but includes ``"type": "refresh"`` and
         uses ``refresh_token_ttl_seconds`` for the expiry window.
+
+        When *app_id* is provided (device auth flow), it is embedded as a claim
+        so the refresh endpoint can enforce grant checks on a per-app basis.
         """
         now = int(datetime.now(timezone.utc).timestamp())
         payload: dict[str, Any] = {
@@ -89,9 +94,13 @@ class TokenFactory:
             "email_verified": user.email_verified,
             "type": "refresh",
         }
+        if app_id:
+            payload["app_id"] = app_id
         return pyjwt.encode(payload, self._signing_key(), algorithm=self._algorithm())
 
-    def issue_tokens(self, user: UserDoc, amr: str) -> tuple[str, str]:
+    def issue_tokens(
+        self, user: UserDoc, amr: str, *, app_id: str | None = None
+    ) -> tuple[str, str]:
         """Issue an access + refresh token pair for *user*.
 
         Returns:
@@ -99,7 +108,7 @@ class TokenFactory:
         """
         return (
             self.generate_access_token(user, amr=amr),
-            self.generate_refresh_token(user, amr=amr),
+            self.generate_refresh_token(user, amr=amr, app_id=app_id),
         )
 
     # ── Token verification ────────────────────────────────────────────────────

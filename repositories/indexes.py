@@ -87,4 +87,10 @@ async def ensure_indexes(db: AsyncDatabase) -> None:
         name="ix_latest_unused_by_user",
     )
 
+    # ── app-grants ─────────────────────────────────────────────────────
+    app_grants_col = db["app-grants"]
+    await app_grants_col.create_index([("user_id", 1), ("app_id", 1)], unique=True)
+    await app_grants_col.create_index([("user_id", 1), ("revoked_at", 1)])
+    await app_grants_col.create_index([("app_id", 1), ("revoked_at", 1)])
+
     log.info("mongodb_indexes_ensured")

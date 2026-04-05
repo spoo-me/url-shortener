@@ -15,19 +15,36 @@ POST /auth/send-verification
 POST /auth/verify-email
 POST /auth/request-password-reset
 POST /auth/reset-password
+GET  /auth/device/login      → device auth initiation + consent
+POST /auth/device/consent    → consent form submission
+GET  /auth/device/callback   → code delivery page for extensions
+POST /auth/device/token      → exchange code for JWT tokens
+POST /auth/device/refresh    → refresh app tokens (body-based)
+POST /auth/device/revoke     → revoke app access
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request, Response
+import secrets
+from urllib.parse import quote, urlencode
+
+from fastapi import APIRouter, Depends, Form, Request, Response
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from dependencies import AuthUser, OptionalUser, get_auth_service
+from dependencies import (
+    AuthUser,
+    JwtUser,
+    OptionalUser,
+    get_app_grant_repo,
+    get_auth_service,
+)
 from errors import AuthenticationError
 from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES, PUBLIC_SECURITY
 from middleware.rate_limiter import Limits, limiter
+from repositories.app_grant_repository import AppGrantRepository
 from routes.cookie_helpers import clear_auth_cookies, set_auth_cookies
 from schemas.dto.requests.auth import (
+    DeviceRefreshRequest,
     DeviceTokenRequest,
     LoginRequest,
     RegisterRequest,
@@ -37,6 +54,7 @@ from schemas.dto.requests.auth import (
     VerifyEmailRequest,
 )
 from schemas.dto.responses.auth import (
+    DeviceRefreshResponse,
     DeviceTokenResponse,
     LoginResponse,
     LogoutResponse,
@@ -48,7 +66,9 @@ from schemas.dto.responses.auth import (
     VerifyEmailResponse,
 )
 from schemas.dto.responses.common import MessageResponse
+from schemas.models.app import AppEntry
 from services.auth_service import OTP_EXPIRY_SECONDS, AuthService
+from shared.generators import generate_secure_token
 from shared.ip_utils import get_client_ip
 from shared.logging import get_logger
 from shared.templates import templates
@@ -56,13 +76,6 @@ from shared.templates import templates
 log = get_logger(__name__)
 
 router = APIRouter(tags=["Authentication"])
-
-
-def _validate_redirect_uri(uri: str, allowed: list[str]) -> str | None:
-    """Return the URI if it's in the allowlist, None otherwise."""
-    if not uri or not allowed:
-        return None
-    return uri if uri in allowed else None
 
 
 # ── Redirect shortcuts ────────────────────────────────────────────────────────
@@ -207,7 +220,7 @@ async def refresh(
         return resp
 
     try:
-        _user, new_access, new_refresh = await auth_service.refresh_token(
+        _user, new_access, new_refresh, _app_id = await auth_service.refresh_token(
             refresh_token_str
         )
     except AuthenticationError as exc:
@@ -287,7 +300,7 @@ async def me(
 async def set_password(
     request: Request,
     body: SetPasswordRequest,
-    user: AuthUser,
+    user: JwtUser,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> MessageResponse:
     """Set a password for an OAuth-only account.
@@ -296,7 +309,7 @@ async def set_password(
     also log in with email + password. Fails if the user already has a
     password set.
 
-    **Authentication**: Required (JWT or API key)
+    **Authentication**: Required (JWT only — API keys cannot set passwords)
 
     **Rate Limits**: 5/min
     """
@@ -452,6 +465,45 @@ async def reset_password(
 
 # ── Device auth flow (extensions, apps, CLIs) ────────────────────────────────
 
+_CSRF_COOKIE_NAME = "_consent_csrf"
+_CSRF_TTL_SECONDS = 600
+_CSRF_TOKEN_BYTES = 32
+_CSRF_HEADER_NAME = "x-requested-with"
+_CSRF_HEADER_VALUE = "fetch"
+_APP_ID_MAX_LEN = 64
+
+
+def _get_device_app(request: Request, app_id: str) -> AppEntry | None:
+    """Look up an app_id in the registry and return it if it's a live device-auth app."""
+    if not app_id or len(app_id) > _APP_ID_MAX_LEN:
+        return None
+    registry: dict[str, AppEntry] = request.app.state.app_registry
+    entry = registry.get(app_id)
+    return entry if entry and entry.is_live_device_app() else None
+
+
+def _validate_redirect_uri(redirect_uri: str, app: AppEntry) -> bool:
+    """Return True if redirect_uri is empty or in the app's allowlist."""
+    return not redirect_uri or redirect_uri in app.redirect_uris
+
+
+def _device_error(request: Request, error: str, status_code: int = 400) -> Response:
+    """Render the device auth error page."""
+    return templates.TemplateResponse(
+        request, "device_error.html", {"error": error}, status_code=status_code
+    )
+
+
+def _build_callback_redirect(
+    code: str, state: str, redirect_uri: str, app: AppEntry
+) -> RedirectResponse:
+    """Build the redirect to the callback page or a registered redirect_uri."""
+    params = urlencode({"code": code, "state": state})
+    if redirect_uri and redirect_uri in app.redirect_uris:
+        separator = "&" if "?" in redirect_uri else "?"
+        return RedirectResponse(f"{redirect_uri}{separator}{params}", status_code=302)
+    return RedirectResponse(f"/auth/device/callback?{params}", status_code=302)
+
 
 @router.get("/auth/device/login", include_in_schema=False)
 @limiter.limit(Limits.DEVICE_AUTH)
@@ -459,40 +511,113 @@ async def device_login(
     request: Request,
     user: OptionalUser,
     auth_service: AuthService = Depends(get_auth_service),
+    grant_repo: AppGrantRepository = Depends(get_app_grant_repo),
+    app_id: str = "",
     redirect_uri: str = "",
     state: str = "",
-) -> RedirectResponse:
-    """Initiate the device auth flow.
+) -> Response:
+    """Initiate the device auth flow with app identification and consent.
 
-    If the user already has a valid session, generates an auth code and
-    redirects to the callback page (or a registered redirect_uri).
-    Otherwise, redirects to the login page.
-    Used by browser extensions, mobile apps, and other third-party clients.
-
-    The ``state`` parameter is passed through for CSRF protection — the
-    client generates it, the server carries it, the client verifies it.
+    Validates the app_id against the registry. If the user has an existing
+    active grant, auto-approves and generates a code. Otherwise shows the
+    consent screen.
     """
-    if user:
+    app = _get_device_app(request, app_id)
+    if not app:
+        return _device_error(request, "Unknown or unsupported application")
+
+    if not _validate_redirect_uri(redirect_uri, app):
+        return _device_error(request, "Invalid redirect URI for this application")
+
+    if not user:
+        params: dict[str, str] = {"app_id": app_id}
+        if state:
+            params["state"] = state
+        if redirect_uri:
+            params["redirect_uri"] = redirect_uri
+        next_url = f"/auth/device/login?{urlencode(params)}"
+        return RedirectResponse(f"/?next={quote(next_url)}", status_code=302)
+
+    # Check for existing active grant (auto-approve)
+    grant = await grant_repo.find_active_grant(user.user_id, app_id)
+    if grant:
         profile = await auth_service.get_user_profile(str(user.user_id))
-        code = await auth_service.create_device_auth_code(profile.id, profile.email)
-        allowed = request.app.state.settings.device_auth_redirect_uris
-        validated_uri = _validate_redirect_uri(redirect_uri, allowed)
-        if validated_uri:
-            separator = "&" if "?" in validated_uri else "?"
-            return RedirectResponse(
-                f"{validated_uri}{separator}code={code}&state={state}",
-                status_code=302,
-            )
-        return RedirectResponse(
-            f"/auth/device/callback?code={code}&state={state}", status_code=302
+        code = await auth_service.create_device_auth_code(
+            profile.id, profile.email, app_id=app_id
+        )
+        return _build_callback_redirect(code, state, redirect_uri, app)
+
+    # No grant: show consent screen
+    csrf_token = generate_secure_token(_CSRF_TOKEN_BYTES)
+    profile = await auth_service.get_user_profile(str(user.user_id))
+    response = templates.TemplateResponse(
+        request,
+        "device_consent.html",
+        {
+            "app": app,
+            "app_id": app_id,
+            "state": state,
+            "redirect_uri": redirect_uri,
+            "csrf_token": csrf_token,
+            "user": profile,
+        },
+    )
+    response.set_cookie(
+        _CSRF_COOKIE_NAME,
+        csrf_token,
+        httponly=True,
+        secure=request.app.state.settings.jwt.cookie_secure,
+        samesite="strict",
+        max_age=_CSRF_TTL_SECONDS,
+    )
+    return response
+
+
+@router.post("/auth/device/consent", include_in_schema=False)
+@limiter.limit(Limits.DEVICE_AUTH)
+async def device_consent_approve(
+    request: Request,
+    user: JwtUser,
+    auth_service: AuthService = Depends(get_auth_service),
+    grant_repo: AppGrantRepository = Depends(get_app_grant_repo),
+    app_id: str = Form(""),
+    state: str = Form(""),
+    csrf_token: str = Form(""),
+    redirect_uri: str = Form(""),
+) -> Response:
+    """Handle consent form submission (Allow button)."""
+    # CSRF validation
+    cookie_csrf = request.cookies.get(_CSRF_COOKIE_NAME)
+    if (
+        not cookie_csrf
+        or not csrf_token
+        or not secrets.compare_digest(csrf_token, cookie_csrf)
+    ):
+        return _device_error(
+            request, "Invalid or expired consent session. Please try again.", 403
         )
 
-    # Preserve params through the login flow
-    params = "state=" + state if state else ""
-    if redirect_uri:
-        params += ("&" if params else "") + f"redirect_uri={redirect_uri}"
-    next_url = "/auth/device/login" + (f"?{params}" if params else "")
-    return RedirectResponse(f"/?next={next_url}", status_code=302)
+    app = _get_device_app(request, app_id)
+    if not app:
+        return _device_error(request, "Unknown or unsupported application")
+
+    if not _validate_redirect_uri(redirect_uri, app):
+        return _device_error(request, "Invalid redirect URI for this application")
+
+    # Create grant
+    await grant_repo.create_or_reactivate(user.user_id, app_id)
+    log.info("app_consent_granted", user_id=str(user.user_id), app_id=app_id)
+
+    # Generate device auth code
+    profile = await auth_service.get_user_profile(str(user.user_id))
+    code = await auth_service.create_device_auth_code(
+        profile.id, profile.email, app_id=app_id
+    )
+
+    # Clear CSRF cookie and redirect
+    response = _build_callback_redirect(code, state, redirect_uri, app)
+    response.delete_cookie(_CSRF_COOKIE_NAME)
+    return response
 
 
 @router.get("/auth/device/callback", include_in_schema=False)
@@ -526,6 +651,7 @@ async def device_token(
     request: Request,
     body: DeviceTokenRequest,
     auth_service: AuthService = Depends(get_auth_service),
+    grant_repo: AppGrantRepository = Depends(get_app_grant_repo),
 ) -> DeviceTokenResponse:
     """Exchange a one-time device auth code for JWT tokens.
 
@@ -536,11 +662,102 @@ async def device_token(
 
     **Rate Limits**: 10/min
     """
-    user, access_token, refresh_token = await auth_service.exchange_device_code(
+    user, access_token, refresh_token, app_id = await auth_service.exchange_device_code(
         body.code.strip()
     )
+
+    # Verify the grant is still active (closes the revoke race window)
+    if app_id:
+        grant = await grant_repo.find_active_grant(user.id, app_id)
+        if not grant:
+            raise AuthenticationError("app access has been revoked")
+        try:
+            await grant_repo.touch_last_used(user.id, app_id)
+        except Exception:
+            log.warning("touch_last_used_failed", user_id=str(user.id), app_id=app_id)
+
     return DeviceTokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
         user=UserProfileResponse.from_user(user),
     )
+
+
+# ── App token refresh ─────────────────────────────────────────────────────────
+
+
+@router.post(
+    "/auth/device/refresh",
+    responses=ERROR_RESPONSES,
+    openapi_extra=PUBLIC_SECURITY,
+    operation_id="refreshDeviceTokens",
+    summary="Refresh Device Auth Tokens",
+)
+@limiter.limit(Limits.TOKEN_REFRESH)
+async def device_refresh(
+    request: Request,
+    body: DeviceRefreshRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+    grant_repo: AppGrantRepository = Depends(get_app_grant_repo),
+) -> DeviceRefreshResponse:
+    """Refresh an app's JWT tokens using a refresh token.
+
+    Accepts the refresh token in the request body (not cookies) for use
+    by external apps (browser extensions, desktop, CLI, bots).  If the
+    refresh token contains an ``app_id`` claim, the server verifies the
+    app grant is still active — revoked apps cannot refresh.
+
+    **Authentication**: Not required (the refresh token itself is the credential)
+
+    **Rate Limits**: 20/min
+    """
+    user, new_access, new_refresh, app_id = await auth_service.refresh_token(
+        body.refresh_token
+    )
+
+    if app_id:
+        grant = await grant_repo.find_active_grant(user.id, app_id)
+        if not grant:
+            raise AuthenticationError("app access has been revoked")
+        try:
+            await grant_repo.touch_last_used(user.id, app_id)
+        except Exception:
+            log.warning("touch_last_used_failed", user_id=str(user.id), app_id=app_id)
+
+    return DeviceRefreshResponse(
+        access_token=new_access,
+        refresh_token=new_refresh,
+    )
+
+
+# ── App revocation (dashboard action) ────────────────────────────────────────
+
+
+@router.post("/auth/device/revoke", include_in_schema=False)
+@limiter.limit(Limits.DEVICE_AUTH)
+async def revoke_app(
+    request: Request,
+    user: JwtUser,
+    auth_service: AuthService = Depends(get_auth_service),
+    grant_repo: AppGrantRepository = Depends(get_app_grant_repo),
+    app_id: str = Form(""),
+) -> Response:
+    """Revoke an app's access (soft-delete grant + invalidate tokens).
+
+    Protected against CSRF by requiring the X-Requested-With header,
+    which cannot be sent by cross-origin form submissions.
+    """
+    if request.headers.get(_CSRF_HEADER_NAME) != _CSRF_HEADER_VALUE:
+        return JSONResponse({"error": "invalid request"}, status_code=403)
+
+    if not app_id or len(app_id) > _APP_ID_MAX_LEN:
+        return JSONResponse({"error": "app_id is required"}, status_code=400)
+
+    revoked = await grant_repo.revoke(user.user_id, app_id)
+    if not revoked:
+        return JSONResponse({"error": "no active grant found"}, status_code=404)
+
+    # Invalidate device auth tokens bound to this app via the public service method
+    await auth_service.revoke_device_tokens(user.user_id, app_id=app_id)
+
+    return JSONResponse({"success": True, "message": f"Access revoked for {app_id}"})

@@ -22,6 +22,7 @@ from infrastructure.captcha.hcaptcha import HCaptchaProvider
 from infrastructure.geoip import GeoIPService
 from infrastructure.webhook.discord import DiscordWebhookProvider
 from repositories.api_key_repository import ApiKeyRepository
+from repositories.app_grant_repository import AppGrantRepository
 from repositories.blocked_url_repository import BlockedUrlRepository
 from repositories.click_repository import ClickRepository
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
@@ -39,6 +40,11 @@ from services.oauth_service import OAuthService
 from services.profile_picture_service import ProfilePictureService
 from services.stats_service import StatsService
 from services.url_service import UrlService
+
+
+async def get_app_grant_repo(db=Depends(get_db)) -> AppGrantRepository:
+    """Return an AppGrantRepository for the current request."""
+    return AppGrantRepository(db["app-grants"])
 
 
 async def get_url_service(

@@ -1,0 +1,124 @@
+# App registry for the spoo.me ecosystem.
+#
+# Loaded at application startup and cached in app.state.app_registry.
+# All apps listed here appear on the dashboard Apps page.
+# Only 'live' + 'device_auth' apps can initiate the consent flow.
+
+apps:
+  spoo-snap:
+    name: Spoo Snap
+    icon: spoo-snap.svg
+    description: Official browser extension for spoo.me
+    verified: true
+    status: live
+    type: device_auth
+    redirect_uris: []
+    links:
+      chrome: https://chrome.google.com/webstore/detail/spoo-snap
+      firefox: https://addons.mozilla.org/en-US/firefox/addon/spoo-snap
+    permissions:
+      - Access your spoo.me account
+      - Create and manage short URLs
+      - View your analytics
+
+  spoo-desktop:
+    name: Spoo Desktop
+    icon: spoo-desktop.svg
+    description: Official Windows desktop app
+    verified: true
+    status: live
+    type: device_auth
+    redirect_uris:
+      - http://localhost:9274/callback
+    links:
+      windows: https://apps.microsoft.com/detail/9mtwpjxlb0gr
+    permissions:
+      - Access your spoo.me account
+      - Create and manage short URLs
+
+  spoo-discord:
+    name: Discord Bot
+    icon: discord-bot.svg
+    description: Shorten links directly in Discord
+    verified: true
+    status: live
+    type: device_auth
+    redirect_uris:
+      - https://discord-bot.spoo.me/callback
+    links:
+      invite: https://spoo.me/discord-bot
+    permissions:
+      - Access your spoo.me account
+      - Create short URLs on your behalf
+
+  spoo-mobile:
+    name: Spoo Mobile
+    icon: spoo-mobile.svg
+    description: Shorten links on the go
+    verified: true
+    status: coming_soon
+    type: device_auth
+
+  spoo-telegram:
+    name: Telegram Bot
+    icon: telegram-bot.svg
+    description: Shorten links in Telegram chats
+    verified: true
+    status: coming_soon
+    type: device_auth
+
+  spoo-slack:
+    name: Slack Bot
+    icon: slack-bot.svg
+    description: Shorten links in Slack with /shorten
+    verified: true
+    status: coming_soon
+    type: device_auth
+
+  spoo-raycast:
+    name: Raycast Extension
+    icon: raycast.svg
+    description: Shorten links from Raycast
+    verified: true
+    status: coming_soon
+    type: device_auth
+
+  spoo-vscode:
+    name: VS Code Extension
+    icon: vscode.svg
+    description: Shorten links from your editor
+    verified: true
+    status: coming_soon
+    type: device_auth
+
+  spoo-mcp:
+    name: MCP Server
+    icon: mcp.svg
+    description: AI tool server for Claude, Cursor, and others
+    verified: true
+    status: coming_soon
+    type: device_auth
+
+  spoo-zapier:
+    name: Zapier
+    icon: zapier.svg
+    description: Shorten links in no-code workflows
+    verified: true
+    status: coming_soon
+    type: device_auth
+
+  spoo-n8n:
+    name: n8n
+    icon: n8n.svg
+    description: Self-hosted automation for link shortening
+    verified: true
+    status: coming_soon
+    type: device_auth
+
+  spoo-cli:
+    name: Spoo CLI
+    icon: spoo-cli.svg
+    description: Shorten links from your terminal
+    verified: true
+    status: coming_soon
+    type: device_auth

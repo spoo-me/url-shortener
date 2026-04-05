@@ -321,10 +321,13 @@ class TestRefreshToken:
         refresh_tok = svc._generate_refresh_token(user, amr="pwd")
         svc._user_repo.find_by_id.return_value = user
 
-        result_user, new_access, new_refresh = await svc.refresh_token(refresh_tok)
+        result_user, new_access, new_refresh, app_id = await svc.refresh_token(
+            refresh_tok
+        )
         assert result_user is user
         assert isinstance(new_access, str)
         assert isinstance(new_refresh, str)
+        assert app_id is None
 
     @pytest.mark.asyncio
     async def test_refresh_token_invalid_raises(self):
@@ -887,9 +890,10 @@ class TestExtensionAuth:
         svc._token_repo.consume_by_hash.return_value = token_doc
         svc._user_repo.find_by_id.return_value = make_user_doc(email_verified=True)
 
-        _user, access, refresh = await svc.exchange_device_code(raw_code)
+        _user, access, refresh, app_id = await svc.exchange_device_code(raw_code)
         assert isinstance(access, str)
         assert isinstance(refresh, str)
+        assert app_id is None  # no app_id set on this token
         svc._token_repo.consume_by_hash.assert_awaited_once()
 
     @pytest.mark.asyncio
