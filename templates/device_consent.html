@@ -185,7 +185,7 @@
             <div class="user-avatar">
                 {% if user.pfp and user.pfp.url %}
                 <img src="{{ user.pfp.url }}" alt="{{ user.user_name or user.email }}"
-                     onerror="this.style.display='none'; this.parentElement.textContent='{{ (user.user_name or user.email)[:2]|upper }}';">
+                     onerror="this.style.display='none'; this.parentElement.textContent={{ ((user.user_name or user.email)[:2]|upper)|tojson }};">
                 {% else %}
                 {{ (user.user_name or user.email)[:2]|upper }}
                 {% endif %}

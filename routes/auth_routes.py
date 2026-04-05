@@ -566,7 +566,7 @@ async def device_login(
         _CSRF_COOKIE_NAME,
         csrf_token,
         httponly=True,
-        secure=True,
+        secure=request.app.state.settings.jwt.cookie_secure,
         samesite="strict",
         max_age=_CSRF_TTL_SECONDS,
     )
@@ -577,7 +577,7 @@ async def device_login(
 @limiter.limit(Limits.DEVICE_AUTH)
 async def device_consent_approve(
     request: Request,
-    user: AuthUser,
+    user: JwtUser,
     auth_service: AuthService = Depends(get_auth_service),
     grant_repo: AppGrantRepository = Depends(get_app_grant_repo),
     app_id: str = Form(""),
@@ -671,7 +671,10 @@ async def device_token(
         grant = await grant_repo.find_active_grant(user.id, app_id)
         if not grant:
             raise AuthenticationError("app access has been revoked")
-        await grant_repo.touch_last_used(user.id, app_id)
+        try:
+            await grant_repo.touch_last_used(user.id, app_id)
+        except Exception:
+            log.warning("touch_last_used_failed", user_id=str(user.id), app_id=app_id)
 
     return DeviceTokenResponse(
         access_token=access_token,
@@ -716,7 +719,10 @@ async def device_refresh(
         grant = await grant_repo.find_active_grant(user.id, app_id)
         if not grant:
             raise AuthenticationError("app access has been revoked")
-        await grant_repo.touch_last_used(user.id, app_id)
+        try:
+            await grant_repo.touch_last_used(user.id, app_id)
+        except Exception:
+            log.warning("touch_last_used_failed", user_id=str(user.id), app_id=app_id)
 
     return DeviceRefreshResponse(
         access_token=new_access,
@@ -731,7 +737,7 @@ async def device_refresh(
 @limiter.limit(Limits.DEVICE_AUTH)
 async def revoke_app(
     request: Request,
-    user: AuthUser,
+    user: JwtUser,
     auth_service: AuthService = Depends(get_auth_service),
     grant_repo: AppGrantRepository = Depends(get_app_grant_repo),
     app_id: str = Form(""),

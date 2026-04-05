@@ -54,6 +54,10 @@ class TestEnsureIndexes:
         app_grants_col.create_index.assert_any_await(
             [("user_id", 1), ("app_id", 1)], unique=True
         )
+        app_grants_col.create_index.assert_any_await(
+            [("user_id", 1), ("revoked_at", 1)]
+        )
+        app_grants_col.create_index.assert_any_await([("app_id", 1), ("revoked_at", 1)])
 
     @pytest.mark.asyncio
     async def test_ensure_indexes_creates_timeseries_collection(self):
