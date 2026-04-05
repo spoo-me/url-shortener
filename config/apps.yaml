@@ -31,7 +31,7 @@ apps:
     redirect_uris:
       - http://localhost:9274/callback
     links:
-      windows: https://github.com/spoo-me/spoo-desktop/releases
+      windows: https://apps.microsoft.com/detail/9mtwpjxlb0gr
     permissions:
       - Access your spoo.me account
       - Create and manage short URLs
