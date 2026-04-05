@@ -148,11 +148,11 @@ async def dashboard_apps(
 
     for app_id, app in app_registry.items():
         entry = {"app_id": app_id, **app.model_dump()}
-        if app.status == AppStatus.COMING_SOON:
-            coming_soon.append(entry)
-        elif app_id in grant_map:
+        if app_id in grant_map:
             entry["grant"] = grant_map[app_id]
             connected.append(entry)
+        elif app.status == AppStatus.COMING_SOON:
+            coming_soon.append(entry)
         else:
             available.append(entry)
 

@@ -36,7 +36,7 @@ def load_app_registry(config_path: Path | None = None) -> dict[str, AppEntry]:
     try:
         with open(path) as f:
             data = yaml.safe_load(f)
-    except yaml.YAMLError as exc:
+    except (OSError, yaml.YAMLError) as exc:
         log.error("app_registry_parse_error", path=str(path), error=str(exc))
         return {}
 

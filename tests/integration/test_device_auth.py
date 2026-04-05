@@ -377,3 +377,42 @@ def test_revoke_no_grant_returns_404(auth_svc, grant_repo, authed_user, _app_fac
         headers={"X-Requested-With": "fetch"},
     )
     assert resp.status_code == 404
+
+
+# ── POST /auth/device/refresh ─────────────────────────────────────────────────
+
+
+def test_device_refresh_success(auth_svc, grant_repo, _app_factory):
+    user = _make_user_doc()
+    auth_svc.refresh_token.return_value = AuthResult(user=user, access_token="new-at", refresh_token="new-rt", app_id="spoo-snap")
+    grant_repo.find_active_grant.return_value = _make_grant()
+
+    c = _app_factory(auth_svc, grant_repo)
+    resp = c.post("/auth/device/refresh", json={"refresh_token": "old-rt"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["access_token"] == "new-at"
+    assert data["refresh_token"] == "new-rt"
+    grant_repo.touch_last_used.assert_awaited_once()
+
+
+def test_device_refresh_no_app_id_skips_grant_check(auth_svc, grant_repo, _app_factory):
+    user = _make_user_doc()
+    auth_svc.refresh_token.return_value = AuthResult(user=user, access_token="new-at", refresh_token="new-rt")
+
+    c = _app_factory(auth_svc, grant_repo)
+    resp = c.post("/auth/device/refresh", json={"refresh_token": "old-rt"})
+    assert resp.status_code == 200
+    grant_repo.find_active_grant.assert_not_awaited()
+
+
+def test_device_refresh_revoked_grant_rejected(auth_svc, grant_repo, _app_factory):
+    user = _make_user_doc()
+    auth_svc.refresh_token.return_value = AuthResult(user=user, access_token="new-at", refresh_token="new-rt", app_id="spoo-snap")
+    grant_repo.find_active_grant.return_value = None
+
+    c = _app_factory(auth_svc, grant_repo)
+    resp = c.post("/auth/device/refresh", json={"refresh_token": "old-rt"})
+    assert resp.status_code == 401
+    assert "revoked" in resp.json()["error"].lower()
+    grant_repo.touch_last_used.assert_not_awaited()
