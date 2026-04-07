@@ -99,8 +99,8 @@
 }
 
 .btn-primary:hover {
-    background: #6d31d8;
-    border-color: #6d31d8;
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
 }
 
 .btn-ghost {
@@ -114,8 +114,8 @@
 
 .btn-danger {
     background: transparent;
-    border-color: #ef4444;
-    color: #ef4444;
+    border-color: var(--color-danger);
+    color: var(--color-danger);
 }
 
 .btn-danger:hover:not(:disabled) {
@@ -274,19 +274,19 @@
 
 .status-active {
     background: rgba(34, 197, 94, 0.1);
-    color: #22c55e;
+    color: var(--color-success);
     border: 1px solid rgba(34, 197, 94, 0.2);
 }
 
 .status-revoked {
     background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    color: var(--color-danger);
     border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .status-expired {
     background: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
+    color: var(--color-warning);
     border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
@@ -300,7 +300,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10000;
+    z-index: var(--z-modal);
     padding: 20px;
 }
 
@@ -726,7 +726,7 @@
 
 .key-success-modal .success-icon {
     background: rgba(34, 197, 94, 0.1);
-    color: #22c55e;
+    color: var(--color-success);
     border: 2px solid rgba(34, 197, 94, 0.2);
 }
 
@@ -841,7 +841,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #f59e0b;
+    color: var(--color-warning);
     font-size: 13px;
 }
 

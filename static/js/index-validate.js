@@ -7,7 +7,7 @@ function validatePassword() {
 
     var passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@.])[A-Za-z\d@.]{8,}$/;
     if (!passwordRegex.test(password)) {
-        customTopNotification("PasswordError", "Password must be at least 8 characters long and contain an alphabet, a number, a special character '@' or '.'", 10);
+        showNotification("Password must be at least 8 characters long and contain an alphabet, a number, a special character '@' or '.'", 'warning', 10000);
         return false;
     }
     return true;
@@ -18,7 +18,7 @@ function validateURL() {
     var urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
 
     if (!urlRegex.test(url) || url.includes('spoo.me')) {
-        customTopNotification("UrlError", "Please Enter a valid URL", 10);
+        showNotification("Please Enter a valid URL", 'warning', 10000);
         return false;
     }
     return true;

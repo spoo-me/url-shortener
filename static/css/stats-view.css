@@ -180,7 +180,8 @@ select:hover {
 .export-data-wrapper .button-pair {
     display: flex;
     gap: 20px;
-    flex-basis: calc(50% - 10px); /* Subtract half of the gap size */
+    flex-basis: calc(50% - 10px);
+    /* Subtract half of the gap size */
     justify-content: space-between;
 }
 

@@ -6,9 +6,8 @@
 <link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/statistics.css') }}?v=1">
 <link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/dateRangePicker.css') }}">
 <!-- <link rel="stylesheet" type="text/css" -->
-    <!-- href="https://cdn.jsdelivr.net/gh/spoo-me/spoo/static/css/anychart-ui.min.css" /> -->
-<link rel="stylesheet" type="text/css"
-    href="{{ url_for('static', path='css/anychart-ui.min.css') }}" />
+<!-- href="https://cdn.jsdelivr.net/gh/spoo-me/spoo/static/css/anychart-ui.min.css" /> -->
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', path='css/anychart-ui.min.css') }}" />
 <link rel="stylesheet" type="text/css"
     href="https://cdn.anychart.com/releases/8.12.1/fonts/css/anychart-font.min.css" />
 {% endblock %}
@@ -249,7 +248,8 @@
                     <div class="chart-empty-state hidden" id="timeSeriesChart-empty">
                         <div class="empty-state-icon"><i class="ti ti-chart-line"></i></div>
                         <h3 class="empty-state-title">No Click Data Yet</h3>
-                        <p class="empty-state-description">Start sharing your short links to see click analytics appear here</p>
+                        <p class="empty-state-description">Start sharing your short links to see click analytics appear
+                            here</p>
                         <a href="/dashboard/links" class="empty-state-action">
                             <i class="ti ti-link"></i>
                             <span>View My Links</span>
@@ -331,7 +331,8 @@
                     <div class="chart-empty-state hidden" id="keyChart-empty">
                         <div class="empty-state-icon"><i class="ti ti-link"></i></div>
                         <h3 class="empty-state-title">No Short Links Found</h3>
-                        <p class="empty-state-description">Create your first short link to start tracking performance</p>
+                        <p class="empty-state-description">Create your first short link to start tracking performance
+                        </p>
                     </div>
                     <div class="stats-table" id="keyTable" style="display: none;">
                         <div class="table-header">
@@ -379,7 +380,8 @@
                     <div class="chart-empty-state hidden" id="referrerChart-empty">
                         <div class="empty-state-icon"><i class="ti ti-world"></i></div>
                         <h3 class="empty-state-title">No Referrer Data</h3>
-                        <p class="empty-state-description">Referrer information will appear once people click your links</p>
+                        <p class="empty-state-description">Referrer information will appear once people click your links
+                        </p>
                     </div>
                     <div class="stats-table" id="referrerTable" style="display: none;">
                         <div class="table-header">
@@ -478,7 +480,8 @@
                     <div class="chart-empty-state hidden" id="osChart-empty">
                         <div class="empty-state-icon"><i class="ti ti-device-desktop"></i></div>
                         <h3 class="empty-state-title">No Platform Data</h3>
-                        <p class="empty-state-description">Operating system stats will populate as users engage with your links</p>
+                        <p class="empty-state-description">Operating system stats will populate as users engage with
+                            your links</p>
                     </div>
                     <div class="stats-table" id="osTable" style="display: none;">
                         <div class="table-header">
@@ -529,7 +532,8 @@
                     <div class="chart-empty-state hidden" id="cityChart-empty">
                         <div class="empty-state-icon"><i class="ti ti-building"></i></div>
                         <h3 class="empty-state-title">No City Data</h3>
-                        <p class="empty-state-description">Geographic data from cities will display when visitors click your links</p>
+                        <p class="empty-state-description">Geographic data from cities will display when visitors click
+                            your links</p>
                     </div>
                     <div class="stats-table" id="cityTable" style="display: none;">
                         <div class="table-header">
@@ -573,7 +577,8 @@
                     <div class="chart-empty-state hidden" id="countryChart-empty">
                         <div class="empty-state-icon"><i class="ti ti-map"></i></div>
                         <h3 class="empty-state-title">No Country Data</h3>
-                        <p class="empty-state-description">Country data will display once visitors engage with your links</p>
+                        <p class="empty-state-description">Country data will display once visitors engage with your
+                            links</p>
                     </div>
                     <div class="stats-table" id="countryTable" style="display: none;">
                         <div class="table-header">

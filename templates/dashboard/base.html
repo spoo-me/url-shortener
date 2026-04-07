@@ -14,7 +14,7 @@
     <!-- Base styles -->
     <link rel="stylesheet" href="{{ url_for('static', path='css/base.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/dashboard-base.css') }}?v=2">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/customNotification.css') }}?v=5">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/notifications.css') }}?v=1">
 
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
@@ -27,25 +27,7 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', path='images/favicon.png') }}">
 
 
-    {% if sentry_client_key or clarity_id %}
-    <script>
-        addEventListener("load", function () {
-            {% if sentry_client_key %}
-            var s = document.createElement("script");
-            s.src = "https://js.sentry-cdn.com/{{ sentry_client_key }}.min.js";
-            s.crossOrigin = "anonymous";
-            document.head.appendChild(s);
-            {% endif %}
-            {% if clarity_id %}
-            (function (c, l, a, r, i, t, y) {
-                c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
-                t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
-                y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
-            })(window, document, "clarity", "script", "{{ clarity_id }}");
-            {% endif %}
-        });
-    </script>
-    {% endif %}
+    {% include 'partials/analytics.html' %}
 
     {% block head_css %}{% endblock %}
 </head>
@@ -74,40 +56,18 @@
     </div>
 
     <!-- Base scripts -->
-    <script src="{{ url_for('static', path='js/customNotification.js') }}?v=3"></script>
+    <script src="{{ url_for('static', path='js/notifications.js') }}?v=1"></script>
     <script src="{{ url_for('static', path='js/dashboard/dashboard-base.js') }}?v=1"></script>
 
     <!-- Auth utilities -->
     <script>
-        // Pass JWT claims to frontend
         const g = {
             jwt_claims: {
-                email_verified: {{ user.email_verified | default(false) | tojson }}
+                email_verified: {{ user.email_verified | default (false) | tojson }}
             }
         };
-
-        async function authFetch(url, options = {}) {
-            const defaultOptions = {
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...options.headers
-                }
-            };
-            const response = await fetch(url, { ...defaultOptions, ...options });
-            if (response.status === 401) {
-                window.location.href = '/';
-            }
-            return response;
-        }
-
-        async function logout() {
-            const res = await authFetch('/auth/logout', { method: 'POST' });
-            if (res.ok) {
-                window.location.href = '/';
-            }
-        }
     </script>
+    <script src="{{ url_for('static', path='js/auth-utils.js') }}?v=1"></script>
 
     <!-- Verification check -->
     <script src="{{ url_for('static', path='js/verification-check.js') }}"></script>
