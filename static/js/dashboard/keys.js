@@ -128,13 +128,13 @@ async function revokeKey(keyId) {
         if (res.ok) {
             const data = await res.json().catch(() => ({}));
             const action = data.action || 'deleted';
-            customTopNotification('KeyDeleted', `Key ${action} successfully`, 6, 'success');
+            showNotification(`Key ${action} successfully`, 'success');
             fetchKeys();
         } else {
-            customTopNotification('KeyRevokeError', 'Failed to revoke key', 8, 'error');
+            showNotification('Failed to revoke key', 'error');
         }
     } catch (error) {
-        customTopNotification('KeyRevokeError', 'Failed to revoke key', 8, 'error');
+        showNotification('Failed to revoke key', 'error');
     }
 }
 
@@ -225,7 +225,7 @@ async function createKey() {
     }
 
     if (!name || scopes.length === 0) {
-        customTopNotification('KeyCreateError', 'Name and at least one permission are required', 8, 'error');
+        showNotification('Name and at least one permission are required', 'error');
         return;
     }
 
@@ -273,7 +273,7 @@ async function createKey() {
                 errorMessage = 'Maximum active keys limit reached (20). Please delete some unused keys first.';
             }
 
-            customTopNotification('KeyCreateError', errorMessage, 10, 'error');
+            showNotification(errorMessage, 'error', 10000);
             return;
         }
 
@@ -282,7 +282,7 @@ async function createKey() {
     } catch (error) {
         // Close modal on network error too
         closeCreateKeyModal();
-        customTopNotification('KeyCreateError', 'Network error. Please try again.', 8, 'error');
+        showNotification('Network error. Please try again.', 'error');
     } finally {
         // Re-enable button and restore original text
         createBtn.disabled = false;
@@ -293,7 +293,7 @@ async function createKey() {
 async function copyTokenToClipboard() {
     try {
         await navigator.clipboard.writeText(keyElements.tokenInput.value);
-        customTopNotification('KeyCopied', 'API key copied to clipboard', 5, 'success');
+        showNotification('API key copied to clipboard', 'success');
 
         // Visual feedback
         const copyBtn = document.querySelector('.copy-btn');
@@ -304,7 +304,7 @@ async function copyTokenToClipboard() {
         }, 2000);
 
     } catch (error) {
-        customTopNotification('KeyCopyError', 'Failed to copy key', 8, 'error');
+        showNotification('Failed to copy key', 'error');
     }
 }
 

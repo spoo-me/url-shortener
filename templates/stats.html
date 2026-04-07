@@ -23,17 +23,15 @@
 
 {% block head_css %}
     <link rel="stylesheet" href="{{ url_for('static', path='css/stats.css') }}?v=5">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/customNotification.css') }}?v=4">
-    <script src="{{ url_for('static', path='js/customNotification.js') }}?v=3"></script>
 {% endblock %}
 
 {% block content %}
     <form action="/stats" method="post" onsubmit="return checkURL();">
         <p id="url-error"></p>
         {% if error %}
-        <script>customTopNotification("Error", "{{ error }}", 10, "error");</script>
+        <script>showNotification("{{ error }}", 'error', 10000);</script>
         {% elif password_error %}
-        <script>customTopNotification("PasswordError", "{{ password_error }}", 10, "error");</script>
+        <script>showNotification("{{ password_error }}", 'error', 10000);</script>
         {% endif %}
         <label for="short-code" style="font-weight: bold;">Enter the alias of the short URL</label>
         <div class="buttonIn">

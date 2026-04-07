@@ -1000,7 +1000,7 @@
 
                     if (response.ok) {
                         closeModal('setPasswordModal');
-                        showNotification('success', data.message || 'Password set successfully!');
+                        showNotification(data.message || 'Password set successfully!', 'success');
                         // Reload page to update UI
                         setTimeout(() => location.reload(), 1500);
                     } else {
@@ -1008,12 +1008,12 @@
                         if (data.field && data.field === 'password') {
                             showFieldError('newPassword', data.error);
                         } else {
-                            showNotification('error', data.error || 'Failed to set password');
+                            showNotification(data.error || 'Failed to set password', 'error');
                         }
                     }
                 } catch (error) {
                     console.error('Error setting password:', error);
-                    showNotification('error', 'Failed to set password. Please try again.');
+                    showNotification('Failed to set password. Please try again.', 'error');
                 } finally {
                     // Reset button state
                     if (submitBtn) {
@@ -1262,7 +1262,7 @@
 
     async function saveSelectedPicture() {
         if (!selectedPictureId) {
-            showNotification('error', 'Please select a picture first');
+            showNotification('Please select a picture first', 'error');
             return;
         }
 
@@ -1279,7 +1279,7 @@
             const data = await response.json();
 
             if (response.ok) {
-                showNotification('success', data.message);
+                showNotification(data.message, 'success');
                 loadProfilePictures();
                 const saveBtn = document.getElementById('save-picture-btn');
                 if (saveBtn) {
@@ -1293,12 +1293,12 @@
                     updateAuthNav();
                 }
             } else if (response.status === 429) {
-                showNotification('error', 'Rate limit exceeded. Please wait before trying again.');
+                showNotification('Rate limit exceeded. Please wait before trying again.', 'error');
             } else {
-                showNotification('error', data.error || 'Failed to save picture');
+                showNotification(data.error || 'Failed to save picture', 'error');
             }
         } catch (error) {
-            showNotification('error', 'Failed to save picture');
+            showNotification('Failed to save picture', 'error');
         }
     }
 
@@ -1346,13 +1346,13 @@
             if (response.ok) {
                 // Reload providers list
                 loadOAuthProviders();
-                showNotification('success', data.message);
+                showNotification(data.message, 'success');
             } else {
-                showNotification('error', data.error || 'Failed to unlink provider');
+                showNotification(data.error || 'Failed to unlink provider', 'error');
             }
         } catch (error) {
             console.error('Error unlinking provider:', error);
-            showNotification('error', 'Failed to unlink provider');
+            showNotification('Failed to unlink provider', 'error');
         }
     }
 
@@ -1650,67 +1650,6 @@
             field.classList.remove('error');
             field.style.borderColor = '';
         }
-    }
-
-
-
-    // Enhanced notification system to match dashboard patterns
-    function showNotification(type, message) {
-        // Remove existing notifications
-        const existingNotifications = document.querySelectorAll('.dashboard-notification');
-        existingNotifications.forEach(notification => notification.remove());
-
-        const notification = document.createElement('div');
-        notification.className = 'dashboard-notification';
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 16px 20px;
-            border-radius: 12px;
-            color: white;
-            font-weight: 500;
-            z-index: 99999;
-            max-width: 400px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transform: translateX(100%);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            ${type === 'success'
-                ? 'background: rgba(34, 197, 94, 0.9); border-color: rgba(34, 197, 94, 0.3);'
-                : 'background: rgba(239, 68, 68, 0.9); border-color: rgba(239, 68, 68, 0.3);'
-            }
-        `;
-
-        const icon = document.createElement('i');
-        icon.className = type === 'success' ? 'ti ti-check' : 'ti ti-alert-triangle';
-        icon.style.fontSize = '18px';
-
-        const text = document.createElement('span');
-        text.textContent = message;
-
-        notification.appendChild(icon);
-        notification.appendChild(text);
-        document.body.appendChild(notification);
-
-        // Animate in
-        setTimeout(() => {
-            notification.style.transform = 'translateX(0)';
-        }, 100);
-
-        // Animate out and remove
-        setTimeout(() => {
-            notification.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
-                }
-            }, 300);
-        }, 4000);
     }
 
     // Close modal when clicking outside

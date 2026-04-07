@@ -99,8 +99,8 @@
 }
 
 .btn-primary:hover {
-    background: #6d31d8;
-    border-color: #6d31d8;
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
 }
 
 .btn-ghost {
@@ -114,8 +114,8 @@
 
 .btn-danger {
     background: transparent;
-    border-color: #ef4444;
-    color: #ef4444;
+    border-color: var(--color-danger);
+    color: var(--color-danger);
 }
 
 .btn-danger:hover:not(:disabled) {
