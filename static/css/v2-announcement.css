@@ -291,8 +291,7 @@
 }
 
 /* Emoji & icons */
-.v2-emoji-container,
-.v2-feature-icon-large {
+.v2-emoji-container {
     width: 108px;
     height: 108px;
     border-radius: 28px;
@@ -403,11 +402,6 @@
     .v2-preview-tooltip-global { display: none; }
 }
 
-.v2-feature-icon-large {
-    margin-left: auto;
-    margin-right: auto;
-}
-
 @keyframes emojiFloat {
     0%,
     100% {
@@ -418,7 +412,6 @@
     }
 }
 
-.v2-feature-icon-large i,
 .v2-feature-highlight-item i {
     color: #b197fc;
     font-size: 26px;
