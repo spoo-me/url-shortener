@@ -116,7 +116,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap:20px;
+    gap: 20px;
 }
 
 #main-container {
@@ -140,7 +140,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 25px;
-    background: rgba(0,0,0, 0.5);
+    background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(10px);
     border-radius: 15px;
     color: white;

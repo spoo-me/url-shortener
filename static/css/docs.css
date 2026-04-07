@@ -74,7 +74,8 @@ code {
     border-radius: 5px;
 }
 
-ul, ol{
+ul,
+ol {
     color: rgba(243, 254, 228, 0.8);
     font-size: 1.1rem;
 }
@@ -166,12 +167,14 @@ a:hover {
     padding: 10px 20px;
 }
 
-.next-link, .next-link:hover {
+.next-link,
+.next-link:hover {
     all: unset;
     cursor: pointer;
 }
 
-.next-link:hover, .next-link:hover svg {
+.next-link:hover,
+.next-link:hover svg {
     color: #2DF98D;
 }
 

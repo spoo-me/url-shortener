@@ -30,10 +30,21 @@
     opacity: 1;
 }
 
-.notification-success i { color: var(--color-success, #22c55e); }
-.notification-error   i { color: var(--color-danger, #ef4444); }
-.notification-warning i { color: var(--color-warning, #f59e0b); }
-.notification-info    i { color: var(--color-info, #6366f1); }
+.notification-success i {
+    color: var(--color-success, #22c55e);
+}
+
+.notification-error i {
+    color: var(--color-danger, #ef4444);
+}
+
+.notification-warning i {
+    color: var(--color-warning, #f59e0b);
+}
+
+.notification-info i {
+    color: var(--color-info, #6366f1);
+}
 
 .notification i {
     font-size: 16px;
@@ -54,14 +65,30 @@
     animation: notification-progress-bar linear forwards;
 }
 
-.notification-success .notification-progress { background: var(--color-success, #22c55e); }
-.notification-error   .notification-progress { background: var(--color-danger, #ef4444); }
-.notification-warning .notification-progress { background: var(--color-warning, #f59e0b); }
-.notification-info    .notification-progress { background: var(--color-info, #6366f1); }
+.notification-success .notification-progress {
+    background: var(--color-success, #22c55e);
+}
+
+.notification-error .notification-progress {
+    background: var(--color-danger, #ef4444);
+}
+
+.notification-warning .notification-progress {
+    background: var(--color-warning, #f59e0b);
+}
+
+.notification-info .notification-progress {
+    background: var(--color-info, #6366f1);
+}
 
 @keyframes notification-progress-bar {
-    from { width: 100%; }
-    to { width: 0; }
+    from {
+        width: 100%;
+    }
+
+    to {
+        width: 0;
+    }
 }
 
 @media screen and (max-width: 480px) {

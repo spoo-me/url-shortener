@@ -90,7 +90,7 @@
     justify-content: center;
     padding: 40px 20px;
     border-radius: 12px;
-    z-index: 10; 
+    z-index: 10;
 }
 
 .chart-empty-state.hidden {
@@ -114,9 +114,12 @@
 }
 
 @keyframes float {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0px);
     }
+
     50% {
         transform: translateY(-10px);
     }
@@ -1927,4 +1930,8 @@
 
 .stats-chart:hover {
     opacity: 0.95;
+}
+
+.anychart-credits {
+    display: none !important;
 }
