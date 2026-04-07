@@ -23,7 +23,9 @@ log = get_logger(__name__)
 def _field_loc(err: dict) -> str:
     """Extract a readable field name from a Pydantic error's loc tuple."""
     loc = err.get("loc", ())
-    parts = [str(p) for p in loc if p not in ("body", "query")]
+    parts = [
+        str(p) for p in loc if p not in ("body", "query", "path", "header", "cookie")
+    ]
     return ".".join(parts) if parts else "input"
 
 
@@ -44,7 +46,7 @@ def _validation_error_response(errors: list[dict]) -> dict:
             "field": details[0]["field"],
         }
 
-    fields = [d["field"] for d in details]
+    fields = list(dict.fromkeys(d["field"] for d in details))
     return {
         "error": f"Validation failed for: {', '.join(fields)}",
         "code": "validation_error",
