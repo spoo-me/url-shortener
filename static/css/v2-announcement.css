@@ -246,8 +246,8 @@
 }
 
 .v2-nav-arrow:hover {
-    background: linear-gradient(135deg, rgba(124, 58, 237, 0.95), rgba(37, 99, 235, 0.95));
-    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(124, 58, 237, 0.35);
+    border-color: rgba(124, 58, 237, 0.5);
     color: #fff;
 }
 
@@ -428,9 +428,7 @@
     font-size: clamp(32px, 4vw, 44px);
     font-weight: 700;
     margin: 0;
-    background: linear-gradient(120deg, var(--v2-accent), var(--v2-accent-2), var(--v2-accent-3));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--v2-text);
 }
 
 .v2-subtitle {
@@ -500,18 +498,19 @@
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.2s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     color: #fff;
-    background: linear-gradient(135deg, var(--v2-accent-2), var(--v2-accent));
-    box-shadow: var(--v2-button-shadow);
+    background: var(--v2-accent);
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
 }
 
 .v2-button:hover {
-    transform: translateY(-3px);
+    background: #6d31d4;
+    transform: translateY(-2px);
 }
 
 .v2-button-ghost {
@@ -565,8 +564,8 @@
     height: 100%;
     width: 0%;
     border-radius: inherit;
-    background: linear-gradient(90deg, rgba(124,58,237,1), rgba(99,102,241,1));
-    box-shadow: 0 6px 14px rgba(124,58,237,0.18);
+    background: rgba(124, 58, 237, 0.85);
+    box-shadow: none;
     pointer-events: none;
     z-index: 0;
     transition: width 15000ms linear;
@@ -583,37 +582,110 @@
     opacity: 0.85;
 }
 
+/* ── Mobile navigation bar (prev / dots / next) ── */
+.v2-mobile-nav {
+    display: none;
+}
+
 /* Responsive tweaks */
+
+/* Tablet: hide absolute-positioned arrows, show inline mobile nav */
 @media (max-width: 900px) {
-    .v2-prev-btn {
+    .v2-modal > .v2-prev-btn,
+    .v2-modal > .v2-next-btn {
+        /* hide the absolutely-positioned side arrows */
         display: none;
     }
 
-    .v2-next-btn.v2-nav-arrow {
+    /* show the inline mobile nav bar */
+    .v2-mobile-nav {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        margin-top: 12px;
+    }
+
+    .v2-mobile-nav .v2-nav-arrow {
+        display: flex;
+        position: static;
+        transform: none;
+        width: 42px;
+        height: 42px;
+        flex-shrink: 0;
+    }
+
+    /* move the progress dots into the mobile nav bar */
+    .v2-modal-footer {
         display: none;
+    }
+
+    .v2-mobile-nav .v2-progress-dots {
+        padding: 8px 14px;
+        gap: 8px;
     }
 }
 
 @media (max-width: 720px) {
     .v2-modal {
-        padding: 56px 28px 72px;
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
-        align-items: center;
+        padding: 36px 20px 28px;
+        border-radius: 20px;
+        width: min(520px, calc(100% - 16px));
     }
 
-    .v2-modal-content-wrapper,
-    .v2-modal-footer {
-        grid-column: 1 / -1;
+    .v2-modal-content-wrapper {
+        min-height: auto;
     }
 
-    .v2-nav-arrow {
-        position: relative;
-        transform: none;
-        margin: 0 auto;
-        width: 48px;
-        height: 48px;
+    .v2-modal-content {
+        min-height: auto;
+    }
+
+    .v2-modal-content.active {
+        justify-content: flex-start;
+        gap: 12px;
+        padding-bottom: 12px;
+    }
+
+    .v2-title {
+        font-size: clamp(26px, 6vw, 34px);
+    }
+
+    .v2-subtitle {
+        font-size: 15px;
+    }
+
+    .v2-feature-title {
+        font-size: 24px;
+        margin-bottom: 4px;
+    }
+
+    .v2-feature-description {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .v2-emoji-plain img {
+        width: 110px !important;
+    }
+
+    .v2-emoji-feature img {
+        width: 80px;
+    }
+
+    .v2-feature-highlight-item {
+        padding: 10px 14px;
+        font-size: 14px;
+        border-radius: 12px;
+    }
+
+    .v2-feature-highlights {
+        gap: 8px;
+    }
+
+    .v2-button {
+        padding: 14px 28px;
+        font-size: 14px;
     }
 }
 
@@ -621,10 +693,33 @@
     .v2-badge {
         bottom: 16px;
         right: 16px;
+        padding: 12px 22px;
+        font-size: 15px;
     }
 
     .v2-modal {
-        border-radius: 26px;
+        padding: 28px 16px 22px;
+        border-radius: 18px;
+    }
+
+    .v2-title {
+        font-size: clamp(22px, 6vw, 28px);
+    }
+
+    .v2-subtitle {
+        font-size: 14px;
+    }
+
+    .v2-feature-title {
+        font-size: 20px;
+    }
+
+    .v2-emoji-plain img {
+        width: 90px !important;
+    }
+
+    .v2-emoji-feature img {
+        width: 64px;
     }
 
     .v2-button {
@@ -632,6 +727,31 @@
     }
 
     .v2-feature-highlight-item {
-        font-size: 14px;
+        font-size: 13px;
+        padding: 8px 12px;
+        gap: 8px;
+    }
+
+    .v2-mobile-nav {
+        gap: 10px;
+    }
+
+    .v2-mobile-nav .v2-nav-arrow {
+        width: 36px;
+        height: 36px;
+    }
+
+    .v2-mobile-nav .v2-progress-dots {
+        padding: 6px 10px;
+        gap: 6px;
+    }
+
+    .v2-mobile-nav .v2-progress-dot {
+        width: 8px;
+        height: 8px;
+    }
+
+    .v2-mobile-nav .v2-progress-dot.active {
+        width: 28px;
     }
 }
