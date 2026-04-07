@@ -110,11 +110,17 @@ class V2Announcement {
             btn.addEventListener('click', () => this.prevStep());
         });
 
-        // Progress dots
-        const dots = document.querySelectorAll('.v2-progress-dot');
-        dots.forEach((dot, index) => {
-            dot.addEventListener('click', () => this.showStep(index + 1));
+        // Progress dots (both desktop and mobile sets)
+        const dotSets = document.querySelectorAll('.v2-progress-dots');
+        dotSets.forEach(container => {
+            const dots = container.querySelectorAll('.v2-progress-dot');
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => this.showStep(index + 1));
+            });
         });
+
+        // Swipe navigation for touch devices
+        this.setupSwipeNavigation();
 
         // Continue as guest
         const guestBtn = document.getElementById('v2-guest-btn');
@@ -141,6 +147,32 @@ class V2Announcement {
                 }, 300);
             });
         }
+    }
+
+    setupSwipeNavigation() {
+        const wrapper = document.querySelector('.v2-modal-content-wrapper');
+        if (!wrapper) return;
+
+        let startX = 0;
+        let startY = 0;
+
+        wrapper.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        }, { passive: true });
+
+        wrapper.addEventListener('touchend', (e) => {
+            if (!this.modalShown) return;
+            const dx = e.changedTouches[0].clientX - startX;
+            const dy = e.changedTouches[0].clientY - startY;
+            // only count horizontal swipes (ignore vertical scrolls)
+            if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
+            if (dx < 0) {
+                this.nextStep();
+            } else {
+                this.prevStep();
+            }
+        }, { passive: true });
     }
 
     openModal() {
@@ -285,34 +317,27 @@ class V2Announcement {
 
     animateProgressForDot(stepNumber) {
         if (this.prefersReducedMotion) return;
-        const dots = document.querySelectorAll('.v2-progress-dot');
-        dots.forEach((dot, idx) => {
-            // ensure relative positioning for fill
+        // Animate across all dot containers (desktop + mobile)
+        const allDots = document.querySelectorAll('.v2-progress-dot');
+        allDots.forEach((dot) => {
             dot.style.position = 'relative';
-            // remove existing fill
             const existing = dot.querySelector('.v2-progress-fill');
             if (existing) existing.remove();
-            // only add fill to active dot
-            if (idx + 1 === stepNumber) {
+
+            if (dot.classList.contains('active')) {
                 const fill = document.createElement('span');
                 fill.className = 'v2-progress-fill';
-                // initial styles
                 fill.style.position = 'absolute';
                 fill.style.left = '0';
                 fill.style.top = '0';
                 fill.style.height = '100%';
                 fill.style.width = '0%';
                 fill.style.borderRadius = '999px';
-                fill.style.background = 'linear-gradient(90deg, rgba(124,58,237,0.9), rgba(99,102,241,0.9))';
+                fill.style.background = 'rgba(124, 58, 237, 0.85)';
                 fill.style.zIndex = '0';
                 fill.style.transition = `width ${this.autoAdvanceInterval}ms linear`;
                 dot.appendChild(fill);
-                // force layout then animate to full width
-                // expand to match the dot's computed width
                 requestAnimationFrame(() => {
-                    // ensure the dot has been sized (active dot may be wider)
-                    const targetW = dot.clientWidth + 'px';
-                    // use percentage to fill entire dot
                     fill.style.width = '100%';
                 });
             }
@@ -362,16 +387,21 @@ class V2Announcement {
     }
 
     updateProgressDots(activeStep) {
-        const dots = document.querySelectorAll('.v2-progress-dot');
-        dots.forEach((dot, index) => {
-            if (index + 1 === activeStep) {
-                dot.classList.add('active');
-                // ensure active dot has progress animation started
-                this.animateProgressForDot(activeStep);
-            } else {
-                dot.classList.remove('active');
-            }
+        // There are two sets of dots (desktop footer + mobile nav), both use
+        // .v2-progress-dots containers. Update every dot across all containers.
+        const dotSets = document.querySelectorAll('.v2-progress-dots');
+        dotSets.forEach(container => {
+            const dots = container.querySelectorAll('.v2-progress-dot');
+            dots.forEach((dot, index) => {
+                if (index + 1 === activeStep) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
         });
+        // animate progress fill across all active dots
+        this.animateProgressForDot(activeStep);
     }
 
     nextStep() {

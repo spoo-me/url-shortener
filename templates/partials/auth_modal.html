@@ -328,13 +328,74 @@
     @media screen and (max-width: 600px) {
         #authModal .modal-container {
             max-width: calc(100vw - 20px) !important;
+            max-height: calc(100vh - 24px);
+        }
+
+        #authModal .modal-content {
+            padding: 22px 18px !important;
         }
 
         #authModal .modal-header,
         #authModal .modal-body,
         #authModal .modal-footer {
-            padding-left: 20px;
-            padding-right: 20px;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        #authModal .modal-title {
+            font-size: 22px;
+        }
+
+        #authModal .modal-subtitle {
+            font-size: 13px;
+        }
+
+        .oauth-section {
+            margin: 20px 0 14px 0;
+            gap: 8px;
+        }
+
+        #authModal .oauth-btn {
+            padding: 10px 12px;
+            font-size: 13px;
+            gap: 6px;
+        }
+
+        #authModal .oauth-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        #authModal .auth-divider {
+            margin: 14px 0;
+        }
+
+        #authModal .form-grid {
+            gap: 14px;
+        }
+
+        #authModal .field input {
+            padding: 10px 12px;
+        }
+
+        #authModal .btn {
+            margin: 20px 0 0 0;
+            padding: 10px 14px;
+        }
+
+        #authModal .legal-notice {
+            margin: 18px 0 0 0;
+        }
+    }
+
+    @media screen and (max-width: 400px) {
+        #authModal .oauth-btn span {
+            display: none;
+        }
+
+        #authModal .oauth-btn {
+            padding: 12px 16px;
+            gap: 0;
         }
     }
 </style>
