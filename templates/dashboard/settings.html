@@ -1654,33 +1654,6 @@
 
 
 
-    function showNotification(type, message) {
-        // Simple notification - you can enhance this
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 12px 16px;
-        border-radius: 6px;
-        color: white;
-        font-weight: 500;
-        z-index: 9999;
-        max-width: 300px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        ${type === 'success' ? 'background: #22c55e;' : 'background: #ef4444;'}
-    `;
-        notification.textContent = message;
-
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-            notification.remove();
-        }, 5000);
-    }
-
-
-
     // Enhanced notification system to match dashboard patterns
     function showNotification(type, message) {
         // Remove existing notifications

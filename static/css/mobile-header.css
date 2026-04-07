@@ -192,11 +192,6 @@ ul.mobile-menu > li:hover {
     width: 14px !important;
 }
 
-.menu-signin {
-    color: #fff !important;
-    font-weight: 500;
-}
-
 /* Mobile profile menu */
 .mobile-profile { 
     display: flex; 
