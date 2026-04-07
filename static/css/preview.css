@@ -64,32 +64,6 @@ body {
     }
 }
 
-.preview-icon {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    font-size: 32px;
-}
-
-.preview-icon-normal {
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-    color: white;
-}
-
-.lock-icon {
-    background: rgba(245, 158, 11, 0.15);
-    color: #f59e0b;
-}
-
-.error-icon {
-    background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
-}
-
 h1 {
     font-size: 28px;
     font-weight: 700;
@@ -331,12 +305,6 @@ h1 {
 
     .button-group {
         flex-direction: column;
-    }
-
-    .preview-icon {
-        width: 56px;
-        height: 56px;
-        font-size: 28px;
     }
 
     .full-url {

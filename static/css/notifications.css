@@ -1,0 +1,79 @@
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    color: white;
+    font-weight: 500;
+    z-index: var(--z-notification, 3000);
+    max-width: 400px;
+    min-width: 280px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateX(calc(100% + 40px));
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 14px;
+    overflow: hidden;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification-success {
+    background: rgba(34, 197, 94, 0.9);
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.notification-error {
+    background: rgba(239, 68, 68, 0.9);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.notification-warning {
+    background: rgba(245, 158, 11, 0.9);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.notification-info {
+    background: rgba(59, 130, 246, 0.9);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.notification i {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.notification span {
+    flex: 1;
+}
+
+.notification .notification-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 0 0 12px 12px;
+    animation: notification-progress-bar linear forwards;
+}
+
+@keyframes notification-progress-bar {
+    from { width: 100%; }
+    to { width: 0; }
+}
+
+@media screen and (max-width: 480px) {
+    .notification {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        min-width: 0;
+    }
+}
