@@ -1,5 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Allerta+Stencil&display=swap');
 
+:root {
+    /* Z-Index Scale */
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-overlay: 1000;
+    --z-modal: 2000;
+    --z-notification: 3000;
+    --z-max: 9999;
+
+    /* Status Colors */
+    --color-danger: #ef4444;
+    --color-danger-hover: #dc2626;
+    --color-success: #22c55e;
+    --color-warning: #f59e0b;
+    --color-info: #6366f1;
+}
+
 body::-webkit-scrollbar {
     display: none;
 }

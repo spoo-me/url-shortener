@@ -345,7 +345,7 @@ class UrlManager {
 
         // If no changes detected, show message and return
         if (!hasChanges) {
-            this.showNotification('No changes detected', 'info');
+            showNotification('No changes detected', 'info');
             return;
         }
 
@@ -391,7 +391,7 @@ class UrlManager {
                     if (this.passwordInput) this.passwordInput.value = ''; // Clear the field after saving
                 }
 
-                this.showNotification('URL updated successfully', 'success');
+                showNotification('URL updated successfully', 'success');
 
                 // Update the table row with new data immediately
                 this.updateTableRow(this.currentUrlData);
@@ -409,7 +409,7 @@ class UrlManager {
             }
         } catch (error) {
             console.error('Error updating URL:', error);
-            this.showNotification(error.message, 'error');
+            showNotification(error.message, 'error');
         } finally {
             this.saveBtn.disabled = false;
             this.saveBtn.innerHTML = '<i class="ti ti-check"></i><span>Save Changes</span>';
@@ -444,7 +444,7 @@ class UrlManager {
 
                 // Show success notification
                 const action = newStatus === 'ACTIVE' ? 'activated' : 'deactivated';
-                this.showNotification(`URL ${action} successfully`, 'success');
+                showNotification(`URL ${action} successfully`, 'success');
 
                 // Update the table row immediately
                 this.updateTableRow(this.currentUrlData);
@@ -457,7 +457,7 @@ class UrlManager {
             }
         } catch (error) {
             console.error('Error updating URL status:', error);
-            this.showNotification(error.message, 'error');
+            showNotification(error.message, 'error');
             // Restore original button content on error
             this.deactivateBtn.innerHTML = originalButtonContent;
         } finally {
@@ -521,7 +521,7 @@ class UrlManager {
             });
 
             if (response.ok) {
-                this.showNotification('URL deleted successfully', 'success');
+                showNotification('URL deleted successfully', 'success');
                 this.closeDeleteModal();
                 this.closeModal();
 
@@ -536,7 +536,7 @@ class UrlManager {
             }
         } catch (error) {
             console.error('Error deleting URL:', error);
-            this.showNotification(error.message, 'error');
+            showNotification(error.message, 'error');
         } finally {
             this.confirmDeleteBtn.disabled = false;
             this.confirmDeleteBtn.innerHTML = '<i class="ti ti-trash"></i><span>Delete Permanently</span>';
@@ -565,62 +565,7 @@ class UrlManager {
         return fetch(url, { ...defaultOptions, ...options });
     }
 
-    showNotification(message, type = 'info') {
-        // Create a simple notification system
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.innerHTML = `
-            <div class="notification-content">
-                <i class="ti ti-${type === 'success' ? 'check' : type === 'error' ? 'x' : 'info-circle'}"></i>
-                <span>${message}</span>
-            </div>
-        `;
 
-        // Add notification styles if not present
-        if (!document.getElementById('notification-styles')) {
-            const styles = document.createElement('style');
-            styles.id = 'notification-styles';
-            styles.textContent = `
-                .notification {
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    z-index: 10000;
-                    background: rgba(255, 255, 255, 0.1);
-                    backdrop-filter: blur(20px);
-                    border-radius: 8px;
-                    padding: 16px 20px;
-                    color: white;
-                    font-size: 14px;
-                    font-weight: 500;
-                    transform: translateX(100%);
-                    transition: transform 0.3s ease;
-                    border-left: 4px solid;
-                }
-                .notification-success { border-left-color: #10b981; }
-                .notification-error { border-left-color: #ef4444; }
-                .notification-info { border-left-color: #3b82f6; }
-                .notification.show { transform: translateX(0); }
-                .notification-content {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }
-            `;
-            document.head.appendChild(styles);
-        }
-
-        document.body.appendChild(notification);
-
-        // Animate in
-        setTimeout(() => notification.classList.add('show'), 100);
-
-        // Auto remove
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
-    }
 
     removeUrlFromTable(alias) {
         if (!alias) {
