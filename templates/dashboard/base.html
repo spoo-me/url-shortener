@@ -79,35 +79,13 @@
 
     <!-- Auth utilities -->
     <script>
-        // Pass JWT claims to frontend
         const g = {
             jwt_claims: {
                 email_verified: {{ user.email_verified | default(false) | tojson }}
             }
         };
-
-        async function authFetch(url, options = {}) {
-            const defaultOptions = {
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...options.headers
-                }
-            };
-            const response = await fetch(url, { ...defaultOptions, ...options });
-            if (response.status === 401) {
-                window.location.href = '/';
-            }
-            return response;
-        }
-
-        async function logout() {
-            const res = await authFetch('/auth/logout', { method: 'POST' });
-            if (res.ok) {
-                window.location.href = '/';
-            }
-        }
     </script>
+    <script src="{{ url_for('static', path='js/auth-utils.js') }}?v=1"></script>
 
     <!-- Verification check -->
     <script src="{{ url_for('static', path='js/verification-check.js') }}"></script>
