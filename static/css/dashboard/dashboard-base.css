@@ -55,7 +55,7 @@ body.dashboard-layout {
     display: flex;
     flex-direction: column;
     transition: width var(--transition-speed) var(--transition-easing);
-    z-index: 100;
+    z-index: var(--z-dropdown);
 }
 
 .dashboard-sidebar.collapsed {
@@ -486,7 +486,7 @@ body.dashboard-layout {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
     backdrop-filter: blur(20px) saturate(1.2);
     border-bottom: 1px solid var(--border-color);
-    z-index: 200;
+    z-index: var(--z-sticky);
     padding: 0 16px;
     align-items: center;
     justify-content: space-between;
@@ -544,7 +544,7 @@ body.dashboard-layout {
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
-    z-index: 150;
+    z-index: var(--z-sticky);
     backdrop-filter: blur(4px);
 }
 
@@ -574,7 +574,7 @@ body.dashboard-layout {
         height: 100vh;
         transform: translateX(-100%);
         transition: transform var(--transition-speed) var(--transition-easing);
-        z-index: 160;
+        z-index: var(--z-sticky);
         /* Remove collapsed width behavior on mobile */
         width: 280px !important;
     }
@@ -636,7 +636,7 @@ body.dashboard-layout {
         margin-bottom: 8px;
         width: auto;
         /* Ensure it appears above the button on mobile */
-        z-index: 1000;
+        z-index: var(--z-overlay);
     }
 
     /* Override collapsed positioning on mobile */

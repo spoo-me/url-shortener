@@ -7,7 +7,7 @@
     border-radius: 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     position: sticky;
-    z-index: 9999;
+    z-index: var(--z-max);
     top: 0;
     backdrop-filter: blur(20px);
     display: flex;
@@ -310,7 +310,7 @@
     padding: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     backdrop-filter: blur(12px);
-    z-index: 1000;
+    z-index: var(--z-overlay);
 }
 
 .profile-dropdown a,

@@ -21,7 +21,7 @@
     position: fixed;
     bottom: 24px;
     right: 24px;
-    z-index: 9999;
+    z-index: var(--z-max);
     /* subtle glassy pill that matches modal tones */
     background: linear-gradient(180deg, rgba(124,58,237,0.14), rgba(37,99,235,0.10));
     color: var(--v2-text);
@@ -146,7 +146,7 @@
     display: none;
     position: fixed;
     inset: 0;
-    z-index: 10000;
+    z-index: var(--z-modal);
     background: var(--v2-overlay);
     backdrop-filter: blur(16px) saturate(140%);
     padding: clamp(16px, 4vw, 40px);
@@ -364,7 +364,7 @@
     transform: translateY(8px) scale(0.98);
     transition: opacity 180ms ease, transform 180ms ease;
     pointer-events: none;
-    z-index: 10002;
+    z-index: var(--z-modal);
 }
 
 .v2-preview-tooltip.visible {
@@ -392,7 +392,7 @@
     transform: translateY(8px) scale(0.98);
     transition: opacity 220ms cubic-bezier(.2,.9,.2,1), transform 220ms cubic-bezier(.2,.9,.2,1);
     pointer-events: none;
-    z-index: 12000;
+    z-index: var(--z-modal);
 }
 .v2-preview-tooltip-global.visible {
     opacity: 1;
