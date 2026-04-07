@@ -127,9 +127,6 @@ function openLinkSuccessModal(shortUrl, linkData) {
         setTimeout(() => {
             try {
                 navigator.clipboard.writeText(shortUrl).then(() => {
-                    if (typeof showNotification === 'function') {
-                        showNotification('Link automatically copied to clipboard!', 'success');
-                    }
                     // Update the copy button to show copied state
                     const copyBtn = document.getElementById('btn-copy-created-link');
                     const icon = copyBtn?.querySelector('i');
@@ -150,9 +147,6 @@ function openLinkSuccessModal(shortUrl, linkData) {
                     input.select();
                     input.setSelectionRange(0, 99999);
                     document.execCommand('copy');
-                    if (typeof showNotification === 'function') {
-                        showNotification('Link automatically copied to clipboard!', 'success');
-                    }
                     // Update the copy button to show copied state
                     const copyBtn = document.getElementById('btn-copy-created-link');
                     const icon = copyBtn?.querySelector('i');
@@ -534,11 +528,6 @@ async function submitCreateForm(event) {
                 setTimeout(() => {
                     window.fetchData();
                 }, 500); // Small delay to ensure any confetti animation doesn't interfere
-            }
-
-            // Show success notification
-            if (typeof showNotification === 'function') {
-                showNotification('Link created successfully!', 'success');
             }
         } else {
             // Handle API errors
