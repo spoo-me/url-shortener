@@ -213,10 +213,8 @@ def test_app_error_json_when_accept_json():
 
 
 def test_validation_error_returns_422_json():
-    """RequestValidationError (FastAPI) should return 422 JSON."""
+    """RequestValidationError (single field) should return structured 422 JSON."""
     app = _build_test_app()
-    # Trigger a FastAPI RequestValidationError by providing wrong type
-    # We need a route with a typed query param
     trigger_router = APIRouter(prefix="/api/v1")
 
     @trigger_router.get("/typed-param")
@@ -228,12 +226,37 @@ def test_validation_error_returns_422_json():
         resp = c.get("/api/v1/typed-param?count=not_a_number")
     assert resp.status_code == 422
     data = resp.json()
-    assert data["error"] == "Validation error"
     assert data["code"] == "validation_error"
+    assert data["field"] == "count"
+    assert data["error"].startswith("count: ")
+    assert "details" not in data
+
+
+def test_validation_error_multi_field_returns_details():
+    """RequestValidationError (multiple fields) should include details array."""
+    app = _build_test_app()
+    trigger_router = APIRouter(prefix="/api/v1")
+
+    @trigger_router.get("/multi-param")
+    async def multi_param(request: Request, count: int, name: str):
+        return {"count": count, "name": name}
+
+    app.include_router(trigger_router)
+    with TestClient(app, raise_server_exceptions=False) as c:
+        # Omit both required query params to trigger multiple errors
+        resp = c.get("/api/v1/multi-param")
+    assert resp.status_code == 422
+    data = resp.json()
+    assert data["code"] == "validation_error"
+    assert "details" in data
+    detail_fields = [d["field"] for d in data["details"]]
+    assert "count" in detail_fields
+    assert "name" in detail_fields
+    assert "field" not in data  # top-level field only for single errors
 
 
 def test_pydantic_validation_error_returns_422():
-    """Pydantic ValidationError (raised in business logic) should return 422 JSON."""
+    """Pydantic ValidationError (raised in business logic) should return structured 422 JSON."""
     from pydantic import BaseModel
 
     app = _build_test_app()
@@ -241,7 +264,6 @@ def test_pydantic_validation_error_returns_422():
 
     @trigger_router.get("/pydantic-error")
     async def pydantic_error(request: Request):
-        # Force a Pydantic ValidationError
         class StrictModel(BaseModel):
             value: int
 
@@ -253,6 +275,8 @@ def test_pydantic_validation_error_returns_422():
     assert resp.status_code == 422
     data = resp.json()
     assert data["code"] == "validation_error"
+    assert data["field"] == "value"
+    assert data["error"].startswith("value: ")
 
 
 # ── Unhandled exceptions ─────────────────────────────────────────────────────

@@ -20,6 +20,40 @@ from shared.templates import templates
 log = get_logger(__name__)
 
 
+def _field_loc(err: dict) -> str:
+    """Extract a readable field name from a Pydantic error's loc tuple."""
+    loc = err.get("loc", ())
+    parts = [
+        str(p) for p in loc if p not in ("body", "query", "path", "header", "cookie")
+    ]
+    return ".".join(parts) if parts else "input"
+
+
+def _validation_error_response(errors: list[dict]) -> dict:
+    """Build a JSON-serialisable error dict from Pydantic validation errors.
+
+    Follows the same ``{error, code, field?, details?}`` shape used by
+    ``AppError.to_dict`` so every error response is structurally identical.
+    """
+    details = [
+        {"field": _field_loc(e), "error": e.get("msg", "invalid value")} for e in errors
+    ]
+
+    if len(details) == 1:
+        return {
+            "error": f"{details[0]['field']}: {details[0]['error']}",
+            "code": "validation_error",
+            "field": details[0]["field"],
+        }
+
+    fields = list(dict.fromkeys(d["field"] for d in details))
+    return {
+        "error": f"Validation failed for: {', '.join(fields)}",
+        "code": "validation_error",
+        "details": details,
+    }
+
+
 def _wants_json(request: Request) -> bool:
     """Determine if the request expects a JSON response."""
     accept = request.headers.get("accept", "")
@@ -65,7 +99,7 @@ def register_error_handlers(app: FastAPI) -> None:
         # Validation errors only occur on typed API/auth routes — always JSON
         return JSONResponse(
             status_code=422,
-            content={"error": "Validation error", "code": "validation_error"},
+            content=_validation_error_response(exc.errors()),
         )
 
     @app.exception_handler(PydanticValidationError)
@@ -74,7 +108,7 @@ def register_error_handlers(app: FastAPI) -> None:
     ) -> JSONResponse:
         return JSONResponse(
             status_code=422,
-            content={"error": "Validation error", "code": "validation_error"},
+            content=_validation_error_response(exc.errors()),
         )
 
     @app.exception_handler(RateLimitExceeded)
