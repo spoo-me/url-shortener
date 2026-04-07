@@ -156,13 +156,20 @@ class V2Announcement {
         let startX = 0;
         let startY = 0;
 
+        const interactiveTags = new Set(['BUTTON', 'A', 'INPUT', 'TEXTAREA', 'SELECT']);
+
         wrapper.addEventListener('touchstart', (e) => {
+            // Ignore swipes starting on interactive elements
+            if (interactiveTags.has(e.target.tagName) || e.target.closest('button, a, input')) {
+                startX = null;
+                return;
+            }
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
         }, { passive: true });
 
         wrapper.addEventListener('touchend', (e) => {
-            if (!this.modalShown) return;
+            if (!this.modalShown || startX === null) return;
             const dx = e.changedTouches[0].clientX - startX;
             const dy = e.changedTouches[0].clientY - startY;
             // only count horizontal swipes (ignore vertical scrolls)
