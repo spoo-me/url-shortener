@@ -62,7 +62,7 @@
     border-radius: 12px;
     box-shadow: rgba(0, 0, 0, 0.3) 0 20px 40px 0px;
     backdrop-filter: blur(16px);
-    z-index: 1000;
+    z-index: var(--z-overlay);
     min-width: 700px;
     max-height: 500px;
     overflow: hidden;
@@ -151,7 +151,7 @@
 .relative-option.selected {
     background: rgba(124, 58, 237, 0.3);
     color: white;
-    border-left: 3px solid #7c3aed;
+    border-left: 3px solid var(--accent-primary);
 }
 
 /* Custom Section */
@@ -203,12 +203,12 @@
 
 .input-group input:focus {
     outline: none;
-    border-color: #7c3aed;
+    border-color: var(--accent-primary);
     background: rgba(255, 255, 255, 0.15);
 }
 
 .input-group input.invalid:focus {
-    border-color: #ef4444;
+    border-color: var(--color-danger);
     background: rgba(239, 68, 68, 0.1);
 }
 
@@ -219,7 +219,7 @@
 
 .apply-btn {
     padding: 10px 20px;
-    background: #7c3aed;
+    background: var(--accent-primary);
     color: white;
     border: none;
     border-radius: 6px;
@@ -232,7 +232,7 @@
 }
 
 .apply-btn:hover {
-    background: #6d28d9;
+    background: var(--accent-primary);
 }
 
 .apply-btn:disabled {
@@ -343,7 +343,7 @@
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
             opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
             visibility 0s linear 0.3s;
-        z-index: 10000 !important;
+        z-index: var(--z-modal) !important;
 
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
@@ -458,13 +458,13 @@
 .relative-option:focus,
 .history-item:focus,
 .apply-btn:focus {
-    outline: 2px solid #7c3aed;
+    outline: 2px solid var(--accent-primary);
     outline-offset: 2px;
 }
 
 /* Error states */
 .input-error {
-    color: #ef4444;
+    color: var(--color-danger);
     font-size: 12px;
     margin-top: 5px;
     display: block;

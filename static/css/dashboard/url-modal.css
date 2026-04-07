@@ -8,7 +8,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 9999;
+    z-index: var(--z-max);
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -517,9 +517,9 @@
 }
 
 .btn-primary {
-    background: #6366f1;
+    background: var(--color-info);
     color: white;
-    border-color: #6366f1;
+    border-color: var(--color-info);
 }
 
 .btn-primary:hover {
@@ -533,9 +533,9 @@
 }
 
 .btn-warning {
-    background: #f59e0b;
+    background: var(--color-warning);
     color: white;
-    border-color: #f59e0b;
+    border-color: var(--color-warning);
 }
 
 .btn-warning:hover {
@@ -549,14 +549,14 @@
 }
 
 .btn-danger {
-    background: #ef4444;
+    background: var(--color-danger);
     color: white;
-    border-color: #ef4444;
+    border-color: var(--color-danger);
 }
 
 .btn-danger:hover {
-    background: #dc2626;
-    border-color: #dc2626;
+    background: var(--color-danger-hover);
+    border-color: var(--color-danger-hover);
 }
 
 .btn-danger:active {
@@ -635,7 +635,7 @@
 }
 
 .url-preview strong {
-    color: #ef4444;
+    color: var(--color-danger);
     font-weight: 600;
 }
 

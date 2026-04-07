@@ -210,7 +210,7 @@
     transform: translateY(-10px);
     transition: all 0.2s ease;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-    z-index: 1000;
+    z-index: var(--z-overlay);
     min-width: 200px;
     top: calc(100% + 8px);
     left: -20px;
@@ -307,7 +307,7 @@
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 8px;
     min-width: 80px;
-    z-index: 1000;
+    z-index: var(--z-overlay);
     visibility: hidden;
     box-shadow: rgba(0, 0, 0, 0.3) 0 20px 40px 0px;
     backdrop-filter: blur(16px);
@@ -420,7 +420,7 @@
     border-radius: 12px;
     backdrop-filter: blur(16px);
     box-shadow: rgba(0, 0, 0, 0.3) 0 20px 40px 0px;
-    z-index: 9999;
+    z-index: var(--z-max);
     visibility: hidden;
     overflow: hidden;
     opacity: 0;
@@ -598,7 +598,7 @@
 
 .values-search-input:focus {
     outline: none;
-    border-color: #7c3aed;
+    border-color: var(--accent-primary);
     background: rgba(255, 255, 255, 0.12);
 }
 
@@ -641,12 +641,12 @@
 }
 
 .multi-select-wrapper:has(.multi-select-dropdown.show) {
-    z-index: 10000;
+    z-index: var(--z-modal);
 }
 
 /* Fallback for browsers that don't support :has() */
 .multi-select-wrapper.active {
-    z-index: 10000;
+    z-index: var(--z-modal);
 }
 
 .multi-select-trigger {
@@ -703,7 +703,7 @@
     border-radius: 12px;
     box-shadow: rgba(0, 0, 0, 0.3) 0 20px 40px;
     backdrop-filter: blur(20px);
-    z-index: 9999;
+    z-index: var(--z-max);
     max-height: 320px;
     visibility: hidden;
     overflow: hidden;
@@ -745,7 +745,7 @@
 
 .search-input:focus {
     outline: none;
-    border-color: #7c3aed;
+    border-color: var(--accent-primary);
     background: rgba(255, 255, 255, 0.15);
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
 }
@@ -837,8 +837,8 @@
 }
 
 .option-item input[type="checkbox"]:checked+.checkmark {
-    background: #7c3aed;
-    border-color: #7c3aed;
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
     transform: scale(1.1);
 }
@@ -1149,7 +1149,7 @@
 
 .cascade-btn.active:not(:disabled) {
     background: rgba(124, 58, 237, 0.3);
-    border-color: #7c3aed;
+    border-color: var(--accent-primary);
 }
 
 .cascade-btn:disabled {
@@ -1168,7 +1168,7 @@
     border-radius: 8px;
     box-shadow: rgba(0, 0, 0, 0.3) 0 10px 30px;
     backdrop-filter: blur(10px);
-    z-index: 1000;
+    z-index: var(--z-overlay);
     min-width: 180px;
     visibility: hidden;
     overflow: hidden;
@@ -1253,7 +1253,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: var(--z-overlay);
 }
 
 .modal-content {
@@ -1312,7 +1312,7 @@
 }
 
 .btn-primary {
-    background: #7c3aed;
+    background: var(--accent-primary);
     color: white;
 }
 
@@ -1427,7 +1427,7 @@
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
             opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
             visibility 0s linear 0.3s;
-        z-index: 9999;
+        z-index: var(--z-max);
 
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
