@@ -17,7 +17,7 @@
     margin-top: 70px;
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 8px 32px 0 rgba( 0, 0, 0, 0.37 );
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     width: 100%;
     max-width: 500px;
     font-family: 'Allerta Stencil', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -74,7 +74,7 @@
     border-radius: 10px;
     color: white;
     font-size: 20px;
-    border: 2px solid rgba(255,255,255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.125);
 }
 
@@ -98,6 +98,7 @@
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -109,6 +110,7 @@
         opacity: 1;
         transform: translateY(0);
     }
+
     to {
         opacity: 0;
         transform: translateY(20px);

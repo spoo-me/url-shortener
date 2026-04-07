@@ -119,7 +119,7 @@ textarea:focus::placeholder {
     border-bottom-left-radius: 18px;
 }
 
-button.h-captcha{
+button.h-captcha {
     border: none;
     width: 180px;
     padding: 10px 13px;

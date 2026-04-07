@@ -63,7 +63,7 @@
     gap: 1rem;
 }
 
-.detail-item > i {
+.detail-item>i {
     font-size: 1.5rem;
     color: var(--accent-primary);
     opacity: 0.8;
@@ -120,7 +120,7 @@
     transform: translateY(-2px);
 }
 
-.features-grid .feature-item > i {
+.features-grid .feature-item>i {
     font-size: 1.5rem;
     color: var(--accent-primary);
     flex-shrink: 0;

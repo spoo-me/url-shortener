@@ -40,6 +40,11 @@
     text-decoration: none;
 }
 
+/* Success modal must sit above all other modals on this page */
+#link-success-modal {
+    z-index: calc(var(--z-max) + 1);
+}
+
 /* Success Modal Close Button */
 #link-success-modal .modal-close {
     background: none;

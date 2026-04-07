@@ -63,7 +63,7 @@
     <script>
         const g = {
             jwt_claims: {
-                email_verified: {{ user.email_verified | default(false) | tojson }}
+                email_verified: {{ user.email_verified | default (false) | tojson }}
             }
         };
     </script>
