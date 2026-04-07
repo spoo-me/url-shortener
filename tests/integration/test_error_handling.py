@@ -228,8 +228,8 @@ def test_validation_error_returns_422_json():
         resp = c.get("/api/v1/typed-param?count=not_a_number")
     assert resp.status_code == 422
     data = resp.json()
-    assert data["error"] == "Validation error"
     assert data["code"] == "validation_error"
+    assert "count" in data["error"]  # field name appears in the message
 
 
 def test_pydantic_validation_error_returns_422():
