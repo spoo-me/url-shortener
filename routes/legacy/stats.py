@@ -352,6 +352,8 @@ async def export(
     if url_data.get("unique_counter"):
         url_data = add_missing_dates("unique_counter", url_data)
 
+    url_data.pop("password", None)
+
     if fmt == ExportFormat.JSON:
         return _export_json(url_data)
     elif fmt == ExportFormat.CSV:
@@ -397,7 +399,6 @@ def _export_csv(data: dict) -> Response:
             "SHORT CODE": data.get("_id", "N/A"),
             "MAX CLICKS": data.get("max-clicks", "N/A"),
             "EXPIRATION TIME": data.get("expiration-time", "N/A"),
-            "PASSWORD": data.get("password", "N/A"),
             "CREATION DATE": data.get("creation-date", "N/A"),
             "CREATION TIME": data.get("creation-time", "N/A"),
             "EXPIRED": data.get("expired", "N/A"),
@@ -461,7 +462,6 @@ def _export_xlsx(data: dict) -> Response:
         ["SHORT CODE", data.get("_id")],
         ["MAX CLICKS", data.get("max-clicks")],
         ["EXPIRATION TIME", data.get("expiration-time")],
-        ["PASSWORD", data.get("password")],
         ["CREATION DATE", data.get("creation-date")],
         ["CREATION TIME", data.get("creation-time")],
         ["EXPIRED", data.get("expired")],
