@@ -43,7 +43,7 @@ from shared.legacy_helpers import (
 )
 from shared.logging import get_logger
 from shared.templates import templates
-from shared.validators import validate_emoji_alias
+from shared.validators import is_emoji_alias
 
 log = get_logger(__name__)
 
@@ -77,7 +77,7 @@ async def stats_route(request: Request, db=Depends(get_db)) -> Response:
     short_code = unquote(short_code)
 
     # Check existence and password gate
-    if validate_emoji_alias(short_code):
+    if is_emoji_alias(short_code):
         url_data = await EmojiUrlRepository(db["emojis"]).find_by_id(short_code)
     else:
         url_data = await LegacyUrlRepository(db["urls"]).find_by_id(short_code)
@@ -146,7 +146,7 @@ async def analytics(short_code: str, request: Request, db=Depends(get_db)) -> Re
     host_url = str(request.base_url)
     pipeline = get_stats_pipeline(short_code)
 
-    if validate_emoji_alias(short_code):
+    if is_emoji_alias(short_code):
         url_data = await EmojiUrlRepository(db["emojis"]).aggregate(pipeline)
     else:
         url_data = await LegacyUrlRepository(db["urls"]).aggregate(pipeline)
@@ -295,7 +295,7 @@ async def export(
         )
 
     pipeline = get_stats_pipeline(short_code)
-    if validate_emoji_alias(short_code):
+    if is_emoji_alias(short_code):
         url_data = await EmojiUrlRepository(db["emojis"]).aggregate(pipeline)
     else:
         url_data = await LegacyUrlRepository(db["urls"]).aggregate(pipeline)

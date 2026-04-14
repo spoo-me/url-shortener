@@ -578,7 +578,7 @@ def test_legacy_export_json():
         mock_repo_instance.aggregate = AsyncMock(return_value=stats_data)
         MockLegacyRepo.return_value = mock_repo_instance
 
-        with patch("routes.legacy.stats.validate_emoji_alias", return_value=False):
+        with patch("routes.legacy.stats.is_emoji_alias", return_value=False):
             resp = client.post("/export/abc123/json")
 
     assert resp.status_code == 200

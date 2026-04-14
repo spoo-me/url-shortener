@@ -418,6 +418,11 @@ class StatsService:
         short_code = query.short_code
         start_date = parse_datetime(query.start_date) if query.start_date else None
         end_date = parse_datetime(query.end_date) if query.end_date else None
+
+        if query.start_date and start_date is None:
+            raise ValidationError("invalid start_date format")
+        if query.end_date and end_date is None:
+            raise ValidationError("invalid end_date format")
         filters = query.parsed_filters
         group_by = query.parsed_group_by
         metrics = query.parsed_metrics

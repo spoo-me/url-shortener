@@ -67,6 +67,21 @@ def validate_alias(alias: str) -> bool:
     return bool(re.search(r"^[a-zA-Z0-9_-]*$", alias))
 
 
+def is_emoji_alias(alias: str) -> bool:
+    """Return True if *alias* consists entirely of emoji characters.
+
+    Unlike ``validate_emoji_alias``, this does NOT enforce a length cap.
+    Use for URL resolution/dispatch where any previously-created emoji
+    alias must be routable regardless of the current creation policy.
+    """
+    decoded = unquote(alias)
+    if not decoded:
+        return False
+    emoji_list = emoji.emoji_list(decoded)
+    extracted = "".join([data["emoji"] for data in emoji_list])
+    return extracted == decoded
+
+
 def validate_emoji_alias(alias: str, max_emojis: int = 15) -> bool:
     """Return True if *alias* is a valid emoji-only alias.
 

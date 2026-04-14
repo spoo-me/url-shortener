@@ -33,6 +33,7 @@ from shared.legacy_helpers import humanize_number, is_positive_integer
 from shared.logging import get_logger
 from shared.templates import templates
 from shared.validators import (
+    is_emoji_alias,
     validate_alias,
     validate_blocked_url,
     validate_emoji_alias,
@@ -199,7 +200,7 @@ async def shorten_url(
             return JSONResponse(
                 {
                     "PasswordError": (
-                        "Invalid password, password must be atleast 8 characters long,"
+                        f"Invalid password, password must be at least {settings.url_password_min_length} characters long,"
                         " must contain a letter and a number and a special character"
                         " either '@' or '.' and cannot be consecutive"
                     )
@@ -332,7 +333,7 @@ async def emoji(
             return JSONResponse(
                 {
                     "PasswordError": (
-                        "Invalid password, password must be atleast 8 characters long,"
+                        f"Invalid password, password must be at least {settings.url_password_min_length} characters long,"
                         " must contain a letter and a number and a special character"
                         " either '@' or '.' and cannot be consecutive"
                     )
@@ -434,7 +435,7 @@ async def preview_url(
     url_data = None
     schema_type = "v1"
 
-    if validate_emoji_alias(short_code):
+    if is_emoji_alias(short_code):
         emoji_repo = EmojiUrlRepository(db["emojis"])
         doc = await emoji_repo.find_by_id(short_code)
         if doc:

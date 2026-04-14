@@ -94,8 +94,8 @@ def _build_test_app(
         app.state.http_client = MagicMock()
         app.state.oauth_providers = {}
         # Singleton service defaults (overridden via dependency_overrides when needed)
-        app.state.contact_service = MagicMock()
-        app.state.url_service = MagicMock()
+        app.state.contact_service = AsyncMock()
+        app.state.url_service = AsyncMock()
         yield
 
     app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None)

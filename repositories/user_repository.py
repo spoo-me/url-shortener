@@ -25,11 +25,20 @@ class UserRepository(BaseRepository[UserDoc]):
     async def find_by_oauth_provider(
         self, provider: str, provider_user_id: str
     ) -> UserDoc | None:
-        """Find a user by their OAuth provider and provider-issued user ID."""
+        """Find a user by their OAuth provider and provider-issued user ID.
+
+        Uses ``$elemMatch`` to ensure both fields match the same array
+        element — without it, MongoDB can satisfy each condition from
+        different elements when a user has multiple linked providers.
+        """
         return await self._find_one(
             {
-                "auth_providers.provider": provider,
-                "auth_providers.provider_user_id": provider_user_id,
+                "auth_providers": {
+                    "$elemMatch": {
+                        "provider": provider,
+                        "provider_user_id": provider_user_id,
+                    }
+                }
             }
         )
 

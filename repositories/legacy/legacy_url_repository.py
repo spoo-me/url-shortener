@@ -35,7 +35,7 @@ class LegacyUrlRepository(BaseRepository[LegacyUrlDoc]):
         The caller must not include ``_id`` in url_data — it is set here.
         """
         try:
-            await self._col.insert_one({"_id": short_code, **url_data})
+            await self._col.insert_one({**url_data, "_id": short_code})
         except DuplicateKeyError as exc:
             log.warning(
                 "repo_insert_duplicate",

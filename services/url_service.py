@@ -50,6 +50,7 @@ from shared.datetime_utils import parse_datetime
 from shared.generators import generate_short_code_v2
 from shared.logging import get_logger, should_sample
 from shared.validators import (
+    is_emoji_alias,
     validate_alias,
     validate_blocked_url,
     validate_emoji_alias,
@@ -564,7 +565,7 @@ class UrlService:
           6 chars → urls first, urlsV2 fallback
           other   → urlsV2 first, urls fallback
         """
-        if validate_emoji_alias(short_code, max_emojis=self._max_emoji_alias_length):
+        if is_emoji_alias(short_code):
             doc = await self._emoji_repo.find_by_id(short_code)
             if doc is not None:
                 return _emoji_doc_to_cache(short_code, doc), SchemaVersion.EMOJI
