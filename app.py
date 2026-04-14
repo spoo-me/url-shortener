@@ -48,6 +48,7 @@ from routes.legacy.url_shortener import router as legacy_url_router
 from routes.oauth_routes import router as oauth_router
 from routes.redirect_routes import router as redirect_router
 from routes.static_routes import router as static_router
+from schemas.models.app import AppStatus
 from shared.app_registry import load_app_registry
 from shared.logging import get_logger
 from shared.templates import configure_template_globals, templates
@@ -128,6 +129,9 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
 
         # App registry for the consent/apps system
         app.state.app_registry = load_app_registry()
+        templates.env.globals["show_apps"] = any(
+            a.status == AppStatus.LIVE for a in app.state.app_registry.values()
+        )
 
         # ── Build all repos + services (composition root) ────────────────
         wire_services(app, settings, redis_client)

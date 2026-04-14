@@ -31,11 +31,13 @@
             <span class="nav-text">Statistics</span>
         </a>
 
+        {% if show_apps %}
         <a href="/dashboard/apps" class="nav-item {% if request.path == '/dashboard/apps' %}active{% endif %}"
             data-tooltip="Apps">
             <i class="ti ti-apps"></i>
             <span class="nav-text">Apps</span>
         </a>
+        {% endif %}
 
         <a href="/dashboard/settings" class="nav-item {% if request.path == '/dashboard/settings' %}active{% endif %}"
             data-tooltip="Settings">

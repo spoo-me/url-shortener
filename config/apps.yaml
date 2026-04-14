@@ -10,7 +10,7 @@ apps:
     icon: spoo-snap.svg
     description: Official browser extension for spoo.me
     verified: true
-    status: live
+    status: coming_soon
     type: device_auth
     redirect_uris: []
     links:
@@ -26,7 +26,7 @@ apps:
     icon: spoo-desktop.svg
     description: Official Windows desktop app
     verified: true
-    status: live
+    status: coming_soon
     type: device_auth
     redirect_uris:
       - http://localhost:9274/callback
@@ -41,7 +41,7 @@ apps:
     icon: discord-bot.svg
     description: Shorten links directly in Discord
     verified: true
-    status: live
+    status: coming_soon
     type: device_auth
     redirect_uris:
       - https://discord-bot.spoo.me/callback

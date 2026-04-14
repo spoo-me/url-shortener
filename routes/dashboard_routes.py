@@ -137,9 +137,14 @@ async def dashboard_apps(
 ) -> Response:
     if user is None:
         return _unauth_redirect()
+
+    app_registry: dict[str, AppEntry] = request.app.state.app_registry
+    has_live_apps = any(app.status == AppStatus.LIVE for app in app_registry.values())
+    if not has_live_apps:
+        return RedirectResponse("/dashboard", status_code=302)
+
     profile = await svc.get_dashboard_profile(user.user_id)
     grants = await grant_repo.find_active_for_user(user.user_id)
-    app_registry: dict[str, AppEntry] = request.app.state.app_registry
     grant_map = {g.app_id: g for g in grants}
 
     connected: list[dict] = []
