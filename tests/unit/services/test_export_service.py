@@ -218,9 +218,10 @@ class TestDelegation:
         svc, stats_svc = make_service()
         query = _export_query("json")
         await svc.export(query=query, owner_id=None)
+        stats_svc.query.assert_awaited_once()
         call_args = stats_svc.query.call_args
-        # The export service passes the ExportQuery (which extends StatsQuery) and owner_id
-        assert call_args[0][0] is query or call_args[0][0].scope == "anon"
+        assert call_args[0][0] is query, "must forward the exact query object"
+        assert call_args[0][1] is None, "must forward owner_id as-is"
 
     @pytest.mark.asyncio
     async def test_stats_service_error_propagates(self):

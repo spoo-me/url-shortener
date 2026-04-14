@@ -121,6 +121,26 @@ class BaseRepository(Generic[T]):
             )
             raise
 
+    async def _update_modified(self, query: dict, ops: dict) -> bool:
+        """Apply an update operation. Returns ``True`` only if a document was actually changed.
+
+        Use instead of ``_update`` when the caller needs to distinguish
+        "matched but unchanged" from "matched and modified" (e.g. conditional
+        status transitions that should not trigger side-effects twice).
+        """
+        try:
+            result = await self._col.update_one(query, ops)
+            return result.modified_count > 0
+        except PyMongoError as exc:
+            log.error(
+                "repo_update_modified_failed",
+                collection=self._collection_name,
+                query_keys=list(query.keys()),
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
+            raise
+
     async def _delete(self, query: dict) -> bool:
         """Delete a single document. Returns ``True`` if a document was removed."""
         try:

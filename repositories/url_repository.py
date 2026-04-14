@@ -78,9 +78,11 @@ class UrlRepository(BaseRepository[UrlV2Doc]):
         """Conditionally expire the URL if total_clicks >= max_clicks.
 
         This is an atomic conditional update — not a read-then-write.
-        Returns True if the URL was expired (document was modified).
+        Returns True only if the URL was actually expired (status changed),
+        not if it was already EXPIRED. Uses ``modified_count`` to avoid
+        duplicate expiration side-effects.
         """
-        return await self._update(
+        return await self._update_modified(
             {"_id": url_id, "total_clicks": {"$gte": max_clicks}},
             {"$set": {"status": UrlStatus.EXPIRED}},
         )
