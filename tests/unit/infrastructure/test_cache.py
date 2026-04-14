@@ -1,7 +1,7 @@
-"""Unit tests for UrlCache and DualCache."""
+"""Unit tests for UrlCache, UrlCacheData, and DualCache."""
 
 import json
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from infrastructure.cache.dual_cache import DualCache
 from infrastructure.cache.url_cache import UrlCache
@@ -58,6 +58,60 @@ class TestUrlCache:
         _, _, payload = r.setex.call_args[0]
         parsed = json.loads(payload)
         assert parsed["password_hash"] == "$argon2id$..."
+
+
+class TestUrlCacheDataVerifyPassword:
+    """Unit tests for UrlCacheData.verify_password()."""
+
+    def test_no_password_returns_true_for_none(self):
+        data = _url_data(password_hash=None)
+        assert data.verify_password(None) is True
+
+    def test_no_password_returns_true_for_any_input(self):
+        data = _url_data(password_hash=None)
+        assert data.verify_password("anything") is True
+
+    def test_v2_correct_password(self):
+        data = _url_data(password_hash="$argon2id$hash", schema_version="v2")
+        with patch(
+            "infrastructure.cache.url_cache.verify_password_hash", return_value=True
+        ):
+            assert data.verify_password("correct") is True
+
+    def test_v2_wrong_password(self):
+        data = _url_data(password_hash="$argon2id$hash", schema_version="v2")
+        with patch(
+            "infrastructure.cache.url_cache.verify_password_hash", return_value=False
+        ):
+            assert data.verify_password("wrong") is False
+
+    def test_v2_none_password_passes_empty_string_to_hash(self):
+        data = _url_data(password_hash="$argon2id$hash", schema_version="v2")
+        with patch(
+            "infrastructure.cache.url_cache.verify_password_hash", return_value=False
+        ) as mock:
+            data.verify_password(None)
+            mock.assert_called_once_with("", "$argon2id$hash")
+
+    def test_v1_plaintext_correct(self):
+        data = _url_data(password_hash="secret123", schema_version="v1")
+        assert data.verify_password("secret123") is True
+
+    def test_v1_plaintext_wrong(self):
+        data = _url_data(password_hash="secret123", schema_version="v1")
+        assert data.verify_password("wrong") is False
+
+    def test_emoji_plaintext_correct(self):
+        data = _url_data(password_hash="mypass", schema_version="emoji")
+        assert data.verify_password("mypass") is True
+
+    def test_emoji_plaintext_wrong(self):
+        data = _url_data(password_hash="mypass", schema_version="emoji")
+        assert data.verify_password("nope") is False
+
+    def test_v1_none_password_does_not_match(self):
+        data = _url_data(password_hash="secret", schema_version="v1")
+        assert data.verify_password(None) is False
 
 
 class TestDualCache:

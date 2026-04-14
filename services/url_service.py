@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import re
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 
 from bson import ObjectId
@@ -103,11 +103,12 @@ async def _handle_password(
     if "password" not in request.model_fields_set:
         return
     if not request.password and existing.password:
+        # Empty string clears the password
         ops["password"] = None
     elif request.password:
-        new_hash = hash_password(request.password)
-        if new_hash != existing.password:
-            ops["password"] = new_hash
+        # Always re-hash — argon2 uses random salts so string comparison
+        # cannot detect "same password", and the write is cheap.
+        ops["password"] = hash_password(request.password)
 
 
 async def _handle_max_clicks(
@@ -161,7 +162,7 @@ def _simple_field_handler(field_name: str) -> Callable:
     return handler
 
 
-FIELD_HANDLERS: dict[str, Callable] = {
+FIELD_HANDLERS: dict[str, Callable[..., Awaitable[None]]] = {
     "long_url": _handle_long_url,
     "alias": _handle_alias,
     "password": _handle_password,
@@ -529,10 +530,11 @@ class UrlService:
         owner_id: ObjectId,
         query: ListUrlsQuery,
     ) -> dict:
-        """
-        Return a paginated list of URLs owned by this user.
+        """Return a paginated list of URLs owned by this user.
 
-        The returned dict matches the current API JSON response shape exactly.
+        Returns a dict with ``items`` as a list of ``UrlV2Doc`` domain
+        objects (not DTOs).  The route layer must map items to
+        ``UrlListItem.from_doc()`` before returning to clients.
         """
         start_time = time.perf_counter()
         mongo_query: dict = {"owner_id": owner_id}

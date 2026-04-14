@@ -153,7 +153,9 @@ class UrlListItem(BaseModel):
         def _ensure_utc(dt: datetime | None) -> datetime | None:
             if dt is None:
                 return None
-            return dt.replace(tzinfo=timezone.utc) if not dt.tzinfo else dt
+            if not dt.tzinfo:
+                return dt.replace(tzinfo=timezone.utc)
+            return dt.astimezone(timezone.utc)
 
         return cls(
             id=str(doc.id),
