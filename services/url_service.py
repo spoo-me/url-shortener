@@ -91,7 +91,7 @@ async def _handle_alias(
         if not await service.check_alias_available(request.alias):
             log.info(
                 "url_alias_conflict",
-                alias=request.alias,
+                short_code=request.alias,
             )
             raise ConflictError("Alias is already in use")
         ops["alias"] = request.alias

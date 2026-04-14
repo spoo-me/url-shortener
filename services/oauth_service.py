@@ -37,7 +37,7 @@ from schemas.models.user import (
     UserStatus,
 )
 from schemas.results import AuthResult
-from services.auth_service import AuthService
+from services.token_factory import TokenFactory
 from shared.logging import get_logger
 
 log = get_logger(__name__)
@@ -47,19 +47,19 @@ class OAuthService:
     """OAuth flow orchestration service.
 
     Args:
-        user_repo:    Repository for the ``users`` collection.
-        auth_service: AuthService instance used for JWT token generation.
-        email:        Email provider for welcome emails.
+        user_repo:     Repository for the ``users`` collection.
+        token_factory: JWT token generation (issues access + refresh pairs).
+        email:         Email provider for welcome emails.
     """
 
     def __init__(
         self,
         user_repo: UserRepository,
-        auth_service: AuthService,
+        token_factory: TokenFactory,
         email: EmailProvider,
     ) -> None:
         self._user_repo = user_repo
-        self._auth_service = auth_service
+        self._token_factory = token_factory
         self._email = email
 
     # ── Private helpers ───────────────────────────────────────────────────────
@@ -211,7 +211,7 @@ class OAuthService:
 
     def _make_tokens(self, user: UserDoc, provider_key: str) -> tuple[str, str]:
         """Issue access + refresh tokens for an OAuth user."""
-        return self._auth_service.issue_tokens(user, provider_key)
+        return self._token_factory.issue_tokens(user, provider_key)
 
     # ── Public API ────────────────────────────────────────────────────────────
 

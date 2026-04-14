@@ -25,7 +25,11 @@ from repositories.token_repository import TokenRepository
 from repositories.url_repository import UrlRepository
 from repositories.user_repository import UserRepository
 from services.api_key_service import ApiKeyService
-from services.auth_service import AuthService
+from services.auth.credentials import CredentialService
+from services.auth.device import DeviceAuthService
+from services.auth.otp import OtpService
+from services.auth.password import PasswordService
+from services.auth.verification import EmailVerificationService
 from services.click import ClickService, LegacyClickHandler, V2ClickHandler
 from services.contact_service import ContactService
 from services.export.formatters import default_formatters
@@ -33,6 +37,7 @@ from services.export.service import ExportService
 from services.oauth_service import OAuthService
 from services.profile_picture_service import ProfilePictureService
 from services.stats_service import StatsService
+from services.token_factory import TokenFactory
 from services.url_service import UrlService
 
 
@@ -88,17 +93,42 @@ def wire_services(app: FastAPI, settings: AppSettings, redis_client) -> None:
         api_key_repo,
         max_active_keys=settings.max_active_api_keys,
     )
-    app.state.auth_service = AuthService(
+    token_factory = TokenFactory(settings.jwt)
+    otp_service = OtpService(token_repo)
+
+    app.state.user_repo = user_repo
+    app.state.token_factory = token_factory
+
+    app.state.credential_service = CredentialService(
         user_repo,
-        token_repo,
+        otp_service,
         app.state.email_provider,
-        settings.jwt,
+        token_factory,
         account_password_min_length=settings.account_password_min_length,
         account_password_max_length=settings.account_password_max_length,
     )
+    app.state.verification_service = EmailVerificationService(
+        user_repo,
+        otp_service,
+        app.state.email_provider,
+        token_factory,
+    )
+    app.state.password_service = PasswordService(
+        user_repo,
+        otp_service,
+        app.state.email_provider,
+        account_password_min_length=settings.account_password_min_length,
+        account_password_max_length=settings.account_password_max_length,
+    )
+    app.state.device_auth_service = DeviceAuthService(
+        user_repo,
+        token_repo,
+        token_factory,
+        app_registry=getattr(app.state, "app_registry", None),
+    )
     app.state.oauth_service = OAuthService(
         user_repo,
-        app.state.auth_service,
+        token_factory,
         app.state.email_provider,
     )
     app.state.profile_picture_service = ProfilePictureService(user_repo)

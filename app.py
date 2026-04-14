@@ -40,7 +40,7 @@ from middleware.security import (
 )
 from repositories.indexes import ensure_indexes
 from routes.api_v1 import router as api_v1_router
-from routes.auth_routes import router as auth_router
+from routes.auth import router as auth_router
 from routes.dashboard_routes import router as dashboard_router
 from routes.health_routes import router as health_router
 from routes.legacy.stats import router as legacy_stats_router
