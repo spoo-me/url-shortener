@@ -19,7 +19,7 @@ from dependencies import (
 from middleware.openapi import ERROR_RESPONSES
 from middleware.rate_limiter import Limits, limiter
 from schemas.dto.requests.url import ListUrlsQuery
-from schemas.dto.responses.url import UrlListResponse
+from schemas.dto.responses.url import UrlListItem, UrlListResponse
 from services.url_service import UrlService
 
 router = APIRouter(tags=["Link Management"])
@@ -59,4 +59,6 @@ async def list_urls_v1(
     `status`, `createdAfter`, `createdBefore`, `passwordSet`, `maxClicksSet`,
     and `search`.
     """
-    return await url_service.list_by_owner(user.user_id, query)
+    result = await url_service.list_by_owner(user.user_id, query)
+    result["items"] = [UrlListItem.from_doc(doc) for doc in result["items"]]
+    return result

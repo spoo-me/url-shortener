@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import re
 import time
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 
 from bson import ObjectId
@@ -58,6 +59,119 @@ from shared.validators import (
 )
 
 log = get_logger(__name__)
+
+# ── Field update handlers ────────────────────────────────────────────────────
+#
+# Each handler inspects one field on the update request and, if changed,
+# writes the new value into `ops`.  Handlers are registered in
+# FIELD_HANDLERS and iterated by UrlService.update().
+#
+# Signature: (request, existing, ops, service) -> None
+#   request  — UpdateUrlRequest from the caller
+#   existing — current UrlV2Doc from the database
+#   ops      — dict collecting $set fields (mutated in place)
+#   service  — the UrlService instance (for cross-cutting helpers)
+
+
+async def _handle_long_url(
+    request: UpdateUrlRequest, existing: UrlV2Doc, ops: dict, service: UrlService
+) -> None:
+    if request.long_url is not None and request.long_url != existing.long_url:
+        if not validate_url(
+            request.long_url, blocked_self_domains=service._blocked_self_domains
+        ):
+            raise ValidationError("URL is not allowed or invalid", field="long_url")
+        ops["long_url"] = request.long_url
+
+
+async def _handle_alias(
+    request: UpdateUrlRequest, existing: UrlV2Doc, ops: dict, service: UrlService
+) -> None:
+    if request.alias is not None and request.alias != existing.alias:
+        if not await service.check_alias_available(request.alias):
+            log.info(
+                "url_alias_conflict",
+                alias=request.alias,
+            )
+            raise ConflictError("Alias is already in use")
+        ops["alias"] = request.alias
+
+
+async def _handle_password(
+    request: UpdateUrlRequest, existing: UrlV2Doc, ops: dict, service: UrlService
+) -> None:
+    if "password" not in request.model_fields_set:
+        return
+    if not request.password and existing.password:
+        # Empty string clears the password
+        ops["password"] = None
+    elif request.password:
+        # Always re-hash — argon2 uses random salts so string comparison
+        # cannot detect "same password", and the write is cheap.
+        ops["password"] = hash_password(request.password)
+
+
+async def _handle_max_clicks(
+    request: UpdateUrlRequest, existing: UrlV2Doc, ops: dict, service: UrlService
+) -> None:
+    if "max_clicks" not in request.model_fields_set:
+        return
+    if (request.max_clicks is None or request.max_clicks == 0) and existing.max_clicks:
+        ops["max_clicks"] = None
+    elif request.max_clicks and request.max_clicks != existing.max_clicks:
+        ops["max_clicks"] = request.max_clicks
+
+
+async def _handle_expire_after(
+    request: UpdateUrlRequest, existing: UrlV2Doc, ops: dict, service: UrlService
+) -> None:
+    if "expire_after" not in request.model_fields_set:
+        return
+    if request.expire_after is None and existing.expire_after:
+        ops["expire_after"] = None
+    elif request.expire_after is not None:
+        expire_ts = parse_datetime(request.expire_after)
+        if expire_ts is None:
+            raise ValidationError("Invalid expire_after format", field="expire_after")
+        if expire_ts != existing.expire_after:
+            ops["expire_after"] = expire_ts
+
+
+async def _handle_status(
+    request: UpdateUrlRequest, existing: UrlV2Doc, ops: dict, service: UrlService
+) -> None:
+    if request.status is not None and request.status != existing.status:
+        ops["status"] = request.status
+
+
+def _simple_field_handler(field_name: str) -> Callable:
+    """Factory for nullable fields that just need a changed-check."""
+
+    async def handler(
+        request: UpdateUrlRequest, existing: UrlV2Doc, ops: dict, service: UrlService
+    ) -> None:
+        if field_name not in request.model_fields_set:
+            return
+        value = getattr(request, field_name)
+        current = getattr(existing, field_name)
+        if value is None and current:
+            ops[field_name] = None
+        elif value != current:
+            ops[field_name] = value
+
+    return handler
+
+
+FIELD_HANDLERS: dict[str, Callable[..., Awaitable[None]]] = {
+    "long_url": _handle_long_url,
+    "alias": _handle_alias,
+    "password": _handle_password,
+    "max_clicks": _handle_max_clicks,
+    "expire_after": _handle_expire_after,
+    "block_bots": _simple_field_handler("block_bots"),
+    "private_stats": _simple_field_handler("private_stats"),
+    "status": _handle_status,
+}
 
 
 class UrlService:
@@ -318,90 +432,13 @@ class UrlService:
         if existing.status == UrlStatus.BLOCKED:
             raise ForbiddenError("Cannot modify a blocked URL")
 
-        # 3. Build update ops — only changed fields
+        # 3. Build update ops via field handlers
         update_ops: dict = {}
-        fields_set = request.model_fields_set
+        for handler in FIELD_HANDLERS.values():
+            await handler(request, existing, update_ops, self)
 
-        if request.long_url is not None and request.long_url != existing.long_url:
-            if not validate_url(
-                request.long_url, blocked_self_domains=self._blocked_self_domains
-            ):
-                raise ValidationError("URL is not allowed or invalid", field="long_url")
-            update_ops["long_url"] = request.long_url
-
-        if request.alias is not None and request.alias != existing.alias:
-            if not await self.check_alias_available(request.alias):
-                log.info(
-                    "url_alias_conflict",
-                    alias=request.alias,
-                    url_id=str(url_id),
-                )
-                raise ConflictError("Alias is already in use")
-            update_ops["alias"] = request.alias
-
-        if "password" in fields_set:
-            if not request.password and existing.password:
-                update_ops["password"] = None
-            elif request.password:
-                new_hash = hash_password(request.password)
-                if new_hash != existing.password:
-                    update_ops["password"] = new_hash
-
-        if "max_clicks" in fields_set:
-            if (
-                request.max_clicks is None or request.max_clicks == 0
-            ) and existing.max_clicks:
-                update_ops["max_clicks"] = None
-            elif request.max_clicks and request.max_clicks != existing.max_clicks:
-                update_ops["max_clicks"] = request.max_clicks
-
-        if "expire_after" in fields_set:
-            if request.expire_after is None and existing.expire_after:
-                update_ops["expire_after"] = None
-            elif request.expire_after is not None:
-                expire_ts = parse_datetime(request.expire_after)
-                if expire_ts is None:
-                    raise ValidationError(
-                        "Invalid expire_after format", field="expire_after"
-                    )
-                if expire_ts != existing.expire_after:
-                    update_ops["expire_after"] = expire_ts
-
-        if "block_bots" in fields_set:
-            if request.block_bots is None and existing.block_bots:
-                update_ops["block_bots"] = None
-            elif request.block_bots != existing.block_bots:
-                update_ops["block_bots"] = request.block_bots
-
-        if "private_stats" in fields_set:
-            if request.private_stats is None and existing.private_stats:
-                update_ops["private_stats"] = None
-            elif request.private_stats != existing.private_stats:
-                update_ops["private_stats"] = request.private_stats
-
-        if request.status is not None and request.status != existing.status:
-            update_ops["status"] = request.status
-
-        # Auto-reactivate EXPIRED URLs when expiry conditions are updated
-        if existing.status == UrlStatus.EXPIRED and "status" not in update_ops:
-            new_max = update_ops.get("max_clicks", existing.max_clicks)
-            new_expire = update_ops.get("expire_after", existing.expire_after)
-            max_clicks_cleared = "max_clicks" in update_ops and new_max is None
-            max_clicks_raised = (
-                new_max is not None
-                and existing.max_clicks is not None
-                and new_max > existing.total_clicks
-            )
-            expire_extended = new_expire is not None and new_expire > now
-            expire_cleared = "expire_after" in update_ops and new_expire is None
-
-            if (
-                max_clicks_cleared
-                or max_clicks_raised
-                or expire_extended
-                or expire_cleared
-            ):
-                update_ops["status"] = UrlStatus.ACTIVE
+        # Auto-reactivate EXPIRED URLs when expiry conditions improve
+        self._auto_reactivate(existing, update_ops, now)
 
         if not update_ops:
             return existing  # No changes detected
@@ -427,6 +464,34 @@ class UrlService:
         merged.update(update_ops)
         merged["_id"] = url_id
         return UrlV2Doc.from_mongo(merged)
+
+    def _auto_reactivate(
+        self, existing: UrlV2Doc, update_ops: dict, now: datetime
+    ) -> None:
+        """Reactivate an EXPIRED URL if expiry conditions improve.
+
+        Only applies when the URL is currently EXPIRED and the caller
+        did not explicitly set a new status.
+        """
+        if existing.status != UrlStatus.EXPIRED:
+            return
+        if "status" in update_ops:
+            return
+
+        new_max = update_ops.get("max_clicks", existing.max_clicks)
+        new_expire = update_ops.get("expire_after", existing.expire_after)
+
+        max_clicks_cleared = "max_clicks" in update_ops and new_max is None
+        max_clicks_raised = (
+            new_max is not None
+            and existing.max_clicks is not None
+            and new_max > existing.total_clicks
+        )
+        expire_extended = new_expire is not None and new_expire > now
+        expire_cleared = "expire_after" in update_ops and new_expire is None
+
+        if max_clicks_cleared or max_clicks_raised or expire_extended or expire_cleared:
+            update_ops["status"] = UrlStatus.ACTIVE
 
     async def delete(
         self,
@@ -465,10 +530,11 @@ class UrlService:
         owner_id: ObjectId,
         query: ListUrlsQuery,
     ) -> dict:
-        """
-        Return a paginated list of URLs owned by this user.
+        """Return a paginated list of URLs owned by this user.
 
-        The returned dict matches the current API JSON response shape exactly.
+        Returns a dict with ``items`` as a list of ``UrlV2Doc`` domain
+        objects (not DTOs).  The route layer must map items to
+        ``UrlListItem.from_doc()`` before returning to clients.
         """
         start_time = time.perf_counter()
         mongo_query: dict = {"owner_id": owner_id}
@@ -523,8 +589,7 @@ class UrlService:
             limit=query.page_size,
         )
 
-        items = [_format_url_list_item(doc) for doc in docs]
-        has_next = (skip + len(items)) < total
+        has_next = (skip + len(docs)) < total
         duration_ms = int((time.perf_counter() - start_time) * 1000)
 
         log.info(
@@ -536,13 +601,13 @@ class UrlService:
             sort_order="descending" if sort_order == -1 else "ascending",
             filter_count=len(mongo_query) - 1,  # subtract the base owner_id filter
             total=total,
-            returned=len(items),
+            returned=len(docs),
             has_next=has_next,
             duration_ms=duration_ms,
         )
 
         return {
-            "items": items,
+            "items": docs,
             "page": query.page,
             "pageSize": query.page_size,
             "total": total,
@@ -681,30 +746,3 @@ def _legacy_doc_to_cache(
 
 def _emoji_doc_to_cache(short_code: str, doc: EmojiUrlDoc) -> UrlCacheData:
     return _legacy_doc_to_cache(short_code, doc, schema_version=SchemaVersion.EMOJI)
-
-
-def _ensure_utc(dt: datetime | None) -> datetime | None:
-    """Ensure a datetime is UTC-aware. Returns None for None input."""
-    if dt is None:
-        return None
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
-
-
-def _format_url_list_item(doc: UrlV2Doc) -> dict:
-    """Format a UrlV2Doc for the URL list response."""
-    return {
-        "id": str(doc.id),
-        "alias": doc.alias,
-        "long_url": doc.long_url,
-        "status": doc.status,
-        "created_at": _ensure_utc(doc.created_at),
-        "expire_after": int(doc.expire_after.timestamp()) if doc.expire_after else None,
-        "max_clicks": doc.max_clicks,
-        "private_stats": doc.private_stats,
-        "block_bots": bool(doc.block_bots),
-        "password_set": doc.password is not None,
-        "total_clicks": doc.total_clicks,
-        "last_click": _ensure_utc(doc.last_click),
-    }

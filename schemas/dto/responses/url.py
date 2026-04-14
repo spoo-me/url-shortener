@@ -13,11 +13,13 @@ endpoints exactly, including the camelCase keys in UrlListResponse
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from schemas.models.url import UrlStatus
+from schemas.models.base import ANONYMOUS_OWNER_ID
+from schemas.models.url import UrlStatus, UrlV2Doc
+from shared.datetime_utils import to_unix_timestamp
 
 
 class UrlResponse(BaseModel):
@@ -51,6 +53,21 @@ class UrlResponse(BaseModel):
         default=None,
         description="Whether statistics are private (owner-only).",
     )
+
+    @classmethod
+    def from_doc(cls, doc: UrlV2Doc, app_url: str) -> UrlResponse:
+        """Build from a UrlV2Doc and the application base URL."""
+        return cls(
+            alias=doc.alias,
+            short_url=f"{app_url.rstrip('/')}/{doc.alias}",
+            long_url=doc.long_url,
+            owner_id=str(doc.owner_id)
+            if doc.owner_id and doc.owner_id != ANONYMOUS_OWNER_ID
+            else None,
+            created_at=to_unix_timestamp(doc.created_at, default=0),
+            status=doc.status,
+            private_stats=doc.private_stats,
+        )
 
 
 class UpdateUrlResponse(BaseModel):
@@ -92,6 +109,22 @@ class UpdateUrlResponse(BaseModel):
         description="Last update time as Unix timestamp.", examples=[1704067200]
     )
 
+    @classmethod
+    def from_doc(cls, doc: UrlV2Doc) -> UpdateUrlResponse:
+        """Build from a UrlV2Doc after an update operation."""
+        return cls(
+            id=str(doc.id),
+            alias=doc.alias,
+            long_url=doc.long_url,
+            status=doc.status,
+            password_set=doc.password is not None,
+            max_clicks=doc.max_clicks,
+            expire_after=to_unix_timestamp(doc.expire_after),
+            block_bots=doc.block_bots,
+            private_stats=doc.private_stats,
+            updated_at=to_unix_timestamp(doc.updated_at, default=0),
+        )
+
 
 class UrlListItem(BaseModel):
     """A single URL entry inside UrlListResponse.items.
@@ -115,6 +148,32 @@ class UrlListItem(BaseModel):
     password_set: bool
     total_clicks: int | None = None
     last_click: datetime | None = None
+
+    @classmethod
+    def from_doc(cls, doc: UrlV2Doc) -> UrlListItem:
+        """Build from a UrlV2Doc for URL list responses."""
+
+        def _ensure_utc(dt: datetime | None) -> datetime | None:
+            if dt is None:
+                return None
+            if not dt.tzinfo:
+                return dt.replace(tzinfo=timezone.utc)
+            return dt.astimezone(timezone.utc)
+
+        return cls(
+            id=str(doc.id),
+            alias=doc.alias,
+            long_url=doc.long_url,
+            status=doc.status,
+            created_at=_ensure_utc(doc.created_at),
+            expire_after=to_unix_timestamp(doc.expire_after),
+            max_clicks=doc.max_clicks,
+            private_stats=doc.private_stats,
+            block_bots=bool(doc.block_bots) if doc.block_bots is not None else None,
+            password_set=doc.password is not None,
+            total_clicks=doc.total_clicks,
+            last_click=_ensure_utc(doc.last_click),
+        )
 
 
 class DeleteUrlResponse(BaseModel):

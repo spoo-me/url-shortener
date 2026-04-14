@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 
 import pytest
+from bson import ObjectId
 from pydantic import ValidationError
 
 from schemas.dto.requests.url import (
@@ -13,9 +15,12 @@ from schemas.dto.requests.url import (
     UpdateUrlRequest,
 )
 from schemas.dto.responses.url import (
+    UpdateUrlResponse,
+    UrlListItem,
     UrlListResponse,
     UrlResponse,
 )
+from schemas.models.url import UrlV2Doc
 
 # ── CreateUrlRequest ───────────────────────────────────────────────────────────
 
@@ -220,3 +225,159 @@ class TestUrlListResponse:
         assert "sortOrder" in d
         assert d["pageSize"] == 20
         assert d["hasNext"] is False
+
+
+# ── from_doc() factory method tests ──────────────────────────────────────────
+
+
+def _make_doc(**overrides) -> UrlV2Doc:
+    """Build a UrlV2Doc with sensible defaults; override via kwargs."""
+    base = {
+        "_id": ObjectId(),
+        "alias": "test123",
+        "owner_id": ObjectId(),
+        "created_at": datetime(2025, 1, 1, tzinfo=timezone.utc),
+        "long_url": "https://example.com/long",
+        "password": None,
+        "block_bots": False,
+        "max_clicks": None,
+        "expire_after": None,
+        "status": "ACTIVE",
+        "private_stats": False,
+        "total_clicks": 42,
+        "last_click": datetime(2025, 6, 1, tzinfo=timezone.utc),
+        "updated_at": datetime(2025, 3, 1, tzinfo=timezone.utc),
+    }
+    base.update(overrides)
+    return UrlV2Doc.from_mongo(base)
+
+
+class TestUrlResponseFromDoc:
+    def test_basic_fields(self):
+        doc = _make_doc()
+        r = UrlResponse.from_doc(doc, "https://spoo.me")
+        assert r.alias == "test123"
+        assert r.short_url == "https://spoo.me/test123"
+        assert r.long_url == "https://example.com/long"
+        assert r.status == "ACTIVE"
+
+    def test_owner_id_stringified(self):
+        oid = ObjectId()
+        r = UrlResponse.from_doc(_make_doc(owner_id=oid), "https://spoo.me")
+        assert r.owner_id == str(oid)
+
+    def test_anonymous_owner_id_returns_none(self):
+        """Anonymous URLs (sentinel ObjectId) should return null owner_id."""
+        from schemas.models.base import ANONYMOUS_OWNER_ID
+
+        r = UrlResponse.from_doc(
+            _make_doc(owner_id=ANONYMOUS_OWNER_ID), "https://spoo.me"
+        )
+        assert r.owner_id is None
+
+    def test_created_at_is_unix_timestamp(self):
+        r = UrlResponse.from_doc(_make_doc(), "https://spoo.me")
+        assert isinstance(r.created_at, int)
+        assert r.created_at == int(
+            datetime(2025, 1, 1, tzinfo=timezone.utc).timestamp()
+        )
+
+    def test_app_url_trailing_slash_stripped(self):
+        r = UrlResponse.from_doc(_make_doc(), "https://spoo.me/")
+        assert r.short_url == "https://spoo.me/test123"
+
+
+class TestUpdateUrlResponseFromDoc:
+    def test_basic_fields(self):
+        doc = _make_doc()
+        r = UpdateUrlResponse.from_doc(doc)
+        assert r.id == str(doc.id)
+        assert r.alias == "test123"
+        assert r.long_url == "https://example.com/long"
+        assert r.status == "ACTIVE"
+
+    def test_password_set_true_when_password_exists(self):
+        r = UpdateUrlResponse.from_doc(_make_doc(password="$argon2id$hash"))
+        assert r.password_set is True
+
+    def test_password_set_false_when_no_password(self):
+        r = UpdateUrlResponse.from_doc(_make_doc(password=None))
+        assert r.password_set is False
+
+    def test_max_clicks_preserved(self):
+        r = UpdateUrlResponse.from_doc(_make_doc(max_clicks=100))
+        assert r.max_clicks == 100
+
+    def test_max_clicks_none(self):
+        r = UpdateUrlResponse.from_doc(_make_doc(max_clicks=None))
+        assert r.max_clicks is None
+
+    def test_expire_after_as_unix_timestamp(self):
+        dt = datetime(2025, 12, 31, tzinfo=timezone.utc)
+        r = UpdateUrlResponse.from_doc(_make_doc(expire_after=dt))
+        assert r.expire_after == int(dt.timestamp())
+
+    def test_expire_after_none(self):
+        r = UpdateUrlResponse.from_doc(_make_doc(expire_after=None))
+        assert r.expire_after is None
+
+    def test_updated_at_as_unix_timestamp(self):
+        r = UpdateUrlResponse.from_doc(_make_doc())
+        assert isinstance(r.updated_at, int)
+
+    def test_updated_at_none_defaults_to_zero(self):
+        r = UpdateUrlResponse.from_doc(_make_doc(updated_at=None))
+        assert r.updated_at == 0
+
+
+class TestUrlListItemFromDoc:
+    def test_basic_fields(self):
+        doc = _make_doc()
+        r = UrlListItem.from_doc(doc)
+        assert r.id == str(doc.id)
+        assert r.alias == "test123"
+        assert r.total_clicks == 42
+
+    def test_password_set_derived(self):
+        assert UrlListItem.from_doc(_make_doc(password="hash")).password_set is True
+        assert UrlListItem.from_doc(_make_doc(password=None)).password_set is False
+
+    def test_block_bots_none_preserved(self):
+        r = UrlListItem.from_doc(_make_doc(block_bots=None))
+        assert r.block_bots is None
+
+    def test_block_bots_false_preserved(self):
+        r = UrlListItem.from_doc(_make_doc(block_bots=False))
+        assert r.block_bots is False
+
+    def test_block_bots_true(self):
+        r = UrlListItem.from_doc(_make_doc(block_bots=True))
+        assert r.block_bots is True
+
+    def test_created_at_is_utc_datetime(self):
+        r = UrlListItem.from_doc(_make_doc())
+        assert r.created_at is not None
+        assert r.created_at.tzinfo is not None
+
+    def test_created_at_naive_gets_utc(self):
+        naive = datetime(2025, 1, 1)  # no tzinfo
+        r = UrlListItem.from_doc(_make_doc(created_at=naive))
+        assert r.created_at.tzinfo == timezone.utc
+
+    def test_last_click_none(self):
+        r = UrlListItem.from_doc(_make_doc(last_click=None))
+        assert r.last_click is None
+
+    def test_last_click_utc(self):
+        r = UrlListItem.from_doc(_make_doc())
+        assert r.last_click is not None
+        assert r.last_click.tzinfo is not None
+
+    def test_expire_after_as_unix_timestamp(self):
+        dt = datetime(2025, 12, 31, tzinfo=timezone.utc)
+        r = UrlListItem.from_doc(_make_doc(expire_after=dt))
+        assert r.expire_after == int(dt.timestamp())
+
+    def test_expire_after_none(self):
+        r = UrlListItem.from_doc(_make_doc(expire_after=None))
+        assert r.expire_after is None

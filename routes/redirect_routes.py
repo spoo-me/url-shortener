@@ -25,7 +25,6 @@ from middleware.rate_limiter import Limits, limiter
 from schemas.models.url import SchemaVersion
 from services.click import ClickService
 from services.url_service import UrlService
-from shared.crypto import verify_password
 from shared.ip_utils import get_client_ip
 from shared.logging import get_logger, should_sample
 from shared.templates import templates
@@ -47,15 +46,6 @@ def _error_page(request: Request, code: str, message: str, status: int) -> Respo
         },
         status_code=status,
     )
-
-
-def _check_url_password(
-    password: str | None, password_hash: str, schema: SchemaVersion
-) -> bool:
-    """Verify a URL password — bcrypt for v2, plaintext comparison for v1/emoji."""
-    if schema == SchemaVersion.V2:
-        return verify_password(password or "", password_hash)
-    return password == password_hash
 
 
 @router.api_route("/{short_code}", methods=["GET", "HEAD"], include_in_schema=False)
@@ -91,7 +81,7 @@ async def redirect_url(
     # 2. Password check
     if url_data.password_hash:
         password = request.query_params.get("password")
-        if not _check_url_password(password, url_data.password_hash, schema):
+        if not url_data.verify_password(password):
             log.debug("url_password_required", short_code=short_code, schema=schema)
             return templates.TemplateResponse(
                 request,
@@ -163,7 +153,7 @@ async def check_password(
     host_url = str(request.base_url)
 
     try:
-        url_data, schema = await url_service.resolve(short_code)
+        url_data, _schema = await url_service.resolve(short_code)
     except (NotFoundError, BlockedUrlError, ForbiddenError, GoneError):
         return _error_page(
             request, "400", "Invalid short code or URL not password-protected", 400
@@ -174,7 +164,7 @@ async def check_password(
             request, "400", "Invalid short code or URL not password-protected", 400
         )
 
-    if _check_url_password(password, url_data.password_hash, schema):
+    if url_data.verify_password(password):
         log.info("url_password_verified", short_code=short_code)
         return RedirectResponse(f"/{short_code}?password={password}", status_code=302)
 

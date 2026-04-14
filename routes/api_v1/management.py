@@ -26,7 +26,6 @@ from middleware.rate_limiter import Limits, limiter
 from schemas.dto.requests.url import UpdateUrlRequest, UpdateUrlStatusRequest
 from schemas.dto.responses.url import DeleteUrlResponse, UpdateUrlResponse
 from services.url_service import UrlService
-from shared.datetime_utils import to_unix_timestamp
 
 router = APIRouter(tags=["Link Management"])
 
@@ -84,18 +83,7 @@ async def update_url_v1(
     """
     oid = _parse_url_id(url_id)
     doc = await url_service.update(oid, body, user.user_id)
-    return UpdateUrlResponse(
-        id=str(doc.id),
-        alias=doc.alias,
-        long_url=doc.long_url,
-        status=doc.status,
-        password_set=doc.password is not None,
-        max_clicks=doc.max_clicks,
-        expire_after=to_unix_timestamp(doc.expire_after),
-        block_bots=doc.block_bots,
-        private_stats=doc.private_stats,
-        updated_at=to_unix_timestamp(doc.updated_at, default=0),
-    )
+    return UpdateUrlResponse.from_doc(doc)
 
 
 @router.patch(
@@ -149,18 +137,7 @@ async def update_url_status_v1(
     status_only = UpdateUrlRequest(status=body.status)
 
     doc = await url_service.update(oid, status_only, user.user_id)
-    return UpdateUrlResponse(
-        id=str(doc.id),
-        alias=doc.alias,
-        long_url=doc.long_url,
-        status=doc.status,
-        password_set=doc.password is not None,
-        max_clicks=doc.max_clicks,
-        expire_after=to_unix_timestamp(doc.expire_after),
-        block_bots=doc.block_bots,
-        private_stats=doc.private_stats,
-        updated_at=to_unix_timestamp(doc.updated_at, default=0),
-    )
+    return UpdateUrlResponse.from_doc(doc)
 
 
 @router.delete(
