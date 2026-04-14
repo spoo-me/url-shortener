@@ -22,7 +22,6 @@ from middleware.rate_limiter import Limits, dynamic_limit, limiter
 from schemas.dto.requests.stats import StatsQuery
 from schemas.dto.responses.stats import StatsResponse
 from services.stats_service import StatsService
-from shared.datetime_utils import parse_datetime
 
 router = APIRouter(tags=["Statistics"])
 
@@ -72,19 +71,5 @@ async def stats_v1(
     or `short_code` using query params or a JSON `filters` object.
     """
     owner_id = str(user.user_id) if user is not None else None
-
-    start_date = parse_datetime(query.start_date) if query.start_date else None
-    end_date = parse_datetime(query.end_date) if query.end_date else None
-
-    result = await stats_service.query(
-        owner_id=owner_id,
-        scope=query.scope,
-        short_code=query.short_code,
-        start_date=start_date,
-        end_date=end_date,
-        filters=query.parsed_filters,
-        group_by=query.parsed_group_by,
-        metrics=query.parsed_metrics,
-        tz_name=query.timezone,
-    )
+    result = await stats_service.query(query, owner_id)
     return StatsResponse.model_validate(result)

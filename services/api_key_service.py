@@ -20,12 +20,15 @@ from shared.logging import get_logger
 
 log = get_logger(__name__)
 
-MAX_ACTIVE_KEYS = 20
-
 
 class ApiKeyService:
-    def __init__(self, api_key_repo: ApiKeyRepository) -> None:
+    def __init__(
+        self,
+        api_key_repo: ApiKeyRepository,
+        max_active_keys: int = 20,
+    ) -> None:
         self._repo = api_key_repo
+        self._max_active_keys = max_active_keys
 
     async def create(
         self,
@@ -55,14 +58,16 @@ class ApiKeyService:
             raise EmailNotVerifiedError("Email verification required")
 
         active_count = await self._repo.count_by_user(user_id)
-        if active_count >= MAX_ACTIVE_KEYS:
+        if active_count >= self._max_active_keys:
             log.warning(
                 "api_key_create_rejected",
                 reason="max_limit_reached",
                 user_id=str(user_id),
                 count=active_count,
             )
-            raise ValidationError(f"maximum {MAX_ACTIVE_KEYS} active keys allowed")
+            raise ValidationError(
+                f"maximum {self._max_active_keys} active keys allowed"
+            )
 
         raw = generate_secure_token()
         token_prefix = raw[:8]

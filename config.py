@@ -148,6 +148,18 @@ class AppSettings(BaseSettings):
     hcaptcha_secret: str = ""
     hcaptcha_sitekey: str = ""
 
+    # Service limits (overridable by self-hosters via env vars)
+    max_active_api_keys: int = 20
+    max_date_range_days: int = 90
+    http_client_timeout: float = 5.0
+
+    # Validator constraints (overridable by self-hosters via env vars)
+    blocked_url_regex_timeout: float = 0.2
+    max_emoji_alias_length: int = 15
+    url_password_min_length: int = 8
+    account_password_min_length: int = 8
+    account_password_max_length: int = 128
+
     # Sub-configs (composed via model_validator below)
     db: DatabaseSettings | None = None
     redis: RedisSettings | None = None

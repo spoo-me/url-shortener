@@ -117,12 +117,12 @@ async def login(
     to prevent user enumeration.
     """
     email = body.email.strip().lower()
-    user, access_token, refresh_token = await auth_service.login(email, body.password)
+    result = await auth_service.login(email, body.password)
     jwt_cfg = request.app.state.settings.jwt
-    set_auth_cookies(response, access_token, refresh_token, jwt_cfg)
+    set_auth_cookies(response, result.access_token, result.refresh_token, jwt_cfg)
     return LoginResponse(
-        access_token=access_token,
-        user=UserProfileResponse.from_user(user),
+        access_token=result.access_token,
+        user=UserProfileResponse.from_user(result.user),
     )
 
 
@@ -157,16 +157,14 @@ async def register(
     email = body.email.strip().lower()
     user_name = (body.user_name or "").strip() or None
     client_ip = get_client_ip(request)
-    user, access_token, refresh_token, verification_sent = await auth_service.register(
-        email, body.password, user_name, client_ip
-    )
+    result = await auth_service.register(email, body.password, user_name, client_ip)
     jwt_cfg = request.app.state.settings.jwt
-    set_auth_cookies(response, access_token, refresh_token, jwt_cfg)
+    set_auth_cookies(response, result.access_token, result.refresh_token, jwt_cfg)
     return RegisterResponse(
-        access_token=access_token,
-        user=UserProfileResponse.from_user(user),
+        access_token=result.access_token,
+        user=UserProfileResponse.from_user(result.user),
         requires_verification=True,
-        verification_sent=verification_sent,
+        verification_sent=result.verification_sent,
     )
 
 
@@ -207,9 +205,7 @@ async def refresh(
         return resp
 
     try:
-        _user, new_access, new_refresh = await auth_service.refresh_token(
-            refresh_token_str
-        )
+        result = await auth_service.refresh_token(refresh_token_str)
     except AuthenticationError as exc:
         log.warning("token_refresh_failed", error=str(exc))
         resp = JSONResponse(
@@ -222,8 +218,8 @@ async def refresh(
         clear_auth_cookies(resp, jwt_cfg)
         return resp
 
-    resp = JSONResponse(RefreshResponse(access_token=new_access).model_dump())
-    set_auth_cookies(resp, new_access, new_refresh, jwt_cfg)
+    resp = JSONResponse(RefreshResponse(access_token=result.access_token).model_dump())
+    set_auth_cookies(resp, result.access_token, result.refresh_token, jwt_cfg)
     return resp
 
 
@@ -536,11 +532,9 @@ async def device_token(
 
     **Rate Limits**: 10/min
     """
-    user, access_token, refresh_token = await auth_service.exchange_device_code(
-        body.code.strip()
-    )
+    result = await auth_service.exchange_device_code(body.code.strip())
     return DeviceTokenResponse(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        user=UserProfileResponse.from_user(user),
+        access_token=result.access_token,
+        refresh_token=result.refresh_token,
+        user=UserProfileResponse.from_user(result.user),
     )

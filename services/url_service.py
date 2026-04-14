@@ -68,6 +68,8 @@ class UrlService:
         blocked_url_repo: BlockedUrlRepository,
         url_cache: UrlCache,
         blocked_self_domains: list[str],
+        blocked_url_regex_timeout: float = 0.2,
+        max_emoji_alias_length: int = 15,
     ) -> None:
         self._url_repo = url_repo
         self._legacy_repo = legacy_repo
@@ -75,6 +77,8 @@ class UrlService:
         self._blocked_url_repo = blocked_url_repo
         self._url_cache = url_cache
         self._blocked_self_domains = blocked_self_domains
+        self._blocked_url_regex_timeout = blocked_url_regex_timeout
+        self._max_emoji_alias_length = max_emoji_alias_length
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -193,7 +197,9 @@ class UrlService:
         # 2. Check against DB blocked patterns
         # validate_blocked_url returns True if allowed, False if blocked
         blocked_patterns = await self._blocked_url_repo.get_patterns()
-        if not validate_blocked_url(request.long_url, blocked_patterns):
+        if not validate_blocked_url(
+            request.long_url, blocked_patterns, timeout=self._blocked_url_regex_timeout
+        ):
             log.warning(
                 "url_create_rejected",
                 reason="blocked_pattern",
@@ -222,7 +228,7 @@ class UrlService:
         # 5. Alias — generate or validate custom (may loop; done after cheap checks)
         if request.alias:
             if not validate_alias(request.alias) and not validate_emoji_alias(
-                request.alias
+                request.alias, max_emojis=self._max_emoji_alias_length
             ):
                 raise ValidationError(
                     "Alias contains invalid characters", field="alias"
@@ -558,7 +564,7 @@ class UrlService:
           6 chars → urls first, urlsV2 fallback
           other   → urlsV2 first, urls fallback
         """
-        if validate_emoji_alias(short_code):
+        if validate_emoji_alias(short_code, max_emojis=self._max_emoji_alias_length):
             doc = await self._emoji_repo.find_by_id(short_code)
             if doc is not None:
                 return _emoji_doc_to_cache(short_code, doc), SchemaVersion.EMOJI

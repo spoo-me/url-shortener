@@ -46,6 +46,16 @@ def _build_smoke_app() -> FastAPI:
         app.state.http_client = MagicMock()
         app.state.oauth_providers = {}
         app.state.geoip = MagicMock()
+        # Mock services for singleton dependency lookups
+        app.state.url_service = MagicMock()
+        app.state.stats_service = MagicMock()
+        app.state.export_service = MagicMock()
+        app.state.api_key_service = MagicMock()
+        app.state.auth_service = MagicMock()
+        app.state.oauth_service = MagicMock()
+        app.state.profile_picture_service = MagicMock()
+        app.state.contact_service = MagicMock()
+        app.state.click_service = MagicMock()
         yield
 
     app = FastAPI(

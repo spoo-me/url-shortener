@@ -441,11 +441,13 @@ def test_create_url_then_export_stats():
     url_svc = AsyncMock()
     url_svc.create.return_value = doc
 
+    from schemas.results import ExportResult
+
     export_svc = AsyncMock()
-    export_svc.export.return_value = (
-        b'{"summary": {}}',
-        "application/json",
-        "stats.json",
+    export_svc.export.return_value = ExportResult(
+        content=b'{"summary": {}}',
+        mimetype="application/json",
+        filename="stats.json",
     )
 
     app = _build_test_app(

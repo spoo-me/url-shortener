@@ -32,29 +32,35 @@ from errors import (
 )
 from repositories.click_repository import ClickRepository
 from repositories.url_repository import UrlRepository
-from schemas.dto.requests.stats import StatsDimension, StatsMetric, StatsScope
+from schemas.dto.requests.stats import (
+    StatsDimension,
+    StatsMetric,
+    StatsQuery,
+    StatsScope,
+)
 from shared.aggregation_strategies import AggregationStrategyFactory
+from shared.datetime_utils import parse_datetime
 from shared.logging import get_logger
 
 log = get_logger(__name__)
-
-# Maximum allowed date range (days)
-MAX_DATE_RANGE_DAYS = 90
 
 
 class StatsService:
     """Analytics query service.
 
     Args:
-        click_repo: Repository for the ``clicks`` time-series collection.
-        url_repo:   Repository for the ``urlsV2`` collection (privacy checks).
+        click_repo:         Repository for the ``clicks`` time-series collection.
+        url_repo:           Repository for the ``urlsV2`` collection (privacy checks).
+        max_date_range_days: Maximum allowed date range in days (default 90).
     """
 
     def __init__(
         self,
         click_repo: ClickRepository,
         url_repo: UrlRepository,
+        max_date_range_days: int = 90,
     ) -> None:
+        self._max_date_range_days = max_date_range_days
         self._click_repo = click_repo
         self._url_repo = url_repo
 
@@ -389,28 +395,14 @@ class StatsService:
 
     async def query(
         self,
+        query: StatsQuery,
         owner_id: str | None,
-        scope: StatsScope,
-        short_code: str | None,
-        start_date: datetime | None,
-        end_date: datetime | None,
-        filters: dict[str, list[str]],
-        group_by: list[str],
-        metrics: list[str],
-        tz_name: str,
     ) -> dict[str, Any]:
         """Execute a stats query and return the formatted, enhanced response.
 
         Args:
-            owner_id:   String user ID for scope=all, or None.
-            scope:      ``"all"`` | ``"anon"``
-            short_code: Required when scope=anon.
-            start_date: UTC start of the time window (None → 7 days ago).
-            end_date:   UTC end of the time window (None → now).
-            filters:    Dimension filter dict, e.g. ``{"browser": ["Chrome"]}``.
-            group_by:   Aggregation dimensions, e.g. ``["time", "browser"]``.
-            metrics:    Metrics to return, e.g. ``["clicks", "unique_clicks"]``.
-            tz_name:    IANA timezone name for output formatting.
+            query:    Validated StatsQuery DTO with all query parameters.
+            owner_id: String user ID for scope=all, or None.
 
         Returns:
             Formatted stats dict ready for JSON serialisation.
@@ -422,6 +414,15 @@ class StatsService:
             ForbiddenError:       Authenticated user does not own private URL.
             AppError:             DB failure.
         """
+        scope = query.scope
+        short_code = query.short_code
+        start_date = parse_datetime(query.start_date) if query.start_date else None
+        end_date = parse_datetime(query.end_date) if query.end_date else None
+        filters = query.parsed_filters
+        group_by = query.parsed_group_by
+        metrics = query.parsed_metrics
+        tz_name = query.timezone
+
         start_time = time.perf_counter()
 
         # ── Apply date defaults ───────────────────────────────────────────────
@@ -443,9 +444,9 @@ class StatsService:
         # ── Date range validation ─────────────────────────────────────────────
         if start_date > end_date:
             raise ValidationError("start_date must be before end_date")
-        if (end_date - start_date).days > MAX_DATE_RANGE_DAYS:
+        if (end_date - start_date).days > self._max_date_range_days:
             raise ValidationError(
-                f"date range cannot exceed {MAX_DATE_RANGE_DAYS} days"
+                f"date range cannot exceed {self._max_date_range_days} days"
             )
 
         # ── Validate timezone ─────────────────────────────────────────────────

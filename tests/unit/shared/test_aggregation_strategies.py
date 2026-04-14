@@ -8,13 +8,7 @@ import pytest
 
 from shared.aggregation_strategies import (
     AggregationStrategyFactory,
-    BrowserAggregationStrategy,
-    CityAggregationStrategy,
-    CountryAggregationStrategy,
-    DeviceAggregationStrategy,
-    OSAggregationStrategy,
-    ReferrerAggregationStrategy,
-    ShortCodeAggregationStrategy,
+    FieldAggregationStrategy,
     TimeAggregationStrategy,
     convert_country_name,
 )
@@ -72,6 +66,32 @@ def test_factory_passes_kwargs_to_time_strategy():
     assert s.bucket_config is None  # legacy mode when time_format given
 
 
+def test_factory_returns_field_strategy_for_non_time():
+    """Factory should return FieldAggregationStrategy for non-time dimensions."""
+    for name in (
+        "browser",
+        "os",
+        "device",
+        "country",
+        "city",
+        "referrer",
+        "short_code",
+    ):
+        s = AggregationStrategyFactory.get(name)
+        assert isinstance(s, FieldAggregationStrategy), (
+            f"{name} should be FieldAggregationStrategy"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Helpers to create strategies via the factory (replaces old class constructors)
+# ---------------------------------------------------------------------------
+
+
+def _strategy(name: str) -> FieldAggregationStrategy:
+    return AggregationStrategyFactory.get(name)
+
+
 # ---------------------------------------------------------------------------
 # build_pipeline — correct MongoDB field grouping
 # ---------------------------------------------------------------------------
@@ -81,18 +101,19 @@ _BASE_QUERY = {"meta.owner_id": "user123"}
 
 
 @pytest.mark.parametrize(
-    "strategy, expected_field",
+    "strategy_name, expected_field",
     [
-        (BrowserAggregationStrategy(), "$browser"),
-        (OSAggregationStrategy(), "$os"),
-        (DeviceAggregationStrategy(), "$device"),
-        (CountryAggregationStrategy(), "$country"),
-        (CityAggregationStrategy(), "$city"),
-        (ReferrerAggregationStrategy(), "$referrer"),
+        ("browser", "$browser"),
+        ("os", "$os"),
+        ("device", "$device"),
+        ("country", "$country"),
+        ("city", "$city"),
+        ("referrer", "$referrer"),
     ],
 )
-def test_pipeline_groups_by_correct_field(strategy, expected_field):
+def test_pipeline_groups_by_correct_field(strategy_name, expected_field):
     """Each strategy must group by its own document field."""
+    strategy = _strategy(strategy_name)
     pipeline = strategy.build_pipeline(_BASE_QUERY)
     group_stage = next(s["$group"] for s in pipeline if "$group" in s)
     group_id = group_stage["_id"]
@@ -102,30 +123,30 @@ def test_pipeline_groups_by_correct_field(strategy, expected_field):
 
 def test_short_code_pipeline_groups_by_nested_field():
     """ShortCode must group by nested meta.short_code, not a top-level field."""
-    pipeline = ShortCodeAggregationStrategy().build_pipeline(_BASE_QUERY)
+    pipeline = _strategy("short_code").build_pipeline(_BASE_QUERY)
     group_stage = next(s["$group"] for s in pipeline if "$group" in s)
     assert group_stage["_id"]["$ifNull"][0] == "$meta.short_code"
 
 
 def test_referrer_pipeline_uses_direct_as_null_fallback():
     """Referrer should fall back to 'Direct' (not 'Unknown') for null values."""
-    pipeline = ReferrerAggregationStrategy().build_pipeline(_BASE_QUERY)
+    pipeline = _strategy("referrer").build_pipeline(_BASE_QUERY)
     group_stage = next(s["$group"] for s in pipeline if "$group" in s)
     assert group_stage["_id"]["$ifNull"][1] == "Direct"
 
 
 @pytest.mark.parametrize(
-    "strategy, expected_null_fallback",
+    "strategy_name, expected_null_fallback",
     [
-        (BrowserAggregationStrategy(), "Unknown"),
-        (OSAggregationStrategy(), "Unknown"),
-        (DeviceAggregationStrategy(), "Unknown"),
-        (CountryAggregationStrategy(), "Unknown"),
-        (CityAggregationStrategy(), "Unknown"),
+        ("browser", "Unknown"),
+        ("os", "Unknown"),
+        ("device", "Unknown"),
+        ("country", "Unknown"),
+        ("city", "Unknown"),
     ],
 )
-def test_pipeline_uses_unknown_as_null_fallback(strategy, expected_null_fallback):
-    pipeline = strategy.build_pipeline(_BASE_QUERY)
+def test_pipeline_uses_unknown_as_null_fallback(strategy_name, expected_null_fallback):
+    pipeline = _strategy(strategy_name).build_pipeline(_BASE_QUERY)
     group_stage = next(s["$group"] for s in pipeline if "$group" in s)
     assert group_stage["_id"]["$ifNull"][1] == expected_null_fallback
 
@@ -136,20 +157,20 @@ def test_pipeline_uses_unknown_as_null_fallback(strategy, expected_null_fallback
 
 
 @pytest.mark.parametrize(
-    "strategy, expected_limit",
+    "strategy_name, expected_limit",
     [
-        (BrowserAggregationStrategy(), 20),
-        (OSAggregationStrategy(), 20),
-        (DeviceAggregationStrategy(), 20),
-        (CountryAggregationStrategy(), 50),
-        (CityAggregationStrategy(), 50),
-        (ReferrerAggregationStrategy(), 30),
-        (ShortCodeAggregationStrategy(), 100),
+        ("browser", 20),
+        ("os", 20),
+        ("device", 20),
+        ("country", 50),
+        ("city", 50),
+        ("referrer", 30),
+        ("short_code", 100),
     ],
 )
-def test_pipeline_limit_values(strategy, expected_limit):
+def test_pipeline_limit_values(strategy_name, expected_limit):
     """Each strategy has a documented result cap — verify the actual $limit value."""
-    pipeline = strategy.build_pipeline(_BASE_QUERY)
+    pipeline = _strategy(strategy_name).build_pipeline(_BASE_QUERY)
     limit_stage = next(s["$limit"] for s in pipeline if "$limit" in s)
     assert limit_stage == expected_limit
 
@@ -160,19 +181,12 @@ def test_pipeline_limit_values(strategy, expected_limit):
 
 
 @pytest.mark.parametrize(
-    "strategy",
-    [
-        BrowserAggregationStrategy(),
-        OSAggregationStrategy(),
-        DeviceAggregationStrategy(),
-        CountryAggregationStrategy(),
-        CityAggregationStrategy(),
-        ReferrerAggregationStrategy(),
-        ShortCodeAggregationStrategy(),
-    ],
+    "strategy_name",
+    ["browser", "os", "device", "country", "city", "referrer", "short_code"],
 )
-def test_pipeline_deduplicates_unique_clicks_by_ip(strategy):
+def test_pipeline_deduplicates_unique_clicks_by_ip(strategy_name):
     """unique_clicks must be computed via $addToSet on ip_address, then $size."""
+    strategy = _strategy(strategy_name)
     pipeline = strategy.build_pipeline(_BASE_QUERY)
     group_stage = next(s["$group"] for s in pipeline if "$group" in s)
     add_fields = next(s["$addFields"] for s in pipeline if "$addFields" in s)
@@ -267,26 +281,26 @@ _RAW = [{"_id": "Chrome", "total_clicks": 10, "unique_clicks": 7}]
 
 
 @pytest.mark.parametrize(
-    "strategy, key",
+    "strategy_name, key",
     [
-        (BrowserAggregationStrategy(), "browser"),
-        (OSAggregationStrategy(), "os"),
-        (DeviceAggregationStrategy(), "device"),
-        (CityAggregationStrategy(), "city"),
-        (ReferrerAggregationStrategy(), "referrer"),
-        (ShortCodeAggregationStrategy(), "short_code"),
+        ("browser", "browser"),
+        ("os", "os"),
+        ("device", "device"),
+        ("city", "city"),
+        ("referrer", "referrer"),
+        ("short_code", "short_code"),
     ],
 )
-def test_format_results_renames_id_to_dimension_key(strategy, key):
+def test_format_results_renames_id_to_dimension_key(strategy_name, key):
     raw = [{"_id": "value", "total_clicks": 5, "unique_clicks": 3}]
-    result = strategy.format_results(raw)[0]
+    result = _strategy(strategy_name).format_results(raw)[0]
     assert key in result
     assert result[key] == "value"
     assert "_id" not in result
 
 
 def test_country_format_results_converts_name_to_code():
-    result = CountryAggregationStrategy().format_results(
+    result = _strategy("country").format_results(
         [{"_id": "Germany", "total_clicks": 4, "unique_clicks": 2}]
     )[0]
     assert result["country"] == "DE"
@@ -294,29 +308,29 @@ def test_country_format_results_converts_name_to_code():
 
 
 def test_country_format_results_unknown_maps_to_xx():
-    result = CountryAggregationStrategy().format_results(
+    result = _strategy("country").format_results(
         [{"_id": "Unknown", "total_clicks": 1, "unique_clicks": 1}]
     )[0]
     assert result["country"] == "XX"
 
 
 def test_format_results_missing_counts_default_to_zero():
-    result = BrowserAggregationStrategy().format_results([{"_id": "Firefox"}])[0]
+    result = _strategy("browser").format_results([{"_id": "Firefox"}])[0]
     assert result["total_clicks"] == 0
     assert result["unique_clicks"] == 0
 
 
 def test_format_results_empty_list():
-    for strategy in [
-        BrowserAggregationStrategy(),
-        OSAggregationStrategy(),
-        DeviceAggregationStrategy(),
-        CountryAggregationStrategy(),
-        CityAggregationStrategy(),
-        ReferrerAggregationStrategy(),
-        ShortCodeAggregationStrategy(),
-    ]:
-        assert strategy.format_results([]) == []
+    for name in (
+        "browser",
+        "os",
+        "device",
+        "country",
+        "city",
+        "referrer",
+        "short_code",
+    ):
+        assert _strategy(name).format_results([]) == []
 
 
 # ---------------------------------------------------------------------------

@@ -37,6 +37,13 @@ def _build_test_app(overrides: dict) -> FastAPI:
         app.state.settings = settings
         app.state.db = MagicMock()
         app.state.redis = None
+        # Singleton service defaults (overridden via dependency_overrides per test)
+        app.state.url_service = MagicMock()
+        app.state.stats_service = MagicMock()
+        app.state.export_service = MagicMock()
+        app.state.api_key_service = MagicMock()
+        app.state.auth_service = MagicMock()
+        app.state.click_service = MagicMock()
         yield
 
     application = FastAPI(lifespan=lifespan)

@@ -20,7 +20,6 @@ _DEPENDENCY_NAMES = [
     "get_redis",
     "get_email_provider",
     "get_geoip_service",
-    "get_url_cache",
     "get_current_user",
     "require_auth",
     "require_verified_email",

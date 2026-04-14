@@ -78,10 +78,8 @@ class TestApiKeyServiceCreate:
 
     @pytest.mark.asyncio
     async def test_create_raises_when_at_max_limit(self):
-        from services.api_key_service import MAX_ACTIVE_KEYS
-
         repo = make_repo()
-        repo.count_by_user = AsyncMock(return_value=MAX_ACTIVE_KEYS)
+        repo.count_by_user = AsyncMock(return_value=20)  # default max_active_keys
         svc = make_service(repo)
 
         with pytest.raises(ValidationError, match="maximum"):

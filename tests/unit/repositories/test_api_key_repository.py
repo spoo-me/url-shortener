@@ -51,7 +51,7 @@ class TestApiKeyRepository:
     @pytest.mark.asyncio
     async def test_revoke_soft(self):
         col = make_collection()
-        col.update_one = AsyncMock(return_value=MagicMock(modified_count=1))
+        col.update_one = AsyncMock(return_value=MagicMock(matched_count=1))
         result = await self._repo(col).revoke(USER_OID, KEY_OID, hard_delete=False)
         col.update_one.assert_awaited_once_with(
             {"_id": KEY_OID, "user_id": USER_OID},
@@ -70,7 +70,7 @@ class TestApiKeyRepository:
     @pytest.mark.asyncio
     async def test_revoke_returns_false_on_not_found(self):
         col = make_collection()
-        col.update_one = AsyncMock(return_value=MagicMock(modified_count=0))
+        col.update_one = AsyncMock(return_value=MagicMock(matched_count=0))
         assert await self._repo(col).revoke(USER_OID, KEY_OID) is False
 
     @pytest.mark.asyncio

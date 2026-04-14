@@ -22,6 +22,7 @@ from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
 from routes.auth_routes import router as auth_router
 from schemas.models.user import UserDoc
+from schemas.results import AuthResult
 
 _USER_OID = ObjectId()
 _EMAIL = "test@example.com"
@@ -128,7 +129,9 @@ def test_device_callback_with_code_renders_page():
 def test_device_token_valid_code():
     mock_svc = AsyncMock()
     user = _make_user_doc()
-    mock_svc.exchange_device_code.return_value = (user, "access-tok", "refresh-tok")
+    mock_svc.exchange_device_code.return_value = AuthResult(
+        user=user, access_token="access-tok", refresh_token="refresh-tok"
+    )
 
     app = _build_test_app({get_auth_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as c:

@@ -33,6 +33,7 @@ from schemas.models.token import (
     TOKEN_TYPE_PASSWORD_RESET,
 )
 from schemas.models.user import UserDoc, UserPlan, UserStatus
+from schemas.results import AuthResult
 from services.token_factory import TokenFactory
 from shared.crypto import hash_password, hash_token, verify_password
 from shared.generators import generate_otp_code, generate_secure_token
@@ -65,11 +66,15 @@ class AuthService:
         token_repo: TokenRepository,
         email: EmailProvider,
         settings: JWTSettings,
+        account_password_min_length: int = 8,
+        account_password_max_length: int = 128,
     ) -> None:
         self._user_repo = user_repo
         self._token_repo = token_repo
         self._email = email
         self._tokens = TokenFactory(settings)
+        self._password_min_length = account_password_min_length
+        self._password_max_length = account_password_max_length
 
     # ── JWT delegation ────────────────────────────────────────────────────────
 
@@ -226,11 +231,8 @@ class AuthService:
 
     # ── Business logic ────────────────────────────────────────────────────────
 
-    async def login(self, email: str, password: str) -> tuple[UserDoc, str, str]:
+    async def login(self, email: str, password: str) -> AuthResult:
         """Authenticate with email + password.
-
-        Returns:
-            (user_doc, access_token, refresh_token)
 
         Raises:
             AuthenticationError: Invalid credentials (does not distinguish
@@ -251,7 +253,9 @@ class AuthService:
 
         log.info("login_success", user_id=str(user.id), auth_method="password")
         access_token, refresh_token = self._tokens.issue_tokens(user, "pwd")
-        return user, access_token, refresh_token
+        return AuthResult(
+            user=user, access_token=access_token, refresh_token=refresh_token
+        )
 
     async def register(
         self,
@@ -259,18 +263,18 @@ class AuthService:
         password: str,
         user_name: str | None,
         signup_ip: str | None,
-    ) -> tuple[UserDoc, str, str, bool]:
+    ) -> AuthResult:
         """Register a new user with email + password.
-
-        Returns:
-            (user_doc, access_token, refresh_token, verification_sent)
-            verification_sent indicates whether the email was sent successfully.
 
         Raises:
             ValidationError: Password fails validation rules.
             ConflictError:   Email already registered.
         """
-        is_valid, missing, _ = validate_account_password(password)
+        is_valid, missing, _ = validate_account_password(
+            password,
+            min_length=self._password_min_length,
+            max_length=self._password_max_length,
+        )
         if not is_valid:
             raise ValidationError(
                 "Password does not meet requirements",
@@ -332,16 +336,18 @@ class AuthService:
                 error_type=type(exc).__name__,
             )
 
-        return user_doc, access_token, refresh_token, verification_sent
+        return AuthResult(
+            user=user_doc,
+            access_token=access_token,
+            refresh_token=refresh_token,
+            verification_sent=verification_sent,
+        )
 
-    async def refresh_token(self, refresh_token_str: str) -> tuple[UserDoc, str, str]:
+    async def refresh_token(self, refresh_token_str: str) -> AuthResult:
         """Perform stateless token rotation.
 
         Verifies the refresh JWT, re-fetches the user to get the latest
         ``email_verified`` status, and issues a new token pair.
-
-        Returns:
-            (user_doc, new_access_token, new_refresh_token)
 
         Raises:
             AuthenticationError: Token invalid/expired, or user not found/inactive.
@@ -363,7 +369,7 @@ class AuthService:
 
         log.info("token_refreshed", user_id=user_id)
         new_access, new_refresh = self._tokens.issue_tokens(user, "pwd")
-        return user, new_access, new_refresh
+        return AuthResult(user=user, access_token=new_access, refresh_token=new_refresh)
 
     async def verify_email(self, user_id: str, otp_code: str) -> tuple[str, str]:
         """Verify a user's email address using an OTP code.
@@ -504,7 +510,11 @@ class AuthService:
         """
         user = await self._user_repo.find_by_email(email)
 
-        is_valid, missing, _ = validate_account_password(new_password)
+        is_valid, missing, _ = validate_account_password(
+            new_password,
+            min_length=self._password_min_length,
+            max_length=self._password_max_length,
+        )
         if not is_valid:
             raise ValidationError(
                 "password does not meet requirements",
@@ -556,7 +566,11 @@ class AuthService:
         if user.password_set:
             raise ValidationError("password already set")
 
-        is_valid, missing, _ = validate_account_password(password)
+        is_valid, missing, _ = validate_account_password(
+            password,
+            min_length=self._password_min_length,
+            max_length=self._password_max_length,
+        )
         if not is_valid:
             raise ValidationError(
                 "Password does not meet requirements",
@@ -617,11 +631,8 @@ class AuthService:
         log.info("device_auth_code_created", user_id=str(user_id))
         return raw_token
 
-    async def exchange_device_code(self, code: str) -> tuple[UserDoc, str, str]:
+    async def exchange_device_code(self, code: str) -> AuthResult:
         """Exchange a one-time device auth code for JWT tokens.
-
-        Returns:
-            (user_doc, access_token, refresh_token)
 
         Raises:
             AuthenticationError: Code invalid, expired, or already used.
@@ -639,4 +650,6 @@ class AuthService:
 
         log.info("device_auth_success", user_id=str(user.id))
         access_token, refresh_token = self._tokens.issue_tokens(user, "ext")
-        return user, access_token, refresh_token
+        return AuthResult(
+            user=user, access_token=access_token, refresh_token=refresh_token
+        )

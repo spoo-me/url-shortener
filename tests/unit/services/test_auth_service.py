@@ -184,12 +184,10 @@ class TestLogin:
         )
         svc._user_repo.find_by_email.return_value = user
 
-        result_user, access, refresh = await svc.login(
-            "test@example.com", "ValidPass1!"
-        )
-        assert result_user is user
-        assert isinstance(access, str)
-        assert isinstance(refresh, str)
+        result = await svc.login("test@example.com", "ValidPass1!")
+        assert result.user is user
+        assert isinstance(result.access_token, str)
+        assert isinstance(result.refresh_token, str)
 
     @pytest.mark.asyncio
     async def test_login_user_not_found_raises(self):
@@ -255,13 +253,13 @@ class TestRegister:
         svc._token_repo.create.return_value = ObjectId()
         svc._email.send_verification_email.return_value = True
 
-        user_doc, access, refresh, verification_sent = await svc.register(
+        result = await svc.register(
             "new@example.com", "ValidPass1!", "New User", "1.2.3.4"
         )
-        assert user_doc.email == "new@example.com"
-        assert isinstance(access, str)
-        assert isinstance(refresh, str)
-        assert verification_sent is True
+        assert result.user.email == "new@example.com"
+        assert isinstance(result.access_token, str)
+        assert isinstance(result.refresh_token, str)
+        assert result.verification_sent is True
 
     @pytest.mark.asyncio
     async def test_register_duplicate_email_raises(self):
@@ -291,11 +289,9 @@ class TestRegister:
         svc._token_repo.create.return_value = ObjectId()
         svc._email.send_verification_email.side_effect = Exception("email server down")
 
-        user_doc, _access, _refresh, verification_sent = await svc.register(
-            "new@example.com", "ValidPass1!", None, None
-        )
-        assert user_doc is not None
-        assert verification_sent is False
+        result = await svc.register("new@example.com", "ValidPass1!", None, None)
+        assert result.user is not None
+        assert result.verification_sent is False
 
     @pytest.mark.asyncio
     async def test_register_race_condition_duplicate_raises(self):
@@ -321,10 +317,10 @@ class TestRefreshToken:
         refresh_tok = svc._generate_refresh_token(user, amr="pwd")
         svc._user_repo.find_by_id.return_value = user
 
-        result_user, new_access, new_refresh = await svc.refresh_token(refresh_tok)
-        assert result_user is user
-        assert isinstance(new_access, str)
-        assert isinstance(new_refresh, str)
+        result = await svc.refresh_token(refresh_tok)
+        assert result.user is user
+        assert isinstance(result.access_token, str)
+        assert isinstance(result.refresh_token, str)
 
     @pytest.mark.asyncio
     async def test_refresh_token_invalid_raises(self):
@@ -887,9 +883,9 @@ class TestExtensionAuth:
         svc._token_repo.consume_by_hash.return_value = token_doc
         svc._user_repo.find_by_id.return_value = make_user_doc(email_verified=True)
 
-        _user, access, refresh = await svc.exchange_device_code(raw_code)
-        assert isinstance(access, str)
-        assert isinstance(refresh, str)
+        result = await svc.exchange_device_code(raw_code)
+        assert isinstance(result.access_token, str)
+        assert isinstance(result.refresh_token, str)
         svc._token_repo.consume_by_hash.assert_awaited_once()
 
     @pytest.mark.asyncio

@@ -31,6 +31,7 @@ from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
 from routes.auth_routes import router as auth_router
 from schemas.models.user import UserDoc
+from schemas.results import AuthResult
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -99,14 +100,18 @@ def test_register_then_verify_then_login():
     verified_user = _make_user_doc(email_verified=True)
 
     mock_svc = AsyncMock()
-    mock_svc.register.return_value = (
-        unverified_user,
-        _ACCESS_TOKEN,
-        _REFRESH_TOKEN,
-        True,
+    mock_svc.register.return_value = AuthResult(
+        user=unverified_user,
+        access_token=_ACCESS_TOKEN,
+        refresh_token=_REFRESH_TOKEN,
+        verification_sent=True,
     )
     mock_svc.verify_email.return_value = ("verified.access", "verified.refresh")
-    mock_svc.login.return_value = (verified_user, "login.access", "login.refresh")
+    mock_svc.login.return_value = AuthResult(
+        user=verified_user,
+        access_token="login.access",
+        refresh_token="login.refresh",
+    )
 
     # For verify-email and me, user must be authenticated
     unverified_mock_user = CurrentUser(user_id=_USER_OID, email_verified=False)
@@ -149,13 +154,17 @@ def test_register_then_login_unverified():
     unverified_user = _make_user_doc(email_verified=False)
 
     mock_svc = AsyncMock()
-    mock_svc.register.return_value = (
-        unverified_user,
-        _ACCESS_TOKEN,
-        _REFRESH_TOKEN,
-        True,
+    mock_svc.register.return_value = AuthResult(
+        user=unverified_user,
+        access_token=_ACCESS_TOKEN,
+        refresh_token=_REFRESH_TOKEN,
+        verification_sent=True,
     )
-    mock_svc.login.return_value = (unverified_user, "login.access", "login.refresh")
+    mock_svc.login.return_value = AuthResult(
+        user=unverified_user,
+        access_token="login.access",
+        refresh_token="login.refresh",
+    )
 
     app = _build_test_app({get_auth_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
@@ -180,8 +189,12 @@ def test_login_then_refresh_rotates_tokens():
     user = _make_user_doc()
 
     mock_svc = AsyncMock()
-    mock_svc.login.return_value = (user, _ACCESS_TOKEN, _REFRESH_TOKEN)
-    mock_svc.refresh_token.return_value = (user, "new.access", "new.refresh")
+    mock_svc.login.return_value = AuthResult(
+        user=user, access_token=_ACCESS_TOKEN, refresh_token=_REFRESH_TOKEN
+    )
+    mock_svc.refresh_token.return_value = AuthResult(
+        user=user, access_token="new.access", refresh_token="new.refresh"
+    )
 
     app = _build_test_app({get_auth_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
@@ -205,7 +218,9 @@ def test_login_then_me_returns_profile():
     user = _make_user_doc()
 
     mock_svc = AsyncMock()
-    mock_svc.login.return_value = (user, _ACCESS_TOKEN, _REFRESH_TOKEN)
+    mock_svc.login.return_value = AuthResult(
+        user=user, access_token=_ACCESS_TOKEN, refresh_token=_REFRESH_TOKEN
+    )
     mock_svc.get_user_profile.return_value = user
 
     mock_user = CurrentUser(user_id=_USER_OID, email_verified=True)
@@ -237,7 +252,9 @@ def test_login_then_set_password():
     oauth_user = _make_user_doc(password_set=False, password_hash=None)
 
     mock_svc = AsyncMock()
-    mock_svc.login.return_value = (oauth_user, _ACCESS_TOKEN, _REFRESH_TOKEN)
+    mock_svc.login.return_value = AuthResult(
+        user=oauth_user, access_token=_ACCESS_TOKEN, refresh_token=_REFRESH_TOKEN
+    )
     mock_svc.set_password.return_value = None
 
     mock_user = CurrentUser(user_id=_USER_OID, email_verified=True)
@@ -268,7 +285,12 @@ def test_register_then_request_reset_then_reset_password():
     user = _make_user_doc(email_verified=False)
 
     mock_svc = AsyncMock()
-    mock_svc.register.return_value = (user, _ACCESS_TOKEN, _REFRESH_TOKEN, True)
+    mock_svc.register.return_value = AuthResult(
+        user=user,
+        access_token=_ACCESS_TOKEN,
+        refresh_token=_REFRESH_TOKEN,
+        verification_sent=True,
+    )
     mock_svc.request_password_reset.return_value = None
     mock_svc.reset_password.return_value = None
 
@@ -300,7 +322,9 @@ def test_login_then_logout_clears_cookies():
     user = _make_user_doc()
 
     mock_svc = AsyncMock()
-    mock_svc.login.return_value = (user, _ACCESS_TOKEN, _REFRESH_TOKEN)
+    mock_svc.login.return_value = AuthResult(
+        user=user, access_token=_ACCESS_TOKEN, refresh_token=_REFRESH_TOKEN
+    )
 
     app = _build_test_app({get_auth_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
@@ -332,18 +356,22 @@ def test_full_auth_journey():
     verified_user = _make_user_doc(email_verified=True, password_set=True)
 
     mock_svc = AsyncMock()
-    mock_svc.register.return_value = (
-        unverified_user,
-        _ACCESS_TOKEN,
-        _REFRESH_TOKEN,
-        True,
+    mock_svc.register.return_value = AuthResult(
+        user=unverified_user,
+        access_token=_ACCESS_TOKEN,
+        refresh_token=_REFRESH_TOKEN,
+        verification_sent=True,
     )
     mock_svc.verify_email.return_value = ("verified.access", "verified.refresh")
-    mock_svc.login.return_value = (verified_user, "login.access", "login.refresh")
-    mock_svc.refresh_token.return_value = (
-        verified_user,
-        "refreshed.access",
-        "refreshed.refresh",
+    mock_svc.login.return_value = AuthResult(
+        user=verified_user,
+        access_token="login.access",
+        refresh_token="login.refresh",
+    )
+    mock_svc.refresh_token.return_value = AuthResult(
+        user=verified_user,
+        access_token="refreshed.access",
+        refresh_token="refreshed.refresh",
     )
     mock_svc.get_user_profile.return_value = verified_user
     mock_svc.set_password.side_effect = ValidationError("password already set")

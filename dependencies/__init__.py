@@ -32,7 +32,6 @@ from dependencies.infra import (
     get_geoip_service,
     get_redis,
     get_settings,
-    get_url_cache,
 )
 from dependencies.services import (
     get_api_key_service,
@@ -75,7 +74,6 @@ __all__ = [
     "get_redis",
     "get_settings",
     "get_stats_service",
-    "get_url_cache",
     "get_url_service",
     "optional_scopes",
     "optional_scopes_verified",

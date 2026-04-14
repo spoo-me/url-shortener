@@ -11,6 +11,7 @@ from bson import ObjectId
 
 from errors import ConflictError, NotFoundError, ValidationError
 from schemas.models.user import ProviderInfo, UserDoc
+from schemas.results import AuthResult
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
@@ -113,15 +114,16 @@ class TestHandleCallbackExistingOAuthUser:
         # No user by provider_user_id at first means provider user IS found
         svc._user_repo.find_by_oauth_provider.return_value = user
 
-        result_user, access, refresh = await svc.handle_callback(
+        result = await svc.handle_callback(
             provider_key="google",
             provider_info=make_provider_info(),
             action="login",
             state_data={"action": "login"},
         )
-        assert result_user is user
-        assert isinstance(access, str)
-        assert isinstance(refresh, str)
+        assert isinstance(result, AuthResult)
+        assert result.user is user
+        assert isinstance(result.access_token, str)
+        assert isinstance(result.refresh_token, str)
         svc._user_repo.update.assert_awaited()  # last_login_at updated
 
     @pytest.mark.asyncio
@@ -133,14 +135,14 @@ class TestHandleCallbackExistingOAuthUser:
         svc._user_repo.find_by_oauth_provider.return_value = user
         settings = make_jwt_settings()
 
-        _, access, _ = await svc.handle_callback(
+        result = await svc.handle_callback(
             provider_key="github",
             provider_info=make_provider_info(),
             action="login",
             state_data={"action": "login"},
         )
         payload = pyjwt.decode(
-            access,
+            result.access_token,
             settings.jwt_secret,
             algorithms=["HS256"],
             audience=settings.jwt_audience,
@@ -163,13 +165,13 @@ class TestHandleCallbackNewUser:
         svc._user_repo.find_by_id.return_value = new_user
         svc._email.send_welcome_email.return_value = True
 
-        result_user, _access, _refresh = await svc.handle_callback(
+        result = await svc.handle_callback(
             provider_key="google",
             provider_info=make_provider_info(),
             action="login",
             state_data={"action": "login"},
         )
-        assert result_user is new_user
+        assert result.user is new_user
         svc._user_repo.create.assert_awaited_once()
         svc._email.send_welcome_email.assert_awaited_once()
 
@@ -184,13 +186,13 @@ class TestHandleCallbackNewUser:
         svc._user_repo.find_by_id.return_value = new_user
         svc._email.send_welcome_email.side_effect = Exception("email down")
 
-        result_user, _access, _refresh = await svc.handle_callback(
+        result = await svc.handle_callback(
             provider_key="google",
             provider_info=make_provider_info(),
             action="login",
             state_data={"action": "login"},
         )
-        assert result_user is new_user  # did not raise
+        assert result.user is new_user  # did not raise
 
 
 # ── handle_callback: email collision + auto-link (flow 3) ────────────────────
@@ -212,13 +214,13 @@ class TestHandleCallbackAutoLink:
             email="test@example.com",
             email_verified=True,  # required for auto-link
         )
-        result_user, _access, _refresh = await svc.handle_callback(
+        result = await svc.handle_callback(
             provider_key="google",
             provider_info=provider_info,
             action="login",
             state_data={"action": "login"},
         )
-        assert result_user is updated_user
+        assert result.user is updated_user
         # update called for linking + last_login
         assert svc._user_repo.update.await_count >= 1
 
@@ -291,13 +293,13 @@ class TestHandleCallbackLink:
         # Second find_by_id call after linking returns updated_user
         svc._user_repo.find_by_id.side_effect = [current_user, updated_user]
 
-        result_user, _access, _refresh = await svc.handle_callback(
+        result = await svc.handle_callback(
             provider_key="google",
             provider_info=make_provider_info(email="test@example.com"),
             action="link",
             state_data={"action": "link", "user_id": str(USER_OID)},
         )
-        assert result_user is updated_user
+        assert result.user is updated_user
 
     @pytest.mark.asyncio
     async def test_link_flow_missing_user_id_raises(self):

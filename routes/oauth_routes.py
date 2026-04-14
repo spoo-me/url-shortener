@@ -205,7 +205,7 @@ async def oauth_callback(
     # ── Delegate to service ───────────────────────────────────────────────────
     action = state_data.get("action", OAuthAction.LOGIN)
     client_ip = get_client_ip(request)
-    _user, access_token, refresh_token = await oauth_service.handle_callback(
+    result = await oauth_service.handle_callback(
         provider, provider_info, action, state_data, client_ip
     )
 
@@ -213,7 +213,7 @@ async def oauth_callback(
     next_url = validate_safe_redirect(state_data.get("next", ""))
     jwt_cfg = request.app.state.settings.jwt
     resp = RedirectResponse(next_url, status_code=302)
-    set_auth_cookies(resp, access_token, refresh_token, jwt_cfg)
+    set_auth_cookies(resp, result.access_token, result.refresh_token, jwt_cfg)
     return resp
 
 

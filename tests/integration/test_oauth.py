@@ -32,6 +32,7 @@ from middleware.rate_limiter import limiter
 from routes.auth_routes import router as auth_router
 from routes.oauth_routes import router as oauth_router
 from schemas.models.user import ProviderInfo, UserDoc
+from schemas.results import AuthResult
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -161,7 +162,9 @@ def test_oauth_callback_new_user_creates_account():
     user = _make_user_doc(email_verified=True, password_set=False)
 
     mock_oauth_svc = AsyncMock()
-    mock_oauth_svc.handle_callback.return_value = (user, _ACCESS_TOKEN, _REFRESH_TOKEN)
+    mock_oauth_svc.handle_callback.return_value = AuthResult(
+        user=user, access_token=_ACCESS_TOKEN, refresh_token=_REFRESH_TOKEN
+    )
 
     mock_strategy = MagicMock()
     mock_strategy.fetch_user_info = AsyncMock(
@@ -207,7 +210,9 @@ def test_oauth_callback_existing_user_logs_in():
     user = _make_user_doc()
 
     mock_oauth_svc = AsyncMock()
-    mock_oauth_svc.handle_callback.return_value = (user, _ACCESS_TOKEN, _REFRESH_TOKEN)
+    mock_oauth_svc.handle_callback.return_value = AuthResult(
+        user=user, access_token=_ACCESS_TOKEN, refresh_token=_REFRESH_TOKEN
+    )
 
     mock_strategy = MagicMock()
     mock_strategy.fetch_user_info = AsyncMock(
@@ -250,7 +255,9 @@ def test_oauth_callback_email_collision_auto_links():
 
     mock_oauth_svc = AsyncMock()
     # handle_callback still succeeds — it handles auto-linking internally
-    mock_oauth_svc.handle_callback.return_value = (user, _ACCESS_TOKEN, _REFRESH_TOKEN)
+    mock_oauth_svc.handle_callback.return_value = AuthResult(
+        user=user, access_token=_ACCESS_TOKEN, refresh_token=_REFRESH_TOKEN
+    )
 
     mock_strategy = MagicMock()
     mock_strategy.fetch_user_info = AsyncMock(

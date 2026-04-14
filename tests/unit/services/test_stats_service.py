@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from errors import AuthenticationError, ForbiddenError, NotFoundError, ValidationError
+from schemas.dto.requests.stats import StatsQuery
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
@@ -15,6 +16,9 @@ OWNER_ID = "aaaaaaaaaaaaaaaaaaaaaaaa"
 
 NOW = datetime(2024, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
 START = NOW - timedelta(days=7)
+
+NOW_ISO = NOW.isoformat()
+START_ISO = START.isoformat()
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -58,6 +62,29 @@ def facet_response(
     return [result]  # aggregate() returns a list
 
 
+def _q(
+    scope="anon",
+    short_code="abc",
+    start_date=None,
+    end_date=None,
+    group_by="time",
+    metrics="clicks",
+    timezone_="UTC",
+    **filter_kw,
+):
+    """Build a StatsQuery with sensible defaults for tests."""
+    return StatsQuery(
+        scope=scope,
+        short_code=short_code,
+        start_date=start_date if start_date is not None else START_ISO,
+        end_date=end_date if end_date is not None else NOW_ISO,
+        group_by=group_by,
+        metrics=metrics,
+        timezone=timezone_,
+        **filter_kw,
+    )
+
+
 # ── Tests: date defaults and validation ──────────────────────────────────────
 
 
@@ -70,15 +97,14 @@ class TestDateHandling:
         click_repo.aggregate.return_value = facet_response()
 
         result = await svc.query(
+            query=StatsQuery(
+                scope="anon",
+                short_code="abc123",
+                group_by="time",
+                metrics="clicks",
+                timezone="UTC",
+            ),
             owner_id=OWNER_ID,
-            scope="anon",
-            short_code="abc123",
-            start_date=None,
-            end_date=None,
-            filters={},
-            group_by=["time"],
-            metrics=["clicks"],
-            tz_name="UTC",
         )
         assert "time_range" in result
         assert result["time_range"]["start_date"] is not None
@@ -92,15 +118,12 @@ class TestDateHandling:
 
         with pytest.raises(ValidationError, match="start_date must be before end_date"):
             await svc.query(
+                query=_q(
+                    short_code="abc",
+                    start_date=future.isoformat(),
+                    end_date=NOW_ISO,
+                ),
                 owner_id=OWNER_ID,
-                scope="anon",
-                short_code="abc",
-                start_date=future,
-                end_date=NOW,
-                filters={},
-                group_by=["time"],
-                metrics=["clicks"],
-                tz_name="UTC",
             )
 
     @pytest.mark.asyncio
@@ -110,15 +133,12 @@ class TestDateHandling:
 
         with pytest.raises(ValidationError, match="date range cannot exceed 90 days"):
             await svc.query(
+                query=_q(
+                    short_code="abc",
+                    start_date=(NOW - timedelta(days=95)).isoformat(),
+                    end_date=NOW_ISO,
+                ),
                 owner_id=OWNER_ID,
-                scope="anon",
-                short_code="abc",
-                start_date=NOW - timedelta(days=95),
-                end_date=NOW,
-                filters={},
-                group_by=["time"],
-                metrics=["clicks"],
-                tz_name="UTC",
             )
 
 
@@ -132,15 +152,8 @@ class TestScopeValidation:
 
         with pytest.raises(ValidationError, match="short_code is required"):
             await svc.query(
+                query=_q(scope="anon", short_code=None),
                 owner_id=None,
-                scope="anon",
-                short_code=None,
-                start_date=START,
-                end_date=NOW,
-                filters={},
-                group_by=["time"],
-                metrics=["clicks"],
-                tz_name="UTC",
             )
 
     @pytest.mark.asyncio
@@ -150,15 +163,8 @@ class TestScopeValidation:
 
         with pytest.raises(NotFoundError):
             await svc.query(
+                query=_q(scope="anon", short_code="ghost"),
                 owner_id=None,
-                scope="anon",
-                short_code="ghost",
-                start_date=START,
-                end_date=NOW,
-                filters={},
-                group_by=["time"],
-                metrics=["clicks"],
-                tz_name="UTC",
             )
 
     @pytest.mark.asyncio
@@ -170,15 +176,8 @@ class TestScopeValidation:
 
         with pytest.raises(AuthenticationError):
             await svc.query(
+                query=_q(scope="anon", short_code="secret"),
                 owner_id=None,  # not logged in
-                scope="anon",
-                short_code="secret",
-                start_date=START,
-                end_date=NOW,
-                filters={},
-                group_by=["time"],
-                metrics=["clicks"],
-                tz_name="UTC",
             )
 
     @pytest.mark.asyncio
@@ -190,15 +189,8 @@ class TestScopeValidation:
 
         with pytest.raises(ForbiddenError):
             await svc.query(
+                query=_q(scope="anon", short_code="secret"),
                 owner_id=OWNER_ID,  # authenticated but not the owner
-                scope="anon",
-                short_code="secret",
-                start_date=START,
-                end_date=NOW,
-                filters={},
-                group_by=["time"],
-                metrics=["clicks"],
-                tz_name="UTC",
             )
 
     @pytest.mark.asyncio
@@ -210,15 +202,8 @@ class TestScopeValidation:
         click_repo.aggregate.return_value = facet_response()
 
         result = await svc.query(
+            query=_q(scope="anon", short_code="secret"),
             owner_id=OWNER_ID,
-            scope="anon",
-            short_code="secret",
-            start_date=START,
-            end_date=NOW,
-            filters={},
-            group_by=["time"],
-            metrics=["clicks"],
-            tz_name="UTC",
         )
         assert result["scope"] == "anon"
 
@@ -228,15 +213,8 @@ class TestScopeValidation:
 
         with pytest.raises(AuthenticationError):
             await svc.query(
+                query=_q(scope="all", short_code=None),
                 owner_id=None,
-                scope="all",
-                short_code=None,
-                start_date=START,
-                end_date=NOW,
-                filters={},
-                group_by=["time"],
-                metrics=["clicks"],
-                tz_name="UTC",
             )
 
     @pytest.mark.asyncio
@@ -245,15 +223,8 @@ class TestScopeValidation:
         click_repo.aggregate.return_value = facet_response()
 
         result = await svc.query(
+            query=_q(scope="all", short_code=None),
             owner_id=OWNER_ID,
-            scope="all",
-            short_code=None,
-            start_date=START,
-            end_date=NOW,
-            filters={},
-            group_by=["time"],
-            metrics=["clicks"],
-            tz_name="UTC",
         )
         assert result["scope"] == "all"
 
@@ -270,15 +241,8 @@ class TestAggregationPipeline:
         click_repo.aggregate.return_value = facet_response()
 
         await svc.query(
+            query=_q(group_by="time,browser"),
             owner_id=OWNER_ID,
-            scope="anon",
-            short_code="abc",
-            start_date=START,
-            end_date=NOW,
-            filters={},
-            group_by=["time", "browser"],
-            metrics=["clicks"],
-            tz_name="UTC",
         )
         click_repo.aggregate.assert_awaited_once()
 
@@ -289,15 +253,8 @@ class TestAggregationPipeline:
         click_repo.aggregate.return_value = facet_response()
 
         await svc.query(
+            query=_q(),
             owner_id=OWNER_ID,
-            scope="anon",
-            short_code="abc",
-            start_date=START,
-            end_date=NOW,
-            filters={},
-            group_by=["time"],
-            metrics=["clicks"],
-            tz_name="UTC",
         )
         pipeline = click_repo.aggregate.call_args[0][0]
         assert pipeline[0].get("$match") is not None
@@ -309,15 +266,8 @@ class TestAggregationPipeline:
         click_repo.aggregate.return_value = facet_response()
 
         await svc.query(
+            query=_q(group_by="browser,country"),
             owner_id=OWNER_ID,
-            scope="anon",
-            short_code="abc",
-            start_date=START,
-            end_date=NOW,
-            filters={},
-            group_by=["browser", "country"],
-            metrics=["clicks"],
-            tz_name="UTC",
         )
         pipeline = click_repo.aggregate.call_args[0][0]
         assert pipeline[1].get("$facet") is not None
@@ -329,15 +279,8 @@ class TestAggregationPipeline:
         click_repo.aggregate.return_value = facet_response()
 
         await svc.query(
+            query=_q(group_by="browser,os"),
             owner_id=OWNER_ID,
-            scope="anon",
-            short_code="abc",
-            start_date=START,
-            end_date=NOW,
-            filters={},
-            group_by=["browser", "os"],
-            metrics=["clicks"],
-            tz_name="UTC",
         )
         facet = click_repo.aggregate.call_args[0][0][1]["$facet"]
         assert "_summary" in facet
@@ -352,15 +295,8 @@ class TestAggregationPipeline:
         click_repo.aggregate.return_value = facet_response()
 
         await svc.query(
+            query=_q(scope="all", short_code=None),
             owner_id=OWNER_ID,
-            scope="all",
-            short_code=None,
-            start_date=START,
-            end_date=NOW,
-            filters={},
-            group_by=["time"],
-            metrics=["clicks"],
-            tz_name="UTC",
         )
         match = click_repo.aggregate.call_args[0][0][0]["$match"]
         assert match["meta.owner_id"] == ObjectId(OWNER_ID)
@@ -372,15 +308,8 @@ class TestAggregationPipeline:
         click_repo.aggregate.return_value = facet_response()
 
         await svc.query(
+            query=_q(scope="anon", short_code="mycode"),
             owner_id=OWNER_ID,
-            scope="anon",
-            short_code="mycode",
-            start_date=START,
-            end_date=NOW,
-            filters={},
-            group_by=["time"],
-            metrics=["clicks"],
-            tz_name="UTC",
         )
         match = click_repo.aggregate.call_args[0][0][0]["$match"]
         assert match["meta.short_code"] == "mycode"
@@ -397,15 +326,8 @@ class TestResponseStructure:
         click_repo.aggregate.return_value = facet_response()
 
         result = await svc.query(
+            query=_q(),
             owner_id=OWNER_ID,
-            scope="anon",
-            short_code="abc",
-            start_date=START,
-            end_date=NOW,
-            filters={},
-            group_by=["time"],
-            metrics=["clicks"],
-            tz_name="UTC",
         )
         for key in (
             "scope",
@@ -427,15 +349,8 @@ class TestResponseStructure:
         click_repo.aggregate.return_value = facet_response(total=50, unique=20)
 
         result = await svc.query(
+            query=_q(),
             owner_id=OWNER_ID,
-            scope="anon",
-            short_code="abc",
-            start_date=START,
-            end_date=NOW,
-            filters={},
-            group_by=["time"],
-            metrics=["clicks"],
-            tz_name="UTC",
         )
         assert result["summary"]["total_clicks"] == 50
         assert result["summary"]["unique_clicks"] == 20
@@ -447,15 +362,8 @@ class TestResponseStructure:
         click_repo.aggregate.return_value = facet_response(total=100, unique=40)
 
         result = await svc.query(
+            query=_q(),
             owner_id=OWNER_ID,
-            scope="anon",
-            short_code="abc",
-            start_date=START,
-            end_date=NOW,
-            filters={},
-            group_by=["time"],
-            metrics=["clicks"],
-            tz_name="UTC",
         )
         cm = result.get("computed_metrics", {})
         assert cm["unique_click_rate"] == 40.0
@@ -468,15 +376,8 @@ class TestResponseStructure:
         click_repo.aggregate.return_value = facet_response()
 
         result = await svc.query(
+            query=_q(scope="anon", short_code="mycode"),
             owner_id=OWNER_ID,
-            scope="anon",
-            short_code="mycode",
-            start_date=START,
-            end_date=NOW,
-            filters={},
-            group_by=["time"],
-            metrics=["clicks"],
-            tz_name="UTC",
         )
         assert result["short_code"] == "mycode"
 
@@ -488,15 +389,8 @@ class TestResponseStructure:
         click_repo.aggregate.return_value = []  # no data
 
         result = await svc.query(
+            query=_q(group_by="browser"),
             owner_id=OWNER_ID,
-            scope="anon",
-            short_code="abc",
-            start_date=START,
-            end_date=NOW,
-            filters={},
-            group_by=["browser"],
-            metrics=["clicks"],
-            tz_name="UTC",
         )
         assert result["metrics"]["clicks_by_browser"] == []
 
@@ -512,35 +406,21 @@ class TestTimezone:
         click_repo.aggregate.return_value = facet_response()
 
         result = await svc.query(
+            query=_q(timezone_="Not/ATimezone"),
             owner_id=OWNER_ID,
-            scope="anon",
-            short_code="abc",
-            start_date=START,
-            end_date=NOW,
-            filters={},
-            group_by=["time"],
-            metrics=["clicks"],
-            tz_name="Not/ATimezone",
         )
         assert result["timezone"] == "UTC"
 
     @pytest.mark.asyncio
     async def test_timezone_alias_is_normalised(self):
-        """Legacy timezone aliases like Asia/Calcutta → Asia/Kolkata."""
+        """Legacy timezone aliases like Asia/Calcutta -> Asia/Kolkata."""
         svc, click_repo, url_repo = make_service()
         url_repo.check_stats_privacy.return_value = privacy_info()
         click_repo.aggregate.return_value = facet_response()
 
         result = await svc.query(
+            query=_q(timezone_="Asia/Calcutta"),
             owner_id=OWNER_ID,
-            scope="anon",
-            short_code="abc",
-            start_date=START,
-            end_date=NOW,
-            filters={},
-            group_by=["time"],
-            metrics=["clicks"],
-            tz_name="Asia/Calcutta",
         )
         assert result["timezone"] == "Asia/Kolkata"
 

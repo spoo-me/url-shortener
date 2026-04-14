@@ -124,7 +124,9 @@ async def shorten_url(
             status_code=400,
         )
 
-    if not validate_blocked_url(url, blocked_patterns):
+    if not validate_blocked_url(
+        url, blocked_patterns, timeout=settings.blocked_url_regex_timeout
+    ):
         return JSONResponse({"BlockedUrlError": "Blocked URL ⛔"}, status_code=403)
 
     if alias and not validate_alias(alias):
@@ -191,7 +193,9 @@ async def shorten_url(
     }
 
     if password:
-        if not validate_url_password(password):
+        if not validate_url_password(
+            password, min_length=settings.url_password_min_length
+        ):
             return JSONResponse(
                 {
                     "PasswordError": (
@@ -277,7 +281,9 @@ async def emoji(
     emoji_repo = EmojiUrlRepository(db["emojis"])
 
     if emojies:
-        if not validate_emoji_alias(emojies):
+        if not validate_emoji_alias(
+            emojies, max_emojis=settings.max_emoji_alias_length
+        ):
             return JSONResponse({"EmojiError": "Invalid emoji"}, status_code=400)
         if await emoji_repo.check_exists(emojies):
             log.warning(
@@ -320,7 +326,9 @@ async def emoji(
     }
 
     if password:
-        if not validate_url_password(password):
+        if not validate_url_password(
+            password, min_length=settings.url_password_min_length
+        ):
             return JSONResponse(
                 {
                     "PasswordError": (
