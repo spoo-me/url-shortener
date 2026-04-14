@@ -665,7 +665,10 @@ class AuthService:
             user, "ext", app_id=app_id
         )
         return AuthResult(
-            user=user, access_token=access_token, refresh_token=refresh_token, app_id=app_id
+            user=user,
+            access_token=access_token,
+            refresh_token=refresh_token,
+            app_id=app_id,
         )
 
     async def revoke_device_tokens(

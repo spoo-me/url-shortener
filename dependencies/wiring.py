@@ -16,13 +16,13 @@ from infrastructure.cache.url_cache import UrlCache
 from infrastructure.captcha.hcaptcha import HCaptchaProvider
 from infrastructure.webhook.discord import DiscordWebhookProvider
 from repositories.api_key_repository import ApiKeyRepository
+from repositories.app_grant_repository import AppGrantRepository
 from repositories.blocked_url_repository import BlockedUrlRepository
 from repositories.click_repository import ClickRepository
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
 from repositories.legacy.legacy_url_repository import LegacyUrlRepository
 from repositories.token_repository import TokenRepository
 from repositories.url_repository import UrlRepository
-from repositories.app_grant_repository import AppGrantRepository
 from repositories.user_repository import UserRepository
 from services.api_key_service import ApiKeyService
 from services.auth_service import AuthService

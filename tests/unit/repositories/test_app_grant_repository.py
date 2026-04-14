@@ -196,7 +196,7 @@ class TestTouchLastUsed:
     @pytest.mark.asyncio
     async def test_updates_active_grant(self):
         col = make_collection()
-        col.update_one = AsyncMock(return_value=MagicMock(modified_count=1))
+        col.update_one = AsyncMock(return_value=MagicMock(matched_count=1))
         await _repo(col).touch_last_used(USER_OID, _APP_ID)
         call_args = col.update_one.await_args[0]
         assert call_args[0] == {

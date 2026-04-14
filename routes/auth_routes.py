@@ -668,7 +668,11 @@ async def device_token(
         try:
             await grant_repo.touch_last_used(result.user.id, result.app_id)
         except Exception:
-            log.warning("touch_last_used_failed", user_id=str(result.user.id), app_id=result.app_id)
+            log.warning(
+                "touch_last_used_failed",
+                user_id=str(result.user.id),
+                app_id=result.app_id,
+            )
 
     return DeviceTokenResponse(
         access_token=result.access_token,
@@ -714,7 +718,11 @@ async def device_refresh(
         try:
             await grant_repo.touch_last_used(result.user.id, result.app_id)
         except Exception:
-            log.warning("touch_last_used_failed", user_id=str(result.user.id), app_id=result.app_id)
+            log.warning(
+                "touch_last_used_failed",
+                user_id=str(result.user.id),
+                app_id=result.app_id,
+            )
 
     return DeviceRefreshResponse(
         access_token=result.access_token,

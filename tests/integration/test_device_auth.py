@@ -384,7 +384,9 @@ def test_revoke_no_grant_returns_404(auth_svc, grant_repo, authed_user, _app_fac
 
 def test_device_refresh_success(auth_svc, grant_repo, _app_factory):
     user = _make_user_doc()
-    auth_svc.refresh_token.return_value = AuthResult(user=user, access_token="new-at", refresh_token="new-rt", app_id="spoo-snap")
+    auth_svc.refresh_token.return_value = AuthResult(
+        user=user, access_token="new-at", refresh_token="new-rt", app_id="spoo-snap"
+    )
     grant_repo.find_active_grant.return_value = _make_grant()
 
     c = _app_factory(auth_svc, grant_repo)
@@ -398,7 +400,9 @@ def test_device_refresh_success(auth_svc, grant_repo, _app_factory):
 
 def test_device_refresh_no_app_id_skips_grant_check(auth_svc, grant_repo, _app_factory):
     user = _make_user_doc()
-    auth_svc.refresh_token.return_value = AuthResult(user=user, access_token="new-at", refresh_token="new-rt")
+    auth_svc.refresh_token.return_value = AuthResult(
+        user=user, access_token="new-at", refresh_token="new-rt"
+    )
 
     c = _app_factory(auth_svc, grant_repo)
     resp = c.post("/auth/device/refresh", json={"refresh_token": "old-rt"})
@@ -408,7 +412,9 @@ def test_device_refresh_no_app_id_skips_grant_check(auth_svc, grant_repo, _app_f
 
 def test_device_refresh_revoked_grant_rejected(auth_svc, grant_repo, _app_factory):
     user = _make_user_doc()
-    auth_svc.refresh_token.return_value = AuthResult(user=user, access_token="new-at", refresh_token="new-rt", app_id="spoo-snap")
+    auth_svc.refresh_token.return_value = AuthResult(
+        user=user, access_token="new-at", refresh_token="new-rt", app_id="spoo-snap"
+    )
     grant_repo.find_active_grant.return_value = None
 
     c = _app_factory(auth_svc, grant_repo)
