@@ -9,6 +9,7 @@ SendVerificationRequest       — POST /auth/send-verification  (no body)
 RequestPasswordResetRequest   — POST /auth/request-password-reset
 ResetPasswordRequest          — POST /auth/reset-password
 DeviceTokenRequest            — POST /auth/device/token
+DeviceRefreshRequest          — POST /auth/device/refresh
 """
 
 from __future__ import annotations
@@ -125,4 +126,15 @@ class DeviceTokenRequest(BaseModel):
         min_length=1,
         max_length=128,
         description="One-time auth code from the device callback page",
+    )
+
+
+class DeviceRefreshRequest(BaseModel):
+    """Request body for POST /auth/device/refresh."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    refresh_token: str = Field(
+        min_length=1,
+        description="JWT refresh token issued by /auth/device/token",
     )

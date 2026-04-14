@@ -347,7 +347,8 @@ class AuthService:
         """Perform stateless token rotation.
 
         Verifies the refresh JWT, re-fetches the user to get the latest
-        ``email_verified`` status, and issues a new token pair.
+        ``email_verified`` status, and issues a new token pair.  The original
+        ``amr`` and ``app_id`` claims are preserved across rotations.
 
         Raises:
             AuthenticationError: Token invalid/expired, or user not found/inactive.
@@ -367,9 +368,14 @@ class AuthService:
             )
             raise AuthenticationError("invalid or expired refresh token")
 
-        log.info("token_refreshed", user_id=user_id)
-        new_access, new_refresh = self._tokens.issue_tokens(user, "pwd")
-        return AuthResult(user=user, access_token=new_access, refresh_token=new_refresh)
+        amr = claims.get("amr", ["pwd"])[0]
+        app_id = claims.get("app_id")
+
+        log.info("token_refreshed", user_id=user_id, amr=amr, app_id=app_id)
+        new_access, new_refresh = self._tokens.issue_tokens(user, amr, app_id=app_id)
+        return AuthResult(
+            user=user, access_token=new_access, refresh_token=new_refresh, app_id=app_id
+        )
 
     async def verify_email(self, user_id: str, otp_code: str) -> tuple[str, str]:
         """Verify a user's email address using an OTP code.
@@ -607,28 +613,33 @@ class AuthService:
 
     # ── Device auth flow ─────────────────────────────────────────────────────
 
-    async def create_device_auth_code(self, user_id: ObjectId, email: str) -> str:
+    async def create_device_auth_code(
+        self, user_id: ObjectId, email: str, app_id: str | None = None
+    ) -> str:
         """Generate a one-time auth code for the device auth flow.
 
         Returns the raw token (caller redirects to callback with it).
         """
-        await self._token_repo.delete_by_user(user_id, TOKEN_TYPE_DEVICE_AUTH)
+        await self._token_repo.delete_by_user(
+            user_id, TOKEN_TYPE_DEVICE_AUTH, app_id=app_id
+        )
 
         raw_token = generate_secure_token(48)
         now = datetime.now(timezone.utc)
-        await self._token_repo.create(
-            {
-                "user_id": user_id,
-                "email": email,
-                "token_hash": hash_token(raw_token),
-                "token_type": TOKEN_TYPE_DEVICE_AUTH,
-                "expires_at": now + timedelta(seconds=DEVICE_AUTH_EXPIRY_SECONDS),
-                "created_at": now,
-                "used_at": None,
-                "attempts": 0,
-            }
-        )
-        log.info("device_auth_code_created", user_id=str(user_id))
+        token_data: dict = {
+            "user_id": user_id,
+            "email": email,
+            "token_hash": hash_token(raw_token),
+            "token_type": TOKEN_TYPE_DEVICE_AUTH,
+            "expires_at": now + timedelta(seconds=DEVICE_AUTH_EXPIRY_SECONDS),
+            "created_at": now,
+            "used_at": None,
+            "attempts": 0,
+        }
+        if app_id:
+            token_data["app_id"] = app_id
+        await self._token_repo.create(token_data)
+        log.info("device_auth_code_created", user_id=str(user_id), app_id=app_id)
         return raw_token
 
     async def exchange_device_code(self, code: str) -> AuthResult:
@@ -648,8 +659,32 @@ class AuthService:
         if not user or user.status != UserStatus.ACTIVE:
             raise AuthenticationError("user not found or inactive")
 
-        log.info("device_auth_success", user_id=str(user.id))
-        access_token, refresh_token = self._tokens.issue_tokens(user, "ext")
-        return AuthResult(
-            user=user, access_token=access_token, refresh_token=refresh_token
+        app_id = token_doc.app_id
+        log.info("device_auth_success", user_id=str(user.id), app_id=app_id)
+        access_token, refresh_token = self._tokens.issue_tokens(
+            user, "ext", app_id=app_id
         )
+        return AuthResult(
+            user=user,
+            access_token=access_token,
+            refresh_token=refresh_token,
+            app_id=app_id,
+        )
+
+    async def revoke_device_tokens(
+        self, user_id: ObjectId, app_id: str | None = None
+    ) -> int:
+        """Invalidate device auth tokens for a user, optionally filtered by app_id.
+
+        Returns the number of tokens deleted.
+        """
+        count = await self._token_repo.delete_by_user(
+            user_id, TOKEN_TYPE_DEVICE_AUTH, app_id=app_id
+        )
+        log.info(
+            "device_tokens_revoked",
+            user_id=str(user_id),
+            app_id=app_id,
+            count=count,
+        )
+        return count

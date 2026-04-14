@@ -1,7 +1,7 @@
 """
 Repository for the `verification-tokens` MongoDB collection.
 
-Tokens are used for email verification, password resets, and OTP flows.
+Tokens are used for email verification, password resets, OTP flows, and device auth codes.
 All methods are async. Returns VerificationTokenDoc models where applicable.
 Errors are handled by BaseRepository for standard operations; domain-specific
 methods (consume_by_hash, find_latest_by_user) handle their own errors.
@@ -110,15 +110,20 @@ class TokenRepository(BaseRepository[VerificationTokenDoc]):
         )
 
     async def delete_by_user(
-        self, user_id: ObjectId, token_type: str | None = None
+        self,
+        user_id: ObjectId,
+        token_type: str | None = None,
+        app_id: str | None = None,
     ) -> int:
-        """Delete all tokens for a user, optionally filtered by token type.
+        """Delete all tokens for a user, optionally filtered by token type and app_id.
 
         Returns the number of documents deleted.
         """
         query: dict = {"user_id": user_id}
         if token_type is not None:
             query["token_type"] = token_type
+        if app_id is not None:
+            query["app_id"] = app_id
         return await self._delete_many(query)
 
     async def count_recent(

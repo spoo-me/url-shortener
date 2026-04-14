@@ -16,6 +16,7 @@ from infrastructure.cache.url_cache import UrlCache
 from infrastructure.captcha.hcaptcha import HCaptchaProvider
 from infrastructure.webhook.discord import DiscordWebhookProvider
 from repositories.api_key_repository import ApiKeyRepository
+from repositories.app_grant_repository import AppGrantRepository
 from repositories.blocked_url_repository import BlockedUrlRepository
 from repositories.click_repository import ClickRepository
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
@@ -53,6 +54,7 @@ def wire_services(app: FastAPI, settings: AppSettings, redis_client) -> None:
     token_repo = TokenRepository(db["verification-tokens"])
     api_key_repo = ApiKeyRepository(db["api-keys"])
     blocked_url_repo = BlockedUrlRepository(db["blocked-urls"])
+    app_grant_repo = AppGrantRepository(db["app-grants"])
 
     # ── Infrastructure ───────────────────────────────────────────────────
     url_cache = UrlCache(redis_client, ttl_seconds=settings.redis.redis_ttl_seconds)
@@ -109,3 +111,5 @@ def wire_services(app: FastAPI, settings: AppSettings, redis_client) -> None:
     v2_handler = V2ClickHandler(click_repo, url_repo, app.state.geoip, url_cache)
     v1_handler = LegacyClickHandler(legacy_repo, emoji_repo, app.state.geoip)
     app.state.click_service = ClickService({"v2": v2_handler, "v1": v1_handler})
+
+    app.state.app_grant_repo = app_grant_repo
