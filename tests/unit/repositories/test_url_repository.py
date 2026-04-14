@@ -109,7 +109,7 @@ class TestUrlRepository:
     @pytest.mark.asyncio
     async def test_increment_clicks_uses_inc_and_set(self):
         col = make_collection()
-        col.update_one = AsyncMock(return_value=MagicMock())
+        col.update_one = AsyncMock(return_value=MagicMock(matched_count=1))
         ts = datetime(2024, 6, 1, tzinfo=timezone.utc)
         await self._repo(col).increment_clicks(URL_OID, last_click_time=ts)
         col.update_one.assert_awaited_once_with(
@@ -120,7 +120,7 @@ class TestUrlRepository:
     @pytest.mark.asyncio
     async def test_increment_clicks_uses_now_when_no_time(self):
         col = make_collection()
-        col.update_one = AsyncMock(return_value=MagicMock())
+        col.update_one = AsyncMock(return_value=MagicMock(matched_count=1))
         await self._repo(col).increment_clicks(URL_OID)
         args = col.update_one.call_args
         update_doc = args[0][1]
@@ -140,6 +140,13 @@ class TestUrlRepository:
 
     @pytest.mark.asyncio
     async def test_expire_if_max_clicks_returns_false_when_not_reached(self):
+        col = make_collection()
+        col.update_one = AsyncMock(return_value=MagicMock(modified_count=0))
+        assert await self._repo(col).expire_if_max_clicks(URL_OID, 100) is False
+
+    @pytest.mark.asyncio
+    async def test_expire_if_max_clicks_returns_false_when_already_expired(self):
+        """matched but not modified — URL was already EXPIRED."""
         col = make_collection()
         col.update_one = AsyncMock(return_value=MagicMock(modified_count=0))
         assert await self._repo(col).expire_if_max_clicks(URL_OID, 100) is False

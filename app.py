@@ -18,6 +18,7 @@ from pymongo.asynchronous.mongo_client import AsyncMongoClient
 from starlette.middleware.sessions import SessionMiddleware
 
 from config import AppSettings
+from dependencies.wiring import wire_services
 from infrastructure.email.zeptomail import ZeptoMailProvider
 from infrastructure.geoip import GeoIPService
 from infrastructure.http_client import HttpClient
@@ -111,7 +112,7 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
         app.state.oauth_providers = oauth_providers
 
         # Shared HTTP client + email provider — singletons to preserve connection pooling
-        http_client = HttpClient(timeout=5.0)
+        http_client = HttpClient(timeout=settings.http_client_timeout)
         app.state.http_client = http_client
         app.state.email_provider = ZeptoMailProvider(
             settings.email, http_client, app_url=settings.app_url
@@ -123,6 +124,9 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
         )
 
         await ensure_indexes(app.state.db)
+
+        # ── Build all repos + services (composition root) ────────────────
+        wire_services(app, settings, redis_client)
 
         # Warn if session secret is missing when auth is enabled
         if settings.jwt and not settings.secret_key:

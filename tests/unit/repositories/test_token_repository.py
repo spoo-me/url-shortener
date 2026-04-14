@@ -26,7 +26,7 @@ class TestTokenRepository:
     @pytest.mark.asyncio
     async def test_mark_as_used_sets_used_at(self):
         col = make_collection()
-        col.update_one = AsyncMock(return_value=MagicMock(modified_count=1))
+        col.update_one = AsyncMock(return_value=MagicMock(matched_count=1))
         result = await self._repo(col).mark_as_used(TOKEN_OID)
         assert col.update_one.await_count == 1
         call_args = col.update_one.call_args[0]
@@ -38,7 +38,7 @@ class TestTokenRepository:
     @pytest.mark.asyncio
     async def test_mark_as_used_returns_false_on_miss(self):
         col = make_collection()
-        col.update_one = AsyncMock(return_value=MagicMock(modified_count=0))
+        col.update_one = AsyncMock(return_value=MagicMock(matched_count=0))
         assert await self._repo(col).mark_as_used(TOKEN_OID) is False
 
     @pytest.mark.asyncio

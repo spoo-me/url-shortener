@@ -7,10 +7,9 @@ in app.py. These are the base-level deps that auth and service deps build on.
 
 from __future__ import annotations
 
-from fastapi import Depends, Request
+from fastapi import Request
 
 from config import AppSettings
-from infrastructure.cache.url_cache import UrlCache
 from infrastructure.geoip import GeoIPService
 
 
@@ -37,11 +36,3 @@ def get_email_provider(request: Request):
 def get_geoip_service(request: Request) -> GeoIPService:
     """Return the GeoIPService singleton from app.state."""
     return request.app.state.geoip
-
-
-def get_url_cache(
-    redis=Depends(get_redis),
-    settings: AppSettings = Depends(get_settings),
-) -> UrlCache:
-    """Return a UrlCache wrapping the shared Redis client."""
-    return UrlCache(redis, ttl_seconds=settings.redis.redis_ttl_seconds)

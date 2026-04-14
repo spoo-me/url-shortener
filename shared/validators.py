@@ -38,11 +38,11 @@ def validate_url(
     return not any(domain in url_lower for domain in blocked_self_domains)
 
 
-def validate_url_password(password: str) -> bool:
+def validate_url_password(password: str, min_length: int = 8) -> bool:
     """Validate a URL password.
 
     Rules:
-    - At least 8 characters
+    - At least *min_length* characters (default 8)
     - Contains at least one letter
     - Contains at least one digit
     - Contains at least one of ``@`` or ``.``
@@ -51,7 +51,7 @@ def validate_url_password(password: str) -> bool:
     Returns:
         True if the password meets all requirements.
     """
-    if len(password) < 8:
+    if len(password) < min_length:
         return False
     if not re.search(r"[a-zA-Z]", password):
         return False
@@ -67,8 +67,27 @@ def validate_alias(alias: str) -> bool:
     return bool(re.search(r"^[a-zA-Z0-9_-]*$", alias))
 
 
-def validate_emoji_alias(alias: str) -> bool:
-    """Return True if *alias* is a valid emoji-only alias (max 15 emojis).
+def is_emoji_alias(alias: str) -> bool:
+    """Return True if *alias* consists entirely of emoji characters.
+
+    Unlike ``validate_emoji_alias``, this does NOT enforce a length cap.
+    Use for URL resolution/dispatch where any previously-created emoji
+    alias must be routable regardless of the current creation policy.
+    """
+    decoded = unquote(alias)
+    if not decoded:
+        return False
+    emoji_list = emoji.emoji_list(decoded)
+    extracted = "".join([data["emoji"] for data in emoji_list])
+    return extracted == decoded
+
+
+def validate_emoji_alias(alias: str, max_emojis: int = 15) -> bool:
+    """Return True if *alias* is a valid emoji-only alias.
+
+    Args:
+        alias:      The alias string (may be percent-encoded).
+        max_emojis: Maximum number of emojis allowed (default 15).
 
     The alias is URL-decoded before validation so percent-encoded emojis are
     handled correctly.
@@ -76,14 +95,20 @@ def validate_emoji_alias(alias: str) -> bool:
     alias = unquote(alias)
     emoji_list = emoji.emoji_list(alias)
     extracted_emojis = "".join([data["emoji"] for data in emoji_list])
-    return not (len(extracted_emojis) != len(alias) or len(emoji_list) > 15)
+    return not (len(extracted_emojis) != len(alias) or len(emoji_list) > max_emojis)
 
 
-def validate_account_password(password: str) -> tuple[bool, list[str], int]:
+def validate_account_password(
+    password: str,
+    min_length: int = 8,
+    max_length: int = 128,
+) -> tuple[bool, list[str], int]:
     """Validate a user account password.
 
-    Rules: ≥8 chars, ≤128 chars, uppercase, lowercase, digit, special char,
-    no invalid characters.
+    Args:
+        password:   The password to validate.
+        min_length: Minimum required length (default 8).
+        max_length: Maximum allowed length (default 128).
 
     Returns:
         (is_valid, missing_requirements, strength_score)
@@ -94,13 +119,13 @@ def validate_account_password(password: str) -> tuple[bool, list[str], int]:
     missing: list[str] = []
     strength_score = 0
 
-    if len(password) < 8:
-        missing.append("At least 8 characters")
+    if len(password) < min_length:
+        missing.append(f"At least {min_length} characters")
     else:
         strength_score += 20
 
-    if len(password) > 128:
-        missing.append("Maximum 128 characters")
+    if len(password) > max_length:
+        missing.append(f"Maximum {max_length} characters")
     else:
         strength_score += 10
 
@@ -152,26 +177,29 @@ def validate_account_password(password: str) -> tuple[bool, list[str], int]:
     return len(missing) == 0, missing, strength_score
 
 
-def validate_blocked_url(url: str, patterns: Sequence[str]) -> bool:
+def validate_blocked_url(
+    url: str, patterns: Sequence[str], timeout: float = 0.2
+) -> bool:
     """Return True if *url* does NOT match any blocked pattern.
 
     This is a pure function — the caller is responsible for providing the
     list of blocked URL regex patterns (typically loaded from the database
     and cached by the repository layer).
 
-    Uses the ``regex`` library with a per-pattern timeout of 200 ms to
-    prevent ReDoS attacks on user-supplied patterns.
+    Uses the ``regex`` library with a per-pattern timeout to prevent ReDoS
+    attacks on user-supplied patterns.
 
     Args:
-        url: The URL to check.
+        url:      The URL to check.
         patterns: Iterable of regex pattern strings to match against.
+        timeout:  Per-pattern regex timeout in seconds (default 0.2).
 
     Returns:
         True if the URL is allowed (no pattern matched), False if blocked.
     """
     for pattern in patterns:
         try:
-            if regex.search(pattern, url, timeout=0.2):
+            if regex.search(pattern, url, timeout=timeout):
                 return False
         except TimeoutError:
             pass  # Treat timed-out patterns as non-matching (fail open)

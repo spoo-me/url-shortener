@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from contextlib import asynccontextmanager
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import FastAPI
@@ -46,6 +46,16 @@ def _build_smoke_app() -> FastAPI:
         app.state.http_client = MagicMock()
         app.state.oauth_providers = {}
         app.state.geoip = MagicMock()
+        # Mock services for singleton dependency lookups
+        app.state.url_service = AsyncMock()
+        app.state.stats_service = AsyncMock()
+        app.state.export_service = AsyncMock()
+        app.state.api_key_service = AsyncMock()
+        app.state.auth_service = AsyncMock()
+        app.state.oauth_service = AsyncMock()
+        app.state.profile_picture_service = AsyncMock()
+        app.state.contact_service = AsyncMock()
+        app.state.click_service = AsyncMock()
         yield
 
     app = FastAPI(

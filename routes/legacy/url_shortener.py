@@ -33,6 +33,7 @@ from shared.legacy_helpers import humanize_number, is_positive_integer
 from shared.logging import get_logger
 from shared.templates import templates
 from shared.validators import (
+    is_emoji_alias,
     validate_alias,
     validate_blocked_url,
     validate_emoji_alias,
@@ -124,7 +125,9 @@ async def shorten_url(
             status_code=400,
         )
 
-    if not validate_blocked_url(url, blocked_patterns):
+    if not validate_blocked_url(
+        url, blocked_patterns, timeout=settings.blocked_url_regex_timeout
+    ):
         return JSONResponse({"BlockedUrlError": "Blocked URL ⛔"}, status_code=403)
 
     if alias and not validate_alias(alias):
@@ -191,11 +194,13 @@ async def shorten_url(
     }
 
     if password:
-        if not validate_url_password(password):
+        if not validate_url_password(
+            password, min_length=settings.url_password_min_length
+        ):
             return JSONResponse(
                 {
                     "PasswordError": (
-                        "Invalid password, password must be atleast 8 characters long,"
+                        f"Invalid password, password must be at least {settings.url_password_min_length} characters long,"
                         " must contain a letter and a number and a special character"
                         " either '@' or '.' and cannot be consecutive"
                     )
@@ -277,7 +282,9 @@ async def emoji(
     emoji_repo = EmojiUrlRepository(db["emojis"])
 
     if emojies:
-        if not validate_emoji_alias(emojies):
+        if not validate_emoji_alias(
+            emojies, max_emojis=settings.max_emoji_alias_length
+        ):
             return JSONResponse({"EmojiError": "Invalid emoji"}, status_code=400)
         if await emoji_repo.check_exists(emojies):
             log.warning(
@@ -320,11 +327,13 @@ async def emoji(
     }
 
     if password:
-        if not validate_url_password(password):
+        if not validate_url_password(
+            password, min_length=settings.url_password_min_length
+        ):
             return JSONResponse(
                 {
                     "PasswordError": (
-                        "Invalid password, password must be atleast 8 characters long,"
+                        f"Invalid password, password must be at least {settings.url_password_min_length} characters long,"
                         " must contain a letter and a number and a special character"
                         " either '@' or '.' and cannot be consecutive"
                     )
@@ -426,7 +435,7 @@ async def preview_url(
     url_data = None
     schema_type = "v1"
 
-    if validate_emoji_alias(short_code):
+    if is_emoji_alias(short_code):
         emoji_repo = EmojiUrlRepository(db["emojis"])
         doc = await emoji_repo.find_by_id(short_code)
         if doc:

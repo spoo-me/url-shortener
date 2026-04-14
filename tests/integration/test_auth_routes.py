@@ -38,6 +38,7 @@ from middleware.rate_limiter import limiter
 from routes.auth_routes import router as auth_router
 from routes.oauth_routes import router as oauth_router
 from schemas.models.user import UserDoc
+from schemas.results import AuthResult
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -104,7 +105,9 @@ _MOCK_REFRESH = "mock.refresh.token"
 def test_login_valid_credentials():
     user = _make_user_doc()
     mock_svc = AsyncMock()
-    mock_svc.login.return_value = (user, _MOCK_ACCESS, _MOCK_REFRESH)
+    mock_svc.login.return_value = AuthResult(
+        user=user, access_token=_MOCK_ACCESS, refresh_token=_MOCK_REFRESH
+    )
 
     app = _build_test_app({get_auth_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
@@ -158,7 +161,12 @@ def test_login_same_error_message_for_unknown_email_and_wrong_password():
 def test_register_creates_user_returns_201():
     user = _make_user_doc(email_verified=False)
     mock_svc = AsyncMock()
-    mock_svc.register.return_value = (user, _MOCK_ACCESS, _MOCK_REFRESH, True)
+    mock_svc.register.return_value = AuthResult(
+        user=user,
+        access_token=_MOCK_ACCESS,
+        refresh_token=_MOCK_REFRESH,
+        verification_sent=True,
+    )
 
     app = _build_test_app({get_auth_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
@@ -208,7 +216,9 @@ def test_register_weak_password_returns_400():
 def test_refresh_rotates_tokens():
     user = _make_user_doc()
     mock_svc = AsyncMock()
-    mock_svc.refresh_token.return_value = (user, "new.access", "new.refresh")
+    mock_svc.refresh_token.return_value = AuthResult(
+        user=user, access_token="new.access", refresh_token="new.refresh"
+    )
 
     app = _build_test_app({get_auth_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:

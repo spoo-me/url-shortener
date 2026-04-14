@@ -22,7 +22,6 @@ from middleware.openapi import EXPORT_RESPONSES, OPTIONAL_AUTH_SECURITY
 from middleware.rate_limiter import Limits, dynamic_limit, limiter
 from schemas.dto.requests.stats import ExportQuery
 from services.export.service import ExportService
-from shared.datetime_utils import parse_datetime
 
 router = APIRouter(tags=["Statistics"])
 
@@ -92,25 +91,9 @@ async def export_v1(
     compared to other endpoints.
     """
     owner_id = str(user.user_id) if user is not None else None
-
-    start_date = parse_datetime(query.start_date) if query.start_date else None
-    end_date = parse_datetime(query.end_date) if query.end_date else None
-
-    data, mimetype, filename = await export_service.export(
-        fmt=query.format,
-        owner_id=owner_id,
-        scope=query.scope,
-        short_code=query.short_code,
-        start_date=start_date,
-        end_date=end_date,
-        filters=query.parsed_filters,
-        group_by=query.parsed_group_by,
-        metrics=query.parsed_metrics,
-        tz_name=query.timezone,
-    )
-
+    result = await export_service.export(query, owner_id)
     return Response(
-        content=data,
-        media_type=mimetype,
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        content=result.content,
+        media_type=result.mimetype,
+        headers={"Content-Disposition": f'attachment; filename="{result.filename}"'},
     )

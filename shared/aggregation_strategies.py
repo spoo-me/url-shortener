@@ -1,11 +1,17 @@
 """
 Aggregation strategies for analytics queries.
 
-Relocated from utils/aggregation_strategies.py. The convert_country_name
-helper (formerly in utils/analytics_utils.py) is now inlined here.
+Uses the Strategy pattern with a parameterized ``FieldAggregationStrategy``
+for simple group-by dimensions, and a dedicated ``TimeAggregationStrategy``
+for time-bucketed aggregation that requires genuinely different logic.
+
+Adding a new field dimension (e.g. "language") is a one-line registry entry.
 """
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from datetime import datetime
 from functools import cache
 from typing import Any, ClassVar
@@ -24,16 +30,14 @@ from shared.time_bucket_utils import (
 log = get_logger(__name__)
 
 
+# ── Helpers ─────────────────────────────────────────────────────────────
+
+
 @cache
 def convert_country_name(country_name: str) -> str:
-    """
-    Convert country name to ISO 2-letter country code with caching.
+    """Convert country name to ISO 2-letter country code with caching.
 
-    Args:
-        country_name: Full country name (e.g., "United States", "Germany")
-
-    Returns:
-        ISO 2-letter country code (e.g., "US", "DE") or "XX" if not found
+    Returns "XX" if the country cannot be resolved.
     """
     name = country_name.strip()
     try:
@@ -42,28 +46,101 @@ def convert_country_name(country_name: str) -> str:
         return {"Turkey": "TR", "Russia": "RU"}.get(name, "XX")
 
 
+# ── Abstract base ───────────────────────────────────────────────────────
+
+
 class AggregationStrategy(ABC):
-    """Abstract base class for aggregation strategies"""
+    """Abstract base class for aggregation strategies."""
 
     @abstractmethod
     def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
-        """Build aggregation pipeline for this strategy"""
-        pass
+        """Build aggregation pipeline for this strategy."""
 
     @abstractmethod
     def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Format the aggregation results"""
-        pass
+        """Format the aggregation results."""
 
     @property
     @abstractmethod
     def dimension_name(self) -> str:
-        """Get the dimension name for this strategy"""
-        pass
+        """Get the dimension name for this strategy."""
+
+
+# ── Parameterized field strategy (replaces 7 concrete classes) ──────────
+
+
+class FieldAggregationStrategy(AggregationStrategy):
+    """Data-driven strategy for simple group-by dimensions.
+
+    Parameterized by the MongoDB field to group on, the output key name,
+    result limit, an optional null default, and an optional per-value
+    transform function.
+
+    This single class replaces BrowserAggregationStrategy,
+    OSAggregationStrategy, DeviceAggregationStrategy,
+    CountryAggregationStrategy, CityAggregationStrategy,
+    ReferrerAggregationStrategy, and ShortCodeAggregationStrategy.
+    """
+
+    def __init__(
+        self,
+        mongo_field: str,
+        output_key: str,
+        limit: int = 20,
+        default: str | None = None,
+        transform_fn: Callable[[str], str] | None = None,
+    ) -> None:
+        self._mongo_field = mongo_field
+        self._output_key = output_key
+        self._limit = limit
+        self._default = default
+        self._transform_fn = transform_fn
+
+    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
+        if self._default is not None:
+            group_expr: Any = {"$ifNull": [self._mongo_field, self._default]}
+        else:
+            group_expr = {"$ifNull": [self._mongo_field, "Unknown"]}
+
+        return [
+            {"$match": base_query},
+            {
+                "$group": {
+                    "_id": group_expr,
+                    "total_clicks": {"$sum": 1},
+                    "unique_clicks": {"$addToSet": "$ip_address"},
+                }
+            },
+            {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
+            {"$sort": {"total_clicks": -1}},
+            {"$limit": self._limit},
+        ]
+
+    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        formatted = []
+        for result in results:
+            value = result["_id"]
+            if self._transform_fn is not None:
+                value = self._transform_fn(value)
+            formatted.append(
+                {
+                    self._output_key: value,
+                    "total_clicks": result.get("total_clicks", 0),
+                    "unique_clicks": result.get("unique_clicks", 0),
+                }
+            )
+        return formatted
+
+    @property
+    def dimension_name(self) -> str:
+        return self._output_key
+
+
+# ── Time strategy (genuinely different logic) ───────────────────────────
 
 
 class TimeAggregationStrategy(AggregationStrategy):
-    """Strategy for time-based aggregation with dynamic bucketing"""
+    """Strategy for time-based aggregation with dynamic bucketing."""
 
     def __init__(
         self,
@@ -72,39 +149,23 @@ class TimeAggregationStrategy(AggregationStrategy):
         time_format: str | None = None,
         timezone: str = "UTC",
     ):
-        """
-        Initialize time aggregation strategy.
-
-        Args:
-            start_date: Start date for determining optimal bucket strategy
-            end_date: End date for determining optimal bucket strategy
-            time_format: Manual override for time format (legacy support)
-            timezone: IANA timezone for output formatting (default: UTC)
-        """
         self.start_date = start_date
         self.end_date = end_date
         self.timezone = timezone
 
-        # Determine bucket configuration
         if time_format:
-            # Legacy mode: use provided format
             self.bucket_config = None
             self.time_format = time_format
         else:
-            # Dynamic mode: determine optimal bucketing
             self.bucket_config = get_optimal_bucket_config(start_date, end_date)
             self.time_format = self.bucket_config.mongo_format
 
     def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
-        """Build aggregation pipeline with dynamic time bucketing"""
-
         if self.bucket_config:
-            # Use dynamic bucketing with specialized pipeline and timezone support
             time_bucket_expr = create_mongo_time_bucket_pipeline(
                 self.bucket_config, timezone=self.timezone
             )
         else:
-            # Legacy mode: use simple dateToString with timezone
             time_bucket_expr = {
                 "$dateToString": {
                     "format": self.time_format,
@@ -127,14 +188,11 @@ class TimeAggregationStrategy(AggregationStrategy):
         ]
 
     def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Format results with proper time bucket display and fill missing buckets"""
         formatted_results = []
 
         for result in results:
             bucket_value = result["_id"]
 
-            # Format the time bucket for display if using dynamic bucketing
-            # NOTE: Buckets are already in user's timezone from MongoDB aggregation
             if self.bucket_config:
                 display_value = format_time_bucket_display(
                     bucket_value, self.bucket_config
@@ -150,14 +208,11 @@ class TimeAggregationStrategy(AggregationStrategy):
                     "bucket_strategy": self.bucket_config.strategy.value
                     if self.bucket_config
                     else "legacy",
-                    "raw_bucket": bucket_value,  # Include raw value for debugging
+                    "raw_bucket": bucket_value,
                 }
             )
 
-        # Fill missing buckets if using dynamic bucketing and we have date range
-        # NOTE: We need to convert start/end dates to user timezone for proper bucket filling
         if self.bucket_config and self.start_date and self.end_date:
-            # Convert date range to user timezone for bucket generation
             user_tz = ZoneInfo(self.timezone)
             start_in_tz = self.start_date.astimezone(user_tz)
             end_in_tz = self.end_date.astimezone(user_tz)
@@ -168,76 +223,12 @@ class TimeAggregationStrategy(AggregationStrategy):
 
         return formatted_results
 
-    def _convert_bucket_to_timezone(self, bucket_str: str) -> str:
-        """Convert UTC bucket timestamp to user's timezone"""
-        if self.timezone == "UTC":
-            return bucket_str  # No conversion needed
-
-        try:
-            from datetime import timezone as dt_timezone
-
-            user_tz = ZoneInfo(self.timezone)
-
-            # Parse the bucket string based on its format
-            if self.bucket_config:
-                strategy = self.bucket_config.strategy.value
-
-                if "minute" in strategy or "hourly" in strategy:
-                    # Format: "2025-01-01 14:30" or "2025-01-01 14:00"
-                    dt = datetime.strptime(bucket_str, "%Y-%m-%d %H:%M")
-                elif "daily" in strategy:
-                    # Format: "2025-01-01"
-                    dt = datetime.strptime(bucket_str, "%Y-%m-%d")
-                elif "weekly" in strategy:
-                    # Format: "2025-W01" - keep as is for now
-                    return bucket_str
-                elif "monthly" in strategy:
-                    # Format: "2025-01"
-                    dt = datetime.strptime(bucket_str, "%Y-%m")
-                else:
-                    return bucket_str
-            else:
-                # Legacy mode - try common formats
-                try:
-                    dt = datetime.strptime(bucket_str, "%Y-%m-%d %H:%M")
-                except ValueError:
-                    try:
-                        dt = datetime.strptime(bucket_str, "%Y-%m-%d")
-                    except ValueError:
-                        return bucket_str
-
-            # Treat parsed datetime as UTC and convert to user timezone
-            dt_utc = dt.replace(tzinfo=dt_timezone.utc)
-            dt_user = dt_utc.astimezone(user_tz)
-
-            # Format back to string in the same format
-            if self.bucket_config:
-                strategy = self.bucket_config.strategy.value
-                if "minute" in strategy or "hourly" in strategy:
-                    return dt_user.strftime("%Y-%m-%d %H:%M")
-                elif "daily" in strategy:
-                    return dt_user.strftime("%Y-%m-%d")
-                elif "monthly" in strategy:
-                    return dt_user.strftime("%Y-%m")
-
-            return dt_user.strftime("%Y-%m-%d %H:%M")
-
-        except Exception as e:
-            log.error(
-                "time_bucket_timezone_conversion_failed",
-                bucket=bucket_str,
-                timezone=self.timezone,
-                error=str(e),
-                error_type=type(e).__name__,
-            )
-            return bucket_str  # Return original on error
-
     @property
     def dimension_name(self) -> str:
         return "time"
 
     def get_bucket_info(self) -> dict[str, Any]:
-        """Get information about the current bucketing strategy"""
+        """Get information about the current bucketing strategy."""
         if self.bucket_config:
             return {
                 "strategy": self.bucket_config.strategy.value,
@@ -246,272 +237,53 @@ class TimeAggregationStrategy(AggregationStrategy):
                 "display_format": self.bucket_config.display_format,
                 "timezone": self.timezone,
             }
-        else:
-            return {
-                "strategy": "legacy",
-                "mongo_format": self.time_format,
-                "display_format": self.time_format,
-                "timezone": self.timezone,
-            }
+        return {
+            "strategy": "legacy",
+            "mongo_format": self.time_format,
+            "display_format": self.time_format,
+            "timezone": self.timezone,
+        }
 
 
-class BrowserAggregationStrategy(AggregationStrategy):
-    """Strategy for browser-based aggregation"""
-
-    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
-        return [
-            {"$match": base_query},
-            {
-                "$group": {
-                    "_id": {"$ifNull": ["$browser", "Unknown"]},
-                    "total_clicks": {"$sum": 1},
-                    "unique_clicks": {"$addToSet": "$ip_address"},
-                }
-            },
-            {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
-            {"$sort": {"total_clicks": -1}},
-            {"$limit": 20},
-        ]
-
-    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        return [
-            {
-                "browser": result["_id"],
-                "total_clicks": result.get("total_clicks", 0),
-                "unique_clicks": result.get("unique_clicks", 0),
-            }
-            for result in results
-        ]
-
-    @property
-    def dimension_name(self) -> str:
-        return "browser"
-
-
-class OSAggregationStrategy(AggregationStrategy):
-    """Strategy for operating system aggregation"""
-
-    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
-        return [
-            {"$match": base_query},
-            {
-                "$group": {
-                    "_id": {"$ifNull": ["$os", "Unknown"]},
-                    "total_clicks": {"$sum": 1},
-                    "unique_clicks": {"$addToSet": "$ip_address"},
-                }
-            },
-            {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
-            {"$sort": {"total_clicks": -1}},
-            {"$limit": 20},
-        ]
-
-    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        return [
-            {
-                "os": result["_id"],
-                "total_clicks": result.get("total_clicks", 0),
-                "unique_clicks": result.get("unique_clicks", 0),
-            }
-            for result in results
-        ]
-
-    @property
-    def dimension_name(self) -> str:
-        return "os"
-
-
-class DeviceAggregationStrategy(AggregationStrategy):
-    """Strategy for device type aggregation"""
-
-    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
-        return [
-            {"$match": base_query},
-            {
-                "$group": {
-                    "_id": {"$ifNull": ["$device", "Unknown"]},
-                    "total_clicks": {"$sum": 1},
-                    "unique_clicks": {"$addToSet": "$ip_address"},
-                }
-            },
-            {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
-            {"$sort": {"total_clicks": -1}},
-            {"$limit": 20},
-        ]
-
-    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        return [
-            {
-                "device": result["_id"],
-                "total_clicks": result.get("total_clicks", 0),
-                "unique_clicks": result.get("unique_clicks", 0),
-            }
-            for result in results
-        ]
-
-    @property
-    def dimension_name(self) -> str:
-        return "device"
-
-
-class CountryAggregationStrategy(AggregationStrategy):
-    """Strategy for country-based aggregation"""
-
-    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
-        return [
-            {"$match": base_query},
-            {
-                "$group": {
-                    "_id": {"$ifNull": ["$country", "Unknown"]},
-                    "total_clicks": {"$sum": 1},
-                    "unique_clicks": {"$addToSet": "$ip_address"},
-                }
-            },
-            {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
-            {"$sort": {"total_clicks": -1}},
-            {"$limit": 50},  # Top 50 countries
-        ]
-
-    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        return [
-            {
-                "country": convert_country_name(
-                    result["_id"]
-                ),  # Send country code after conversion
-                "total_clicks": result.get("total_clicks", 0),
-                "unique_clicks": result.get("unique_clicks", 0),
-            }
-            for result in results
-        ]
-
-    @property
-    def dimension_name(self) -> str:
-        return "country"
-
-
-class CityAggregationStrategy(AggregationStrategy):
-    """Strategy for city-based aggregation"""
-
-    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
-        return [
-            {"$match": base_query},
-            {
-                "$group": {
-                    "_id": {"$ifNull": ["$city", "Unknown"]},
-                    "total_clicks": {"$sum": 1},
-                    "unique_clicks": {"$addToSet": "$ip_address"},
-                }
-            },
-            {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
-            {"$sort": {"total_clicks": -1}},
-            {"$limit": 50},  # Top 50 cities
-        ]
-
-    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        return [
-            {
-                "city": result["_id"],
-                "total_clicks": result.get("total_clicks", 0),
-                "unique_clicks": result.get("unique_clicks", 0),
-            }
-            for result in results
-        ]
-
-    @property
-    def dimension_name(self) -> str:
-        return "city"
-
-
-class ReferrerAggregationStrategy(AggregationStrategy):
-    """Strategy for referrer-based aggregation"""
-
-    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
-        return [
-            {"$match": base_query},
-            {
-                "$group": {
-                    "_id": {"$ifNull": ["$referrer", "Direct"]},
-                    "total_clicks": {"$sum": 1},
-                    "unique_clicks": {"$addToSet": "$ip_address"},
-                }
-            },
-            {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
-            {"$sort": {"total_clicks": -1}},
-            {"$limit": 30},  # Top 30 referrers
-        ]
-
-    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        return [
-            {
-                "referrer": result["_id"],
-                "total_clicks": result.get("total_clicks", 0),
-                "unique_clicks": result.get("unique_clicks", 0),
-            }
-            for result in results
-        ]
-
-    @property
-    def dimension_name(self) -> str:
-        return "referrer"
-
-
-class ShortCodeAggregationStrategy(AggregationStrategy):
-    """Strategy for short_code-based aggregation (grouping by short codes/aliases)"""
-
-    def build_pipeline(self, base_query: dict[str, Any]) -> list[dict[str, Any]]:
-        return [
-            {"$match": base_query},
-            {
-                "$group": {
-                    "_id": {"$ifNull": ["$meta.short_code", "Unknown"]},
-                    "total_clicks": {"$sum": 1},
-                    "unique_clicks": {"$addToSet": "$ip_address"},
-                }
-            },
-            {"$addFields": {"unique_clicks": {"$size": "$unique_clicks"}}},
-            {"$sort": {"total_clicks": -1}},
-            {"$limit": 100},  # Top 100 short codes
-        ]
-
-    def format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        return [
-            {
-                "short_code": result["_id"],
-                "total_clicks": result.get("total_clicks", 0),
-                "unique_clicks": result.get("unique_clicks", 0),
-            }
-            for result in results
-        ]
-
-    @property
-    def dimension_name(self) -> str:
-        return "short_code"
+# ── Factory ─────────────────────────────────────────────────────────────
 
 
 class AggregationStrategyFactory:
-    """Factory for creating aggregation strategies"""
+    """Factory for creating aggregation strategies.
 
-    _strategies: ClassVar[dict] = {
-        "time": TimeAggregationStrategy,
-        "browser": BrowserAggregationStrategy,
-        "os": OSAggregationStrategy,
-        "device": DeviceAggregationStrategy,
-        "country": CountryAggregationStrategy,
-        "city": CityAggregationStrategy,
-        "referrer": ReferrerAggregationStrategy,
-        "short_code": ShortCodeAggregationStrategy,
+    Field-based strategies are registered as lambda constructors in
+    ``_FIELD_STRATEGIES``.  Adding a new dimension is a single entry.
+    """
+
+    _FIELD_STRATEGIES: ClassVar[dict[str, Callable[[], AggregationStrategy]]] = {
+        "browser": lambda: FieldAggregationStrategy("$browser", "browser", 20),
+        "os": lambda: FieldAggregationStrategy("$os", "os", 20),
+        "device": lambda: FieldAggregationStrategy("$device", "device", 20),
+        "country": lambda: FieldAggregationStrategy(
+            "$country", "country", 50, transform_fn=convert_country_name
+        ),
+        "city": lambda: FieldAggregationStrategy("$city", "city", 50),
+        "referrer": lambda: FieldAggregationStrategy(
+            "$referrer", "referrer", 30, default="Direct"
+        ),
+        "short_code": lambda: FieldAggregationStrategy(
+            "$meta.short_code", "short_code", 100
+        ),
     }
 
     @classmethod
-    def get(cls, strategy_name: str, **kwargs) -> AggregationStrategy:
-        """Get an aggregation strategy by name"""
-        if strategy_name not in cls._strategies:
+    def get(cls, strategy_name: str, **kwargs: Any) -> AggregationStrategy:
+        """Get an aggregation strategy by name."""
+        if strategy_name == "time":
+            return TimeAggregationStrategy(**kwargs)
+
+        factory = cls._FIELD_STRATEGIES.get(strategy_name)
+        if factory is None:
             raise ValueError(f"Unknown aggregation strategy: {strategy_name}")
 
-        strategy_class = cls._strategies[strategy_name]
-        return strategy_class(**kwargs)
+        return factory()
 
     @classmethod
     def get_available_strategies(cls) -> list[str]:
-        """Get list of available strategy names"""
-        return list(cls._strategies.keys())
+        """Get list of available strategy names."""
+        return ["time", *cls._FIELD_STRATEGIES.keys()]

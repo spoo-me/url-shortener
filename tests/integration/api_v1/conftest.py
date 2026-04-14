@@ -10,7 +10,7 @@ from __future__ import annotations
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from bson import ObjectId
 from fastapi import FastAPI
@@ -37,6 +37,13 @@ def _build_test_app(overrides: dict) -> FastAPI:
         app.state.settings = settings
         app.state.db = MagicMock()
         app.state.redis = None
+        # Singleton service defaults (overridden via dependency_overrides per test)
+        app.state.url_service = AsyncMock()
+        app.state.stats_service = AsyncMock()
+        app.state.export_service = AsyncMock()
+        app.state.api_key_service = AsyncMock()
+        app.state.auth_service = AsyncMock()
+        app.state.click_service = AsyncMock()
         yield
 
     application = FastAPI(lifespan=lifespan)

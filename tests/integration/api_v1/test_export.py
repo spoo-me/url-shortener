@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 from fastapi.testclient import TestClient
 
 from dependencies import get_current_user, get_export_service
+from schemas.results import ExportResult
 
 from .conftest import _build_test_app, _make_api_key_doc, _make_user
 
@@ -15,7 +16,11 @@ class TestExport:
     def test_export_json_returns_correct_content_type(self):
         mock_svc = AsyncMock()
         mock_svc.export = AsyncMock(
-            return_value=(b'{"data": []}', "application/json", "stats.json")
+            return_value=ExportResult(
+                content=b'{"data": []}',
+                mimetype="application/json",
+                filename="stats.json",
+            )
         )
 
         application = _build_test_app(

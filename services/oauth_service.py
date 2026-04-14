@@ -36,6 +36,7 @@ from schemas.models.user import (
     UserPlan,
     UserStatus,
 )
+from schemas.results import AuthResult
 from services.auth_service import AuthService
 from shared.logging import get_logger
 
@@ -221,7 +222,7 @@ class OAuthService:
         action: str,
         state_data: dict[str, Any],
         signup_ip: str | None = None,
-    ) -> tuple[UserDoc, str, str]:
+    ) -> AuthResult:
         """Process an OAuth callback after the route has validated state and
         fetched user info from the provider.
 
@@ -311,7 +312,11 @@ class OAuthService:
             )
             updated_user = await self._user_repo.find_by_id(ObjectId(link_user_id))
             access_token, refresh_token = self._make_tokens(updated_user, provider_key)
-            return updated_user, access_token, refresh_token
+            return AuthResult(
+                user=updated_user,
+                access_token=access_token,
+                refresh_token=refresh_token,
+            )
 
         # ── Existing OAuth user login ─────────────────────────────────────────
         existing_oauth_user = await self._user_repo.find_by_oauth_provider(
@@ -328,7 +333,11 @@ class OAuthService:
             access_token, refresh_token = self._make_tokens(
                 existing_oauth_user, provider_key
             )
-            return existing_oauth_user, access_token, refresh_token
+            return AuthResult(
+                user=existing_oauth_user,
+                access_token=access_token,
+                refresh_token=refresh_token,
+            )
 
         # Email is required for collision detection and new user creation
         if not provider_info.email:
@@ -359,7 +368,11 @@ class OAuthService:
                 access_token, refresh_token = self._make_tokens(
                     updated_user, provider_key
                 )
-                return updated_user, access_token, refresh_token
+                return AuthResult(
+                    user=updated_user,
+                    access_token=access_token,
+                    refresh_token=refresh_token,
+                )
             else:
                 log.warning("oauth_email_collision_rejected", provider=provider_key)
                 raise ConflictError(
@@ -398,7 +411,9 @@ class OAuthService:
 
         new_user = await self._user_repo.find_by_id(new_user_id)
         access_token, refresh_token = self._make_tokens(new_user, provider_key)
-        return new_user, access_token, refresh_token
+        return AuthResult(
+            user=new_user, access_token=access_token, refresh_token=refresh_token
+        )
 
     async def unlink_provider(self, user_id: str, provider_name: str) -> None:
         """Unlink an OAuth provider from a user's account.

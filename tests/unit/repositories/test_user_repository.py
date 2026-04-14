@@ -70,8 +70,12 @@ class TestUserRepository:
         )
         col.find_one.assert_awaited_once_with(
             {
-                "auth_providers.provider": "google",
-                "auth_providers.provider_user_id": "google-uid-123",
+                "auth_providers": {
+                    "$elemMatch": {
+                        "provider": "google",
+                        "provider_user_id": "google-uid-123",
+                    }
+                }
             }
         )
         assert result is not None

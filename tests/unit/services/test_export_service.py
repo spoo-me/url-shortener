@@ -12,6 +12,8 @@ import pytest
 from openpyxl import load_workbook
 
 from errors import NotFoundError, ValidationError
+from schemas.dto.requests.stats import ExportQuery
+from schemas.results import ExportResult
 from services.export import ExportService, default_formatters
 from services.export.formatters import (
     CsvFormatter,
@@ -25,6 +27,9 @@ from services.stats_service import StatsService
 
 NOW = datetime(2024, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
 START = datetime(2024, 6, 8, 12, 0, 0, tzinfo=timezone.utc)
+
+NOW_ISO = NOW.isoformat()
+START_ISO = START.isoformat()
 
 SAMPLE_STATS = {
     "scope": "anon",
@@ -53,17 +58,19 @@ SAMPLE_STATS = {
     "api_version": "v1",
 }
 
-QUERY_KWARGS = dict(
-    owner_id=None,
-    scope="anon",
-    short_code="abc",
-    start_date=START,
-    end_date=NOW,
-    filters={},
-    group_by=["browser"],
-    metrics=["clicks"],
-    tz_name="UTC",
-)
+
+def _export_query(fmt="json"):
+    """Build an ExportQuery with sensible defaults for tests."""
+    return ExportQuery(
+        format=fmt,
+        scope="anon",
+        short_code="abc",
+        start_date=START_ISO,
+        end_date=NOW_ISO,
+        group_by="browser",
+        metrics="clicks",
+        timezone="UTC",
+    )
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -162,33 +169,38 @@ class TestFormatValidation:
     @pytest.mark.asyncio
     async def test_unknown_format_raises_validation_error(self):
         svc, _ = make_service()
+        # ExportQuery validates format, so we need to bypass pydantic validation
+        # by constructing a query with a valid format, then patching it
+        query = _export_query("json")
+        # Manually override the format to simulate an invalid one getting through
+        object.__setattr__(query, "format", "pdf")
         with pytest.raises(ValidationError, match="invalid format"):
-            await svc.export(fmt="pdf", **QUERY_KWARGS)
+            await svc.export(query=query, owner_id=None)
 
     @pytest.mark.asyncio
     async def test_known_formats_do_not_raise(self):
         for fmt in ("json", "xml", "csv", "xlsx"):
             svc, _ = make_service()
-            content, _mimetype, _filename = await svc.export(fmt=fmt, **QUERY_KWARGS)
-            assert len(content) > 0, f"{fmt} produced empty content"
+            result = await svc.export(query=_export_query(fmt), owner_id=None)
+            assert len(result.content) > 0, f"{fmt} produced empty content"
 
 
-# ── Tests: ExportService — return tuple ───────────────────────────────────────
+# ── Tests: ExportService — return type ───────────────────────────────────────
 
 
-class TestReturnTuple:
+class TestReturnType:
     @pytest.mark.asyncio
-    async def test_returns_three_tuple(self):
+    async def test_returns_export_result(self):
         svc, _ = make_service()
-        result = await svc.export(fmt="json", **QUERY_KWARGS)
-        assert isinstance(result, tuple) and len(result) == 3
+        result = await svc.export(query=_export_query("json"), owner_id=None)
+        assert isinstance(result, ExportResult)
 
     @pytest.mark.asyncio
     async def test_mimetype_and_filename_come_from_formatter(self):
         svc, _ = make_service()
-        _, mimetype, filename = await svc.export(fmt="json", **QUERY_KWARGS)
-        assert mimetype == "application/json"
-        assert filename == "spoo-me-export.json"
+        result = await svc.export(query=_export_query("json"), owner_id=None)
+        assert result.mimetype == "application/json"
+        assert result.filename == "spoo-me-export.json"
 
 
 # ── Tests: ExportService — delegation ────────────────────────────────────────
@@ -198,24 +210,25 @@ class TestDelegation:
     @pytest.mark.asyncio
     async def test_calls_stats_service_query_once(self):
         svc, stats_svc = make_service()
-        await svc.export(fmt="json", **QUERY_KWARGS)
+        await svc.export(query=_export_query("json"), owner_id=None)
         stats_svc.query.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_passes_all_params_to_stats_service(self):
+    async def test_passes_query_to_stats_service(self):
         svc, stats_svc = make_service()
-        await svc.export(fmt="json", **QUERY_KWARGS)
-        call_kwargs = stats_svc.query.call_args.kwargs
-        assert call_kwargs["scope"] == "anon"
-        assert call_kwargs["short_code"] == "abc"
-        assert call_kwargs["tz_name"] == "UTC"
+        query = _export_query("json")
+        await svc.export(query=query, owner_id=None)
+        stats_svc.query.assert_awaited_once()
+        call_args = stats_svc.query.call_args
+        assert call_args[0][0] is query, "must forward the exact query object"
+        assert call_args[0][1] is None, "must forward owner_id as-is"
 
     @pytest.mark.asyncio
     async def test_stats_service_error_propagates(self):
         svc, stats_svc = make_service()
         stats_svc.query.side_effect = NotFoundError("not found")
         with pytest.raises(NotFoundError):
-            await svc.export(fmt="json", **QUERY_KWARGS)
+            await svc.export(query=_export_query("json"), owner_id=None)
 
     @pytest.mark.asyncio
     async def test_custom_formatter_is_called(self):
@@ -232,8 +245,11 @@ class TestDelegation:
             stats_service=stats_svc,
             formatters={"custom": custom_fmt},
         )
-        content, mimetype, filename = await svc.export(fmt="custom", **QUERY_KWARGS)
+        # Build a query with a valid format then override to "custom"
+        query = _export_query("json")
+        object.__setattr__(query, "format", "custom")
+        result = await svc.export(query=query, owner_id=None)
         custom_fmt.serialize.assert_called_once_with(SAMPLE_STATS)
-        assert content == b"custom"
-        assert mimetype == "application/custom"
-        assert filename == "out.custom"
+        assert result.content == b"custom"
+        assert result.mimetype == "application/custom"
+        assert result.filename == "out.custom"

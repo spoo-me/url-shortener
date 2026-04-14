@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from urllib.parse import urlparse
 
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -148,6 +148,50 @@ class AppSettings(BaseSettings):
     hcaptcha_secret: str = ""
     hcaptcha_sitekey: str = ""
 
+    # Service limits (overridable by self-hosters via env vars)
+    max_active_api_keys: int = 20
+    max_date_range_days: int = 90
+    http_client_timeout: float = 5.0
+
+    # Validator constraints (overridable by self-hosters via env vars)
+    blocked_url_regex_timeout: float = 0.2
+    max_emoji_alias_length: int = 15
+    url_password_min_length: int = 8
+    account_password_min_length: int = 8
+    account_password_max_length: int = 128
+
+    # ── Field validators for safety-critical config ────────────────────
+
+    @field_validator(
+        "max_active_api_keys", "max_date_range_days", "max_emoji_alias_length"
+    )
+    @classmethod
+    def _must_be_positive_int(cls, v: int, info) -> int:
+        if v < 1:
+            raise ValueError(f"{info.field_name} must be >= 1, got {v}")
+        return v
+
+    @field_validator("http_client_timeout", "blocked_url_regex_timeout")
+    @classmethod
+    def _must_be_positive_float(cls, v: float, info) -> float:
+        if v <= 0:
+            raise ValueError(f"{info.field_name} must be > 0, got {v}")
+        return v
+
+    @field_validator("url_password_min_length", "account_password_min_length")
+    @classmethod
+    def _password_min_length_sane(cls, v: int, info) -> int:
+        if v < 1:
+            raise ValueError(f"{info.field_name} must be >= 1, got {v}")
+        return v
+
+    @field_validator("account_password_max_length")
+    @classmethod
+    def _password_max_length_sane(cls, v: int) -> int:
+        if v < 1:
+            raise ValueError(f"account_password_max_length must be >= 1, got {v}")
+        return v
+
     # Sub-configs (composed via model_validator below)
     db: DatabaseSettings | None = None
     redis: RedisSettings | None = None
@@ -159,6 +203,13 @@ class AppSettings(BaseSettings):
 
     @model_validator(mode="after")
     def _populate_sub_configs_and_secret(self) -> AppSettings:
+        # Cross-field validation
+        if self.account_password_max_length < self.account_password_min_length:
+            raise ValueError(
+                f"account_password_max_length ({self.account_password_max_length}) "
+                f"must be >= account_password_min_length ({self.account_password_min_length})"
+            )
+
         # Accept FLASK_SECRET_KEY as a fallback for backward compatibility
         if not self.secret_key and self.flask_secret_key:
             self.secret_key = self.flask_secret_key
