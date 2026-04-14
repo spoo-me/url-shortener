@@ -20,7 +20,6 @@ from middleware.rate_limiter import Limits, dynamic_limit, limiter
 from schemas.dto.requests.url import CreateUrlRequest
 from schemas.dto.responses.url import UrlResponse
 from services.url_service import UrlService
-from shared.datetime_utils import to_unix_timestamp
 from shared.ip_utils import get_client_ip
 
 router = APIRouter(tags=["URL Shortening"])
@@ -70,12 +69,4 @@ async def shorten_v1(
     doc = await url_service.create(body, owner_id, client_ip)
 
     settings = request.app.state.settings
-    return UrlResponse(
-        alias=doc.alias,
-        short_url=f"{settings.app_url.rstrip('/')}/{doc.alias}",
-        long_url=doc.long_url,
-        owner_id=str(doc.owner_id) if doc.owner_id else None,
-        created_at=to_unix_timestamp(doc.created_at, default=0),
-        status=doc.status,
-        private_stats=doc.private_stats,
-    )
+    return UrlResponse.from_doc(doc, settings.app_url)

@@ -192,7 +192,9 @@ def test_redirect_v2_correct_password_bcrypt():
     )
     client = TestClient(app, raise_server_exceptions=False)
 
-    with patch("routes.redirect_routes.verify_password", return_value=True):
+    with patch(
+        "infrastructure.cache.url_cache.verify_password_hash", return_value=True
+    ):
         resp = client.get("/abc123?password=correct", follow_redirects=False)
 
     assert resp.status_code == 302
@@ -235,7 +237,9 @@ def test_redirect_wrong_password():
     )
     client = TestClient(app, raise_server_exceptions=False)
 
-    with patch("routes.redirect_routes.verify_password", return_value=False):
+    with patch(
+        "infrastructure.cache.url_cache.verify_password_hash", return_value=False
+    ):
         resp = client.get("/abc123?password=wrong", follow_redirects=False)
 
     assert resp.status_code == 401
@@ -460,7 +464,9 @@ def test_password_form_submit_correct():
     )
     client = TestClient(app, raise_server_exceptions=False)
 
-    with patch("routes.redirect_routes.verify_password", return_value=True):
+    with patch(
+        "infrastructure.cache.url_cache.verify_password_hash", return_value=True
+    ):
         resp = client.post(
             "/abc123/password",
             data={"password": "correct"},
@@ -484,7 +490,9 @@ def test_password_form_submit_wrong():
     )
     client = TestClient(app, raise_server_exceptions=False)
 
-    with patch("routes.redirect_routes.verify_password", return_value=False):
+    with patch(
+        "infrastructure.cache.url_cache.verify_password_hash", return_value=False
+    ):
         resp = client.post(
             "/abc123/password",
             data={"password": "wrong"},

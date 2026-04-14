@@ -376,7 +376,9 @@ def test_create_password_protected_then_redirect():
         assert resp.status_code == 401
 
         # Step 3: GET with correct password redirects
-        with patch("routes.redirect_routes.verify_password", return_value=True):
+        with patch(
+            "infrastructure.cache.url_cache.verify_password_hash", return_value=True
+        ):
             resp = client.get(f"/{_ALIAS}?password=correct", follow_redirects=False)
         assert resp.status_code == 302
         assert resp.headers["location"] == _LONG_URL

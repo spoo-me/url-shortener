@@ -9,6 +9,7 @@ from dataclasses import asdict, dataclass
 
 import redis.asyncio as aioredis
 
+from shared.crypto import verify_password as verify_password_hash
 from shared.logging import get_logger
 
 log = get_logger(__name__)
@@ -29,6 +30,18 @@ class UrlCacheData:
     schema_version: str  # "v1" or "v2"
     owner_id: str | None  # ObjectId as string; None for v1 URLs
     total_clicks: int = 0  # Live click count for v1 max-clicks check
+
+    def verify_password(self, password: str | None) -> bool:
+        """Check a password against this URL's stored hash.
+
+        Handles schema-specific hashing: argon2 for v2, plaintext for v1/emoji.
+        Returns True if no password is set or if the password matches.
+        """
+        if not self.password_hash:
+            return True
+        if self.schema_version == "v2":
+            return verify_password_hash(password or "", self.password_hash)
+        return password == self.password_hash
 
 
 class UrlCache:
