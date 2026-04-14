@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from schemas.models.base import ANONYMOUS_OWNER_ID
 from schemas.models.url import UrlStatus, UrlV2Doc
 from shared.datetime_utils import to_unix_timestamp
 
@@ -60,7 +61,9 @@ class UrlResponse(BaseModel):
             alias=doc.alias,
             short_url=f"{app_url.rstrip('/')}/{doc.alias}",
             long_url=doc.long_url,
-            owner_id=str(doc.owner_id) if doc.owner_id else None,
+            owner_id=str(doc.owner_id)
+            if doc.owner_id and doc.owner_id != ANONYMOUS_OWNER_ID
+            else None,
             created_at=to_unix_timestamp(doc.created_at, default=0),
             status=doc.status,
             private_stats=doc.private_stats,

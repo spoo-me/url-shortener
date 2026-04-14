@@ -266,14 +266,14 @@ class TestUrlResponseFromDoc:
         r = UrlResponse.from_doc(_make_doc(owner_id=oid), "https://spoo.me")
         assert r.owner_id == str(oid)
 
-    def test_anonymous_owner_id(self):
-        """Anonymous URLs use a sentinel ObjectId that stringifies."""
+    def test_anonymous_owner_id_returns_none(self):
+        """Anonymous URLs (sentinel ObjectId) should return null owner_id."""
         from schemas.models.base import ANONYMOUS_OWNER_ID
 
         r = UrlResponse.from_doc(
             _make_doc(owner_id=ANONYMOUS_OWNER_ID), "https://spoo.me"
         )
-        assert r.owner_id == str(ANONYMOUS_OWNER_ID)
+        assert r.owner_id is None
 
     def test_created_at_is_unix_timestamp(self):
         r = UrlResponse.from_doc(_make_doc(), "https://spoo.me")

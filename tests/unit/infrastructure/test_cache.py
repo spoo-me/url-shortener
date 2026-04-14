@@ -85,13 +85,12 @@ class TestUrlCacheDataVerifyPassword:
         ):
             assert data.verify_password("wrong") is False
 
-    def test_v2_none_password_passes_empty_string_to_hash(self):
+    def test_v2_none_password_short_circuits_without_hashing(self):
         data = _url_data(password_hash="$argon2id$hash", schema_version="v2")
-        with patch(
-            "infrastructure.cache.url_cache.verify_password_hash", return_value=False
-        ) as mock:
-            data.verify_password(None)
-            mock.assert_called_once_with("", "$argon2id$hash")
+        with patch("infrastructure.cache.url_cache.verify_password_hash") as mock:
+            result = data.verify_password(None)
+            assert result is False
+            mock.assert_not_called()
 
     def test_v1_plaintext_correct(self):
         data = _url_data(password_hash="secret123", schema_version="v1")

@@ -39,8 +39,10 @@ class UrlCacheData:
         """
         if not self.password_hash:
             return True
+        if password is None:
+            return False
         if self.schema_version == "v2":
-            return verify_password_hash(password or "", self.password_hash)
+            return verify_password_hash(password, self.password_hash)
         return password == self.password_hash
 
 
