@@ -7,53 +7,13 @@ Covers: GET/POST /stats, GET/POST /stats/<code>,
 
 from __future__ import annotations
 
-import os
-from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from fastapi.testclient import TestClient
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 
-os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
-
-from config import AppSettings
 from dependencies import get_db
-from middleware.error_handler import register_error_handlers
-from middleware.rate_limiter import limiter
 from routes.legacy.stats import router as legacy_stats_router
-
-# ── Helpers ──────────────────────────────────────────────────────────────────
-
-_STATIC_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static"
-)
-
-
-def _build_test_app(overrides: dict) -> FastAPI:
-    settings = AppSettings()
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        app.state.settings = settings
-        app.state.db = MagicMock()
-        app.state.redis = None
-        app.state.email_provider = MagicMock()
-        app.state.http_client = MagicMock()
-        app.state.oauth_providers = {}
-        yield
-
-    app = FastAPI(lifespan=lifespan)
-    app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    register_error_handlers(app)
-    if os.path.isdir(_STATIC_DIR):
-        app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
-    app.include_router(legacy_stats_router)
-    app.dependency_overrides.update(overrides)
-    return app
+from tests.conftest import build_test_app
 
 
 def _mock_db():
@@ -103,7 +63,7 @@ SAMPLE_URL_DATA = {
 
 def test_stats_get_renders_form():
     db = _mock_db()
-    app = _build_test_app({get_db: lambda: db})
+    app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
     with TestClient(app) as client:
         resp = client.get("/stats")
     assert resp.status_code == 200
@@ -115,7 +75,7 @@ def test_stats_get_renders_form():
 
 def test_stats_post_missing_short_code_returns_400():
     db = _mock_db()
-    app = _build_test_app({get_db: lambda: db})
+    app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
     with TestClient(app) as client:
         resp = client.post("/stats", data={})
     assert resp.status_code == 400
@@ -127,7 +87,7 @@ def test_stats_post_url_not_found_renders_form():
     with patch("routes.legacy.stats.LegacyUrlRepository") as MockLegacyRepo:
         MockLegacyRepo.return_value.find_by_id = AsyncMock(return_value=None)
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.post("/stats", data={"short_code": "noexist"})
     assert resp.status_code == 200
@@ -141,7 +101,7 @@ def test_stats_post_password_required_renders_prompt():
     with patch("routes.legacy.stats.LegacyUrlRepository") as MockLegacyRepo:
         MockLegacyRepo.return_value.find_by_id = AsyncMock(return_value=doc)
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.post("/stats", data={"short_code": "abc123"})
     assert resp.status_code == 200
@@ -155,7 +115,7 @@ def test_stats_post_wrong_password_renders_error():
     with patch("routes.legacy.stats.LegacyUrlRepository") as MockLegacyRepo:
         MockLegacyRepo.return_value.find_by_id = AsyncMock(return_value=doc)
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.post(
                 "/stats", data={"short_code": "abc123", "password": "wrong"}
@@ -171,7 +131,7 @@ def test_stats_post_correct_password_redirects():
     with patch("routes.legacy.stats.LegacyUrlRepository") as MockLegacyRepo:
         MockLegacyRepo.return_value.find_by_id = AsyncMock(return_value=doc)
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app, follow_redirects=False) as client:
             resp = client.post(
                 "/stats", data={"short_code": "abc123", "password": "secret123"}
@@ -187,7 +147,7 @@ def test_stats_post_no_password_redirects():
     with patch("routes.legacy.stats.LegacyUrlRepository") as MockLegacyRepo:
         MockLegacyRepo.return_value.find_by_id = AsyncMock(return_value=doc)
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app, follow_redirects=False) as client:
             resp = client.post("/stats", data={"short_code": "abc123"})
     assert resp.status_code == 302
@@ -205,7 +165,7 @@ def test_analytics_get_not_found_returns_404_html():
     with patch("routes.legacy.stats.LegacyUrlRepository") as MockLegacyRepo:
         MockLegacyRepo.return_value.aggregate = AsyncMock(return_value=None)
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.get("/stats/noexist")
     assert resp.status_code == 404
@@ -218,7 +178,7 @@ def test_analytics_post_not_found_returns_404_json():
     with patch("routes.legacy.stats.LegacyUrlRepository") as MockLegacyRepo:
         MockLegacyRepo.return_value.aggregate = AsyncMock(return_value=None)
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.post("/stats/noexist")
     assert resp.status_code == 404
@@ -232,7 +192,7 @@ def test_analytics_post_wrong_password_returns_400():
     with patch("routes.legacy.stats.LegacyUrlRepository") as MockLegacyRepo:
         MockLegacyRepo.return_value.aggregate = AsyncMock(return_value=url_data)
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.post("/stats/abc123", data={"password": "wrong"})
     assert resp.status_code == 400
@@ -247,7 +207,7 @@ def test_analytics_post_returns_json():
             return_value=dict(SAMPLE_URL_DATA)
         )
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.post("/stats/abc123")
     assert resp.status_code == 200
@@ -266,7 +226,7 @@ def test_analytics_get_renders_stats_page():
             return_value=dict(SAMPLE_URL_DATA)
         )
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.get("/stats/abc123")
     assert resp.status_code == 200
@@ -278,7 +238,7 @@ def test_analytics_get_renders_stats_page():
 
 def test_export_invalid_format_get_returns_400_html():
     db = _mock_db()
-    app = _build_test_app({get_db: lambda: db})
+    app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
     with TestClient(app) as client:
         resp = client.get("/export/abc123/pdf")
     assert resp.status_code == 400
@@ -287,7 +247,7 @@ def test_export_invalid_format_get_returns_400_html():
 
 def test_export_invalid_format_post_returns_400_json():
     db = _mock_db()
-    app = _build_test_app({get_db: lambda: db})
+    app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
     with TestClient(app) as client:
         resp = client.post("/export/abc123/pdf")
     assert resp.status_code == 400
@@ -300,7 +260,7 @@ def test_export_not_found_post_returns_404_json():
     with patch("routes.legacy.stats.LegacyUrlRepository") as MockLegacyRepo:
         MockLegacyRepo.return_value.aggregate = AsyncMock(return_value=None)
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.post("/export/noexist/json")
     assert resp.status_code == 404
@@ -314,7 +274,7 @@ def test_export_wrong_password_post_returns_400():
     with patch("routes.legacy.stats.LegacyUrlRepository") as MockLegacyRepo:
         MockLegacyRepo.return_value.aggregate = AsyncMock(return_value=url_data)
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.post("/export/abc123/json", data={"password": "wrong"})
     assert resp.status_code == 400
@@ -329,7 +289,7 @@ def test_export_json_format():
             return_value=dict(SAMPLE_URL_DATA)
         )
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.post("/export/abc123/json")
     assert resp.status_code == 200
@@ -345,7 +305,7 @@ def test_export_csv_format():
             return_value=dict(SAMPLE_URL_DATA)
         )
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.post("/export/abc123/csv")
     assert resp.status_code == 200
@@ -361,7 +321,7 @@ def test_export_xlsx_format():
             return_value=dict(SAMPLE_URL_DATA)
         )
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.post("/export/abc123/xlsx")
     assert resp.status_code == 200
@@ -377,7 +337,7 @@ def test_export_xml_format():
             return_value=dict(SAMPLE_URL_DATA)
         )
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_stats_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.post("/export/abc123/xml")
     assert resp.status_code == 200

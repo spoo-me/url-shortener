@@ -8,56 +8,15 @@ unexpected crash) are handled gracefully.
 
 from __future__ import annotations
 
-import os
-from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, MagicMock
 
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from fastapi.testclient import TestClient
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 
-os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
-
-from config import AppSettings
 from dependencies import get_click_service, get_url_service
 from errors import ForbiddenError, ValidationError
 from infrastructure.cache.url_cache import UrlCacheData
-from middleware.error_handler import register_error_handlers
-from middleware.rate_limiter import limiter
 from routes.redirect_routes import router as redirect_router
-
-_STATIC_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static"
-)
-
-
-# ── Helpers ──────────────────────────────────────────────────────────────────
-
-
-def _build_test_app(overrides: dict) -> FastAPI:
-    settings = AppSettings()
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        app.state.settings = settings
-        app.state.db = MagicMock()
-        app.state.redis = None
-        app.state.email_provider = MagicMock()
-        app.state.http_client = MagicMock()
-        app.state.oauth_providers = {}
-        yield
-
-    app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None)
-    app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    register_error_handlers(app)
-    if os.path.isdir(_STATIC_DIR):
-        app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
-    app.include_router(redirect_router)
-    app.dependency_overrides.update(overrides)
-    return app
+from tests.conftest import build_test_app
 
 
 def _make_url_cache(
@@ -105,8 +64,12 @@ def test_click_tracked_on_redirect():
     url_data = _make_url_cache(long_url="https://example.com/target")
     url_svc = _mock_url_service(url_data)
     click_svc = _mock_click_service()
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(app, follow_redirects=False, raise_server_exceptions=False) as c:
         resp = c.get("/abc1234", headers={"User-Agent": "Mozilla/5.0"})
@@ -120,8 +83,12 @@ def test_click_not_tracked_on_head():
     url_data = _make_url_cache(long_url="https://example.com")
     url_svc = _mock_url_service(url_data)
     click_svc = _mock_click_service()
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(app, follow_redirects=False, raise_server_exceptions=False) as c:
         resp = c.head("/abc1234")
@@ -134,8 +101,12 @@ def test_click_not_tracked_on_password_page():
     url_data = _make_url_cache(password_hash="$2b$12$hashed")
     url_svc = _mock_url_service(url_data)
     click_svc = _mock_click_service()
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as c:
         resp = c.get("/abc1234")
@@ -149,8 +120,12 @@ def test_click_bad_user_agent_skips_but_redirects():
     url_svc = _mock_url_service(url_data)
     click_svc = MagicMock()
     click_svc.track_click = AsyncMock(side_effect=ValidationError("bad UA"))
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(app, follow_redirects=False, raise_server_exceptions=False) as c:
         resp = c.get("/abc1234", headers={"User-Agent": ""})
@@ -168,8 +143,12 @@ def test_click_bot_blocked_returns_403():
     click_svc.track_click = AsyncMock(
         side_effect=ForbiddenError("bots not allowed on this URL")
     )
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as c:
         resp = c.get("/abc123", headers={"User-Agent": "Googlebot/2.1"})
@@ -182,8 +161,12 @@ def test_click_track_receives_correct_context():
     url_data = _make_url_cache(alias="mycode", long_url="https://example.com")
     url_svc = _mock_url_service(url_data, schema="v2")
     click_svc = _mock_click_service()
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(app, follow_redirects=False, raise_server_exceptions=False) as c:
         c.get(
@@ -209,8 +192,12 @@ def test_click_error_does_not_crash_redirect():
     url_svc = _mock_url_service(url_data)
     click_svc = MagicMock()
     click_svc.track_click = AsyncMock(side_effect=RuntimeError("DB connection lost"))
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(app, follow_redirects=False, raise_server_exceptions=False) as c:
         resp = c.get("/abc1234", headers={"User-Agent": "Mozilla/5.0"})
@@ -223,8 +210,12 @@ def test_click_tracked_with_user_agent_header():
     url_data = _make_url_cache(long_url="https://example.com")
     url_svc = _mock_url_service(url_data)
     click_svc = _mock_click_service()
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     custom_ua = "CustomBrowser/1.0 (Linux; x86_64)"
     with TestClient(app, follow_redirects=False, raise_server_exceptions=False) as c:
@@ -238,8 +229,12 @@ def test_click_tracked_with_referer_header():
     url_data = _make_url_cache(long_url="https://example.com")
     url_svc = _mock_url_service(url_data)
     click_svc = _mock_click_service()
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(app, follow_redirects=False, raise_server_exceptions=False) as c:
         c.get("/abc1234", headers={"Referer": "https://twitter.com/status/123"})
@@ -252,8 +247,12 @@ def test_click_tracked_with_none_referer_when_absent():
     url_data = _make_url_cache(long_url="https://example.com")
     url_svc = _mock_url_service(url_data)
     click_svc = _mock_click_service()
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(app, follow_redirects=False, raise_server_exceptions=False) as c:
         c.get("/abc1234", headers={"User-Agent": "Mozilla/5.0"})
@@ -268,8 +267,12 @@ def test_click_emoji_schema_sets_is_emoji_true():
     )
     url_svc = _mock_url_service(url_data, schema="emoji")
     click_svc = _mock_click_service()
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(app, follow_redirects=False, raise_server_exceptions=False) as c:
         c.get("/smile123", headers={"User-Agent": "Mozilla/5.0"})
@@ -283,8 +286,12 @@ def test_redirect_sets_noindex_nofollow_header():
     url_data = _make_url_cache(long_url="https://example.com")
     url_svc = _mock_url_service(url_data)
     click_svc = _mock_click_service()
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(app, follow_redirects=False, raise_server_exceptions=False) as c:
         resp = c.get("/abc1234")

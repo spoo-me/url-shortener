@@ -34,36 +34,13 @@ from infrastructure.cache.url_cache import UrlCacheData
 from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
 from routes.legacy.url_shortener import router as legacy_url_router
+from tests.conftest import build_test_app
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 _STATIC_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static"
 )
-
-
-def _build_test_app(overrides: dict) -> FastAPI:
-    settings = AppSettings()
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        app.state.settings = settings
-        app.state.db = MagicMock()
-        app.state.redis = None
-        app.state.email_provider = MagicMock()
-        app.state.http_client = MagicMock()
-        app.state.oauth_providers = {}
-        yield
-
-    app = FastAPI(lifespan=lifespan)
-    app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    register_error_handlers(app)
-    if os.path.isdir(_STATIC_DIR):
-        app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
-    app.include_router(legacy_url_router)
-    app.dependency_overrides.update(overrides)
-    return app
 
 
 def _mock_db():
@@ -111,7 +88,7 @@ def _make_url_cache(
 
 
 def test_index_renders_html():
-    app = _build_test_app({})
+    app = build_test_app(legacy_url_router, overrides={})
     with TestClient(app) as client:
         resp = client.get("/")
     assert resp.status_code == 200
@@ -122,7 +99,7 @@ def test_index_redirects_authenticated_user_to_dashboard():
     from dependencies.auth import CurrentUser
 
     user = CurrentUser(user_id=ObjectId(), email_verified=True)
-    app = _build_test_app({get_current_user: lambda: user})
+    app = build_test_app(legacy_url_router, overrides={get_current_user: lambda: user})
     with TestClient(app, follow_redirects=False) as client:
         resp = client.get("/")
     assert resp.status_code == 302
@@ -134,12 +111,13 @@ def test_index_redirects_authenticated_user_to_dashboard():
 
 def test_shorten_url_json_missing_url_returns_400():
     db = _mock_db()
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        legacy_url_router,
+        overrides={
             get_db: lambda: db,
             get_settings: lambda: _mock_settings(),
             get_url_service: lambda: _mock_url_service(),
-        }
+        },
     )
     with TestClient(app) as client:
         resp = client.post("/", data={}, headers={"Accept": "application/json"})
@@ -149,12 +127,13 @@ def test_shorten_url_json_missing_url_returns_400():
 
 def test_shorten_url_html_missing_url_returns_400():
     db = _mock_db()
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        legacy_url_router,
+        overrides={
             get_db: lambda: db,
             get_settings: lambda: _mock_settings(),
             get_url_service: lambda: _mock_url_service(),
-        }
+        },
     )
     with TestClient(app) as client:
         resp = client.post("/", data={})
@@ -176,12 +155,13 @@ def test_shorten_url_json_success():
 
     settings = _mock_settings()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        legacy_url_router,
+        overrides={
             get_db: lambda: db,
             get_settings: lambda: settings,
             get_url_service: lambda: url_svc,
-        }
+        },
     )
 
     # Patch the BlockedUrlRepository.get_patterns and LegacyUrlRepository
@@ -214,12 +194,13 @@ def test_shorten_url_html_success_redirects_to_result():
     url_svc = _mock_url_service()
     settings = _mock_settings()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        legacy_url_router,
+        overrides={
             get_db: lambda: db,
             get_settings: lambda: settings,
             get_url_service: lambda: url_svc,
-        }
+        },
     )
 
     with (
@@ -243,12 +224,13 @@ def test_shorten_url_blocked_url_returns_403():
     settings = _mock_settings()
     url_svc = _mock_url_service()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        legacy_url_router,
+        overrides={
             get_db: lambda: db,
             get_settings: lambda: settings,
             get_url_service: lambda: url_svc,
-        }
+        },
     )
 
     with (
@@ -272,12 +254,13 @@ def test_shorten_url_invalid_alias_returns_400():
     settings = _mock_settings()
     url_svc = _mock_url_service()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        legacy_url_router,
+        overrides={
             get_db: lambda: db,
             get_settings: lambda: settings,
             get_url_service: lambda: url_svc,
-        }
+        },
     )
 
     with patch("routes.legacy.url_shortener.BlockedUrlRepository") as MockBlockedRepo:
@@ -299,12 +282,13 @@ def test_shorten_url_alias_already_exists_returns_400():
     url_svc = MagicMock()
     url_svc.check_alias_available = AsyncMock(return_value=False)
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        legacy_url_router,
+        overrides={
             get_db: lambda: db,
             get_settings: lambda: settings,
             get_url_service: lambda: url_svc,
-        }
+        },
     )
 
     with patch("routes.legacy.url_shortener.BlockedUrlRepository") as MockBlockedRepo:
@@ -325,12 +309,13 @@ def test_shorten_url_invalid_password_returns_400():
     settings = _mock_settings()
     url_svc = _mock_url_service()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        legacy_url_router,
+        overrides={
             get_db: lambda: db,
             get_settings: lambda: settings,
             get_url_service: lambda: url_svc,
-        }
+        },
     )
 
     with (
@@ -357,12 +342,13 @@ def test_shorten_url_invalid_max_clicks_returns_400():
     settings = _mock_settings()
     url_svc = _mock_url_service()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        legacy_url_router,
+        overrides={
             get_db: lambda: db,
             get_settings: lambda: settings,
             get_url_service: lambda: url_svc,
-        }
+        },
     )
 
     with (
@@ -390,11 +376,12 @@ def test_shorten_url_invalid_max_clicks_returns_400():
 def test_emoji_missing_url_returns_400():
     db = _mock_db()
     settings = _mock_settings()
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        legacy_url_router,
+        overrides={
             get_db: lambda: db,
             get_settings: lambda: settings,
-        }
+        },
     )
     with TestClient(app) as client:
         resp = client.post("/emoji", data={})
@@ -406,11 +393,12 @@ def test_emoji_get_without_url_returns_400():
     """GET /emoji with no query params returns 400 (matches Flask behavior)."""
     db = _mock_db()
     settings = _mock_settings()
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        legacy_url_router,
+        overrides={
             get_db: lambda: db,
             get_settings: lambda: settings,
-        }
+        },
     )
     with TestClient(app) as client:
         resp = client.get("/emoji")
@@ -422,11 +410,12 @@ def test_emoji_success_json():
     db = _mock_db()
     settings = _mock_settings()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        legacy_url_router,
+        overrides={
             get_db: lambda: db,
             get_settings: lambda: settings,
-        }
+        },
     )
 
     with (
@@ -455,7 +444,9 @@ def test_emoji_success_json():
 def test_result_page_found():
     url_data = _make_url_cache(alias="abc1234", long_url="https://example.com")
     url_svc = _mock_url_service(url_data)
-    app = _build_test_app({get_url_service: lambda: url_svc})
+    app = build_test_app(
+        legacy_url_router, overrides={get_url_service: lambda: url_svc}
+    )
     with TestClient(app) as client:
         resp = client.get("/result/abc1234")
     assert resp.status_code == 200
@@ -464,7 +455,9 @@ def test_result_page_found():
 
 def test_result_page_not_found():
     url_svc = _mock_url_service()  # side_effect=NotFoundError
-    app = _build_test_app({get_url_service: lambda: url_svc})
+    app = build_test_app(
+        legacy_url_router, overrides={get_url_service: lambda: url_svc}
+    )
     with TestClient(app) as client:
         resp = client.get("/result/doesnotexist")
     assert resp.status_code == 404
@@ -484,7 +477,7 @@ def test_preview_not_found():
         MockUrlRepo.return_value.find_by_alias = AsyncMock(return_value=None)
         MockLegacyRepo.return_value.find_by_id = AsyncMock(return_value=None)
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_url_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.get("/abc1234+")
     assert resp.status_code == 404
@@ -505,7 +498,7 @@ def test_preview_v2_url_shows_destination():
         MockUrlRepo.return_value.find_by_alias = AsyncMock(return_value=v2_doc)
         MockLegacyRepo.return_value.find_by_id = AsyncMock(return_value=None)
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_url_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.get("/abc1234+")
     assert resp.status_code == 200
@@ -526,7 +519,7 @@ def test_preview_password_protected_hides_destination():
         MockUrlRepo.return_value.find_by_alias = AsyncMock(return_value=v2_doc)
         MockLegacyRepo.return_value.find_by_id = AsyncMock(return_value=None)
 
-        app = _build_test_app({get_db: lambda: db})
+        app = build_test_app(legacy_url_router, overrides={get_db: lambda: db})
         with TestClient(app) as client:
             resp = client.get("/abc1234+")
     assert resp.status_code == 200

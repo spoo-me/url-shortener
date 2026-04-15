@@ -12,21 +12,12 @@ dependency_overrides and a mock lifespan — no real infrastructure needed.
 
 from __future__ import annotations
 
-import os
-from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from bson import ObjectId
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from fastapi.testclient import TestClient
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 
-os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
-
-from config import AppSettings
 from dependencies import (
     CurrentUser,
     get_api_key_service,
@@ -35,46 +26,14 @@ from dependencies import (
     require_jwt,
     require_jwt_verified,
 )
-from middleware.error_handler import register_error_handlers
-from middleware.rate_limiter import limiter
 from routes.api_v1 import router as api_v1_router
 from schemas.models.api_key import ApiKeyDoc
+from tests.conftest import build_test_app
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
-_STATIC_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static"
-)
-
 _USER_ID = ObjectId()
 _KEY_ID = ObjectId()
-
-
-def _build_test_app(overrides: dict) -> FastAPI:
-    """Build a minimal FastAPI app with mock lifespan and given dependency overrides."""
-    settings = AppSettings()
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        app.state.settings = settings
-        app.state.db = MagicMock()
-        app.state.redis = None
-        app.state.email_provider = MagicMock()
-        app.state.http_client = MagicMock()
-        app.state.oauth_providers = {}
-        yield
-
-    application = FastAPI(lifespan=lifespan)
-    application.state.limiter = limiter
-    application.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    register_error_handlers(application)
-
-    if os.path.isdir(_STATIC_DIR):
-        application.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
-
-    application.include_router(api_v1_router)
-    application.dependency_overrides.update(overrides)
-    return application
 
 
 def _make_verified_user(user_id: ObjectId | None = None) -> CurrentUser:
@@ -142,11 +101,12 @@ def test_create_api_key_returns_token_once():
     mock_svc.create = AsyncMock(return_value=(key_doc, raw_token))
 
     verified_user = _make_verified_user()
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        overrides={
             require_jwt_verified: lambda: verified_user,
             get_api_key_service: lambda: mock_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.post(
@@ -173,10 +133,11 @@ def test_create_api_key_requires_verified_email():
     def _raise_unverified():
         raise EmailNotVerifiedError("Email verification required")
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        overrides={
             require_jwt_verified: _raise_unverified,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.post(
@@ -196,10 +157,11 @@ def test_create_api_key_requires_auth():
     def _raise_unauth():
         raise AuthenticationError("Authentication required")
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        overrides={
             require_jwt_verified: _raise_unauth,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.post(
@@ -220,11 +182,12 @@ def test_create_api_key_with_scopes():
     mock_svc.create = AsyncMock(return_value=(key_doc, raw_token))
 
     verified_user = _make_verified_user()
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        overrides={
             require_jwt_verified: lambda: verified_user,
             get_api_key_service: lambda: mock_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.post(
@@ -248,11 +211,12 @@ def test_list_api_keys_returns_without_token():
     mock_svc.list_by_user = AsyncMock(return_value=[key_doc])
 
     verified_user = _make_verified_user()
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        overrides={
             require_jwt: lambda: verified_user,
             get_api_key_service: lambda: mock_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/api/v1/keys")
@@ -290,11 +254,12 @@ def test_use_api_key_for_shorten():
     )
     mock_url_svc.create = AsyncMock(return_value=created_doc)
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        overrides={
             get_current_user: lambda: api_key_user,
             get_url_service: lambda: mock_url_svc,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
@@ -314,11 +279,12 @@ def test_use_api_key_scope_check():
 
     mock_url_svc = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        overrides={
             get_current_user: lambda: api_key_user,
             get_url_service: lambda: mock_url_svc,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
@@ -338,11 +304,12 @@ def test_revoke_api_key_soft():
     mock_svc.revoke = AsyncMock(return_value=True)
 
     verified_user = _make_verified_user()
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        overrides={
             require_jwt: lambda: verified_user,
             get_api_key_service: lambda: mock_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.delete(f"/api/v1/keys/{_KEY_ID}?revoke=true")
@@ -359,11 +326,12 @@ def test_revoke_api_key_hard():
     mock_svc.revoke = AsyncMock(return_value=True)
 
     verified_user = _make_verified_user()
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        overrides={
             require_jwt: lambda: verified_user,
             get_api_key_service: lambda: mock_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.delete(f"/api/v1/keys/{_KEY_ID}")
@@ -385,11 +353,12 @@ def test_revoked_api_key_rejected():
 
     mock_svc = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        overrides={
             require_jwt: _raise_unauth,
             get_api_key_service: lambda: mock_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/api/v1/keys")
@@ -408,11 +377,12 @@ def test_expired_api_key_rejected():
 
     mock_svc = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        overrides={
             require_jwt: _raise_unauth,
             get_api_key_service: lambda: mock_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/api/v1/keys")
@@ -426,11 +396,12 @@ def test_api_key_not_found_on_delete():
     mock_svc.revoke = AsyncMock(return_value=False)
 
     verified_user = _make_verified_user()
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        overrides={
             require_jwt: lambda: verified_user,
             get_api_key_service: lambda: mock_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
 

@@ -37,6 +37,7 @@ from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
 from routes.legacy.stats import router as legacy_stats_router
 from routes.legacy.url_shortener import router as legacy_url_router
+from tests.conftest import build_test_app
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -47,38 +48,14 @@ _STATIC_DIR = os.path.join(
 _SETTINGS = AppSettings()
 
 
-def _build_test_app(overrides: dict) -> FastAPI:
-    """Build a minimal FastAPI app with mock lifespan and given dependency overrides.
-
-    Always injects get_settings override so routes that depend on it work.
-    """
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        app.state.settings = _SETTINGS
-        app.state.db = MagicMock()
-        app.state.redis = None
-        app.state.email_provider = MagicMock()
-        app.state.http_client = MagicMock()
-        app.state.oauth_providers = {}
-        yield
-
-    application = FastAPI(lifespan=lifespan)
-    application.state.limiter = limiter
-    application.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    register_error_handlers(application)
-
-    if os.path.isdir(_STATIC_DIR):
-        application.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
-
-    application.include_router(legacy_stats_router)
-    application.include_router(legacy_url_router)
-
+def _build_legacy_test_app(overrides: dict) -> FastAPI:
+    """Build a test app with legacy routers, injecting get_settings override."""
     # Always provide settings override — legacy routes use Depends(get_settings)
     base_overrides = {get_settings: lambda: _SETTINGS}
     base_overrides.update(overrides)
-    application.dependency_overrides.update(base_overrides)
-    return application
+    return build_test_app(
+        legacy_stats_router, legacy_url_router, overrides=base_overrides
+    )
 
 
 @dataclass
@@ -156,7 +133,7 @@ def test_legacy_shorten_json_response():
     mock_url_svc = AsyncMock()
     mock_url_svc.check_alias_available = AsyncMock(return_value=True)
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_db: lambda: mock_db,
             get_url_service: lambda: mock_url_svc,
@@ -188,7 +165,7 @@ def test_legacy_shorten_html_redirect():
     mock_url_svc = AsyncMock()
     mock_url_svc.check_alias_available = AsyncMock(return_value=True)
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_db: lambda: mock_db,
             get_url_service: lambda: mock_url_svc,
@@ -217,7 +194,7 @@ def test_legacy_shorten_missing_url():
     mock_db = _make_mock_db()
     mock_url_svc = AsyncMock()
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_db: lambda: mock_db,
             get_url_service: lambda: mock_url_svc,
@@ -241,7 +218,7 @@ def test_legacy_shorten_blocked_url():
     mock_db = _make_mock_db()
     mock_url_svc = AsyncMock()
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_db: lambda: mock_db,
             get_url_service: lambda: mock_url_svc,
@@ -269,7 +246,7 @@ def test_legacy_shorten_invalid_alias():
     mock_db = _make_mock_db()
     mock_url_svc = AsyncMock()
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_db: lambda: mock_db,
             get_url_service: lambda: mock_url_svc,
@@ -299,7 +276,7 @@ def test_legacy_shorten_alias_exists():
     mock_url_svc = AsyncMock()
     mock_url_svc.check_alias_available = AsyncMock(return_value=False)
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_db: lambda: mock_db,
             get_url_service: lambda: mock_url_svc,
@@ -331,7 +308,7 @@ def test_legacy_emoji_shorten_success():
     """POST /emoji with url -> JSON response with short_url."""
     mock_db = _make_mock_db()
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_db: lambda: mock_db,
         }
@@ -362,7 +339,7 @@ def test_legacy_emoji_get_returns_400():
     """GET /emoji without url -> 400 JSON."""
     mock_db = _make_mock_db()
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_db: lambda: mock_db,
         }
@@ -384,7 +361,7 @@ def test_legacy_result_page_found():
     mock_url_svc = AsyncMock()
     mock_url_svc.resolve = AsyncMock(return_value=(url_data, "v2"))
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_url_service: lambda: mock_url_svc,
         }
@@ -401,7 +378,7 @@ def test_legacy_result_page_not_found():
     mock_url_svc = AsyncMock()
     mock_url_svc.resolve = AsyncMock(side_effect=NotFoundError("Not found"))
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_url_service: lambda: mock_url_svc,
         }
@@ -471,7 +448,7 @@ def test_legacy_stats_form_get():
     """GET /stats -> 200 HTML form."""
     mock_db = _make_mock_db()
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_db: lambda: mock_db,
         }
@@ -487,7 +464,7 @@ def test_legacy_stats_post_not_found():
     """POST /stats with missing code -> renders stats.html with error (200)."""
     mock_db = _make_mock_db()
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_db: lambda: mock_db,
         }
@@ -514,7 +491,7 @@ def test_legacy_stats_password_protected_redirect():
     mock_db = _make_mock_db()
     fake_doc = _FakeLegacyDoc(url="https://example.com", password="secret123")
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_db: lambda: mock_db,
         }
@@ -566,7 +543,7 @@ def test_legacy_export_json():
 
     mock_db = _make_mock_db()
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_db: lambda: mock_db,
         }
@@ -589,7 +566,7 @@ def test_legacy_export_invalid_format():
     """POST /export/{code}/pdf -> 400 with FormatError key."""
     mock_db = _make_mock_db()
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_db: lambda: mock_db,
         }
@@ -607,7 +584,7 @@ def test_legacy_export_invalid_format_get():
     """GET /export/{code}/pdf -> 400 HTML error page."""
     mock_db = _make_mock_db()
 
-    app = _build_test_app(
+    app = _build_legacy_test_app(
         {
             get_db: lambda: mock_db,
         }

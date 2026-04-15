@@ -40,38 +40,13 @@ from routes.redirect_routes import router as redirect_router
 from schemas.dto.requests.url import UpdateUrlRequest
 from schemas.models.url import UrlV2Doc
 from services.url_service import UrlService
+from tests.conftest import build_test_app
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 _STATIC_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static"
 )
-
-
-def _build_test_app(overrides: dict) -> FastAPI:
-    settings = AppSettings()
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        app.state.settings = settings
-        app.state.db = MagicMock()
-        app.state.redis = None
-        app.state.email_provider = MagicMock()
-        app.state.http_client = MagicMock()
-        app.state.oauth_providers = {}
-        app.state.geoip = MagicMock()
-        yield
-
-    app = FastAPI(lifespan=lifespan)
-    app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    register_error_handlers(app)
-    if os.path.isdir(_STATIC_DIR):
-        app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
-    app.include_router(redirect_router)
-    app.include_router(legacy_url_router)
-    app.dependency_overrides.update(overrides)
-    return app
 
 
 def _make_url_cache_data(
@@ -184,8 +159,13 @@ def test_redirect_works_without_redis():
     v2_doc = _make_v2_doc_mock()
     url_svc = _make_url_service(cache, v2_doc_from_db=v2_doc)
     click_svc = _mock_click_service()
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        legacy_url_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(
         app, raise_server_exceptions=False, follow_redirects=False
@@ -205,8 +185,13 @@ def test_redirect_works_when_cache_miss():
     v2_doc = _make_v2_doc_mock()
     url_svc = _make_url_service(cache, v2_doc_from_db=v2_doc)
     click_svc = _mock_click_service()
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        legacy_url_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(
         app, raise_server_exceptions=False, follow_redirects=False
@@ -227,8 +212,13 @@ def test_redirect_populates_cache_on_miss():
     v2_doc = _make_v2_doc_mock()
     url_svc = _make_url_service(cache, v2_doc_from_db=v2_doc)
     click_svc = _mock_click_service()
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        legacy_url_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(
         app, raise_server_exceptions=False, follow_redirects=False
@@ -251,8 +241,13 @@ def test_redirect_uses_cached_data():
 
     url_svc = _make_url_service(cache, v2_doc_from_db=None)
     click_svc = _mock_click_service()
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        legacy_url_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(
         app, raise_server_exceptions=False, follow_redirects=False
@@ -324,8 +319,13 @@ def test_redis_error_on_get_falls_back_to_db():
     v2_doc = _make_v2_doc_mock(long_url="https://fallback-dest.com")
     url_svc = _make_url_service(cache, v2_doc_from_db=v2_doc)
     click_svc = _mock_click_service()
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        legacy_url_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(
         app, raise_server_exceptions=False, follow_redirects=False
@@ -345,8 +345,13 @@ def test_redis_error_on_set_does_not_crash():
     v2_doc = _make_v2_doc_mock(long_url="https://still-works.com")
     url_svc = _make_url_service(cache, v2_doc_from_db=v2_doc)
     click_svc = _mock_click_service()
-    app = _build_test_app(
-        {get_url_service: lambda: url_svc, get_click_service: lambda: click_svc}
+    app = build_test_app(
+        redirect_router,
+        legacy_url_router,
+        overrides={
+            get_url_service: lambda: url_svc,
+            get_click_service: lambda: click_svc,
+        },
     )
     with TestClient(
         app, raise_server_exceptions=False, follow_redirects=False

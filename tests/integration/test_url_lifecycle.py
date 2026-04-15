@@ -7,21 +7,12 @@ dependency_overrides and a mock lifespan — no real infrastructure needed.
 
 from __future__ import annotations
 
-import os
-from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from bson import ObjectId
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from fastapi.testclient import TestClient
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 
-os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
-
-from config import AppSettings
 from dependencies import (
     CurrentUser,
     get_click_service,
@@ -33,11 +24,10 @@ from dependencies import (
 )
 from errors import GoneError, NotFoundError
 from infrastructure.cache.url_cache import UrlCacheData
-from middleware.error_handler import register_error_handlers
-from middleware.rate_limiter import limiter
 from routes.api_v1 import router as api_v1_router
 from routes.redirect_routes import router as redirect_router
 from schemas.models.url import UrlV2Doc
+from tests.conftest import build_test_app
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -46,35 +36,6 @@ _URL_OID = ObjectId()
 _NOW = datetime.now(timezone.utc)
 _ALIAS = "abc123"
 _LONG_URL = "https://www.example.com/very/long/path"
-
-
-def _build_test_app(overrides: dict) -> FastAPI:
-    settings = AppSettings()
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        app.state.settings = settings
-        app.state.db = MagicMock()
-        app.state.redis = None
-        app.state.email_provider = MagicMock()
-        app.state.http_client = MagicMock()
-        app.state.oauth_providers = {}
-        yield
-
-    app = FastAPI(lifespan=lifespan)
-    app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    register_error_handlers(app)
-    app.include_router(api_v1_router)
-    # Mount static files before redirect_router so templates can resolve url_for('static', ...)
-    _static_dir = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static"
-    )
-    if os.path.isdir(_static_dir):
-        app.mount("/static", StaticFiles(directory=_static_dir), name="static")
-    app.include_router(redirect_router)
-    app.dependency_overrides.update(overrides)
-    return app
 
 
 def _make_url_doc(
@@ -146,11 +107,13 @@ def test_create_url_then_redirect():
 
     click_svc = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        redirect_router,
+        overrides={
             get_url_service: lambda: url_svc,
             get_click_service: lambda: click_svc,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         # Step 1: Create URL
@@ -178,11 +141,13 @@ def test_create_url_with_custom_alias_then_redirect():
 
     click_svc = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        redirect_router,
+        overrides={
             get_url_service: lambda: url_svc,
             get_click_service: lambda: click_svc,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
@@ -222,11 +187,13 @@ def test_create_url_then_check_stats():
     stats_svc = AsyncMock()
     stats_svc.query.return_value = stats_result
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        redirect_router,
+        overrides={
             get_url_service: lambda: url_svc,
             get_stats_service: lambda: stats_svc,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         # Step 1: Create
@@ -253,12 +220,14 @@ def test_create_url_then_update_long_url():
 
     user = _mock_user()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        redirect_router,
+        overrides={
             get_url_service: lambda: url_svc,
             require_auth: lambda: user,
             get_current_user: lambda: user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         # Step 1: Create
@@ -289,13 +258,15 @@ def test_create_url_then_deactivate():
     click_svc = AsyncMock()
     user = _mock_user()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        redirect_router,
+        overrides={
             get_url_service: lambda: url_svc,
             get_click_service: lambda: click_svc,
             require_auth: lambda: user,
             get_current_user: lambda: user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         # Step 1: Create
@@ -325,12 +296,14 @@ def test_create_url_then_delete():
 
     user = _mock_user()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        redirect_router,
+        overrides={
             get_url_service: lambda: url_svc,
             require_auth: lambda: user,
             get_current_user: lambda: user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         # Step 1: Create
@@ -360,11 +333,13 @@ def test_create_password_protected_then_redirect():
     # Patch verify_password to simulate correct password check
     from unittest.mock import patch
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        redirect_router,
+        overrides={
             get_url_service: lambda: url_svc,
             get_click_service: lambda: click_svc,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         # Step 1: Create
@@ -399,11 +374,13 @@ def test_create_url_with_max_clicks_expires():
 
     click_svc = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        redirect_router,
+        overrides={
             get_url_service: lambda: url_svc,
             get_click_service: lambda: click_svc,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         # Step 1: Create
@@ -425,11 +402,13 @@ def test_redirect_nonexistent_alias_returns_404():
     url_svc.resolve.side_effect = NotFoundError("URL not found")
     click_svc = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        redirect_router,
+        overrides={
             get_url_service: lambda: url_svc,
             get_click_service: lambda: click_svc,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.get("/nonexistent", follow_redirects=False)
@@ -452,11 +431,13 @@ def test_create_url_then_export_stats():
         filename="stats.json",
     )
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        api_v1_router,
+        redirect_router,
+        overrides={
             get_url_service: lambda: url_svc,
             get_export_service: lambda: export_svc,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         # Step 1: Create
