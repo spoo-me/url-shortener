@@ -5,7 +5,6 @@ Provides:
 - get_logger(): Get a configured logger instance
 - should_sample(): Determine if an event should be logged based on sampling rate
 - hash_ip(): Hash IP addresses for privacy
-- log_with_context(): Bind context to a logger
 - setup_logging(): Initialize the logging system
 - configure_structlog(): Configure structlog processors
 - SAMPLING_RATES: Sampling rate configuration
@@ -95,24 +94,6 @@ def should_sample(event_type: str) -> bool:
     return random.random() < sample_rate
 
 
-def log_with_context(logger: BoundLogger, **context) -> BoundLogger:
-    """Bind context to a logger for all subsequent log calls."""
-    return logger.bind(**context)
-
-
-# ---------------------------------------------------------------------------
-# structlog processors
-# ---------------------------------------------------------------------------
-def add_timestamp(
-    logger: logging.Logger, method_name: str, event_dict: EventDict
-) -> EventDict:
-    """Add ISO format timestamp to event dict."""
-    from datetime import datetime, timezone
-
-    event_dict["timestamp"] = datetime.now(timezone.utc).isoformat()
-    return event_dict
-
-
 def redact_sensitive_fields(
     logger: logging.Logger, method_name: str, event_dict: EventDict
 ) -> EventDict:
@@ -155,7 +136,6 @@ def configure_structlog() -> None:
         structlog.contextvars.merge_contextvars,
         structlog.stdlib.add_log_level,
         structlog.stdlib.add_logger_name,
-        add_timestamp,
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.stdlib.PositionalArgumentsFormatter(),
         structlog.processors.StackInfoRenderer(),
@@ -261,7 +241,6 @@ __all__ = [
     "configure_structlog",
     "get_logger",
     "hash_ip",
-    "log_with_context",
     "setup_logging",
     "should_sample",
 ]

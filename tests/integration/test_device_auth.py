@@ -18,12 +18,18 @@ from slowapi.errors import RateLimitExceeded
 os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
 
 from config import AppSettings
-from dependencies import get_app_grant_repo, get_auth_service, get_current_user
+from dependencies import (
+    get_app_grant_repo,
+    get_credential_service,
+    get_current_user,
+    get_device_auth_service,
+    get_user_repo,
+)
 from dependencies.auth import CurrentUser
 from errors import AuthenticationError
 from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
-from routes.auth_routes import router as auth_router
+from routes.auth import router as auth_router
 from schemas.models.app import AppEntry, AppStatus, AppType
 from schemas.models.app_grant import AppGrantDoc
 from schemas.models.user import UserDoc
@@ -89,11 +95,33 @@ def _make_grant(app_id: str = "spoo-snap") -> AppGrantDoc:
     )
 
 
+def _resolve_app(app_id: str) -> AppEntry | None:
+    """Mirror real DeviceAuthService.resolve_app using test registry."""
+    entry = _TEST_APP_REGISTRY.get(app_id)
+    return entry if entry and entry.is_live_device_app() else None
+
+
 @pytest.fixture()
-def auth_svc():
+def device_auth_svc():
     svc = AsyncMock()
-    svc.get_user_profile.return_value = _make_user_doc()
+    # resolve_app and validate_redirect_uri are sync — must not be coroutines
+    svc.resolve_app = MagicMock(side_effect=_resolve_app)
+    svc.validate_redirect_uri = MagicMock(
+        side_effect=lambda uri, app: not uri or uri in app.redirect_uris
+    )
     return svc
+
+
+@pytest.fixture()
+def credential_svc():
+    return AsyncMock()
+
+
+@pytest.fixture()
+def user_repo_mock():
+    repo = AsyncMock()
+    repo.find_by_id.return_value = _make_user_doc()
+    return repo
 
 
 @pytest.fixture()
@@ -120,7 +148,9 @@ def _app_factory():
     """Returns a factory that builds a TestClient with given mocks."""
     _clients: list[TestClient] = []
 
-    def _make(auth_svc, grant_repo, user=None) -> TestClient:
+    def _make(
+        device_auth_svc, credential_svc, user_repo_mock, grant_repo, user=None
+    ) -> TestClient:
         settings = AppSettings()
 
         @asynccontextmanager
@@ -144,7 +174,9 @@ def _app_factory():
             app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
         app.include_router(auth_router)
-        app.dependency_overrides[get_auth_service] = lambda: auth_svc
+        app.dependency_overrides[get_device_auth_service] = lambda: device_auth_svc
+        app.dependency_overrides[get_credential_service] = lambda: credential_svc
+        app.dependency_overrides[get_user_repo] = lambda: user_repo_mock
         app.dependency_overrides[get_app_grant_repo] = lambda: grant_repo
         app.dependency_overrides[get_current_user] = (
             (lambda: user) if user is not None else (lambda: None)
@@ -173,15 +205,19 @@ def _app_factory():
     ],
     ids=["missing_app_id", "unknown_app_id", "coming_soon_app"],
 )
-def test_device_login_invalid_app_returns_400(auth_svc, grant_repo, url, _app_factory):
-    c = _app_factory(auth_svc, grant_repo)
+def test_device_login_invalid_app_returns_400(
+    device_auth_svc, credential_svc, user_repo_mock, grant_repo, url, _app_factory
+):
+    c = _app_factory(device_auth_svc, credential_svc, user_repo_mock, grant_repo)
     resp = c.get(url)
     assert resp.status_code == 400
     assert "Unknown or unsupported" in resp.text
 
 
-def test_device_login_invalid_redirect_uri(auth_svc, grant_repo, _app_factory):
-    c = _app_factory(auth_svc, grant_repo)
+def test_device_login_invalid_redirect_uri(
+    device_auth_svc, credential_svc, user_repo_mock, grant_repo, _app_factory
+):
+    c = _app_factory(device_auth_svc, credential_svc, user_repo_mock, grant_repo)
     resp = c.get(
         "/auth/device/login?app_id=spoo-snap&state=abc&redirect_uri=https://evil.com"
     )
@@ -192,8 +228,10 @@ def test_device_login_invalid_redirect_uri(auth_svc, grant_repo, _app_factory):
 # ── GET /auth/device/login — unauthenticated ─────────────────────────────────
 
 
-def test_device_login_unauthenticated_redirects(auth_svc, grant_repo, _app_factory):
-    c = _app_factory(auth_svc, grant_repo)
+def test_device_login_unauthenticated_redirects(
+    device_auth_svc, credential_svc, user_repo_mock, grant_repo, _app_factory
+):
+    c = _app_factory(device_auth_svc, credential_svc, user_repo_mock, grant_repo)
     resp = c.get(
         "/auth/device/login?app_id=spoo-snap&state=abc", follow_redirects=False
     )
@@ -208,12 +246,19 @@ def test_device_login_unauthenticated_redirects(auth_svc, grant_repo, _app_facto
 
 
 def test_device_login_with_grant_auto_approves(
-    auth_svc, grant_repo, authed_user, _app_factory
+    device_auth_svc,
+    credential_svc,
+    user_repo_mock,
+    grant_repo,
+    authed_user,
+    _app_factory,
 ):
-    auth_svc.create_device_auth_code.return_value = "test-code-123"
+    device_auth_svc.create_device_auth_code.return_value = "test-code-123"
     grant_repo.find_active_grant.return_value = _make_grant()
 
-    c = _app_factory(auth_svc, grant_repo, authed_user)
+    c = _app_factory(
+        device_auth_svc, credential_svc, user_repo_mock, grant_repo, authed_user
+    )
     resp = c.get(
         "/auth/device/login?app_id=spoo-snap&state=xyz", follow_redirects=False
     )
@@ -225,9 +270,16 @@ def test_device_login_with_grant_auto_approves(
 
 
 def test_device_login_without_grant_shows_consent(
-    auth_svc, grant_repo, authed_user, _app_factory
+    device_auth_svc,
+    credential_svc,
+    user_repo_mock,
+    grant_repo,
+    authed_user,
+    _app_factory,
 ):
-    c = _app_factory(auth_svc, grant_repo, authed_user)
+    c = _app_factory(
+        device_auth_svc, credential_svc, user_repo_mock, grant_repo, authed_user
+    )
     resp = c.get("/auth/device/login?app_id=spoo-snap&state=xyz")
     assert resp.status_code == 200
     assert "Spoo Snap" in resp.text
@@ -239,15 +291,19 @@ def test_device_login_without_grant_shows_consent(
 # ── GET /auth/device/callback ────────────────────────────────────────────────
 
 
-def test_device_callback_no_code_redirects(auth_svc, grant_repo, _app_factory):
-    c = _app_factory(auth_svc, grant_repo)
+def test_device_callback_no_code_redirects(
+    device_auth_svc, credential_svc, user_repo_mock, grant_repo, _app_factory
+):
+    c = _app_factory(device_auth_svc, credential_svc, user_repo_mock, grant_repo)
     resp = c.get("/auth/device/callback", follow_redirects=False)
     assert resp.status_code == 302
     assert resp.headers["location"] == "/"
 
 
-def test_device_callback_with_code_renders(auth_svc, grant_repo, _app_factory):
-    c = _app_factory(auth_svc, grant_repo)
+def test_device_callback_with_code_renders(
+    device_auth_svc, credential_svc, user_repo_mock, grant_repo, _app_factory
+):
+    c = _app_factory(device_auth_svc, credential_svc, user_repo_mock, grant_repo)
     resp = c.get("/auth/device/callback?code=abc&state=xyz")
     assert resp.status_code == 200
     assert 'data-code="abc"' in resp.text
@@ -257,14 +313,16 @@ def test_device_callback_with_code_renders(auth_svc, grant_repo, _app_factory):
 # ── POST /auth/device/token ──────────────────────────────────────────────────
 
 
-def test_device_token_valid_code(auth_svc, grant_repo, _app_factory):
+def test_device_token_valid_code(
+    device_auth_svc, credential_svc, user_repo_mock, grant_repo, _app_factory
+):
     user = _make_user_doc()
-    auth_svc.exchange_device_code.return_value = AuthResult(
+    device_auth_svc.exchange_device_code.return_value = AuthResult(
         user=user, access_token="at", refresh_token="rt", app_id="spoo-snap"
     )
     grant_repo.find_active_grant.return_value = _make_grant()
 
-    c = _app_factory(auth_svc, grant_repo)
+    c = _app_factory(device_auth_svc, credential_svc, user_repo_mock, grant_repo)
     resp = c.post("/auth/device/token", json={"code": "valid-code"})
     assert resp.status_code == 200
     data = resp.json()
@@ -274,25 +332,29 @@ def test_device_token_valid_code(auth_svc, grant_repo, _app_factory):
     grant_repo.touch_last_used.assert_awaited_once()
 
 
-def test_device_token_invalid_code(auth_svc, grant_repo, _app_factory):
-    auth_svc.exchange_device_code.side_effect = AuthenticationError(
+def test_device_token_invalid_code(
+    device_auth_svc, credential_svc, user_repo_mock, grant_repo, _app_factory
+):
+    device_auth_svc.exchange_device_code.side_effect = AuthenticationError(
         "invalid or expired"
     )
 
-    c = _app_factory(auth_svc, grant_repo)
+    c = _app_factory(device_auth_svc, credential_svc, user_repo_mock, grant_repo)
     resp = c.post("/auth/device/token", json={"code": "bad"})
     assert resp.status_code == 401
 
 
-def test_device_token_revoked_grant_rejected(auth_svc, grant_repo, _app_factory):
+def test_device_token_revoked_grant_rejected(
+    device_auth_svc, credential_svc, user_repo_mock, grant_repo, _app_factory
+):
     """Token exchange fails if grant was revoked between consent and exchange."""
     user = _make_user_doc()
-    auth_svc.exchange_device_code.return_value = AuthResult(
+    device_auth_svc.exchange_device_code.return_value = AuthResult(
         user=user, access_token="at", refresh_token="rt", app_id="spoo-snap"
     )
     grant_repo.find_active_grant.return_value = None  # revoked
 
-    c = _app_factory(auth_svc, grant_repo)
+    c = _app_factory(device_auth_svc, credential_svc, user_repo_mock, grant_repo)
     resp = c.post("/auth/device/token", json={"code": "valid"})
     assert resp.status_code == 401
     assert "revoked" in resp.json()["error"].lower()
@@ -301,8 +363,17 @@ def test_device_token_revoked_grant_rejected(auth_svc, grant_repo, _app_factory)
 # ── POST /auth/device/consent ────────────────────────────────────────────────
 
 
-def test_consent_missing_csrf_rejected(auth_svc, grant_repo, authed_user, _app_factory):
-    c = _app_factory(auth_svc, grant_repo, authed_user)
+def test_consent_missing_csrf_rejected(
+    device_auth_svc,
+    credential_svc,
+    user_repo_mock,
+    grant_repo,
+    authed_user,
+    _app_factory,
+):
+    c = _app_factory(
+        device_auth_svc, credential_svc, user_repo_mock, grant_repo, authed_user
+    )
     resp = c.post(
         "/auth/device/consent",
         data={"app_id": "spoo-snap", "state": "xyz", "csrf_token": "wrong"},
@@ -311,10 +382,19 @@ def test_consent_missing_csrf_rejected(auth_svc, grant_repo, authed_user, _app_f
     assert "Invalid or expired" in resp.text
 
 
-def test_consent_valid_creates_grant(auth_svc, grant_repo, authed_user, _app_factory):
-    auth_svc.create_device_auth_code.return_value = "consent-code-123"
+def test_consent_valid_creates_grant(
+    device_auth_svc,
+    credential_svc,
+    user_repo_mock,
+    grant_repo,
+    authed_user,
+    _app_factory,
+):
+    device_auth_svc.create_device_auth_code.return_value = "consent-code-123"
 
-    c = _app_factory(auth_svc, grant_repo, authed_user)
+    c = _app_factory(
+        device_auth_svc, credential_svc, user_repo_mock, grant_repo, authed_user
+    )
     c.cookies.set("_consent_csrf", "valid-tok")
     resp = c.post(
         "/auth/device/consent",
@@ -331,8 +411,17 @@ def test_consent_valid_creates_grant(auth_svc, grant_repo, authed_user, _app_fac
     grant_repo.create_or_reactivate.assert_awaited_once()
 
 
-def test_consent_unknown_app_rejected(auth_svc, grant_repo, authed_user, _app_factory):
-    c = _app_factory(auth_svc, grant_repo, authed_user)
+def test_consent_unknown_app_rejected(
+    device_auth_svc,
+    credential_svc,
+    user_repo_mock,
+    grant_repo,
+    authed_user,
+    _app_factory,
+):
+    c = _app_factory(
+        device_auth_svc, credential_svc, user_repo_mock, grant_repo, authed_user
+    )
     c.cookies.set("_consent_csrf", "tok")
     resp = c.post(
         "/auth/device/consent",
@@ -345,17 +434,33 @@ def test_consent_unknown_app_rejected(auth_svc, grant_repo, authed_user, _app_fa
 
 
 def test_revoke_without_csrf_header_rejected(
-    auth_svc, grant_repo, authed_user, _app_factory
+    device_auth_svc,
+    credential_svc,
+    user_repo_mock,
+    grant_repo,
+    authed_user,
+    _app_factory,
 ):
-    c = _app_factory(auth_svc, grant_repo, authed_user)
+    c = _app_factory(
+        device_auth_svc, credential_svc, user_repo_mock, grant_repo, authed_user
+    )
     resp = c.post("/auth/device/revoke", data={"app_id": "spoo-snap"})
     assert resp.status_code == 403
 
 
-def test_revoke_success(auth_svc, grant_repo, authed_user, _app_factory):
+def test_revoke_success(
+    device_auth_svc,
+    credential_svc,
+    user_repo_mock,
+    grant_repo,
+    authed_user,
+    _app_factory,
+):
     grant_repo.revoke.return_value = True
 
-    c = _app_factory(auth_svc, grant_repo, authed_user)
+    c = _app_factory(
+        device_auth_svc, credential_svc, user_repo_mock, grant_repo, authed_user
+    )
     resp = c.post(
         "/auth/device/revoke",
         data={"app_id": "spoo-snap"},
@@ -364,13 +469,22 @@ def test_revoke_success(auth_svc, grant_repo, authed_user, _app_factory):
     assert resp.status_code == 200
     assert resp.json()["success"] is True
     grant_repo.revoke.assert_awaited_once()
-    auth_svc.revoke_device_tokens.assert_awaited_once()
+    device_auth_svc.revoke_device_tokens.assert_awaited_once()
 
 
-def test_revoke_no_grant_returns_404(auth_svc, grant_repo, authed_user, _app_factory):
+def test_revoke_no_grant_returns_404(
+    device_auth_svc,
+    credential_svc,
+    user_repo_mock,
+    grant_repo,
+    authed_user,
+    _app_factory,
+):
     grant_repo.revoke.return_value = False
 
-    c = _app_factory(auth_svc, grant_repo, authed_user)
+    c = _app_factory(
+        device_auth_svc, credential_svc, user_repo_mock, grant_repo, authed_user
+    )
     resp = c.post(
         "/auth/device/revoke",
         data={"app_id": "spoo-snap"},
@@ -382,14 +496,16 @@ def test_revoke_no_grant_returns_404(auth_svc, grant_repo, authed_user, _app_fac
 # ── POST /auth/device/refresh ─────────────────────────────────────────────────
 
 
-def test_device_refresh_success(auth_svc, grant_repo, _app_factory):
+def test_device_refresh_success(
+    device_auth_svc, credential_svc, user_repo_mock, grant_repo, _app_factory
+):
     user = _make_user_doc()
-    auth_svc.refresh_token.return_value = AuthResult(
+    credential_svc.refresh_token.return_value = AuthResult(
         user=user, access_token="new-at", refresh_token="new-rt", app_id="spoo-snap"
     )
     grant_repo.find_active_grant.return_value = _make_grant()
 
-    c = _app_factory(auth_svc, grant_repo)
+    c = _app_factory(device_auth_svc, credential_svc, user_repo_mock, grant_repo)
     resp = c.post("/auth/device/refresh", json={"refresh_token": "old-rt"})
     assert resp.status_code == 200
     data = resp.json()
@@ -398,26 +514,30 @@ def test_device_refresh_success(auth_svc, grant_repo, _app_factory):
     grant_repo.touch_last_used.assert_awaited_once()
 
 
-def test_device_refresh_no_app_id_skips_grant_check(auth_svc, grant_repo, _app_factory):
+def test_device_refresh_no_app_id_skips_grant_check(
+    device_auth_svc, credential_svc, user_repo_mock, grant_repo, _app_factory
+):
     user = _make_user_doc()
-    auth_svc.refresh_token.return_value = AuthResult(
+    credential_svc.refresh_token.return_value = AuthResult(
         user=user, access_token="new-at", refresh_token="new-rt"
     )
 
-    c = _app_factory(auth_svc, grant_repo)
+    c = _app_factory(device_auth_svc, credential_svc, user_repo_mock, grant_repo)
     resp = c.post("/auth/device/refresh", json={"refresh_token": "old-rt"})
     assert resp.status_code == 200
     grant_repo.find_active_grant.assert_not_awaited()
 
 
-def test_device_refresh_revoked_grant_rejected(auth_svc, grant_repo, _app_factory):
+def test_device_refresh_revoked_grant_rejected(
+    device_auth_svc, credential_svc, user_repo_mock, grant_repo, _app_factory
+):
     user = _make_user_doc()
-    auth_svc.refresh_token.return_value = AuthResult(
+    credential_svc.refresh_token.return_value = AuthResult(
         user=user, access_token="new-at", refresh_token="new-rt", app_id="spoo-snap"
     )
     grant_repo.find_active_grant.return_value = None
 
-    c = _app_factory(auth_svc, grant_repo)
+    c = _app_factory(device_auth_svc, credential_svc, user_repo_mock, grant_repo)
     resp = c.post("/auth/device/refresh", json={"refresh_token": "old-rt"})
     assert resp.status_code == 401
     assert "revoked" in resp.json()["error"].lower()

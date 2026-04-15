@@ -24,8 +24,11 @@ os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
 from config import AppSettings
 from dependencies import (
     CurrentUser,
-    get_auth_service,
+    get_credential_service,
     get_oauth_service,
+    get_password_service,
+    get_user_repo,
+    get_verification_service,
     require_auth,
 )
 from errors import (
@@ -35,7 +38,7 @@ from errors import (
 )
 from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
-from routes.auth_routes import router as auth_router
+from routes.auth import router as auth_router
 from routes.oauth_routes import router as oauth_router
 from schemas.models.user import UserDoc
 from schemas.results import AuthResult
@@ -109,7 +112,7 @@ def test_login_valid_credentials():
         user=user, access_token=_MOCK_ACCESS, refresh_token=_MOCK_REFRESH
     )
 
-    app = _build_test_app({get_auth_service: lambda: mock_svc})
+    app = _build_test_app({get_credential_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/login", json={"email": "test@example.com", "password": "pass"}
@@ -129,7 +132,7 @@ def test_login_invalid_credentials_returns_401():
     mock_svc = AsyncMock()
     mock_svc.login.side_effect = AuthenticationError("invalid credentials")
 
-    app = _build_test_app({get_auth_service: lambda: mock_svc})
+    app = _build_test_app({get_credential_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/login", json={"email": "bad@example.com", "password": "wrong"}
@@ -143,7 +146,7 @@ def test_login_same_error_message_for_unknown_email_and_wrong_password():
     mock_svc = AsyncMock()
     mock_svc.login.side_effect = AuthenticationError("invalid credentials")
 
-    app = _build_test_app({get_auth_service: lambda: mock_svc})
+    app = _build_test_app({get_credential_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
         r1 = client.post(
             "/auth/login", json={"email": "unknown@example.com", "password": "p"}
@@ -168,7 +171,7 @@ def test_register_creates_user_returns_201():
         verification_sent=True,
     )
 
-    app = _build_test_app({get_auth_service: lambda: mock_svc})
+    app = _build_test_app({get_credential_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/register",
@@ -185,7 +188,7 @@ def test_register_duplicate_email_returns_409():
     mock_svc = AsyncMock()
     mock_svc.register.side_effect = ConflictError("email already registered")
 
-    app = _build_test_app({get_auth_service: lambda: mock_svc})
+    app = _build_test_app({get_credential_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/register",
@@ -201,7 +204,7 @@ def test_register_weak_password_returns_400():
         details={"missing_requirements": ["digit"]},
     )
 
-    app = _build_test_app({get_auth_service: lambda: mock_svc})
+    app = _build_test_app({get_credential_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/register",
@@ -220,7 +223,7 @@ def test_refresh_rotates_tokens():
         user=user, access_token="new.access", refresh_token="new.refresh"
     )
 
-    app = _build_test_app({get_auth_service: lambda: mock_svc})
+    app = _build_test_app({get_credential_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
         client.cookies.set("refresh_token", "old.refresh.jwt")
         resp = client.post("/auth/refresh")
@@ -231,7 +234,7 @@ def test_refresh_rotates_tokens():
 def test_refresh_missing_cookie_clears_cookies_returns_401():
     mock_svc = AsyncMock()
 
-    app = _build_test_app({get_auth_service: lambda: mock_svc})
+    app = _build_test_app({get_credential_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post("/auth/refresh")  # no refresh_token cookie
     assert resp.status_code == 401
@@ -248,7 +251,7 @@ def test_refresh_expired_token_clears_cookies_returns_401():
         "invalid or expired refresh token"
     )
 
-    app = _build_test_app({get_auth_service: lambda: mock_svc})
+    app = _build_test_app({get_credential_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
         client.cookies.set("refresh_token", "expired.jwt")
         resp = client.post("/auth/refresh")
@@ -280,13 +283,13 @@ def test_logout_clears_cookies_returns_success():
 def test_me_returns_user_profile():
     user_oid = ObjectId()
     user = _make_user_doc(user_id=user_oid)
-    mock_svc = AsyncMock()
-    mock_svc.get_user_profile.return_value = user
+    mock_user_repo = AsyncMock()
+    mock_user_repo.find_by_id.return_value = user
     mock_user = CurrentUser(user_id=user_oid, email_verified=True)
 
     app = _build_test_app(
         {
-            get_auth_service: lambda: mock_svc,
+            get_user_repo: lambda: mock_user_repo,
             require_auth: lambda: mock_user,
         }
     )
@@ -316,7 +319,7 @@ def test_set_password_succeeds():
 
     app = _build_test_app(
         {
-            get_auth_service: lambda: mock_svc,
+            get_password_service: lambda: mock_svc,
             require_auth: lambda: mock_user,
         }
     )
@@ -334,7 +337,7 @@ def test_set_password_already_set_returns_400():
 
     app = _build_test_app(
         {
-            get_auth_service: lambda: mock_svc,
+            get_password_service: lambda: mock_svc,
             require_auth: lambda: mock_user,
         }
     )
@@ -354,7 +357,7 @@ def test_verify_email_success_sets_new_cookies():
 
     app = _build_test_app(
         {
-            get_auth_service: lambda: mock_svc,
+            get_verification_service: lambda: mock_svc,
             require_auth: lambda: mock_user,
         }
     )
@@ -376,7 +379,7 @@ def test_verify_email_wrong_code_returns_400():
 
     app = _build_test_app(
         {
-            get_auth_service: lambda: mock_svc,
+            get_verification_service: lambda: mock_svc,
             require_auth: lambda: mock_user,
         }
     )
@@ -396,7 +399,7 @@ def test_send_verification_returns_success():
 
     app = _build_test_app(
         {
-            get_auth_service: lambda: mock_svc,
+            get_verification_service: lambda: mock_svc,
             require_auth: lambda: mock_user,
         }
     )
@@ -414,7 +417,7 @@ def test_request_password_reset_always_returns_same_response():
     mock_svc = AsyncMock()
     mock_svc.request_password_reset.return_value = None  # swallows all errors
 
-    app = _build_test_app({get_auth_service: lambda: mock_svc})
+    app = _build_test_app({get_password_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
         r1 = client.post(
             "/auth/request-password-reset", json={"email": "exists@example.com"}
@@ -431,7 +434,7 @@ def test_reset_password_success():
     mock_svc = AsyncMock()
     mock_svc.reset_password.return_value = None
 
-    app = _build_test_app({get_auth_service: lambda: mock_svc})
+    app = _build_test_app({get_password_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/reset-password",
@@ -449,7 +452,7 @@ def test_reset_password_invalid_code_returns_400():
     mock_svc = AsyncMock()
     mock_svc.reset_password.side_effect = ValidationError("invalid or expired code")
 
-    app = _build_test_app({get_auth_service: lambda: mock_svc})
+    app = _build_test_app({get_password_service: lambda: mock_svc})
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/reset-password",

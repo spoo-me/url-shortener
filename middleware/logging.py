@@ -39,7 +39,11 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         # Bind request context to structlog contextvars — available in all
         # downstream log calls (services, repositories, etc.)
         structlog.contextvars.clear_contextvars()
-        structlog.contextvars.bind_contextvars(request_id=request_id)
+        structlog.contextvars.bind_contextvars(
+            request_id=request_id,
+            http_method=request.method,
+            http_path=path,
+        )
 
         response = await call_next(request)
 

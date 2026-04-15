@@ -66,17 +66,19 @@ async def redirect_url(
     host_url = str(request.base_url)
 
     # 1. Resolve URL (cache-first)
+    resolve_start = time.perf_counter()
     try:
         url_data, schema = await url_service.resolve(short_code)
     except NotFoundError:
         log.info("url_not_found", short_code=short_code)
         return _error_page(request, "404", "URL NOT FOUND", 404)
     except BlockedUrlError:
-        log.warning("url_blocked", short_code=short_code)
+        log.info("url_blocked", short_code=short_code)
         return _error_page(request, "451", "THIS URL HAS BEEN BLOCKED", 451)
     except GoneError:
         log.info("url_gone", short_code=short_code)
         return _error_page(request, "410", "SHORT URL EXPIRED", 410)
+    resolve_ms = int((time.perf_counter() - resolve_start) * 1000)
 
     # 2. Password check
     if url_data.password_hash:
@@ -91,11 +93,13 @@ async def redirect_url(
             )
 
     # 3. Track click — skip for HEAD / OPTIONS
+    tracking_ms = 0
     if request.method not in ("HEAD", "OPTIONS"):
         user_agent = request.headers.get("User-Agent", "")
         referrer = request.headers.get("Referer")
         cf_city = request.headers.get("CF-IPCity")
         is_emoji = schema == SchemaVersion.EMOJI
+        tracking_start = time.perf_counter()
         try:
             await click_service.track_click(
                 url_data=url_data,
@@ -110,25 +114,29 @@ async def redirect_url(
             )
         except ValidationError:
             # Bad / missing User-Agent — skip analytics, still redirect
-            log.warning(
+            log.info(
                 "click_tracking_validation_error", short_code=short_code, schema=schema
             )
         except ForbiddenError as exc:
             # Bot blocked (v1 / emoji) — block the redirect
-            log.warning(
+            log.info(
                 "click_tracking_bot_blocked", short_code=short_code, reason=str(exc)
             )
             return _error_page(request, "403", "ACCESS DENIED", 403)
         except Exception:
             log.exception("click_tracking_failed", short_code=short_code, schema=schema)
+        tracking_ms = int((time.perf_counter() - tracking_start) * 1000)
 
     # 4. Redirect
+    total_ms = int((time.perf_counter() - start_time) * 1000)
     if should_sample("url_redirect"):
         log.info(
             "url_redirect",
             short_code=short_code,
             schema=schema,
-            duration_ms=int((time.perf_counter() - start_time) * 1000),
+            resolve_ms=resolve_ms,
+            tracking_ms=tracking_ms,
+            total_ms=total_ms,
         )
     resp = RedirectResponse(url_data.long_url, status_code=302)
     resp.headers["X-Robots-Tag"] = "noindex, nofollow"
@@ -169,7 +177,7 @@ async def check_password(
         return RedirectResponse(f"/{short_code}?password={password}", status_code=302)
 
     # Wrong password — re-render password form with error
-    log.warning("url_password_incorrect", short_code=short_code)
+    log.info("url_password_incorrect", short_code=short_code)
     return templates.TemplateResponse(
         request,
         "password.html",

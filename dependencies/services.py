@@ -8,11 +8,18 @@ object construction — services are stateless and shared across requests.
 
 from __future__ import annotations
 
+from bson import ObjectId
 from fastapi import Request
 
+from errors import NotFoundError
 from repositories.app_grant_repository import AppGrantRepository
+from repositories.user_repository import UserRepository
+from schemas.models.user import UserDoc
 from services.api_key_service import ApiKeyService
-from services.auth_service import AuthService
+from services.auth.credentials import CredentialService
+from services.auth.device import DeviceAuthService
+from services.auth.password import PasswordService
+from services.auth.verification import EmailVerificationService
 from services.click import ClickService
 from services.contact_service import ContactService
 from services.export.service import ExportService
@@ -38,8 +45,36 @@ def get_api_key_service(request: Request) -> ApiKeyService:
     return request.app.state.api_key_service
 
 
-def get_auth_service(request: Request) -> AuthService:
-    return request.app.state.auth_service
+def get_credential_service(request: Request) -> CredentialService:
+    return request.app.state.credential_service
+
+
+def get_verification_service(request: Request) -> EmailVerificationService:
+    return request.app.state.verification_service
+
+
+def get_password_service(request: Request) -> PasswordService:
+    return request.app.state.password_service
+
+
+def get_device_auth_service(request: Request) -> DeviceAuthService:
+    return request.app.state.device_auth_service
+
+
+def get_user_repo(request: Request) -> UserRepository:
+    return request.app.state.user_repo
+
+
+async def fetch_user_profile(user_repo: UserRepository, user_id: ObjectId) -> UserDoc:
+    """Fetch a user by ID or raise NotFoundError.
+
+    Thin helper used by route handlers that need a user profile
+    without depending on a full auth service.
+    """
+    user = await user_repo.find_by_id(user_id)
+    if not user:
+        raise NotFoundError("user not found")
+    return user
 
 
 def get_oauth_service(request: Request) -> OAuthService:

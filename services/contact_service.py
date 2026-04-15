@@ -122,7 +122,7 @@ class ContactService:
             AppError:       Webhook send failed.
         """
         if not await self._captcha.verify(captcha_token):
-            log.warning("contact_captcha_failed")
+            log.info("contact_captcha_failed")
             raise ForbiddenError("Invalid captcha, please try again")
 
         payload = self._contact_embed(email, message)
@@ -166,7 +166,7 @@ class ContactService:
             AppError:        Webhook send failed.
         """
         if not await self._captcha.verify(captcha_token):
-            log.warning("report_captcha_failed", short_code=short_code)
+            log.info("report_captcha_failed", short_code=short_code)
             raise ForbiddenError("Invalid captcha, please try again")
 
         if not url_exists:

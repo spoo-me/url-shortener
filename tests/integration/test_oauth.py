@@ -29,7 +29,7 @@ from dependencies import (
 from errors import ValidationError
 from middleware.error_handler import register_error_handlers
 from middleware.rate_limiter import limiter
-from routes.auth_routes import router as auth_router
+from routes.auth import router as auth_router
 from routes.oauth_routes import router as oauth_router
 from schemas.models.user import ProviderInfo, UserDoc
 from schemas.results import AuthResult
