@@ -206,7 +206,7 @@ async def set_profile_picture(
     body: SetProfilePictureRequest,
     user: AuthUser,
     svc: ProfilePictureSvc,
-) -> Response:
+) -> Response | ProfilePictureMessageResponse:
     try:
         await svc.set_picture(user.user_id, body.picture_id)
     except NotFoundError as exc:

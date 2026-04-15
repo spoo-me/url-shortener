@@ -20,7 +20,12 @@ _EMOJIS_PATH = Path(__file__).resolve().parent.parent / "data" / "emojis.json"
 @lru_cache(maxsize=1)
 def _load_emojis() -> list[str]:
     with open(_EMOJIS_PATH, encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    if not isinstance(data, list) or not data:
+        raise ValueError(
+            f"emojis.json must be a non-empty list, got {type(data).__name__}"
+        )
+    return data
 
 
 def generate_short_code() -> str:

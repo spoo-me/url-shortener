@@ -197,7 +197,7 @@ class TestV2ClickHandler:
         handler = make_v2_handler(d.click_repo, d.url_repo, d.geoip, d.url_cache)
         url_data = make_v2_cache(block_bots=True)
 
-        with patch("services.click.bot_detection.is_bot_request", return_value=True):
+        with patch("services.click.handlers.is_bot_request", return_value=True):
             # Should NOT raise
             await handler.handle(make_context(url_data, user_agent=BOT_UA))
 
@@ -212,10 +212,8 @@ class TestV2ClickHandler:
         url_data = make_v2_cache(block_bots=False)
 
         with (
-            patch("services.click.bot_detection.is_bot_request", return_value=True),
-            patch(
-                "services.click.bot_detection.get_bot_name", return_value="Googlebot"
-            ),
+            patch("services.click.handlers.is_bot_request", return_value=True),
+            patch("services.click.handlers.get_bot_name", return_value="Googlebot"),
         ):
             await handler.handle(make_context(url_data, user_agent=BOT_UA))
 
@@ -322,7 +320,7 @@ class TestLegacyClickHandler:
         handler = make_legacy_handler(d.legacy_repo, d.emoji_repo, d.geoip)
         url_data = make_v1_cache(short_code="abcdef")
 
-        with patch("services.click.bot_detection.is_bot_request", return_value=False):
+        with patch("services.click.handlers.is_bot_request", return_value=False):
             await handler.handle(
                 make_context(url_data, short_code="abcdef", is_emoji=False)
             )
@@ -341,7 +339,7 @@ class TestLegacyClickHandler:
         url_data = make_v1_cache(short_code="🐍🔥💎")
         url_data.schema_version = "emoji"
 
-        with patch("services.click.bot_detection.is_bot_request", return_value=False):
+        with patch("services.click.handlers.is_bot_request", return_value=False):
             await handler.handle(
                 make_context(url_data, short_code="🐍🔥💎", is_emoji=True)
             )
@@ -357,7 +355,7 @@ class TestLegacyClickHandler:
         url_data = make_v1_cache(block_bots=True, short_code="abcdef")
 
         with (
-            patch("services.click.bot_detection.is_bot_request", return_value=True),
+            patch("services.click.handlers.is_bot_request", return_value=True),
             pytest.raises(ForbiddenError),
         ):
             await handler.handle(
@@ -379,10 +377,8 @@ class TestLegacyClickHandler:
         url_data = make_v1_cache(block_bots=False, short_code="abcdef")
 
         with (
-            patch("services.click.bot_detection.is_bot_request", return_value=True),
-            patch(
-                "services.click.bot_detection.get_bot_name", return_value="Googlebot"
-            ),
+            patch("services.click.handlers.is_bot_request", return_value=True),
+            patch("services.click.handlers.get_bot_name", return_value="Googlebot"),
         ):
             await handler.handle(
                 make_context(
@@ -410,7 +406,7 @@ class TestLegacyClickHandler:
         handler = make_legacy_handler(d.legacy_repo, d.emoji_repo, d.geoip)
         url_data = make_v1_cache(short_code="abcdef")
 
-        with patch("services.click.bot_detection.is_bot_request", return_value=False):
+        with patch("services.click.handlers.is_bot_request", return_value=False):
             await handler.handle(
                 make_context(
                     url_data,
@@ -431,7 +427,7 @@ class TestLegacyClickHandler:
         handler = make_legacy_handler(d.legacy_repo, d.emoji_repo, d.geoip)
         url_data = make_v1_cache(short_code="abcdef")
 
-        with patch("services.click.bot_detection.is_bot_request", return_value=False):
+        with patch("services.click.handlers.is_bot_request", return_value=False):
             await handler.handle(
                 make_context(url_data, short_code="abcdef", is_emoji=False)
             )
@@ -449,7 +445,7 @@ class TestLegacyClickHandler:
         handler = make_legacy_handler(d.legacy_repo, d.emoji_repo, d.geoip)
         url_data = make_v1_cache(short_code="abcdef")
 
-        with patch("services.click.bot_detection.is_bot_request", return_value=False):
+        with patch("services.click.handlers.is_bot_request", return_value=False):
             await handler.handle(
                 make_context(url_data, short_code="abcdef", is_emoji=False)
             )

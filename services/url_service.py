@@ -129,11 +129,13 @@ async def _handle_expire_after(
         return
     if request.expire_after is None and existing.expire_after:
         ops["expire_after"] = None
-    elif (
-        request.expire_after is not None
-        and request.expire_after != existing.expire_after
-    ):
-        ops["expire_after"] = request.expire_after
+    elif request.expire_after is not None:
+        if request.expire_after <= datetime.now(timezone.utc):
+            raise ValidationError(
+                "expire_after must be in the future", field="expire_after"
+            )
+        if request.expire_after != existing.expire_after:
+            ops["expire_after"] = request.expire_after
 
 
 async def _handle_status(
