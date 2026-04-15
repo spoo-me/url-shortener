@@ -78,27 +78,21 @@ def make_provider_info(
     )
 
 
-def make_auth_service_mock():
-    """Create a mock AuthService with working token generation."""
-    from services.auth_service import AuthService
+def make_token_factory():
+    """Create a real TokenFactory with working token generation."""
+    from services.token_factory import TokenFactory
 
-    auth_svc = AuthService(
-        user_repo=AsyncMock(),
-        token_repo=AsyncMock(),
-        email=AsyncMock(),
-        settings=make_jwt_settings(),
-    )
-    return auth_svc
+    return TokenFactory(make_jwt_settings())
 
 
-def make_oauth_service(auth_svc=None):
+def make_oauth_service(token_factory=None):
     from services.oauth_service import OAuthService
 
-    if auth_svc is None:
-        auth_svc = make_auth_service_mock()
+    if token_factory is None:
+        token_factory = make_token_factory()
     return OAuthService(
         user_repo=AsyncMock(),
-        auth_service=auth_svc,
+        token_factory=token_factory,
         email=AsyncMock(),
     )
 

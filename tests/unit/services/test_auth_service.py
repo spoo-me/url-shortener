@@ -1,4 +1,4 @@
-"""Unit tests for Phase 8 — AuthService."""
+"""Unit tests for split auth services (CredentialService, EmailVerificationService, etc.)."""
 
 from __future__ import annotations
 
@@ -65,14 +65,60 @@ def make_user_doc(
     return UserDoc.from_mongo(doc)
 
 
-def make_auth_service():
-    from services.auth_service import AuthService
+def make_token_factory():
+    from services.token_factory import TokenFactory
 
-    return AuthService(
+    return TokenFactory(make_jwt_settings())
+
+
+def make_otp_service():
+    from services.auth.otp import OtpService
+
+    return OtpService(token_repo=AsyncMock())
+
+
+def make_credential_service():
+    from services.auth.credentials import CredentialService
+
+    otp = make_otp_service()
+    return CredentialService(
+        user_repo=AsyncMock(),
+        otp_service=otp,
+        email=AsyncMock(),
+        token_factory=make_token_factory(),
+    )
+
+
+def make_verification_service():
+    from services.auth.verification import EmailVerificationService
+
+    otp = make_otp_service()
+    return EmailVerificationService(
+        user_repo=AsyncMock(),
+        otp_service=otp,
+        email=AsyncMock(),
+        token_factory=make_token_factory(),
+    )
+
+
+def make_password_service():
+    from services.auth.password import PasswordService
+
+    otp = make_otp_service()
+    return PasswordService(
+        user_repo=AsyncMock(),
+        otp_service=otp,
+        email=AsyncMock(),
+    )
+
+
+def make_device_auth_service():
+    from services.auth.device import DeviceAuthService
+
+    return DeviceAuthService(
         user_repo=AsyncMock(),
         token_repo=AsyncMock(),
-        email=AsyncMock(),
-        settings=make_jwt_settings(),
+        token_factory=make_token_factory(),
     )
 
 
@@ -81,16 +127,14 @@ def make_auth_service():
 
 class TestJWTHelpers:
     def test_generate_access_token_returns_string(self):
-        svc = make_auth_service()
-        token = svc._generate_access_token(make_user_doc(), amr="pwd")
+        tf = make_token_factory()
+        token = tf.generate_access_token(make_user_doc(), amr="pwd")
         assert isinstance(token, str)
 
     def test_access_token_has_correct_claims(self):
-        svc = make_auth_service()
+        tf = make_token_factory()
         settings = make_jwt_settings()
-        token = svc._generate_access_token(
-            make_user_doc(email_verified=True), amr="pwd"
-        )
+        token = tf.generate_access_token(make_user_doc(email_verified=True), amr="pwd")
         payload = pyjwt.decode(
             token,
             settings.jwt_secret,
@@ -107,9 +151,9 @@ class TestJWTHelpers:
         assert payload["exp"] - payload["iat"] == 900
 
     def test_refresh_token_has_type_field(self):
-        svc = make_auth_service()
+        tf = make_token_factory()
         settings = make_jwt_settings()
-        token = svc._generate_refresh_token(make_user_doc(), amr="google")
+        token = tf.generate_refresh_token(make_user_doc(), amr="google")
         payload = pyjwt.decode(
             token,
             settings.jwt_secret,
@@ -122,31 +166,31 @@ class TestJWTHelpers:
         assert payload["exp"] - payload["iat"] == 2592000
 
     def test_verify_token_returns_payload(self):
-        svc = make_auth_service()
-        token = svc._generate_access_token(make_user_doc(), amr="pwd")
-        payload = svc._verify_token(token, token_type="access")
+        tf = make_token_factory()
+        token = tf.generate_access_token(make_user_doc(), amr="pwd")
+        payload = tf.verify_token(token, token_type="access")
         assert payload["sub"] == str(USER_OID)
 
     def test_verify_refresh_token_requires_type_field(self):
-        svc = make_auth_service()
-        refresh = svc._generate_refresh_token(make_user_doc(), amr="pwd")
-        access = svc._generate_access_token(make_user_doc(), amr="pwd")
+        tf = make_token_factory()
+        refresh = tf.generate_refresh_token(make_user_doc(), amr="pwd")
+        access = tf.generate_access_token(make_user_doc(), amr="pwd")
         # refresh passes as "refresh"
-        assert svc._verify_token(refresh, token_type="refresh")["type"] == "refresh"
+        assert tf.verify_token(refresh, token_type="refresh")["type"] == "refresh"
         # access token fails as "refresh" (no type field)
         with pytest.raises(AuthenticationError):
-            svc._verify_token(access, token_type="refresh")
+            tf.verify_token(access, token_type="refresh")
 
     def test_verify_invalid_token_raises_auth_error(self):
-        svc = make_auth_service()
+        tf = make_token_factory()
         with pytest.raises(AuthenticationError):
-            svc._verify_token("not.a.valid.token", token_type="access")
+            tf.verify_token("not.a.valid.token", token_type="access")
 
     def test_issue_tokens_returns_valid_pair(self):
-        svc = make_auth_service()
+        tf = make_token_factory()
         settings = make_jwt_settings()
         user = make_user_doc()
-        access, refresh = svc.issue_tokens(user, "google")
+        access, refresh = tf.issue_tokens(user, "google")
         # Access token has no type field
         access_payload = pyjwt.decode(
             access,
@@ -177,7 +221,7 @@ class TestLogin:
     async def test_login_success(self):
         from shared.crypto import hash_password
 
-        svc = make_auth_service()
+        svc = make_credential_service()
         hashed = hash_password("ValidPass1!")
         user = make_user_doc(
             password_hash=hashed, password_set=True, email_verified=True
@@ -191,7 +235,7 @@ class TestLogin:
 
     @pytest.mark.asyncio
     async def test_login_user_not_found_raises(self):
-        svc = make_auth_service()
+        svc = make_credential_service()
         svc._user_repo.find_by_email.return_value = None
 
         with pytest.raises(AuthenticationError, match="invalid credentials"):
@@ -199,7 +243,7 @@ class TestLogin:
 
     @pytest.mark.asyncio
     async def test_login_no_password_hash_raises(self):
-        svc = make_auth_service()
+        svc = make_credential_service()
         user = make_user_doc(password_hash=None)
         svc._user_repo.find_by_email.return_value = user
 
@@ -210,7 +254,7 @@ class TestLogin:
     async def test_login_wrong_password_raises(self):
         from shared.crypto import hash_password
 
-        svc = make_auth_service()
+        svc = make_credential_service()
         hashed = hash_password("CorrectPass1!")
         user = make_user_doc(password_hash=hashed, password_set=True)
         svc._user_repo.find_by_email.return_value = user
@@ -223,7 +267,7 @@ class TestLogin:
         """No user enumeration — both failure cases return identical message."""
         from shared.crypto import hash_password
 
-        svc = make_auth_service()
+        svc = make_credential_service()
 
         svc._user_repo.find_by_email.return_value = None
         with pytest.raises(AuthenticationError) as exc_info:
@@ -246,11 +290,11 @@ class TestLogin:
 class TestRegister:
     @pytest.mark.asyncio
     async def test_register_success(self):
-        svc = make_auth_service()
+        svc = make_credential_service()
         svc._user_repo.find_by_email.return_value = None
         svc._user_repo.create.return_value = USER_OID
-        svc._token_repo.count_recent.return_value = 0
-        svc._token_repo.create.return_value = ObjectId()
+        svc._otp._token_repo.count_recent.return_value = 0
+        svc._otp._token_repo.create.return_value = ObjectId()
         svc._email.send_verification_email.return_value = True
 
         result = await svc.register(
@@ -263,7 +307,7 @@ class TestRegister:
 
     @pytest.mark.asyncio
     async def test_register_duplicate_email_raises(self):
-        svc = make_auth_service()
+        svc = make_credential_service()
         svc._user_repo.find_by_email.return_value = make_user_doc()
 
         with pytest.raises(ConflictError, match="email already registered"):
@@ -271,7 +315,7 @@ class TestRegister:
 
     @pytest.mark.asyncio
     async def test_register_weak_password_raises(self):
-        svc = make_auth_service()
+        svc = make_credential_service()
         svc._user_repo.find_by_email.return_value = None
 
         with pytest.raises(
@@ -282,11 +326,11 @@ class TestRegister:
     @pytest.mark.asyncio
     async def test_register_verification_email_failure_is_non_fatal(self):
         """Registration succeeds even if sending verification email fails."""
-        svc = make_auth_service()
+        svc = make_credential_service()
         svc._user_repo.find_by_email.return_value = None
         svc._user_repo.create.return_value = USER_OID
-        svc._token_repo.count_recent.return_value = 0
-        svc._token_repo.create.return_value = ObjectId()
+        svc._otp._token_repo.count_recent.return_value = 0
+        svc._otp._token_repo.create.return_value = ObjectId()
         svc._email.send_verification_email.side_effect = Exception("email server down")
 
         result = await svc.register("new@example.com", "ValidPass1!", None, None)
@@ -297,7 +341,7 @@ class TestRegister:
     async def test_register_race_condition_duplicate_raises(self):
         from pymongo.errors import DuplicateKeyError
 
-        svc = make_auth_service()
+        svc = make_credential_service()
         svc._user_repo.find_by_email.return_value = None
         svc._user_repo.create.side_effect = DuplicateKeyError("duplicate")
 
@@ -311,10 +355,10 @@ class TestRegister:
 class TestRefreshToken:
     @pytest.mark.asyncio
     async def test_refresh_token_success(self):
-        svc = make_auth_service()
+        svc = make_credential_service()
         user = make_user_doc()
-        # Generate a valid refresh token
-        refresh_tok = svc._generate_refresh_token(user, amr="pwd")
+        # Generate a valid refresh token via the token factory
+        refresh_tok = svc._tokens.generate_refresh_token(user, amr="pwd")
         svc._user_repo.find_by_id.return_value = user
 
         result = await svc.refresh_token(refresh_tok)
@@ -325,16 +369,16 @@ class TestRefreshToken:
 
     @pytest.mark.asyncio
     async def test_refresh_token_invalid_raises(self):
-        svc = make_auth_service()
+        svc = make_credential_service()
 
         with pytest.raises(AuthenticationError):
             await svc.refresh_token("invalid.token.here")
 
     @pytest.mark.asyncio
     async def test_refresh_token_user_not_found_raises(self):
-        svc = make_auth_service()
+        svc = make_credential_service()
         user = make_user_doc()
-        refresh_tok = svc._generate_refresh_token(user, amr="pwd")
+        refresh_tok = svc._tokens.generate_refresh_token(user, amr="pwd")
         svc._user_repo.find_by_id.return_value = None
 
         with pytest.raises(
@@ -344,9 +388,9 @@ class TestRefreshToken:
 
     @pytest.mark.asyncio
     async def test_refresh_token_inactive_user_raises(self):
-        svc = make_auth_service()
+        svc = make_credential_service()
         user = make_user_doc()
-        refresh_tok = svc._generate_refresh_token(user, amr="pwd")
+        refresh_tok = svc._tokens.generate_refresh_token(user, amr="pwd")
         inactive_user = make_user_doc(status="INACTIVE")
         svc._user_repo.find_by_id.return_value = inactive_user
 
@@ -356,9 +400,9 @@ class TestRefreshToken:
     @pytest.mark.asyncio
     async def test_refresh_rejects_access_token(self):
         """An access token must not be accepted as a refresh token."""
-        svc = make_auth_service()
+        svc = make_credential_service()
         user = make_user_doc()
-        access_tok = svc._generate_access_token(user, amr="pwd")
+        access_tok = svc._tokens.generate_access_token(user, amr="pwd")
 
         with pytest.raises(AuthenticationError):
             await svc.refresh_token(access_tok)
@@ -389,12 +433,12 @@ class TestVerifyEmail:
 
     @pytest.mark.asyncio
     async def test_verify_email_success(self):
-        svc = make_auth_service()
+        svc = make_verification_service()
         user = make_user_doc(email_verified=False)
         token_doc = self._make_token_doc(USER_OID, "123456")
         svc._user_repo.find_by_id.return_value = user
-        svc._token_repo.find_latest_by_user.return_value = token_doc
-        svc._token_repo.mark_as_used.return_value = True
+        svc._otp._token_repo.find_latest_by_user.return_value = token_doc
+        svc._otp._token_repo.mark_as_used.return_value = True
         svc._user_repo.update.return_value = True
         svc._email.send_welcome_email.return_value = True
 
@@ -414,7 +458,7 @@ class TestVerifyEmail:
 
     @pytest.mark.asyncio
     async def test_verify_email_already_verified_raises(self):
-        svc = make_auth_service()
+        svc = make_verification_service()
         user = make_user_doc(email_verified=True)
         svc._user_repo.find_by_id.return_value = user
 
@@ -423,57 +467,57 @@ class TestVerifyEmail:
 
     @pytest.mark.asyncio
     async def test_verify_email_invalid_otp_raises(self):
-        svc = make_auth_service()
+        svc = make_verification_service()
         user = make_user_doc(email_verified=False)
         svc._user_repo.find_by_id.return_value = user
-        svc._token_repo.find_latest_by_user.return_value = None  # token not found
+        svc._otp._token_repo.find_latest_by_user.return_value = None  # token not found
 
         with pytest.raises(ValidationError):
             await svc.verify_email(str(USER_OID), "000000")
 
     @pytest.mark.asyncio
     async def test_verify_email_expired_otp_raises(self):
-        svc = make_auth_service()
+        svc = make_verification_service()
         user = make_user_doc(email_verified=False)
         token_doc = self._make_token_doc(USER_OID, "123456", expired=True)
         svc._user_repo.find_by_id.return_value = user
-        svc._token_repo.find_latest_by_user.return_value = token_doc
+        svc._otp._token_repo.find_latest_by_user.return_value = token_doc
 
         with pytest.raises(ValidationError, match="expired"):
             await svc.verify_email(str(USER_OID), "123456")
 
     @pytest.mark.asyncio
     async def test_verify_email_max_attempts_raises(self):
-        svc = make_auth_service()
+        svc = make_verification_service()
         user = make_user_doc(email_verified=False)
         token_doc = self._make_token_doc(USER_OID, "123456", attempts=5)
         svc._user_repo.find_by_id.return_value = user
-        svc._token_repo.find_latest_by_user.return_value = token_doc
+        svc._otp._token_repo.find_latest_by_user.return_value = token_doc
 
         with pytest.raises(ValidationError, match="Too many failed attempts"):
             await svc.verify_email(str(USER_OID), "123456")
 
     @pytest.mark.asyncio
     async def test_verify_email_wrong_code_increments_attempts(self):
-        svc = make_auth_service()
+        svc = make_verification_service()
         user = make_user_doc(email_verified=False)
         token_doc = self._make_token_doc(USER_OID, "123456")
         svc._user_repo.find_by_id.return_value = user
-        svc._token_repo.find_latest_by_user.return_value = token_doc
-        svc._token_repo.increment_attempts.return_value = True
+        svc._otp._token_repo.find_latest_by_user.return_value = token_doc
+        svc._otp._token_repo.increment_attempts.return_value = True
 
         with pytest.raises(ValidationError, match="Invalid or expired"):
             await svc.verify_email(str(USER_OID), "999999")  # wrong code
-        svc._token_repo.increment_attempts.assert_awaited_once()
+        svc._otp._token_repo.increment_attempts.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_verify_email_welcome_email_failure_is_non_fatal(self):
-        svc = make_auth_service()
+        svc = make_verification_service()
         user = make_user_doc(email_verified=False)
         token_doc = self._make_token_doc(USER_OID, "123456")
         svc._user_repo.find_by_id.return_value = user
-        svc._token_repo.find_latest_by_user.return_value = token_doc
-        svc._token_repo.mark_as_used.return_value = True
+        svc._otp._token_repo.find_latest_by_user.return_value = token_doc
+        svc._otp._token_repo.mark_as_used.return_value = True
         svc._user_repo.update.return_value = True
         svc._email.send_welcome_email.side_effect = Exception("server down")
 
@@ -488,10 +532,10 @@ class TestVerifyEmail:
 class TestSendVerification:
     @pytest.mark.asyncio
     async def test_send_verification_success(self):
-        svc = make_auth_service()
+        svc = make_verification_service()
         svc._user_repo.find_by_id.return_value = make_user_doc(email_verified=False)
-        svc._token_repo.count_recent.return_value = 0
-        svc._token_repo.create.return_value = ObjectId()
+        svc._otp._token_repo.count_recent.return_value = 0
+        svc._otp._token_repo.create.return_value = ObjectId()
         svc._email.send_verification_email.return_value = True
 
         await svc.send_verification(str(USER_OID))
@@ -499,7 +543,7 @@ class TestSendVerification:
 
     @pytest.mark.asyncio
     async def test_send_verification_already_verified_raises(self):
-        svc = make_auth_service()
+        svc = make_verification_service()
         svc._user_repo.find_by_id.return_value = make_user_doc(email_verified=True)
 
         with pytest.raises(ValidationError, match="already verified"):
@@ -507,7 +551,7 @@ class TestSendVerification:
 
     @pytest.mark.asyncio
     async def test_send_verification_user_not_found_raises(self):
-        svc = make_auth_service()
+        svc = make_verification_service()
         svc._user_repo.find_by_id.return_value = None
 
         with pytest.raises(NotFoundError, match="user not found"):
@@ -518,9 +562,9 @@ class TestSendVerification:
         """Service-level rate limit: raises when MAX_TOKENS_PER_HOUR exceeded."""
         from errors import RateLimitError
 
-        svc = make_auth_service()
+        svc = make_verification_service()
         svc._user_repo.find_by_id.return_value = make_user_doc(email_verified=False)
-        svc._token_repo.count_recent.return_value = 3  # MAX_TOKENS_PER_HOUR
+        svc._otp._token_repo.count_recent.return_value = 3  # MAX_TOKENS_PER_HOUR
 
         with pytest.raises(RateLimitError, match="Too many verification attempts"):
             await svc.send_verification(str(USER_OID))
@@ -535,15 +579,15 @@ class TestSendVerification:
 class TestOTPRateLimit:
     @pytest.mark.asyncio
     async def test_create_otp_at_limit_raises(self):
-        """_create_otp raises RateLimitError when count_recent >= MAX_TOKENS_PER_HOUR."""
+        """create_otp raises RateLimitError when count_recent >= MAX_TOKENS_PER_HOUR."""
         from errors import RateLimitError
         from schemas.models.token import TOKEN_TYPE_EMAIL_VERIFY
 
-        svc = make_auth_service()
+        svc = make_otp_service()
         svc._token_repo.count_recent.return_value = 3
 
         with pytest.raises(RateLimitError):
-            await svc._create_otp(USER_OID, "test@example.com", TOKEN_TYPE_EMAIL_VERIFY)
+            await svc.create_otp(USER_OID, "test@example.com", TOKEN_TYPE_EMAIL_VERIFY)
 
         svc._token_repo.create.assert_not_called()
 
@@ -551,11 +595,11 @@ class TestOTPRateLimit:
     async def test_create_otp_below_limit_succeeds(self):
         from schemas.models.token import TOKEN_TYPE_EMAIL_VERIFY
 
-        svc = make_auth_service()
+        svc = make_otp_service()
         svc._token_repo.count_recent.return_value = 2
         svc._token_repo.create.return_value = ObjectId()
 
-        otp = await svc._create_otp(
+        otp = await svc.create_otp(
             USER_OID, "test@example.com", TOKEN_TYPE_EMAIL_VERIFY
         )
         assert isinstance(otp, str)
@@ -567,11 +611,11 @@ class TestOTPRateLimit:
         from errors import RateLimitError
         from schemas.models.token import TOKEN_TYPE_PASSWORD_RESET
 
-        svc = make_auth_service()
+        svc = make_otp_service()
         svc._token_repo.count_recent.return_value = 3
 
         with pytest.raises(RateLimitError, match="password reset"):
-            await svc._create_otp(
+            await svc.create_otp(
                 USER_OID, "test@example.com", TOKEN_TYPE_PASSWORD_RESET
             )
 
@@ -583,7 +627,7 @@ class TestRequestPasswordReset:
     @pytest.mark.asyncio
     async def test_always_returns_none_for_nonexistent_email(self):
         """Timing-safe: nonexistent email returns normally."""
-        svc = make_auth_service()
+        svc = make_password_service()
         svc._user_repo.find_by_email.return_value = None
 
         result = await svc.request_password_reset("nobody@example.com")
@@ -592,7 +636,7 @@ class TestRequestPasswordReset:
     @pytest.mark.asyncio
     async def test_always_returns_none_when_no_password_set(self):
         """Timing-safe: OAuth-only user returns normally."""
-        svc = make_auth_service()
+        svc = make_password_service()
         user = make_user_doc(password_set=False)
         svc._user_repo.find_by_email.return_value = user
 
@@ -602,22 +646,22 @@ class TestRequestPasswordReset:
     @pytest.mark.asyncio
     async def test_always_returns_none_when_rate_limited(self):
         """Timing-safe: rate limited returns normally."""
-        svc = make_auth_service()
+        svc = make_password_service()
         user = make_user_doc(password_set=True)
         svc._user_repo.find_by_email.return_value = user
-        svc._token_repo.count_recent.return_value = 99  # definitely rate limited
+        svc._otp._token_repo.count_recent.return_value = 99  # definitely rate limited
 
         result = await svc.request_password_reset("test@example.com")
         assert result is None
 
     @pytest.mark.asyncio
     async def test_sends_email_when_valid(self):
-        svc = make_auth_service()
+        svc = make_password_service()
         user = make_user_doc(password_set=True)
         svc._user_repo.find_by_email.return_value = user
-        svc._token_repo.count_recent.return_value = 0
-        svc._token_repo.delete_by_user.return_value = 0
-        svc._token_repo.create.return_value = ObjectId()
+        svc._otp._token_repo.count_recent.return_value = 0
+        svc._otp._token_repo.delete_by_user.return_value = 0
+        svc._otp._token_repo.create.return_value = ObjectId()
         svc._email.send_password_reset_email.return_value = True
 
         await svc.request_password_reset("test@example.com")
@@ -626,12 +670,12 @@ class TestRequestPasswordReset:
     @pytest.mark.asyncio
     async def test_always_returns_none_on_send_failure(self):
         """Timing-safe: email send failure returns normally."""
-        svc = make_auth_service()
+        svc = make_password_service()
         user = make_user_doc(password_set=True)
         svc._user_repo.find_by_email.return_value = user
-        svc._token_repo.count_recent.return_value = 0
-        svc._token_repo.delete_by_user.return_value = 0
-        svc._token_repo.create.return_value = ObjectId()
+        svc._otp._token_repo.count_recent.return_value = 0
+        svc._otp._token_repo.delete_by_user.return_value = 0
+        svc._otp._token_repo.create.return_value = ObjectId()
         svc._email.send_password_reset_email.return_value = False
 
         result = await svc.request_password_reset("test@example.com")
@@ -663,12 +707,12 @@ class TestResetPassword:
 
     @pytest.mark.asyncio
     async def test_reset_password_success(self):
-        svc = make_auth_service()
+        svc = make_password_service()
         user = make_user_doc(password_set=True)
         token_doc = self._make_token_doc(USER_OID, "654321")
         svc._user_repo.find_by_email.return_value = user
-        svc._token_repo.find_latest_by_user.return_value = token_doc
-        svc._token_repo.mark_as_used.return_value = True
+        svc._otp._token_repo.find_latest_by_user.return_value = token_doc
+        svc._otp._token_repo.mark_as_used.return_value = True
         svc._user_repo.update.return_value = True
 
         await svc.reset_password("test@example.com", "654321", "NewValidPass1!")
@@ -676,7 +720,7 @@ class TestResetPassword:
 
     @pytest.mark.asyncio
     async def test_reset_password_user_not_found_raises(self):
-        svc = make_auth_service()
+        svc = make_password_service()
         svc._user_repo.find_by_email.return_value = None
 
         with pytest.raises(ValidationError, match="invalid email or code"):
@@ -684,7 +728,7 @@ class TestResetPassword:
 
     @pytest.mark.asyncio
     async def test_reset_password_weak_password_raises(self):
-        svc = make_auth_service()
+        svc = make_password_service()
         user = make_user_doc(password_set=True)
         svc._user_repo.find_by_email.return_value = user
 
@@ -695,40 +739,40 @@ class TestResetPassword:
 
     @pytest.mark.asyncio
     async def test_reset_password_wrong_otp_raises(self):
-        svc = make_auth_service()
+        svc = make_password_service()
         user = make_user_doc(password_set=True)
         svc._user_repo.find_by_email.return_value = user
-        svc._token_repo.find_latest_by_user.return_value = None  # token not found
+        svc._otp._token_repo.find_latest_by_user.return_value = None  # token not found
 
         with pytest.raises(ValidationError):
             await svc.reset_password("test@example.com", "wrong-code", "NewValidPass1!")
 
     @pytest.mark.asyncio
     async def test_reset_password_wrong_code_increments_attempts(self):
-        svc = make_auth_service()
+        svc = make_password_service()
         user = make_user_doc(password_set=True)
         token_doc = self._make_token_doc(USER_OID, "654321")
         svc._user_repo.find_by_email.return_value = user
-        svc._token_repo.find_latest_by_user.return_value = token_doc
-        svc._token_repo.increment_attempts.return_value = True
+        svc._otp._token_repo.find_latest_by_user.return_value = token_doc
+        svc._otp._token_repo.increment_attempts.return_value = True
 
         with pytest.raises(ValidationError, match="invalid email or code"):
             await svc.reset_password("test@example.com", "000000", "NewValidPass1!")
-        svc._token_repo.increment_attempts.assert_awaited_once()
+        svc._otp._token_repo.increment_attempts.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_request_password_reset_deletes_old_tokens_before_creating(self):
         """_create_password_reset_otp deletes old reset tokens before inserting new one."""
-        svc = make_auth_service()
+        svc = make_password_service()
         user = make_user_doc(password_set=True)
         svc._user_repo.find_by_email.return_value = user
-        svc._token_repo.count_recent.return_value = 0
-        svc._token_repo.delete_by_user.return_value = 1
-        svc._token_repo.create.return_value = ObjectId()
+        svc._otp._token_repo.count_recent.return_value = 0
+        svc._otp._token_repo.delete_by_user.return_value = 1
+        svc._otp._token_repo.create.return_value = ObjectId()
         svc._email.send_password_reset_email.return_value = True
 
         await svc.request_password_reset("test@example.com")
-        svc._token_repo.delete_by_user.assert_awaited()
+        svc._otp._token_repo.delete_by_user.assert_awaited()
 
 
 # ── Set password tests ────────────────────────────────────────────────────────
@@ -737,7 +781,7 @@ class TestResetPassword:
 class TestSetPassword:
     @pytest.mark.asyncio
     async def test_set_password_success(self):
-        svc = make_auth_service()
+        svc = make_password_service()
         user = make_user_doc(password_set=False)
         svc._user_repo.find_by_id.return_value = user
         svc._user_repo.update.return_value = True
@@ -747,7 +791,7 @@ class TestSetPassword:
 
     @pytest.mark.asyncio
     async def test_set_password_already_set_raises(self):
-        svc = make_auth_service()
+        svc = make_password_service()
         user = make_user_doc(password_set=True)
         svc._user_repo.find_by_id.return_value = user
 
@@ -756,7 +800,7 @@ class TestSetPassword:
 
     @pytest.mark.asyncio
     async def test_set_password_user_not_found_raises(self):
-        svc = make_auth_service()
+        svc = make_password_service()
         svc._user_repo.find_by_id.return_value = None
 
         with pytest.raises(NotFoundError):
@@ -764,7 +808,7 @@ class TestSetPassword:
 
     @pytest.mark.asyncio
     async def test_set_password_weak_password_raises(self):
-        svc = make_auth_service()
+        svc = make_password_service()
         user = make_user_doc(password_set=False)
         svc._user_repo.find_by_id.return_value = user
 
@@ -849,7 +893,7 @@ class TestGetUserProfile:
 class TestExtensionAuth:
     @pytest.mark.asyncio
     async def test_create_device_auth_code(self):
-        svc = make_auth_service()
+        svc = make_device_auth_service()
         svc._token_repo.delete_by_user.return_value = 0
         svc._token_repo.create.return_value = ObjectId()
 
@@ -865,7 +909,7 @@ class TestExtensionAuth:
         from schemas.models.token import TOKEN_TYPE_DEVICE_AUTH, VerificationTokenDoc
         from shared.crypto import hash_token
 
-        svc = make_auth_service()
+        svc = make_device_auth_service()
         raw_code = "test-code-123"
         now = datetime.now(timezone.utc)
         token_doc = VerificationTokenDoc.from_mongo(
@@ -892,7 +936,7 @@ class TestExtensionAuth:
 
     @pytest.mark.asyncio
     async def test_exchange_device_code_invalid(self):
-        svc = make_auth_service()
+        svc = make_device_auth_service()
         svc._token_repo.consume_by_hash.return_value = None
 
         with pytest.raises(AuthenticationError, match="invalid or expired"):
@@ -901,7 +945,7 @@ class TestExtensionAuth:
     @pytest.mark.asyncio
     async def test_exchange_device_code_expired(self):
         """Expired codes are filtered out by consume_by_hash (expires_at in query)."""
-        svc = make_auth_service()
+        svc = make_device_auth_service()
         svc._token_repo.consume_by_hash.return_value = None
 
         with pytest.raises(AuthenticationError, match="invalid or expired"):

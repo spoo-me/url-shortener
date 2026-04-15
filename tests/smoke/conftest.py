@@ -24,7 +24,7 @@ from middleware.security import (
     configure_cors,
 )
 from routes.api_v1 import router as api_v1_router
-from routes.auth_routes import router as auth_router
+from routes.auth import router as auth_router
 from routes.dashboard_routes import router as dashboard_router
 from routes.health_routes import router as health_router
 from routes.legacy.stats import router as legacy_stats_router
@@ -51,7 +51,12 @@ def _build_smoke_app() -> FastAPI:
         app.state.stats_service = AsyncMock()
         app.state.export_service = AsyncMock()
         app.state.api_key_service = AsyncMock()
-        app.state.auth_service = AsyncMock()
+        app.state.credential_service = AsyncMock()
+        app.state.verification_service = AsyncMock()
+        app.state.password_service = AsyncMock()
+        app.state.device_auth_service = AsyncMock()
+        app.state.user_repo = AsyncMock()
+        app.state.token_factory = AsyncMock()
         app.state.oauth_service = AsyncMock()
         app.state.profile_picture_service = AsyncMock()
         app.state.contact_service = AsyncMock()

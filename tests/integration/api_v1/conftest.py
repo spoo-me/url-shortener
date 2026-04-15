@@ -42,7 +42,12 @@ def _build_test_app(overrides: dict) -> FastAPI:
         app.state.stats_service = AsyncMock()
         app.state.export_service = AsyncMock()
         app.state.api_key_service = AsyncMock()
-        app.state.auth_service = AsyncMock()
+        app.state.credential_service = AsyncMock()
+        app.state.verification_service = AsyncMock()
+        app.state.password_service = AsyncMock()
+        app.state.device_auth_service = AsyncMock()
+        app.state.user_repo = AsyncMock()
+        app.state.token_factory = AsyncMock()
         app.state.click_service = AsyncMock()
         yield
 
