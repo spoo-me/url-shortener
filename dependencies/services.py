@@ -8,8 +8,10 @@ object construction — services are stateless and shared across requests.
 
 from __future__ import annotations
 
+from typing import Annotated
+
 from bson import ObjectId
-from fastapi import Request
+from fastapi import Depends, Request
 
 from errors import NotFoundError
 from repositories.app_grant_repository import AppGrantRepository
@@ -95,3 +97,23 @@ def get_click_service(request: Request) -> ClickService:
 
 def get_app_grant_repo(request: Request) -> AppGrantRepository:
     return request.app.state.app_grant_repo
+
+
+# ── Annotated type aliases — Depends shortcuts for route signatures ──────────
+
+UrlSvc = Annotated[UrlService, Depends(get_url_service)]
+StatsSvc = Annotated[StatsService, Depends(get_stats_service)]
+ExportSvc = Annotated[ExportService, Depends(get_export_service)]
+ApiKeySvc = Annotated[ApiKeyService, Depends(get_api_key_service)]
+CredentialSvc = Annotated[CredentialService, Depends(get_credential_service)]
+VerificationSvc = Annotated[EmailVerificationService, Depends(get_verification_service)]
+PasswordSvc = Annotated[PasswordService, Depends(get_password_service)]
+DeviceAuthSvc = Annotated[DeviceAuthService, Depends(get_device_auth_service)]
+UserRepo = Annotated[UserRepository, Depends(get_user_repo)]
+OAuthSvc = Annotated[OAuthService, Depends(get_oauth_service)]
+ProfilePictureSvc = Annotated[
+    ProfilePictureService, Depends(get_profile_picture_service)
+]
+ContactSvc = Annotated[ContactService, Depends(get_contact_service)]
+ClickSvc = Annotated[ClickService, Depends(get_click_service)]
+AppGrantRepo = Annotated[AppGrantRepository, Depends(get_app_grant_repo)]

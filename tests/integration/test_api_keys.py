@@ -320,11 +320,11 @@ def test_use_api_key_scope_check():
             get_url_service: lambda: mock_url_svc,
         }
     )
-    client = TestClient(app, raise_server_exceptions=False)
-    resp = client.post(
-        "/api/v1/shorten",
-        json={"url": "https://example.com/long"},
-    )
+    with TestClient(app, raise_server_exceptions=False) as client:
+        resp = client.post(
+            "/api/v1/shorten",
+            json={"url": "https://example.com/long"},
+        )
 
     assert resp.status_code == 403
 

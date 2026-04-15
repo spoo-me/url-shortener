@@ -12,14 +12,14 @@ from fastapi import APIRouter, Depends, Request
 from dependencies import (
     SHORTEN_SCOPES,
     CurrentUser,
-    get_url_service,
+    Settings,
+    UrlSvc,
     optional_scopes_verified,
 )
 from middleware.openapi import AUTH_RESPONSES, OPTIONAL_AUTH_SECURITY
 from middleware.rate_limiter import Limits, dynamic_limit, limiter
 from schemas.dto.requests.url import CreateUrlRequest
 from schemas.dto.responses.url import UrlResponse
-from services.url_service import UrlService
 from shared.ip_utils import get_client_ip
 
 router = APIRouter(tags=["URL Shortening"])
@@ -39,8 +39,9 @@ _shorten_limit, _shorten_key = dynamic_limit(Limits.API_AUTHED, Limits.API_ANON)
 async def shorten_v1(
     request: Request,
     body: CreateUrlRequest,
+    url_service: UrlSvc,
+    settings: Settings,
     user: CurrentUser | None = Depends(optional_scopes_verified(SHORTEN_SCOPES)),  # noqa: B008
-    url_service: UrlService = Depends(get_url_service),
 ) -> UrlResponse:
     """Create a new shortened URL.
 
@@ -67,6 +68,4 @@ async def shorten_v1(
     client_ip = get_client_ip(request)
 
     doc = await url_service.create(body, owner_id, client_ip)
-
-    settings = request.app.state.settings
     return UrlResponse.from_doc(doc, settings.app_url)

@@ -13,14 +13,13 @@ from fastapi import APIRouter, Depends, Query, Request
 from dependencies import (
     URL_READ_SCOPES,
     CurrentUser,
-    get_url_service,
+    UrlSvc,
     require_scopes,
 )
 from middleware.openapi import ERROR_RESPONSES
 from middleware.rate_limiter import Limits, limiter
 from schemas.dto.requests.url import ListUrlsQuery
 from schemas.dto.responses.url import UrlListItem, UrlListResponse
-from services.url_service import UrlService
 
 router = APIRouter(tags=["Link Management"])
 
@@ -35,8 +34,8 @@ router = APIRouter(tags=["Link Management"])
 async def list_urls_v1(
     request: Request,
     query: Annotated[ListUrlsQuery, Query()],
+    url_service: UrlSvc,
     user: CurrentUser = Depends(require_scopes(URL_READ_SCOPES)),  # noqa: B008
-    url_service: UrlService = Depends(get_url_service),
 ) -> UrlListResponse:
     """List all URLs owned by the authenticated user.
 

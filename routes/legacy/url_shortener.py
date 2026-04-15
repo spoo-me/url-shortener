@@ -19,7 +19,7 @@ from urllib.parse import unquote, urlparse
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 
-from dependencies import OptionalUser, get_db, get_redis, get_settings, get_url_service
+from dependencies import OptionalUser, Settings, UrlSvc, get_db, get_redis
 from errors import ForbiddenError, GoneError, NotFoundError
 from infrastructure.cache.dual_cache import DualCache
 from middleware.rate_limiter import Limits, limiter
@@ -27,7 +27,6 @@ from repositories.blocked_url_repository import BlockedUrlRepository
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
 from repositories.legacy.legacy_url_repository import LegacyUrlRepository
 from repositories.url_repository import UrlRepository
-from services.url_service import UrlService
 from shared.generators import generate_emoji_alias, generate_short_code
 from shared.legacy_helpers import humanize_number, is_positive_integer
 from shared.logging import get_logger
@@ -79,9 +78,9 @@ async def index(request: Request, user: OptionalUser) -> Response:
 @limiter.limit(Limits.SHORTEN_LEGACY)
 async def shorten_url(
     request: Request,
+    url_service: UrlSvc,
+    settings: Settings,
     db=Depends(get_db),
-    settings=Depends(get_settings),
-    url_service: UrlService = Depends(get_url_service),
 ) -> Response:
     """Legacy v1 URL shortening.
 
@@ -251,8 +250,8 @@ async def shorten_url(
 @limiter.limit(Limits.SHORTEN_LEGACY)
 async def emoji(
     request: Request,
+    settings: Settings,
     db=Depends(get_db),
-    settings=Depends(get_settings),
 ) -> Response:
     """Emoji URL shortening — reads form/query params, validates, and creates emoji URL.
 
@@ -382,7 +381,7 @@ async def emoji(
 async def result(
     short_code: str,
     request: Request,
-    url_service: UrlService = Depends(get_url_service),
+    url_service: UrlSvc,
 ) -> Response:
     """Show the result page after a URL is shortened."""
     short_code = unquote(short_code)
@@ -547,9 +546,9 @@ async def preview_url(
 @limiter.exempt
 async def metric(
     request: Request,
+    settings: Settings,
     db=Depends(get_db),
     redis=Depends(get_redis),
-    settings=Depends(get_settings),
 ) -> Response:
     """Return global platform metrics, cached for 24 hours via DualCache."""
     dual_cache = DualCache(redis)
