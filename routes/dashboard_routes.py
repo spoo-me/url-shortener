@@ -15,7 +15,7 @@ POST /dashboard/profile-pictures  → set profile picture (JSON)
 from __future__ import annotations
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi.responses import RedirectResponse, Response
 from pydantic import BaseModel, Field
 
 from dependencies import (
@@ -26,7 +26,6 @@ from dependencies import (
     OptionalUser,
     ProfilePictureSvc,
 )
-from errors import NotFoundError
 from infrastructure.logging import get_logger
 from infrastructure.templates import templates
 from middleware.rate_limiter import Limits, limiter
@@ -206,13 +205,6 @@ async def set_profile_picture(
     body: SetProfilePictureRequest,
     user: AuthUser,
     svc: ProfilePictureSvc,
-) -> Response | ProfilePictureMessageResponse:
-    try:
-        await svc.set_picture(user.user_id, body.picture_id)
-    except NotFoundError as exc:
-        log.warning(
-            "profile_picture_not_found", user_id=str(user.user_id), error=str(exc)
-        )
-        return JSONResponse({"error": "Profile picture not found"}, status_code=404)
-
+) -> ProfilePictureMessageResponse:
+    await svc.set_picture(user.user_id, body.picture_id)
     return ProfilePictureMessageResponse(message="Profile picture updated successfully")
