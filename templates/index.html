@@ -27,10 +27,7 @@
 
 {% block head_css %}
 <link rel="stylesheet" href="{{ url_for('static', path='css/index.css') }}?v=9">
-<link rel="stylesheet" href="{{ url_for('static', path='css/customNotification.css') }}?v=4">
-
 <link rel="stylesheet" href="{{ url_for('static', path='css/landing-edit-modal.css') }}">
-<script src="{{ url_for('static', path='js/customNotification.js') }}?v=3"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Allerta+Stencil&display=swap" rel="preload">
@@ -47,7 +44,7 @@
         <input type="text" id="long-url" name="url" required placeholder="https://your-long-url.com" value="{{ url }}">
         {% if error %}
         <script>
-            customTopNotification("AliasError", "{{ error }}", 10);
+            showNotification("{{ error }}", 'warning', 10000);
         </script>
         {% endif %}
         <div class="alias-time-container">

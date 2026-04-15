@@ -3,12 +3,7 @@ body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    background-image: linear-gradient(3deg, #fc6538, #678382);
-    background-color: rgb(136, 43, 8);
     color: white;
-}
-
-body {
     width: 100%;
     height: 100%;
     background-size: cover;
@@ -124,7 +119,7 @@ textarea:focus::placeholder {
     border-bottom-left-radius: 18px;
 }
 
-button.h-captcha{
+button.h-captcha {
     border: none;
     width: 180px;
     padding: 10px 13px;
