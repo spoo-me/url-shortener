@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 
 from bson import ObjectId
 
-from errors import AppError, RateLimitError, ValidationError
+from errors import RateLimitError, ValidationError
 from repositories.token_repository import TokenRepository
 from schemas.models.token import TOKEN_TYPE_PASSWORD_RESET
 from shared.crypto import hash_token
@@ -53,7 +53,6 @@ class OtpService:
 
         Raises:
             RateLimitError: When too many tokens have been created recently.
-            AppError:       On unexpected DB failure.
         """
         svc_log = log.bind(op="otp.create")
 
@@ -98,8 +97,8 @@ class OtpService:
         """Verify an OTP code and mark it as used.
 
         Raises:
-            ValidationError: On any verification failure.
-            AppError: If marking the token as used fails.
+            ValidationError: On any verification failure (wrong code,
+                expired, max attempts, already used).
         """
         svc_log = log.bind(op="otp.verify")
 
@@ -151,14 +150,15 @@ class OtpService:
             )
             raise ValidationError("Invalid or expired verification code")
 
-        marked = await self._token_repo.mark_as_used(token_doc.id)
-        if not marked:
-            svc_log.error(
-                "otp_mark_used_failed",
+        consumed = await self._token_repo.consume_if_unused(token_doc.id)
+        if not consumed:
+            svc_log.info(
+                "otp_verification_failed",
                 user_id=str(user_id),
-                token_id=str(token_doc.id),
+                reason="already_used_or_expired",
+                token_type=token_type,
             )
-            raise AppError("Failed to verify code")
+            raise ValidationError("Invalid or expired verification code")
 
         svc_log.info(
             "otp_verified_success",

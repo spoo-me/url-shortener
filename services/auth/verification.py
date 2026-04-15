@@ -46,11 +46,15 @@ class EmailVerificationService:
         self._email = email
         self._tokens = token_factory
 
-    async def verify_email(self, user_id: str, otp_code: str) -> tuple[str, str]:
+    async def verify_email(
+        self, user_id: str, otp_code: str, *, amr: str = "pwd"
+    ) -> tuple[str, str]:
         """Verify a user's email address using an OTP code.
 
         Marks the user's email as verified, sends a welcome email (best-effort),
-        and issues new tokens with ``email_verified=True``.
+        and issues new tokens with ``email_verified=True``.  The *amr* parameter
+        preserves the original authentication method so OAuth users don't get
+        tokens claiming password auth.
 
         Returns:
             (new_access_token, new_refresh_token)
@@ -93,7 +97,7 @@ class EmailVerificationService:
         user_data["email_verified"] = True
         updated_user = UserDoc.model_validate(user_data)
 
-        access_token, refresh_token = self._tokens.issue_tokens(updated_user, "pwd")
+        access_token, refresh_token = self._tokens.issue_tokens(updated_user, amr)
 
         # Send welcome email — best-effort, do not fail verification on error
         try:

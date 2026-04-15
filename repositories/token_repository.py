@@ -77,6 +77,19 @@ class TokenRepository(BaseRepository[VerificationTokenDoc]):
             {"$set": {"used_at": datetime.now(timezone.utc)}},
         )
 
+    async def consume_if_unused(self, token_id: ObjectId) -> bool:
+        """Atomically consume a token only if it is still unused and not expired.
+
+        Returns True if a document was modified (i.e. the token was valid and
+        successfully consumed).  Returns False if the token was already used,
+        expired, or not found — preventing double-use in concurrent requests.
+        """
+        now = datetime.now(timezone.utc)
+        return await self._update(
+            {"_id": token_id, "used_at": None, "expires_at": {"$gt": now}},
+            {"$set": {"used_at": now}},
+        )
+
     async def find_latest_by_user(
         self, user_id: ObjectId, token_type: str
     ) -> VerificationTokenDoc | None:

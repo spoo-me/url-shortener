@@ -1,8 +1,8 @@
 """
 FastAPI dependency providers.
 
-Re-exports all dependencies from sub-modules so that existing
-``from dependencies import X`` imports continue to work unchanged.
+Re-exports all dependencies from sub-modules for convenient
+``from dependencies import X`` imports.
 """
 
 from dependencies.auth import (

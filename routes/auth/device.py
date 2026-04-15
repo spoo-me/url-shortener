@@ -40,7 +40,7 @@ from schemas.dto.responses.auth import (
 )
 from schemas.models.app import AppEntry
 from services.auth.credentials import CredentialService
-from services.auth.device import DeviceAuthService
+from services.auth.device import APP_ID_MAX_LEN, DeviceAuthService
 from shared.generators import generate_secure_token
 from shared.logging import get_logger
 from shared.templates import templates
@@ -333,8 +333,8 @@ async def revoke_app(
     if request.headers.get(_CSRF_HEADER_NAME) != _CSRF_HEADER_VALUE:
         return JSONResponse({"error": "invalid request"}, status_code=403)
 
-    app = device_auth_service.resolve_app(app_id)
-    if not app:
+    app_id = app_id.strip()
+    if not app_id or len(app_id) > APP_ID_MAX_LEN:
         return JSONResponse({"error": "app_id is required"}, status_code=400)
 
     revoked = await grant_repo.revoke(user.user_id, app_id)

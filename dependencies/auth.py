@@ -40,6 +40,7 @@ class CurrentUser:
     user_id: ObjectId
     email_verified: bool
     api_key_doc: ApiKeyDoc | None = field(default=None)
+    amr: str = "pwd"
 
 
 async def get_current_user(
@@ -124,8 +125,9 @@ async def get_current_user(
             return None
         user_id = ObjectId(claims["sub"])
         email_verified = bool(claims.get("email_verified", False))
+        amr = claims.get("amr", ["pwd"])[0]
         structlog.contextvars.bind_contextvars(user_id=str(user_id), auth_method="jwt")
-        return CurrentUser(user_id=user_id, email_verified=email_verified)
+        return CurrentUser(user_id=user_id, email_verified=email_verified, amr=amr)
     except Exception:
         return None
 

@@ -29,10 +29,7 @@ from schemas.dto.responses.auth import (
 )
 from services.auth.otp import OTP_EXPIRY_SECONDS
 from services.auth.verification import EmailVerificationService
-from shared.logging import get_logger
 from shared.templates import templates
-
-log = get_logger(__name__)
 
 router = APIRouter()
 
@@ -112,7 +109,7 @@ async def verify_email(
     be expired. Expired or already-used codes are rejected.
     """
     new_access, new_refresh = await verification_service.verify_email(
-        str(user.user_id), body.code.strip()
+        str(user.user_id), body.code.strip(), amr=user.amr
     )
     jwt_cfg = request.app.state.settings.jwt
     set_auth_cookies(response, new_access, new_refresh, jwt_cfg)
