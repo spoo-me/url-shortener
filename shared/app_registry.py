@@ -12,8 +12,8 @@ from pathlib import Path
 import yaml
 from pydantic import ValidationError
 
+from infrastructure.logging import get_logger
 from schemas.models.app import AppEntry, AppStatus
-from shared.logging import get_logger
 
 log = get_logger(__name__)
 

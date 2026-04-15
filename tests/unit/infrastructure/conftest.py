@@ -7,7 +7,7 @@ def _url_data(**overrides):
     from infrastructure.cache.url_cache import UrlCacheData
 
     base = dict(
-        _id="507f1f77bcf86cd799439011",
+        id="507f1f77bcf86cd799439011",
         alias="abc1234",
         long_url="https://example.com",
         block_bots=False,

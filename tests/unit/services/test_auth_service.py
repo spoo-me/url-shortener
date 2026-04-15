@@ -219,7 +219,7 @@ class TestJWTHelpers:
 class TestLogin:
     @pytest.mark.asyncio
     async def test_login_success(self):
-        from shared.crypto import hash_password
+        from infrastructure.crypto import hash_password
 
         svc = make_credential_service()
         hashed = hash_password("ValidPass1!")
@@ -252,7 +252,7 @@ class TestLogin:
 
     @pytest.mark.asyncio
     async def test_login_wrong_password_raises(self):
-        from shared.crypto import hash_password
+        from infrastructure.crypto import hash_password
 
         svc = make_credential_service()
         hashed = hash_password("CorrectPass1!")
@@ -265,7 +265,7 @@ class TestLogin:
     @pytest.mark.asyncio
     async def test_login_invalid_creds_same_message_for_both_failures(self):
         """No user enumeration — both failure cases return identical message."""
-        from shared.crypto import hash_password
+        from infrastructure.crypto import hash_password
 
         svc = make_credential_service()
 
@@ -413,8 +413,8 @@ class TestRefreshToken:
 
 class TestVerifyEmail:
     def _make_token_doc(self, user_id, otp_code, expired=False, used=False, attempts=0):
+        from infrastructure.crypto import hash_token
         from schemas.models.token import TOKEN_TYPE_EMAIL_VERIFY, VerificationTokenDoc
-        from shared.crypto import hash_token
 
         now = datetime.now(timezone.utc)
         expires = now - timedelta(seconds=1) if expired else now + timedelta(minutes=10)
@@ -687,8 +687,8 @@ class TestRequestPasswordReset:
 
 class TestResetPassword:
     def _make_token_doc(self, user_id, otp_code, expired=False):
+        from infrastructure.crypto import hash_token
         from schemas.models.token import TOKEN_TYPE_PASSWORD_RESET, VerificationTokenDoc
-        from shared.crypto import hash_token
 
         now = datetime.now(timezone.utc)
         expires = now - timedelta(seconds=1) if expired else now + timedelta(minutes=10)
@@ -906,8 +906,8 @@ class TestExtensionAuth:
     async def test_exchange_device_code_success(self):
         from datetime import timedelta
 
+        from infrastructure.crypto import hash_token
         from schemas.models.token import TOKEN_TYPE_DEVICE_AUTH, VerificationTokenDoc
-        from shared.crypto import hash_token
 
         svc = make_device_auth_service()
         raw_code = "test-code-123"

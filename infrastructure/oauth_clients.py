@@ -16,8 +16,8 @@ from typing import Any
 
 from authlib.integrations.starlette_client import OAuth
 
+from infrastructure.logging import get_logger
 from schemas.models.user import OAuthAction, ProviderInfo
-from shared.logging import get_logger
 
 log = get_logger(__name__)
 
@@ -281,17 +281,3 @@ def extract_user_info_from_discord(userinfo: dict[str, Any]) -> ProviderInfo:
         given_name=name.split(" ")[0] if name and " " in name else name,
         family_name=" ".join(name.split(" ")[1:]) if name and " " in name else "",
     )
-
-
-def can_auto_link_accounts(
-    existing_user: dict[str, Any], provider_info: dict[str, Any], provider: str
-) -> bool:
-    """True only if provider email is verified, matches user email, and isn't already linked."""
-    if not provider_info.get("email_verified", False):
-        return False
-    if existing_user.get("email", "").lower() != provider_info.get("email", "").lower():
-        return False
-    for entry in existing_user.get("auth_providers", []):
-        if entry.get("provider") == provider:
-            return False
-    return True

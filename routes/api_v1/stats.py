@@ -14,14 +14,13 @@ from fastapi import APIRouter, Depends, Query, Request
 from dependencies import (
     STATS_SCOPES,
     CurrentUser,
-    get_stats_service,
+    StatsSvc,
     optional_scopes,
 )
 from middleware.openapi import ERROR_RESPONSES, OPTIONAL_AUTH_SECURITY
 from middleware.rate_limiter import Limits, dynamic_limit, limiter
 from schemas.dto.requests.stats import StatsQuery
 from schemas.dto.responses.stats import StatsResponse
-from services.stats_service import StatsService
 
 router = APIRouter(tags=["Statistics"])
 
@@ -39,8 +38,8 @@ _stats_limit, _stats_key = dynamic_limit(Limits.API_AUTHED, Limits.API_ANON)
 async def stats_v1(
     request: Request,
     query: Annotated[StatsQuery, Query()],
+    stats_service: StatsSvc,
     user: CurrentUser | None = Depends(optional_scopes(STATS_SCOPES)),  # noqa: B008
-    stats_service: StatsService = Depends(get_stats_service),
 ) -> StatsResponse:
     """Get click statistics for URLs.
 

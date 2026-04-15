@@ -10,13 +10,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from schemas.dto.base import ResponseBase
 
 
-class ErrorResponse(BaseModel):
+class ErrorResponse(ResponseBase):
     """Standard error JSON body produced by the AppError exception handler."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     error: str
     code: str
@@ -24,37 +22,29 @@ class ErrorResponse(BaseModel):
     details: Any | None = None
 
 
-class HealthChecks(BaseModel):
+class HealthChecks(ResponseBase):
     """Individual service check statuses inside HealthResponse."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     mongodb: str
     redis: str
 
 
-class HealthResponse(BaseModel):
+class HealthResponse(ResponseBase):
     """Response body for GET /health."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     status: str
     checks: dict[str, str]
 
 
-class MessageResponse(BaseModel):
+class MessageResponse(ResponseBase):
     """Generic success/message response returned by several endpoints."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     success: bool
     message: str | None = None
 
 
-class PaginationMeta(BaseModel):
+class PaginationMeta(ResponseBase):
     """Reusable pagination metadata included in list responses."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     page: int
     page_size: int

@@ -5,27 +5,28 @@ Request DTOs for URL shortening and management endpoints.
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from typing import Literal
 
 from pydantic import (
     AliasChoices,
     BaseModel,
-    ConfigDict,
     Field,
     PrivateAttr,
+    field_validator,
     model_validator,
 )
 
+from schemas.dto.base import RequestBase
 from schemas.dto.requests._descriptions import LIST_URLS_FILTER_DESC
 from schemas.models.url import UrlStatus
+from shared.datetime_utils import parse_datetime
 
 ALLOWED_SORT_FIELDS = frozenset({"created_at", "last_click", "total_clicks"})
 
 
-class UrlFilter(BaseModel):
+class UrlFilter(RequestBase):
     """Parsed structure for the ``filter`` query parameter in ListUrlsQuery."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     status: UrlStatus | None = None
     created_after: str | int | None = Field(
@@ -43,13 +44,11 @@ class UrlFilter(BaseModel):
     search: str | None = Field(default=None, max_length=500)
 
 
-class CreateUrlRequest(BaseModel):
+class CreateUrlRequest(RequestBase):
     """Request body for creating a new shortened URL.
 
     Accepts ``url`` as an alias for ``long_url`` — the existing API supports both.
     """
-
-    model_config = ConfigDict(populate_by_name=True)
 
     long_url: str = Field(
         max_length=8192,
@@ -82,7 +81,7 @@ class CreateUrlRequest(BaseModel):
         description="Maximum clicks before the URL expires. Must be positive.",
         examples=[100],
     )
-    expire_after: str | int | None = Field(
+    expire_after: datetime | None = Field(
         default=None,
         description="Expiration time. ISO 8601 string (e.g. `2025-12-31T23:59:59Z`) or Unix epoch seconds (e.g. `1735689599`).",
         examples=["2025-12-31T23:59:59Z", 1735689599],
@@ -92,16 +91,24 @@ class CreateUrlRequest(BaseModel):
         description="Make statistics private (only owner can view). Requires authentication.",
     )
 
+    @field_validator("expire_after", mode="before")
+    @classmethod
+    def _parse_expire_after(cls, v: str | int | None) -> datetime | None:
+        if v is None:
+            return None
+        result = parse_datetime(v)
+        if result is None:
+            raise ValueError("Invalid expire_after format")
+        return result
 
-class UpdateUrlRequest(BaseModel):
+
+class UpdateUrlRequest(RequestBase):
     """Request body for partially updating an existing shortened URL.
 
     All fields are optional; only provided fields are updated.
     Pass ``max_clicks=0`` or ``max_clicks=null`` to remove the limit.
     Pass ``password=null`` (or omit) to remove password protection.
     """
-
-    model_config = ConfigDict(populate_by_name=True)
 
     long_url: str | None = Field(
         default=None,
@@ -136,7 +143,7 @@ class UpdateUrlRequest(BaseModel):
         description="New click limit. Pass `0` or `null` to remove the limit.",
         examples=[500],
     )
-    expire_after: str | int | None = Field(
+    expire_after: datetime | None = Field(
         default=None,
         description="Expiration time. ISO 8601 string (e.g. `2025-12-31T23:59:59Z`) or Unix epoch seconds (e.g. `1735689599`). Pass `null` to remove.",
         examples=["2025-12-31T23:59:59Z", 1735689599],
@@ -151,6 +158,16 @@ class UpdateUrlRequest(BaseModel):
         examples=["ACTIVE"],
     )
 
+    @field_validator("expire_after", mode="before")
+    @classmethod
+    def _parse_expire_after(cls, v: str | int | None) -> datetime | None:
+        if v is None:
+            return None
+        result = parse_datetime(v)
+        if result is None:
+            raise ValueError("Invalid expire_after format")
+        return result
+
 
 class UpdateUrlStatusRequest(BaseModel):
     """Request body for updating only the status of a shortened URL."""
@@ -161,15 +178,13 @@ class UpdateUrlStatusRequest(BaseModel):
     )
 
 
-class ListUrlsQuery(BaseModel):
+class ListUrlsQuery(RequestBase):
     """Query parameters for listing a user's URLs with pagination and filtering.
 
     The ``filter`` / ``filterBy`` parameter accepts a JSON-encoded ``UrlFilter``
     object.  Call ``get_parsed_filter()`` to obtain the typed sub-model; invalid
     JSON raises ``ValueError`` which FastAPI converts to a 422 response.
     """
-
-    model_config = ConfigDict(populate_by_name=True)
 
     page: int = Field(
         default=1,

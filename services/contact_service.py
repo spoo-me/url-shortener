@@ -20,8 +20,8 @@ from typing import Any
 
 from errors import AppError, ForbiddenError, ValidationError
 from infrastructure.captcha.protocol import CaptchaProvider
+from infrastructure.logging import get_logger
 from infrastructure.webhook.protocol import WebhookProvider
-from shared.logging import get_logger
 
 log = get_logger(__name__)
 

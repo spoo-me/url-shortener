@@ -19,7 +19,7 @@ from zoneinfo import ZoneInfo
 
 import pycountry
 
-from shared.logging import get_logger
+from infrastructure.logging import get_logger
 from shared.time_bucket_utils import (
     create_mongo_time_bucket_pipeline,
     fill_missing_buckets,

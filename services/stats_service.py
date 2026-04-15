@@ -30,17 +30,17 @@ from errors import (
     NotFoundError,
     ValidationError,
 )
+from infrastructure.logging import get_logger
 from repositories.click_repository import ClickRepository
 from repositories.url_repository import UrlRepository
-from schemas.dto.requests.stats import (
+from schemas.dto.requests.stats import StatsQuery
+from schemas.enums.stats import (
     StatsDimension,
     StatsMetric,
-    StatsQuery,
     StatsScope,
 )
 from shared.aggregation_strategies import AggregationStrategyFactory
 from shared.datetime_utils import parse_datetime
-from shared.logging import get_logger
 
 log = get_logger(__name__)
 

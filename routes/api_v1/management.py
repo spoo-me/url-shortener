@@ -17,7 +17,7 @@ from fastapi import APIRouter, Depends, Path, Request
 from dependencies import (
     URL_MANAGEMENT_SCOPES,
     CurrentUser,
-    get_url_service,
+    UrlSvc,
     require_scopes,
 )
 from errors import ValidationError
@@ -25,7 +25,6 @@ from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES
 from middleware.rate_limiter import Limits, limiter
 from schemas.dto.requests.url import UpdateUrlRequest, UpdateUrlStatusRequest
 from schemas.dto.responses.url import DeleteUrlResponse, UpdateUrlResponse
-from services.url_service import UrlService
 
 router = APIRouter(tags=["Link Management"])
 
@@ -57,8 +56,8 @@ async def update_url_v1(
         ),
     ],
     body: UpdateUrlRequest,
+    url_service: UrlSvc,
     user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),  # noqa: B008
-    url_service: UrlService = Depends(get_url_service),
 ) -> UpdateUrlResponse:
     """Update an existing URL's properties.
 
@@ -105,8 +104,8 @@ async def update_url_status_v1(
         ),
     ],
     body: UpdateUrlStatusRequest,
+    url_service: UrlSvc,
     user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),  # noqa: B008
-    url_service: UrlService = Depends(get_url_service),
 ) -> UpdateUrlResponse:
     """Update only the status of a URL (ACTIVE / INACTIVE).
 
@@ -158,8 +157,8 @@ async def delete_url_v1(
             pattern=r"^[0-9a-f]{24}$",
         ),
     ],
+    url_service: UrlSvc,
     user: CurrentUser = Depends(require_scopes(URL_MANAGEMENT_SCOPES)),  # noqa: B008
-    url_service: UrlService = Depends(get_url_service),
 ) -> DeleteUrlResponse:
     """Delete a URL permanently.
 

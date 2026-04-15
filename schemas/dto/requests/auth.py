@@ -14,13 +14,13 @@ DeviceRefreshRequest          — POST /auth/device/refresh
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import EmailStr, Field
+
+from schemas.dto.base import RequestBase
 
 
-class LoginRequest(BaseModel):
+class LoginRequest(RequestBase):
     """Request body for POST /auth/login."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     email: EmailStr = Field(
         description="Account email address", examples=["user@example.com"]
@@ -32,10 +32,8 @@ class LoginRequest(BaseModel):
     )
 
 
-class RegisterRequest(BaseModel):
+class RegisterRequest(RequestBase):
     """Request body for POST /auth/register."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     email: EmailStr = Field(
         description="Email address for the new account",
@@ -55,13 +53,11 @@ class RegisterRequest(BaseModel):
     )
 
 
-class SetPasswordRequest(BaseModel):
+class SetPasswordRequest(RequestBase):
     """Request body for POST /auth/set-password.
 
     Only applies to OAuth-only users who have not yet set a password.
     """
-
-    model_config = ConfigDict(populate_by_name=True)
 
     password: str = Field(
         max_length=128,
@@ -70,13 +66,11 @@ class SetPasswordRequest(BaseModel):
     )
 
 
-class VerifyEmailRequest(BaseModel):
+class VerifyEmailRequest(RequestBase):
     """Request body for POST /auth/verify-email.
 
     ``code`` is the 6-digit OTP sent to the user's email address.
     """
-
-    model_config = ConfigDict(populate_by_name=True)
 
     code: str = Field(
         pattern=r"^[0-9]{6}$",
@@ -85,10 +79,8 @@ class VerifyEmailRequest(BaseModel):
     )
 
 
-class RequestPasswordResetRequest(BaseModel):
+class RequestPasswordResetRequest(RequestBase):
     """Request body for POST /auth/request-password-reset."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     email: EmailStr = Field(
         description="Email address of the account to reset",
@@ -96,10 +88,8 @@ class RequestPasswordResetRequest(BaseModel):
     )
 
 
-class ResetPasswordRequest(BaseModel):
+class ResetPasswordRequest(RequestBase):
     """Request body for POST /auth/reset-password."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     email: EmailStr = Field(
         description="Email address of the account",
@@ -117,10 +107,8 @@ class ResetPasswordRequest(BaseModel):
     )
 
 
-class DeviceTokenRequest(BaseModel):
+class DeviceTokenRequest(RequestBase):
     """Request body for POST /auth/device/token."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     code: str = Field(
         min_length=1,
@@ -129,10 +117,8 @@ class DeviceTokenRequest(BaseModel):
     )
 
 
-class DeviceRefreshRequest(BaseModel):
+class DeviceRefreshRequest(RequestBase):
     """Request body for POST /auth/device/refresh."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     refresh_token: str = Field(
         min_length=1,

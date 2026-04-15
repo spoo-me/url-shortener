@@ -17,7 +17,7 @@ from typing import Any
 
 import redis.asyncio as aioredis
 
-from shared.logging import get_logger
+from infrastructure.logging import get_logger
 
 log = get_logger(__name__)
 

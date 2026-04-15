@@ -14,24 +14,23 @@ POST /dashboard/profile-pictures  → set profile picture (JSON)
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi import APIRouter, Request
+from fastapi.responses import RedirectResponse, Response
 from pydantic import BaseModel, Field
 
 from dependencies import (
+    AppGrantRepo,
+    AppRegistryDep,
     AuthUser,
     CurrentUser,
     OptionalUser,
-    get_app_grant_repo,
-    get_profile_picture_service,
+    ProfilePictureSvc,
 )
-from errors import NotFoundError
+from infrastructure.logging import get_logger
+from infrastructure.templates import templates
 from middleware.rate_limiter import Limits, limiter
-from repositories.app_grant_repository import AppGrantRepository
-from schemas.models.app import AppEntry, AppStatus
+from schemas.models.app import AppStatus
 from services.profile_picture_service import AvailablePicture, ProfilePictureService
-from shared.logging import get_logger
-from shared.templates import templates
 
 log = get_logger(__name__)
 
@@ -82,7 +81,7 @@ async def dashboard_root(
 async def dashboard_links(
     request: Request,
     user: OptionalUser,
-    svc: ProfilePictureService = Depends(get_profile_picture_service),
+    svc: ProfilePictureSvc,
 ) -> Response:
     return await _render_dashboard_page("dashboard/links.html", request, user, svc)
 
@@ -92,7 +91,7 @@ async def dashboard_links(
 async def dashboard_keys(
     request: Request,
     user: OptionalUser,
-    svc: ProfilePictureService = Depends(get_profile_picture_service),
+    svc: ProfilePictureSvc,
 ) -> Response:
     return await _render_dashboard_page("dashboard/keys.html", request, user, svc)
 
@@ -102,7 +101,7 @@ async def dashboard_keys(
 async def dashboard_statistics(
     request: Request,
     user: OptionalUser,
-    svc: ProfilePictureService = Depends(get_profile_picture_service),
+    svc: ProfilePictureSvc,
 ) -> Response:
     return await _render_dashboard_page("dashboard/statistics.html", request, user, svc)
 
@@ -112,7 +111,7 @@ async def dashboard_statistics(
 async def dashboard_settings(
     request: Request,
     user: OptionalUser,
-    svc: ProfilePictureService = Depends(get_profile_picture_service),
+    svc: ProfilePictureSvc,
 ) -> Response:
     return await _render_dashboard_page("dashboard/settings.html", request, user, svc)
 
@@ -122,7 +121,7 @@ async def dashboard_settings(
 async def dashboard_billing(
     request: Request,
     user: OptionalUser,
-    svc: ProfilePictureService = Depends(get_profile_picture_service),
+    svc: ProfilePictureSvc,
 ) -> Response:
     return await _render_dashboard_page("dashboard/billing.html", request, user, svc)
 
@@ -132,13 +131,12 @@ async def dashboard_billing(
 async def dashboard_apps(
     request: Request,
     user: OptionalUser,
-    svc: ProfilePictureService = Depends(get_profile_picture_service),
-    grant_repo: AppGrantRepository = Depends(get_app_grant_repo),
+    svc: ProfilePictureSvc,
+    grant_repo: AppGrantRepo,
+    app_registry: AppRegistryDep,
 ) -> Response:
     if user is None:
         return _unauth_redirect()
-
-    app_registry: dict[str, AppEntry] = request.app.state.app_registry
     has_live_apps = any(app.status == AppStatus.LIVE for app in app_registry.values())
     if not has_live_apps:
         return RedirectResponse("/dashboard", status_code=302)
@@ -194,7 +192,7 @@ class ProfilePictureMessageResponse(BaseModel):
 async def get_profile_pictures(
     request: Request,
     user: AuthUser,
-    svc: ProfilePictureService = Depends(get_profile_picture_service),
+    svc: ProfilePictureSvc,
 ) -> AvailablePicturesResponse:
     pictures = await svc.get_available_pictures(user.user_id)
     return AvailablePicturesResponse(pictures=pictures)
@@ -206,14 +204,7 @@ async def set_profile_picture(
     request: Request,
     body: SetProfilePictureRequest,
     user: AuthUser,
-    svc: ProfilePictureService = Depends(get_profile_picture_service),
-) -> Response:
-    try:
-        await svc.set_picture(user.user_id, body.picture_id)
-    except NotFoundError as exc:
-        log.warning(
-            "profile_picture_not_found", user_id=str(user.user_id), error=str(exc)
-        )
-        return JSONResponse({"error": "Profile picture not found"}, status_code=404)
-
+    svc: ProfilePictureSvc,
+) -> ProfilePictureMessageResponse:
+    await svc.set_picture(user.user_id, body.picture_id)
     return ProfilePictureMessageResponse(message="Profile picture updated successfully")

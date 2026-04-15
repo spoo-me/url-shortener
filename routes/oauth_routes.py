@@ -14,11 +14,12 @@ parameter from capturing the literal "providers" segment.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Request, Response
 from fastapi.responses import RedirectResponse
 
-from dependencies import AuthUser, get_oauth_service
+from dependencies import AuthUser, JwtConfig, OAuthProviders, OAuthSvc, Settings
 from errors import AppError, NotFoundError, ValidationError
+from infrastructure.logging import get_logger
 from infrastructure.oauth_clients import (
     PROVIDER_STRATEGIES,
     generate_oauth_state,
@@ -31,9 +32,7 @@ from routes.cookie_helpers import set_auth_cookies
 from schemas.dto.responses.auth import OAuthProvidersResponse
 from schemas.dto.responses.common import MessageResponse
 from schemas.models.user import OAuthAction
-from services.oauth_service import OAuthService
 from shared.ip_utils import get_client_ip
-from shared.logging import get_logger
 from shared.validators import validate_safe_redirect
 
 log = get_logger(__name__)
@@ -56,7 +55,7 @@ _DASHBOARD_URL = "/dashboard"
 async def list_providers(
     request: Request,
     user: AuthUser,
-    oauth_service: OAuthService = Depends(get_oauth_service),
+    oauth_service: OAuthSvc,
 ) -> OAuthProvidersResponse:
     """List all OAuth providers linked to the authenticated user's account.
 
@@ -83,7 +82,7 @@ async def unlink_provider(
     provider_name: str,
     request: Request,
     user: AuthUser,
-    oauth_service: OAuthService = Depends(get_oauth_service),
+    oauth_service: OAuthSvc,
 ) -> MessageResponse:
     """Remove an OAuth provider link from the authenticated user's account.
 
@@ -114,6 +113,8 @@ async def unlink_provider(
 async def oauth_login(
     provider: str,
     request: Request,
+    oauth_providers: OAuthProviders,
+    settings: Settings,
 ) -> Response:
     """Initiate the OAuth authorization flow for the given provider.
 
@@ -128,14 +129,14 @@ async def oauth_login(
     **Supported providers**: google, github (configurable)
     """
     strategy = PROVIDER_STRATEGIES.get(provider)
-    client = getattr(request.app.state, "oauth_providers", {}).get(provider)
+    client = oauth_providers.get(provider)
     if not strategy or not client:
         raise NotFoundError(f"'{provider}' OAuth not configured")
 
     log.info("oauth_flow_initiated", provider=provider)
     next_url = request.query_params.get("next")
     state = generate_oauth_state(provider, OAuthAction.LOGIN, next_url=next_url)
-    redirect_uri = get_oauth_redirect_url(provider, request.app.state.settings.oauth)
+    redirect_uri = get_oauth_redirect_url(provider, settings.oauth)
     return await client.authorize_redirect(request, redirect_uri, state=state)
 
 
@@ -150,7 +151,9 @@ async def oauth_login(
 async def oauth_callback(
     provider: str,
     request: Request,
-    oauth_service: OAuthService = Depends(get_oauth_service),
+    oauth_service: OAuthSvc,
+    oauth_providers: OAuthProviders,
+    jwt_cfg: JwtConfig,
 ) -> Response:
     """Handle the OAuth provider callback after user authorization.
 
@@ -167,7 +170,7 @@ async def oauth_callback(
     by the client. The ``state`` query parameter is required for CSRF protection.
     """
     strategy = PROVIDER_STRATEGIES.get(provider)
-    client = getattr(request.app.state, "oauth_providers", {}).get(provider)
+    client = oauth_providers.get(provider)
     if not strategy or not client:
         raise NotFoundError(f"'{provider}' OAuth not configured")
 
@@ -211,7 +214,6 @@ async def oauth_callback(
 
     # ── Redirect with cookies ──────────────────────────────────────────────
     next_url = validate_safe_redirect(state_data.get("next", ""))
-    jwt_cfg = request.app.state.settings.jwt
     resp = RedirectResponse(next_url, status_code=302)
     set_auth_cookies(resp, result.access_token, result.refresh_token, jwt_cfg)
     return resp
@@ -228,6 +230,8 @@ async def oauth_link(
     provider: str,
     request: Request,
     user: AuthUser,
+    oauth_providers: OAuthProviders,
+    settings: Settings,
 ) -> Response:
     """Initiate an OAuth flow to link a provider to the authenticated account.
 
@@ -240,11 +244,11 @@ async def oauth_link(
     **Rate Limits**: 5/min
     """
     strategy = PROVIDER_STRATEGIES.get(provider)
-    client = getattr(request.app.state, "oauth_providers", {}).get(provider)
+    client = oauth_providers.get(provider)
     if not strategy or not client:
         raise NotFoundError(f"'{provider}' OAuth not configured")
 
     log.info("oauth_link_initiated", provider=provider, user_id=str(user.user_id))
     state = generate_oauth_state(provider, OAuthAction.LINK, user_id=str(user.user_id))
-    redirect_uri = get_oauth_redirect_url(provider, request.app.state.settings.oauth)
+    redirect_uri = get_oauth_redirect_url(provider, settings.oauth)
     return await client.authorize_redirect(request, redirect_uri, state=state)

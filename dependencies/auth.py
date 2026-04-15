@@ -18,12 +18,12 @@ from fastapi import Depends, Request
 
 from dependencies.infra import get_db, get_settings
 from errors import AuthenticationError, EmailNotVerifiedError, ForbiddenError
+from infrastructure.crypto import hash_token
+from infrastructure.logging import get_logger
 from repositories.api_key_repository import ApiKeyRepository
 from repositories.user_repository import UserRepository
 from schemas.dto.requests.api_key import ApiKeyScope
 from schemas.models.api_key import ApiKeyDoc
-from shared.crypto import hash_token
-from shared.logging import get_logger
 
 log = get_logger(__name__)
 

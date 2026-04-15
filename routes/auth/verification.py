@@ -9,18 +9,19 @@ POST /auth/verify-email
 from __future__ import annotations
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Request, Response
 from fastapi.responses import RedirectResponse
 
 from dependencies import (
     AuthUser,
+    JwtConfig,
+    UserRepo,
+    VerificationSvc,
     fetch_user_profile,
-    get_user_repo,
-    get_verification_service,
 )
+from infrastructure.templates import templates
 from middleware.openapi import ERROR_RESPONSES
 from middleware.rate_limiter import Limits, limiter
-from repositories.user_repository import UserRepository
 from routes.cookie_helpers import set_auth_cookies
 from schemas.dto.requests.auth import VerifyEmailRequest
 from schemas.dto.responses.auth import (
@@ -28,8 +29,6 @@ from schemas.dto.responses.auth import (
     VerifyEmailResponse,
 )
 from services.auth.otp import OTP_EXPIRY_SECONDS
-from services.auth.verification import EmailVerificationService
-from shared.templates import templates
 
 router = APIRouter()
 
@@ -39,7 +38,7 @@ router = APIRouter()
 async def verify_page(
     request: Request,
     user: AuthUser,
-    user_repo: UserRepository = Depends(get_user_repo),
+    user_repo: UserRepo,
 ) -> Response:
     """Email verification page.
 
@@ -61,7 +60,7 @@ async def verify_page(
 async def send_verification(
     request: Request,
     user: AuthUser,
-    verification_service: EmailVerificationService = Depends(get_verification_service),
+    verification_service: VerificationSvc,
 ) -> SendVerificationResponse:
     """Send a 6-digit OTP verification code to the user's email.
 
@@ -94,7 +93,8 @@ async def verify_email(
     response: Response,
     body: VerifyEmailRequest,
     user: AuthUser,
-    verification_service: EmailVerificationService = Depends(get_verification_service),
+    verification_service: VerificationSvc,
+    jwt_cfg: JwtConfig,
 ) -> VerifyEmailResponse:
     """Verify the user's email address using a 6-digit OTP code.
 
@@ -111,7 +111,6 @@ async def verify_email(
     new_access, new_refresh = await verification_service.verify_email(
         str(user.user_id), body.code.strip(), amr=user.amr
     )
-    jwt_cfg = request.app.state.settings.jwt
     set_auth_cookies(response, new_access, new_refresh, jwt_cfg)
     return VerifyEmailResponse(
         success=True,

@@ -11,18 +11,16 @@ IANA timezone names.  The JSON ``filters`` string is parsed into a typed dict.
 from __future__ import annotations
 
 import json
-from enum import Enum
 from typing import Any, Literal
 
 from pydantic import (
-    BaseModel,
-    ConfigDict,
     Field,
     PrivateAttr,
     field_validator,
     model_validator,
 )
 
+from schemas.dto.base import RequestBase
 from schemas.dto.requests._descriptions import (
     STATS_BROWSER_DESC,
     STATS_CITY_DESC,
@@ -38,57 +36,15 @@ from schemas.dto.requests._descriptions import (
     STATS_START_DATE_DESC,
     STATS_TIMEZONE_DESC,
 )
-
-
-class StatsScope(str, Enum):
-    """Stats query scope."""
-
-    ALL = "all"
-    ANON = "anon"
-
-
-class StatsDimension(str, Enum):
-    """Stats group-by dimensions."""
-
-    TIME = "time"
-    BROWSER = "browser"
-    OS = "os"
-    COUNTRY = "country"
-    CITY = "city"
-    REFERRER = "referrer"
-    SHORT_CODE = "short_code"
-
-
-class StatsMetric(str, Enum):
-    """Stats metric types."""
-
-    CLICKS = "clicks"
-    UNIQUE_CLICKS = "unique_clicks"
-
-
-class ExportFormat(str, Enum):
-    """Export file formats."""
-
-    CSV = "csv"
-    XLSX = "xlsx"
-    JSON = "json"
-    XML = "xml"
-
-
-ALLOWED_SCOPES = frozenset(StatsScope)
-ALLOWED_GROUP_BY = frozenset(StatsDimension)
-ALLOWED_METRICS = frozenset(StatsMetric)
-ALLOWED_FILTERS = frozenset(
-    {
-        StatsDimension.BROWSER,
-        StatsDimension.OS,
-        StatsDimension.COUNTRY,
-        StatsDimension.CITY,
-        StatsDimension.REFERRER,
-        StatsDimension.SHORT_CODE,
-    }
+from schemas.enums.stats import (
+    ALLOWED_EXPORT_FORMATS,
+    ALLOWED_FILTERS,
+    ALLOWED_GROUP_BY,
+    ALLOWED_METRICS,
+    ExportFormat,
+    StatsDimension,
+    StatsScope,
 )
-ALLOWED_EXPORT_FORMATS = frozenset(ExportFormat)
 
 
 def _parse_comma_separated(value: Any) -> list[str]:
@@ -100,15 +56,13 @@ def _parse_comma_separated(value: Any) -> list[str]:
     return [item.strip() for item in str(value).split(",") if item.strip()]
 
 
-class StatsQuery(BaseModel):
+class StatsQuery(RequestBase):
     """Query parameters for GET /api/v1/stats.
 
     Multi-value parameters (``group_by``, ``metrics``, ``browser``, ``os``,
     ``country``, ``city``, ``referrer``) accept comma-separated strings.
     The ``filters`` parameter accepts a JSON object string.
     """
-
-    model_config = ConfigDict(populate_by_name=True)
 
     scope: Literal[StatsScope.ALL, StatsScope.ANON] = Field(
         default=StatsScope.ALL, description=STATS_SCOPE_DESC

@@ -15,20 +15,19 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
+from schemas.dto.base import ResponseBase
 from schemas.models.base import ANONYMOUS_OWNER_ID
 from schemas.models.url import UrlStatus, UrlV2Doc
 from shared.datetime_utils import to_unix_timestamp
 
 
-class UrlResponse(BaseModel):
+class UrlResponse(ResponseBase):
     """Response body for a newly created shortened URL (POST /api/v1/shorten).
 
     ``created_at`` is a Unix timestamp integer — matching the existing endpoint.
     """
-
-    model_config = ConfigDict(populate_by_name=True)
 
     alias: str = Field(description="Short code for the URL.", examples=["mylink"])
     short_url: str = Field(
@@ -70,10 +69,8 @@ class UrlResponse(BaseModel):
         )
 
 
-class UpdateUrlResponse(BaseModel):
+class UpdateUrlResponse(ResponseBase):
     """Response body after a successful URL update (PATCH /api/v1/urls/{url_id})."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     id: str = Field(
         description="MongoDB ObjectId of the URL.",
@@ -126,15 +123,13 @@ class UpdateUrlResponse(BaseModel):
         )
 
 
-class UrlListItem(BaseModel):
+class UrlListItem(ResponseBase):
     """A single URL entry inside UrlListResponse.items.
 
     ``created_at`` and ``last_click`` are ISO 8601 strings (e.g. "2024-01-01T00:00:00Z").
     ``expire_after`` is a Unix timestamp integer or null.
     These formats match the existing endpoint exactly.
     """
-
-    model_config = ConfigDict(populate_by_name=True)
 
     id: str
     alias: str | None = None
@@ -176,10 +171,8 @@ class UrlListItem(BaseModel):
         )
 
 
-class DeleteUrlResponse(BaseModel):
+class DeleteUrlResponse(ResponseBase):
     """Response body for DELETE /api/v1/urls/{url_id}."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     message: str = Field(description="Confirmation message.", examples=["URL deleted"])
     id: str = Field(
@@ -187,15 +180,13 @@ class DeleteUrlResponse(BaseModel):
     )
 
 
-class UrlListResponse(BaseModel):
+class UrlListResponse(ResponseBase):
     """Response body for GET /api/v1/urls.
 
     Uses camelCase field names to match the existing Flask endpoint exactly.
     Field names are camelCase here (not snake_case + alias) because this is a
     response-only model — we build it explicitly in the route handler.
     """
-
-    model_config = ConfigDict(populate_by_name=True)
 
     items: list[UrlListItem]
     page: int

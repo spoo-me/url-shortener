@@ -7,9 +7,9 @@ POST /auth/reset-password
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 
-from dependencies import get_password_service
+from dependencies import PasswordSvc
 from middleware.openapi import ERROR_RESPONSES, PUBLIC_SECURITY
 from middleware.rate_limiter import Limits, limiter
 from schemas.dto.requests.auth import (
@@ -17,7 +17,6 @@ from schemas.dto.requests.auth import (
     ResetPasswordRequest,
 )
 from schemas.dto.responses.common import MessageResponse
-from services.auth.password import PasswordService
 
 router = APIRouter()
 
@@ -32,7 +31,7 @@ router = APIRouter()
 async def request_password_reset(
     request: Request,
     body: RequestPasswordResetRequest,
-    password_service: PasswordService = Depends(get_password_service),
+    password_service: PasswordSvc,
 ) -> MessageResponse:
     """Request a password-reset OTP to be sent via email.
 
@@ -63,7 +62,7 @@ async def request_password_reset(
 async def reset_password(
     request: Request,
     body: ResetPasswordRequest,
-    password_service: PasswordService = Depends(get_password_service),
+    password_service: PasswordSvc,
 ) -> MessageResponse:
     """Reset the account password using a 6-digit OTP code.
 

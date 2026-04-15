@@ -14,8 +14,8 @@ from pydantic import ValidationError as PydanticValidationError
 from slowapi.errors import RateLimitExceeded
 
 from errors import AppError
-from shared.logging import get_logger
-from shared.templates import templates
+from infrastructure.logging import get_logger
+from infrastructure.templates import templates
 
 log = get_logger(__name__)
 

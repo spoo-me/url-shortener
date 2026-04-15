@@ -7,60 +7,21 @@ dependency_overrides and a mock lifespan — no real infrastructure needed.
 
 from __future__ import annotations
 
-import os
-from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock
 
 from bson import ObjectId
 from fastapi import FastAPI
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 
-os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
-
-from config import AppSettings
 from dependencies import CurrentUser
-from middleware.error_handler import register_error_handlers
-from middleware.rate_limiter import limiter
 from routes.api_v1 import router as api_v1_router
 from schemas.models.api_key import ApiKeyDoc
 from schemas.models.url import UrlV2Doc
+from tests.conftest import build_test_app
 
 
 def _build_test_app(overrides: dict) -> FastAPI:
-    """Build a minimal FastAPI app with mock lifespan and given dependency overrides."""
-    settings = AppSettings()
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        app.state.settings = settings
-        app.state.db = MagicMock()
-        app.state.redis = None
-        # Singleton service defaults (overridden via dependency_overrides per test)
-        app.state.url_service = AsyncMock()
-        app.state.stats_service = AsyncMock()
-        app.state.export_service = AsyncMock()
-        app.state.api_key_service = AsyncMock()
-        app.state.credential_service = AsyncMock()
-        app.state.verification_service = AsyncMock()
-        app.state.password_service = AsyncMock()
-        app.state.device_auth_service = AsyncMock()
-        app.state.user_repo = AsyncMock()
-        app.state.token_factory = AsyncMock()
-        app.state.click_service = AsyncMock()
-        yield
-
-    application = FastAPI(lifespan=lifespan)
-    application.state.limiter = limiter
-    application.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    register_error_handlers(application)
-    application.include_router(api_v1_router)
-
-    for dep, override in overrides.items():
-        application.dependency_overrides[dep] = override
-
-    return application
+    """Thin wrapper around the shared builder for api_v1 tests."""
+    return build_test_app(api_v1_router, overrides=overrides)
 
 
 def _make_url_doc(alias: str = "testme", owner_id: ObjectId | None = None) -> UrlV2Doc:

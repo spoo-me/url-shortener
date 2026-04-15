@@ -15,13 +15,12 @@ from fastapi.responses import Response
 from dependencies import (
     STATS_SCOPES,
     CurrentUser,
-    get_export_service,
+    ExportSvc,
     optional_scopes,
 )
 from middleware.openapi import EXPORT_RESPONSES, OPTIONAL_AUTH_SECURITY
 from middleware.rate_limiter import Limits, dynamic_limit, limiter
 from schemas.dto.requests.stats import ExportQuery
-from services.export.service import ExportService
 
 router = APIRouter(tags=["Statistics"])
 
@@ -62,8 +61,8 @@ _export_limit, _export_key = dynamic_limit(
 async def export_v1(
     request: Request,
     query: Annotated[ExportQuery, Query()],
+    export_service: ExportSvc,
     user: CurrentUser | None = Depends(optional_scopes(STATS_SCOPES)),  # noqa: B008
-    export_service: ExportService = Depends(get_export_service),
 ) -> Response:
     """Export URL click statistics as a downloadable file.
 

@@ -15,21 +15,22 @@ POST /auth/set-password
 from __future__ import annotations
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from dependencies import (
     AuthUser,
+    CredentialSvc,
+    JwtConfig,
     JwtUser,
+    PasswordSvc,
+    UserRepo,
     fetch_user_profile,
-    get_credential_service,
-    get_password_service,
-    get_user_repo,
 )
 from errors import AuthenticationError
+from infrastructure.logging import get_logger
 from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES, PUBLIC_SECURITY
 from middleware.rate_limiter import Limits, limiter
-from repositories.user_repository import UserRepository
 from routes.cookie_helpers import clear_auth_cookies, set_auth_cookies
 from schemas.dto.requests.auth import (
     LoginRequest,
@@ -45,10 +46,7 @@ from schemas.dto.responses.auth import (
     UserProfileResponse,
 )
 from schemas.dto.responses.common import MessageResponse
-from services.auth.credentials import CredentialService
-from services.auth.password import PasswordService
 from shared.ip_utils import get_client_ip
-from shared.logging import get_logger
 
 log = get_logger(__name__)
 
@@ -91,7 +89,8 @@ async def login(
     request: Request,
     response: Response,
     body: LoginRequest,
-    credential_service: CredentialService = Depends(get_credential_service),
+    credential_service: CredentialSvc,
+    jwt_cfg: JwtConfig,
 ) -> LoginResponse:
     """Authenticate with email and password.
 
@@ -108,7 +107,6 @@ async def login(
     """
     email = body.email.strip().lower()
     result = await credential_service.login(email, body.password)
-    jwt_cfg = request.app.state.settings.jwt
     set_auth_cookies(response, result.access_token, result.refresh_token, jwt_cfg)
     return LoginResponse(
         access_token=result.access_token,
@@ -129,7 +127,8 @@ async def register(
     request: Request,
     response: Response,
     body: RegisterRequest,
-    credential_service: CredentialService = Depends(get_credential_service),
+    credential_service: CredentialSvc,
+    jwt_cfg: JwtConfig,
 ) -> RegisterResponse:
     """Create a new user account with email and password.
 
@@ -150,7 +149,6 @@ async def register(
     result = await credential_service.register(
         email, body.password, user_name, client_ip
     )
-    jwt_cfg = request.app.state.settings.jwt
     set_auth_cookies(response, result.access_token, result.refresh_token, jwt_cfg)
     return RegisterResponse(
         access_token=result.access_token,
@@ -171,7 +169,8 @@ async def register(
 @limiter.limit(Limits.TOKEN_REFRESH)
 async def refresh(
     request: Request,
-    credential_service: CredentialService = Depends(get_credential_service),
+    credential_service: CredentialSvc,
+    jwt_cfg: JwtConfig,
 ) -> Response:
     """Rotate the access and refresh token pair.
 
@@ -186,7 +185,6 @@ async def refresh(
 
     **Notes**: The old refresh token is invalidated after use (rotation).
     """
-    jwt_cfg = request.app.state.settings.jwt
     refresh_token_str = request.cookies.get("refresh_token")
     if not refresh_token_str:
         resp = JSONResponse(
@@ -224,6 +222,7 @@ async def refresh(
 async def logout(
     request: Request,
     response: Response,
+    jwt_cfg: JwtConfig,
 ) -> LogoutResponse:
     """Log the current user out by clearing auth cookies.
 
@@ -234,7 +233,6 @@ async def logout(
 
     **Rate Limits**: 60/hour
     """
-    jwt_cfg = request.app.state.settings.jwt
     clear_auth_cookies(response, jwt_cfg)
     return LogoutResponse(success=True)
 
@@ -249,7 +247,7 @@ async def logout(
 async def me(
     request: Request,
     user: AuthUser,
-    user_repo: UserRepository = Depends(get_user_repo),
+    user_repo: UserRepo,
 ) -> MeResponse:
     """Return the authenticated user's full profile.
 
@@ -276,7 +274,7 @@ async def set_password(
     request: Request,
     body: SetPasswordRequest,
     user: JwtUser,
-    password_service: PasswordService = Depends(get_password_service),
+    password_service: PasswordSvc,
 ) -> MessageResponse:
     """Set a password for an OAuth-only account.
 

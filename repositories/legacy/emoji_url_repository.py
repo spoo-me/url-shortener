@@ -12,9 +12,9 @@ from typing import Any
 
 from pymongo.errors import DuplicateKeyError, PyMongoError, WriteError
 
+from infrastructure.logging import get_logger
 from repositories.base import BaseRepository
 from schemas.models.url import EmojiUrlDoc
-from shared.logging import get_logger
 
 log = get_logger(__name__)
 

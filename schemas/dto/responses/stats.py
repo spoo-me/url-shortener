@@ -14,15 +14,14 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
-from schemas.dto.requests.stats import StatsScope
+from schemas.dto.base import ResponseBase
+from schemas.enums.stats import StatsScope
 
 
-class StatsSummary(BaseModel):
+class StatsSummary(ResponseBase):
     """Summary statistics block inside StatsResponse."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     total_clicks: int
     unique_clicks: int
@@ -31,29 +30,23 @@ class StatsSummary(BaseModel):
     avg_redirection_time: float
 
 
-class StatsTimeRange(BaseModel):
+class StatsTimeRange(ResponseBase):
     """Time range metadata inside StatsResponse."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     start_date: datetime | None = None
     end_date: datetime | None = None
 
 
-class ComputedMetrics(BaseModel):
+class ComputedMetrics(ResponseBase):
     """Optional computed metrics added by format_stats_response_with_metadata."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     unique_click_rate: float
     repeat_click_rate: float
     average_clicks_per_visitor: float
 
 
-class TimeBucketInfo(BaseModel):
+class TimeBucketInfo(ResponseBase):
     """Time bucketing metadata — only present when 'time' is in group_by."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     strategy: str  # e.g. "hourly", "daily", "weekly", "monthly", "legacy"
     mongo_format: str  # strftime format used in MongoDB $dateToString
@@ -62,15 +55,13 @@ class TimeBucketInfo(BaseModel):
     interval_minutes: int | None = None  # only for fixed-interval strategies
 
 
-class StatsResponse(BaseModel):
+class StatsResponse(ResponseBase):
     """Response body for GET /api/v1/stats.
 
     ``metrics`` uses dynamic keys ({metric}_by_{dimension}), each mapping to a
     list of data-point dicts.  Optional fields (``short_code``,
     ``time_bucket_info``, ``computed_metrics``) are absent when not applicable.
     """
-
-    model_config = ConfigDict(populate_by_name=True)
 
     scope: StatsScope
     filters: dict[str, list[str]]

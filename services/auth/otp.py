@@ -13,11 +13,11 @@ from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 
 from errors import RateLimitError, ValidationError
+from infrastructure.crypto import hash_token
+from infrastructure.logging import get_logger
 from repositories.token_repository import TokenRepository
 from schemas.models.token import TOKEN_TYPE_PASSWORD_RESET
-from shared.crypto import hash_token
 from shared.generators import generate_otp_code
-from shared.logging import get_logger
 
 log = get_logger(__name__)
 

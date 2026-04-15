@@ -18,15 +18,15 @@ from ua_parser import parse as ua_parse
 from errors import ForbiddenError, ValidationError
 from infrastructure.cache.url_cache import UrlCache
 from infrastructure.geoip import GeoIPService
+from infrastructure.logging import get_logger, should_sample
 from repositories.click_repository import ClickRepository
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
 from repositories.legacy.legacy_url_repository import LegacyUrlRepository
 from repositories.url_repository import UrlRepository
 from schemas.models.base import ANONYMOUS_OWNER_ID
 from schemas.models.click import ClickDoc, ClickMeta
+from services.click.bot_detection import get_bot_name, is_bot_request
 from services.click.protocol import ClickContext
-from shared.bot_detection import get_bot_name, is_bot_request
-from shared.logging import get_logger, should_sample
 
 log = get_logger(__name__)
 
@@ -117,7 +117,7 @@ class V2ClickHandler:
             return  # Skip analytics; redirect still proceeds
 
         # Build and insert ClickDoc
-        url_id = ObjectId(url_data._id)
+        url_id = ObjectId(url_data.id)
         owner_id = (
             ObjectId(url_data.owner_id) if url_data.owner_id else ANONYMOUS_OWNER_ID
         )

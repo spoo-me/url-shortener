@@ -13,12 +13,12 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, Path, Query, Request
+from fastapi import APIRouter, Path, Query, Request
 
 from dependencies import (
+    ApiKeySvc,
     JwtUser,
     JwtVerifiedUser,
-    get_api_key_service,
 )
 from errors import NotFoundError, ValidationError
 from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES
@@ -30,7 +30,6 @@ from schemas.dto.responses.api_key import (
     ApiKeyResponse,
     ApiKeysListResponse,
 )
-from services.api_key_service import ApiKeyService
 from shared.datetime_utils import parse_datetime, to_unix_timestamp
 
 router = APIRouter(tags=["API Keys"])
@@ -48,7 +47,7 @@ async def create_api_key(
     request: Request,
     body: CreateApiKeyRequest,
     user: JwtVerifiedUser,
-    api_key_service: ApiKeyService = Depends(get_api_key_service),
+    api_key_service: ApiKeySvc,
 ) -> ApiKeyCreatedResponse:
     """Create a new API key for programmatic access.
 
@@ -116,7 +115,7 @@ async def create_api_key(
 async def list_api_keys(
     request: Request,
     user: JwtUser,
-    api_key_service: ApiKeyService = Depends(get_api_key_service),
+    api_key_service: ApiKeySvc,
 ) -> ApiKeysListResponse:
     """List all API keys for the authenticated user.
 
@@ -159,7 +158,7 @@ async def delete_api_key(
         str, Path(min_length=24, max_length=24, pattern=r"^[0-9a-f]{24}$")
     ],
     user: JwtUser,
-    api_key_service: ApiKeyService = Depends(get_api_key_service),
+    api_key_service: ApiKeySvc,
     revoke: bool = Query(default=False),
 ) -> ApiKeyActionResponse:
     """Delete or revoke an API key.

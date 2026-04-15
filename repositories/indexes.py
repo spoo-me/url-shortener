@@ -13,7 +13,7 @@ from __future__ import annotations
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import CollectionInvalid, OperationFailure
 
-from shared.logging import get_logger
+from infrastructure.logging import get_logger
 
 log = get_logger(__name__)
 

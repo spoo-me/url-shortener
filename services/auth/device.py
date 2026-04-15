@@ -13,6 +13,8 @@ from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 
 from errors import AuthenticationError
+from infrastructure.crypto import hash_token
+from infrastructure.logging import get_logger
 from repositories.token_repository import TokenRepository
 from repositories.user_repository import UserRepository
 from schemas.models.app import AppEntry
@@ -20,9 +22,7 @@ from schemas.models.token import TOKEN_TYPE_DEVICE_AUTH
 from schemas.models.user import UserStatus
 from schemas.results import AuthResult
 from services.token_factory import TokenFactory
-from shared.crypto import hash_token
 from shared.generators import generate_secure_token
-from shared.logging import get_logger
 
 log = get_logger(__name__)
 

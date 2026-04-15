@@ -10,18 +10,15 @@ from __future__ import annotations
 
 import os
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse, RedirectResponse, Response
 
-from config import AppSettings
-from dependencies import get_contact_service, get_settings, get_url_service
+from dependencies import ContactSvc, Settings, UrlSvc
 from errors import AppError, ForbiddenError, ValidationError
+from infrastructure.logging import get_logger
+from infrastructure.templates import templates
 from middleware.rate_limiter import Limits, limiter
-from services.contact_service import ContactService
-from services.url_service import UrlService
 from shared.ip_utils import get_client_ip
-from shared.logging import get_logger
-from shared.templates import templates
 
 log = get_logger(__name__)
 
@@ -140,8 +137,8 @@ async def docs_wildcard(path: str, request: Request) -> Response:
 @limiter.limit(Limits.CONTACT)
 async def contact(
     request: Request,
-    contact_service: ContactService = Depends(get_contact_service),
-    settings: AppSettings = Depends(get_settings),
+    contact_service: ContactSvc,
+    settings: Settings,
 ) -> Response:
     host_url = str(request.base_url)
 
@@ -219,9 +216,9 @@ async def contact(
 @limiter.limit(Limits.CONTACT)
 async def report(
     request: Request,
-    contact_service: ContactService = Depends(get_contact_service),
-    url_service: UrlService = Depends(get_url_service),
-    settings: AppSettings = Depends(get_settings),
+    contact_service: ContactSvc,
+    url_service: UrlSvc,
+    settings: Settings,
 ) -> Response:
     host_url = str(request.base_url)
 

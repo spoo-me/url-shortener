@@ -42,33 +42,7 @@ from routes.auth import router as auth_router
 from routes.oauth_routes import router as oauth_router
 from schemas.models.user import UserDoc
 from schemas.results import AuthResult
-
-# ── Helpers ──────────────────────────────────────────────────────────────────
-
-
-def _build_test_app(overrides: dict) -> FastAPI:
-    """Build a minimal FastAPI app with mock lifespan and given dependency overrides."""
-    settings = AppSettings()
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        app.state.settings = settings
-        app.state.db = MagicMock()
-        app.state.redis = None
-        app.state.oauth_providers = {}
-        yield
-
-    application = FastAPI(lifespan=lifespan)
-    application.state.limiter = limiter
-    application.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    register_error_handlers(application)
-    application.include_router(auth_router)
-    application.include_router(oauth_router)
-
-    for dep, override in overrides.items():
-        application.dependency_overrides[dep] = override
-
-    return application
+from tests.conftest import build_test_app
 
 
 def _make_user_doc(
@@ -112,7 +86,9 @@ def test_login_valid_credentials():
         user=user, access_token=_MOCK_ACCESS, refresh_token=_MOCK_REFRESH
     )
 
-    app = _build_test_app({get_credential_service: lambda: mock_svc})
+    app = build_test_app(
+        auth_router, oauth_router, overrides={get_credential_service: lambda: mock_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/login", json={"email": "test@example.com", "password": "pass"}
@@ -132,7 +108,9 @@ def test_login_invalid_credentials_returns_401():
     mock_svc = AsyncMock()
     mock_svc.login.side_effect = AuthenticationError("invalid credentials")
 
-    app = _build_test_app({get_credential_service: lambda: mock_svc})
+    app = build_test_app(
+        auth_router, oauth_router, overrides={get_credential_service: lambda: mock_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/login", json={"email": "bad@example.com", "password": "wrong"}
@@ -146,7 +124,9 @@ def test_login_same_error_message_for_unknown_email_and_wrong_password():
     mock_svc = AsyncMock()
     mock_svc.login.side_effect = AuthenticationError("invalid credentials")
 
-    app = _build_test_app({get_credential_service: lambda: mock_svc})
+    app = build_test_app(
+        auth_router, oauth_router, overrides={get_credential_service: lambda: mock_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         r1 = client.post(
             "/auth/login", json={"email": "unknown@example.com", "password": "p"}
@@ -171,7 +151,9 @@ def test_register_creates_user_returns_201():
         verification_sent=True,
     )
 
-    app = _build_test_app({get_credential_service: lambda: mock_svc})
+    app = build_test_app(
+        auth_router, oauth_router, overrides={get_credential_service: lambda: mock_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/register",
@@ -188,7 +170,9 @@ def test_register_duplicate_email_returns_409():
     mock_svc = AsyncMock()
     mock_svc.register.side_effect = ConflictError("email already registered")
 
-    app = _build_test_app({get_credential_service: lambda: mock_svc})
+    app = build_test_app(
+        auth_router, oauth_router, overrides={get_credential_service: lambda: mock_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/register",
@@ -204,7 +188,9 @@ def test_register_weak_password_returns_400():
         details={"missing_requirements": ["digit"]},
     )
 
-    app = _build_test_app({get_credential_service: lambda: mock_svc})
+    app = build_test_app(
+        auth_router, oauth_router, overrides={get_credential_service: lambda: mock_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/register",
@@ -223,7 +209,9 @@ def test_refresh_rotates_tokens():
         user=user, access_token="new.access", refresh_token="new.refresh"
     )
 
-    app = _build_test_app({get_credential_service: lambda: mock_svc})
+    app = build_test_app(
+        auth_router, oauth_router, overrides={get_credential_service: lambda: mock_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         client.cookies.set("refresh_token", "old.refresh.jwt")
         resp = client.post("/auth/refresh")
@@ -234,7 +222,9 @@ def test_refresh_rotates_tokens():
 def test_refresh_missing_cookie_clears_cookies_returns_401():
     mock_svc = AsyncMock()
 
-    app = _build_test_app({get_credential_service: lambda: mock_svc})
+    app = build_test_app(
+        auth_router, oauth_router, overrides={get_credential_service: lambda: mock_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post("/auth/refresh")  # no refresh_token cookie
     assert resp.status_code == 401
@@ -251,7 +241,9 @@ def test_refresh_expired_token_clears_cookies_returns_401():
         "invalid or expired refresh token"
     )
 
-    app = _build_test_app({get_credential_service: lambda: mock_svc})
+    app = build_test_app(
+        auth_router, oauth_router, overrides={get_credential_service: lambda: mock_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         client.cookies.set("refresh_token", "expired.jwt")
         resp = client.post("/auth/refresh")
@@ -266,7 +258,7 @@ def test_refresh_expired_token_clears_cookies_returns_401():
 
 
 def test_logout_clears_cookies_returns_success():
-    app = _build_test_app({})
+    app = build_test_app(auth_router, oauth_router, overrides={})
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post("/auth/logout")
     assert resp.status_code == 200
@@ -287,11 +279,13 @@ def test_me_returns_user_profile():
     mock_user_repo.find_by_id.return_value = user
     mock_user = CurrentUser(user_id=user_oid, email_verified=True)
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        auth_router,
+        oauth_router,
+        overrides={
             get_user_repo: lambda: mock_user_repo,
             require_auth: lambda: mock_user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.get("/auth/me")
@@ -302,7 +296,7 @@ def test_me_returns_user_profile():
 
 
 def test_me_requires_auth():
-    app = _build_test_app({})
+    app = build_test_app(auth_router, oauth_router, overrides={})
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.get("/auth/me")
     assert resp.status_code == 401
@@ -317,11 +311,13 @@ def test_set_password_succeeds():
     mock_svc.set_password.return_value = None
     mock_user = CurrentUser(user_id=user_oid, email_verified=True)
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        auth_router,
+        oauth_router,
+        overrides={
             get_password_service: lambda: mock_svc,
             require_auth: lambda: mock_user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post("/auth/set-password", json={"password": "NewPass1!"})
@@ -335,11 +331,13 @@ def test_set_password_already_set_returns_400():
     mock_svc.set_password.side_effect = ValidationError("password already set")
     mock_user = CurrentUser(user_id=user_oid, email_verified=True)
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        auth_router,
+        oauth_router,
+        overrides={
             get_password_service: lambda: mock_svc,
             require_auth: lambda: mock_user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post("/auth/set-password", json={"password": "NewPass1!"})
@@ -355,11 +353,13 @@ def test_verify_email_success_sets_new_cookies():
     mock_svc.verify_email.return_value = ("new.access", "new.refresh")
     mock_user = CurrentUser(user_id=user_oid, email_verified=False)
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        auth_router,
+        oauth_router,
+        overrides={
             get_verification_service: lambda: mock_svc,
             require_auth: lambda: mock_user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post("/auth/verify-email", json={"code": "123456"})
@@ -377,11 +377,13 @@ def test_verify_email_wrong_code_returns_400():
     )
     mock_user = CurrentUser(user_id=user_oid, email_verified=False)
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        auth_router,
+        oauth_router,
+        overrides={
             get_verification_service: lambda: mock_svc,
             require_auth: lambda: mock_user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post("/auth/verify-email", json={"code": "000000"})
@@ -397,11 +399,13 @@ def test_send_verification_returns_success():
     mock_svc.send_verification.return_value = None
     mock_user = CurrentUser(user_id=user_oid, email_verified=False)
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        auth_router,
+        oauth_router,
+        overrides={
             get_verification_service: lambda: mock_svc,
             require_auth: lambda: mock_user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post("/auth/send-verification")
@@ -417,7 +421,9 @@ def test_request_password_reset_always_returns_same_response():
     mock_svc = AsyncMock()
     mock_svc.request_password_reset.return_value = None  # swallows all errors
 
-    app = _build_test_app({get_password_service: lambda: mock_svc})
+    app = build_test_app(
+        auth_router, oauth_router, overrides={get_password_service: lambda: mock_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         r1 = client.post(
             "/auth/request-password-reset", json={"email": "exists@example.com"}
@@ -434,7 +440,9 @@ def test_reset_password_success():
     mock_svc = AsyncMock()
     mock_svc.reset_password.return_value = None
 
-    app = _build_test_app({get_password_service: lambda: mock_svc})
+    app = build_test_app(
+        auth_router, oauth_router, overrides={get_password_service: lambda: mock_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/reset-password",
@@ -452,7 +460,9 @@ def test_reset_password_invalid_code_returns_400():
     mock_svc = AsyncMock()
     mock_svc.reset_password.side_effect = ValidationError("invalid or expired code")
 
-    app = _build_test_app({get_password_service: lambda: mock_svc})
+    app = build_test_app(
+        auth_router, oauth_router, overrides={get_password_service: lambda: mock_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.post(
             "/auth/reset-password",
@@ -469,7 +479,7 @@ def test_reset_password_invalid_code_returns_400():
 
 
 def test_login_page_redirect():
-    app = _build_test_app({})
+    app = build_test_app(auth_router, oauth_router, overrides={})
     with TestClient(
         app, raise_server_exceptions=False, follow_redirects=False
     ) as client:
@@ -479,7 +489,7 @@ def test_login_page_redirect():
 
 
 def test_register_page_redirect():
-    app = _build_test_app({})
+    app = build_test_app(auth_router, oauth_router, overrides={})
     with TestClient(
         app, raise_server_exceptions=False, follow_redirects=False
     ) as client:
@@ -489,7 +499,7 @@ def test_register_page_redirect():
 
 
 def test_signup_page_redirect():
-    app = _build_test_app({})
+    app = build_test_app(auth_router, oauth_router, overrides={})
     with TestClient(
         app, raise_server_exceptions=False, follow_redirects=False
     ) as client:
@@ -518,11 +528,13 @@ def test_list_providers_returns_linked_providers():
     )
     mock_user = CurrentUser(user_id=user_oid, email_verified=True)
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        auth_router,
+        oauth_router,
+        overrides={
             get_oauth_service: lambda: mock_oauth_svc,
             require_auth: lambda: mock_user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.get("/oauth/providers")
@@ -534,7 +546,7 @@ def test_list_providers_returns_linked_providers():
 
 
 def test_list_providers_requires_auth():
-    app = _build_test_app({})
+    app = build_test_app(auth_router, oauth_router, overrides={})
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.get("/oauth/providers")
     assert resp.status_code == 401
@@ -549,11 +561,13 @@ def test_unlink_provider_success():
     mock_oauth_svc.unlink_provider.return_value = None
     mock_user = CurrentUser(user_id=user_oid, email_verified=True)
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        auth_router,
+        oauth_router,
+        overrides={
             get_oauth_service: lambda: mock_oauth_svc,
             require_auth: lambda: mock_user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.delete("/oauth/providers/google/unlink")
@@ -569,11 +583,13 @@ def test_unlink_provider_last_method_returns_400():
     )
     mock_user = CurrentUser(user_id=user_oid, email_verified=True)
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        auth_router,
+        oauth_router,
+        overrides={
             get_oauth_service: lambda: mock_oauth_svc,
             require_auth: lambda: mock_user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.delete("/oauth/providers/google/unlink")
@@ -584,7 +600,7 @@ def test_unlink_provider_last_method_returns_400():
 
 
 def test_oauth_login_unconfigured_provider_returns_404():
-    app = _build_test_app({})
+    app = build_test_app(auth_router, oauth_router, overrides={})
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.get("/oauth/unknown-provider")
     assert resp.status_code == 404
@@ -594,7 +610,9 @@ def test_oauth_link_unconfigured_provider_returns_404():
     user_oid = ObjectId()
     mock_user = CurrentUser(user_id=user_oid, email_verified=True)
 
-    app = _build_test_app({require_auth: lambda: mock_user})
+    app = build_test_app(
+        auth_router, oauth_router, overrides={require_auth: lambda: mock_user}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         resp = client.get("/oauth/unknown-provider/link")
     assert resp.status_code == 404
@@ -605,7 +623,9 @@ def test_oauth_link_unconfigured_provider_returns_404():
 
 def test_oauth_callback_missing_state_returns_400():
     mock_oauth_svc = AsyncMock()
-    app = _build_test_app({get_oauth_service: lambda: mock_oauth_svc})
+    app = build_test_app(
+        auth_router, oauth_router, overrides={get_oauth_service: lambda: mock_oauth_svc}
+    )
 
     # Patch PROVIDER_STRATEGIES so provider lookup succeeds
     with (

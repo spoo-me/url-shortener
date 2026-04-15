@@ -29,20 +29,20 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font
 
 from dependencies import get_db
+from infrastructure.logging import get_logger
+from infrastructure.templates import templates
 from middleware.rate_limiter import Limits, limiter
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
 from repositories.legacy.legacy_url_repository import LegacyUrlRepository
-from schemas.dto.requests.stats import ExportFormat
-from shared.datetime_utils import convert_to_gmt
-from shared.legacy_helpers import (
+from routes.legacy.helpers import (
     add_missing_dates,
     calculate_click_averages,
     convert_country_data,
     get_stats_pipeline,
     top_four,
 )
-from shared.logging import get_logger
-from shared.templates import templates
+from schemas.enums.stats import ExportFormat
+from shared.datetime_utils import convert_to_gmt
 from shared.validators import is_emoji_alias
 
 log = get_logger(__name__)

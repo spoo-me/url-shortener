@@ -10,10 +10,10 @@ from __future__ import annotations
 import time
 from urllib.parse import unquote
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse, Response
 
-from dependencies import get_click_service, get_url_service
+from dependencies import ClickSvc, UrlSvc
 from errors import (
     BlockedUrlError,
     ForbiddenError,
@@ -21,13 +21,11 @@ from errors import (
     NotFoundError,
     ValidationError,
 )
+from infrastructure.logging import get_logger, should_sample
+from infrastructure.templates import templates
 from middleware.rate_limiter import Limits, limiter
 from schemas.models.url import SchemaVersion
-from services.click import ClickService
-from services.url_service import UrlService
 from shared.ip_utils import get_client_ip
-from shared.logging import get_logger, should_sample
-from shared.templates import templates
 
 log = get_logger(__name__)
 
@@ -53,8 +51,8 @@ def _error_page(request: Request, code: str, message: str, status: int) -> Respo
 async def redirect_url(
     short_code: str,
     request: Request,
-    url_service: UrlService = Depends(get_url_service),
-    click_service: ClickService = Depends(get_click_service),
+    url_service: UrlSvc,
+    click_service: ClickSvc,
 ) -> Response:
     """Resolve a short code and redirect to the destination URL.
 
@@ -148,7 +146,7 @@ async def redirect_url(
 async def check_password(
     short_code: str,
     request: Request,
-    url_service: UrlService = Depends(get_url_service),
+    url_service: UrlSvc,
 ) -> Response:
     """Verify a password for a password-protected URL.
 

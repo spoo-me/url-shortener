@@ -15,23 +15,24 @@ import secrets
 from urllib.parse import quote, urlencode
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, Form, Request, Response
+from fastapi import APIRouter, Form, Request, Response
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from dependencies import (
+    AppGrantRepo,
+    CredentialSvc,
+    DeviceAuthSvc,
+    JwtConfig,
     JwtUser,
     OptionalUser,
+    UserRepo,
     fetch_user_profile,
-    get_app_grant_repo,
-    get_credential_service,
-    get_device_auth_service,
-    get_user_repo,
 )
 from errors import AuthenticationError
+from infrastructure.logging import get_logger
+from infrastructure.templates import templates
 from middleware.openapi import ERROR_RESPONSES, PUBLIC_SECURITY
 from middleware.rate_limiter import Limits, limiter
-from repositories.app_grant_repository import AppGrantRepository
-from repositories.user_repository import UserRepository
 from schemas.dto.requests.auth import DeviceRefreshRequest, DeviceTokenRequest
 from schemas.dto.responses.auth import (
     DeviceRefreshResponse,
@@ -39,11 +40,8 @@ from schemas.dto.responses.auth import (
     UserProfileResponse,
 )
 from schemas.models.app import AppEntry
-from services.auth.credentials import CredentialService
-from services.auth.device import APP_ID_MAX_LEN, DeviceAuthService
+from services.auth.device import APP_ID_MAX_LEN
 from shared.generators import generate_secure_token
-from shared.logging import get_logger
-from shared.templates import templates
 
 log = get_logger(__name__)
 
@@ -87,9 +85,10 @@ def _build_callback_redirect(
 async def device_login(
     request: Request,
     user: OptionalUser,
-    device_auth_service: DeviceAuthService = Depends(get_device_auth_service),
-    user_repo: UserRepository = Depends(get_user_repo),
-    grant_repo: AppGrantRepository = Depends(get_app_grant_repo),
+    device_auth_service: DeviceAuthSvc,
+    user_repo: UserRepo,
+    grant_repo: AppGrantRepo,
+    jwt_cfg: JwtConfig,
     app_id: str = "",
     redirect_uri: str = "",
     state: str = "",
@@ -144,7 +143,7 @@ async def device_login(
         _CSRF_COOKIE_NAME,
         csrf_token,
         httponly=True,
-        secure=request.app.state.settings.jwt.cookie_secure,
+        secure=jwt_cfg.cookie_secure,
         samesite="strict",
         max_age=_CSRF_TTL_SECONDS,
     )
@@ -156,9 +155,9 @@ async def device_login(
 async def device_consent_approve(
     request: Request,
     user: JwtUser,
-    device_auth_service: DeviceAuthService = Depends(get_device_auth_service),
-    user_repo: UserRepository = Depends(get_user_repo),
-    grant_repo: AppGrantRepository = Depends(get_app_grant_repo),
+    device_auth_service: DeviceAuthSvc,
+    user_repo: UserRepo,
+    grant_repo: AppGrantRepo,
     app_id: str = Form(""),
     state: str = Form(""),
     csrf_token: str = Form(""),
@@ -229,8 +228,8 @@ async def device_callback(
 async def device_token(
     request: Request,
     body: DeviceTokenRequest,
-    device_auth_service: DeviceAuthService = Depends(get_device_auth_service),
-    grant_repo: AppGrantRepository = Depends(get_app_grant_repo),
+    device_auth_service: DeviceAuthSvc,
+    grant_repo: AppGrantRepo,
 ) -> DeviceTokenResponse:
     """Exchange a one-time device auth code for JWT tokens.
 
@@ -278,8 +277,8 @@ async def device_token(
 async def device_refresh(
     request: Request,
     body: DeviceRefreshRequest,
-    credential_service: CredentialService = Depends(get_credential_service),
-    grant_repo: AppGrantRepository = Depends(get_app_grant_repo),
+    credential_service: CredentialSvc,
+    grant_repo: AppGrantRepo,
 ) -> DeviceRefreshResponse:
     """Refresh an app's JWT tokens using a refresh token.
 
@@ -321,8 +320,8 @@ async def device_refresh(
 async def revoke_app(
     request: Request,
     user: JwtUser,
-    device_auth_service: DeviceAuthService = Depends(get_device_auth_service),
-    grant_repo: AppGrantRepository = Depends(get_app_grant_repo),
+    device_auth_service: DeviceAuthSvc,
+    grant_repo: AppGrantRepo,
     app_id: str = Form(""),
 ) -> Response:
     """Revoke an app's access (soft-delete grant + invalidate tokens).

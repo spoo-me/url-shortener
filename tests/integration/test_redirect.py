@@ -10,20 +10,11 @@ dependency_overrides and a mock lifespan — no real infrastructure needed.
 
 from __future__ import annotations
 
-import os
-from contextlib import asynccontextmanager
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from bson import ObjectId
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from fastapi.testclient import TestClient
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 
-os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
-
-from config import AppSettings
 from dependencies import get_click_service, get_url_service
 from errors import (
     BlockedUrlError,
@@ -33,48 +24,14 @@ from errors import (
     ValidationError,
 )
 from infrastructure.cache.url_cache import UrlCacheData
-from middleware.error_handler import register_error_handlers
-from middleware.rate_limiter import limiter
 from routes.redirect_routes import router as redirect_router
-
-# ── Helpers ──────────────────────────────────────────────────────────────────
-
-_STATIC_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static"
-)
-
-
-def _build_test_app(overrides: dict) -> FastAPI:
-    """Build a minimal FastAPI app with mock lifespan and given dependency overrides."""
-    settings = AppSettings()
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        app.state.settings = settings
-        app.state.db = MagicMock()
-        app.state.redis = None
-        app.state.email_provider = MagicMock()
-        app.state.http_client = MagicMock()
-        app.state.oauth_providers = {}
-        yield
-
-    application = FastAPI(lifespan=lifespan)
-    application.state.limiter = limiter
-    application.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    register_error_handlers(application)
-
-    if os.path.isdir(_STATIC_DIR):
-        application.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
-
-    application.include_router(redirect_router)
-    application.dependency_overrides.update(overrides)
-    return application
+from tests.conftest import build_test_app
 
 
 def _make_cache_data(**kwargs) -> UrlCacheData:
     """Build a UrlCacheData with sensible defaults; override via kwargs."""
     defaults = dict(
-        _id=str(ObjectId()),
+        id=str(ObjectId()),
         alias="abc123",
         long_url="https://example.com/destination",
         block_bots=False,
@@ -101,11 +58,12 @@ def test_redirect_v2_active_url():
     mock_click_svc = AsyncMock()
     mock_click_svc.track_click = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/abc123", follow_redirects=False)
@@ -122,11 +80,12 @@ def test_redirect_v1_active_url():
     mock_click_svc = AsyncMock()
     mock_click_svc.track_click = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/xYz789", follow_redirects=False)
@@ -143,11 +102,12 @@ def test_redirect_emoji_url():
     mock_click_svc = AsyncMock()
     mock_click_svc.track_click = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/%F0%9F%98%80%F0%9F%9A%80", follow_redirects=False)
@@ -163,11 +123,12 @@ def test_redirect_password_protected_no_password():
     mock_url_svc.resolve = AsyncMock(return_value=(url_data, "v2"))
     mock_click_svc = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/abc123", follow_redirects=False)
@@ -184,11 +145,12 @@ def test_redirect_v2_correct_password_bcrypt():
     mock_click_svc = AsyncMock()
     mock_click_svc.track_click = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
 
@@ -209,11 +171,12 @@ def test_redirect_v1_correct_plaintext_password():
     mock_click_svc = AsyncMock()
     mock_click_svc.track_click = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/abc123?password=secret", follow_redirects=False)
@@ -229,11 +192,12 @@ def test_redirect_wrong_password():
     mock_url_svc.resolve = AsyncMock(return_value=(url_data, "v2"))
     mock_click_svc = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
 
@@ -252,11 +216,12 @@ def test_redirect_blocked_url():
     mock_url_svc.resolve = AsyncMock(side_effect=BlockedUrlError("Blocked"))
     mock_click_svc = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/abc123", follow_redirects=False)
@@ -271,11 +236,12 @@ def test_redirect_expired_url():
     mock_url_svc.resolve = AsyncMock(side_effect=GoneError("Expired"))
     mock_click_svc = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/abc123", follow_redirects=False)
@@ -290,11 +256,12 @@ def test_redirect_inactive_url():
     mock_url_svc.resolve = AsyncMock(side_effect=GoneError("Inactive"))
     mock_click_svc = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/someCode", follow_redirects=False)
@@ -309,11 +276,12 @@ def test_redirect_not_found():
     mock_url_svc.resolve = AsyncMock(side_effect=NotFoundError("Not found"))
     mock_click_svc = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/nope42", follow_redirects=False)
@@ -328,11 +296,12 @@ def test_redirect_max_clicks_reached():
     mock_url_svc.resolve = AsyncMock(side_effect=GoneError("Max clicks reached"))
     mock_click_svc = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/abc123", follow_redirects=False)
@@ -350,11 +319,12 @@ def test_redirect_bot_blocked_v1():
         side_effect=ForbiddenError("Bot access denied")
     )
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/abc123", follow_redirects=False)
@@ -373,11 +343,12 @@ def test_redirect_bot_blocked_v2():
         side_effect=ForbiddenError("Bot access denied")
     )
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/abc123", follow_redirects=False)
@@ -396,11 +367,12 @@ def test_redirect_bad_user_agent_still_redirects():
         side_effect=ValidationError("Bad User-Agent")
     )
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/abc123", follow_redirects=False)
@@ -417,11 +389,12 @@ def test_redirect_head_request_skips_tracking():
     mock_click_svc = AsyncMock()
     mock_click_svc.track_click = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.head("/abc123", follow_redirects=False)
@@ -438,11 +411,12 @@ def test_redirect_sets_x_robots_tag():
     mock_click_svc = AsyncMock()
     mock_click_svc.track_click = AsyncMock()
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
             get_click_service: lambda: mock_click_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.get("/abc123", follow_redirects=False)
@@ -457,10 +431,11 @@ def test_password_form_submit_correct():
     mock_url_svc = AsyncMock()
     mock_url_svc.resolve = AsyncMock(return_value=(url_data, "v2"))
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
 
@@ -483,10 +458,11 @@ def test_password_form_submit_wrong():
     mock_url_svc = AsyncMock()
     mock_url_svc.resolve = AsyncMock(return_value=(url_data, "v2"))
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
 
@@ -508,10 +484,11 @@ def test_password_form_url_not_found():
     mock_url_svc = AsyncMock()
     mock_url_svc.resolve = AsyncMock(side_effect=NotFoundError("Not found"))
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.post(
@@ -530,10 +507,11 @@ def test_password_form_not_password_protected():
     mock_url_svc = AsyncMock()
     mock_url_svc.resolve = AsyncMock(return_value=(url_data, "v2"))
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        redirect_router,
+        overrides={
             get_url_service: lambda: mock_url_svc,
-        }
+        },
     )
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.post(

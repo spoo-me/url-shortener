@@ -22,7 +22,9 @@ from dependencies.wiring import wire_services
 from infrastructure.email.zeptomail import ZeptoMailProvider
 from infrastructure.geoip import GeoIPService
 from infrastructure.http_client import HttpClient
+from infrastructure.logging import get_logger
 from infrastructure.oauth_clients import init_oauth
+from infrastructure.templates import configure_template_globals, templates
 from middleware.error_handler import register_error_handlers
 from middleware.logging import RequestLoggingMiddleware
 from middleware.openapi import (
@@ -50,8 +52,6 @@ from routes.redirect_routes import router as redirect_router
 from routes.static_routes import router as static_router
 from schemas.models.app import AppStatus
 from shared.app_registry import load_app_registry
-from shared.logging import get_logger
-from shared.templates import configure_template_globals, templates
 
 log = get_logger(__name__)
 

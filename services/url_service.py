@@ -33,6 +33,8 @@ from errors import (
     ValidationError,
 )
 from infrastructure.cache.url_cache import UrlCache, UrlCacheData
+from infrastructure.crypto import hash_password
+from infrastructure.logging import get_logger, should_sample
 from repositories.blocked_url_repository import BlockedUrlRepository
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
 from repositories.legacy.legacy_url_repository import LegacyUrlRepository
@@ -46,10 +48,8 @@ from schemas.models.url import (
     UrlStatus,
     UrlV2Doc,
 )
-from shared.crypto import hash_password
 from shared.datetime_utils import parse_datetime
 from shared.generators import generate_short_code_v2
-from shared.logging import get_logger, should_sample
 from shared.validators import (
     is_emoji_alias,
     validate_alias,
@@ -130,11 +130,12 @@ async def _handle_expire_after(
     if request.expire_after is None and existing.expire_after:
         ops["expire_after"] = None
     elif request.expire_after is not None:
-        expire_ts = parse_datetime(request.expire_after)
-        if expire_ts is None:
-            raise ValidationError("Invalid expire_after format", field="expire_after")
-        if expire_ts != existing.expire_after:
-            ops["expire_after"] = expire_ts
+        if request.expire_after <= datetime.now(timezone.utc):
+            raise ValidationError(
+                "expire_after must be in the future", field="expire_after"
+            )
+        if request.expire_after != existing.expire_after:
+            ops["expire_after"] = request.expire_after
 
 
 async def _handle_status(
@@ -325,18 +326,12 @@ class UrlService:
         if request.password:
             password_hash = hash_password(request.password)
 
-        # 4. expire_after (cheap — validate before alias generation loop)
-        expire_ts: datetime | None = None
-        if request.expire_after is not None:
-            expire_ts = parse_datetime(request.expire_after)
-            if expire_ts is None:
-                raise ValidationError(
-                    "Invalid expire_after format", field="expire_after"
-                )
-            if expire_ts <= now:
-                raise ValidationError(
-                    "expire_after must be in the future", field="expire_after"
-                )
+        # 4. expire_after (already parsed to datetime by the DTO validator)
+        expire_ts: datetime | None = request.expire_after
+        if expire_ts is not None and expire_ts <= now:
+            raise ValidationError(
+                "expire_after must be in the future", field="expire_after"
+            )
 
         # 5. Alias — generate or validate custom (may loop; done after cheap checks)
         if request.alias:
@@ -705,7 +700,7 @@ def _raise_for_status(status: UrlStatus) -> None:
 
 def _v2_doc_to_cache(doc: UrlV2Doc) -> UrlCacheData:
     return UrlCacheData(
-        _id=str(doc.id),
+        id=str(doc.id),
         alias=doc.alias,
         long_url=doc.long_url,
         block_bots=bool(doc.block_bots),
@@ -730,7 +725,7 @@ def _legacy_doc_to_cache(
     if doc.expiration_time:
         expiration_time = int(doc.expiration_time.timestamp())
     return UrlCacheData(
-        _id=short_code,
+        id=short_code,
         alias=short_code,
         long_url=doc.url,
         block_bots=bool(doc.block_bots),

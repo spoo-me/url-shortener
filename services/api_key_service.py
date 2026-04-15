@@ -12,11 +12,11 @@ from datetime import datetime, timezone
 from bson import ObjectId
 
 from errors import EmailNotVerifiedError, ValidationError
+from infrastructure.crypto import hash_token
+from infrastructure.logging import get_logger
 from repositories.api_key_repository import ApiKeyRepository
 from schemas.models.api_key import ApiKeyDoc
-from shared.crypto import hash_token
 from shared.generators import generate_secure_token
-from shared.logging import get_logger
 
 log = get_logger(__name__)
 

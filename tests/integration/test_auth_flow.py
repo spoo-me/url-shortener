@@ -7,20 +7,12 @@ dependency_overrides and a mock lifespan — no real infrastructure needed.
 
 from __future__ import annotations
 
-import os
-from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from bson import ObjectId
-from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 
-os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017/")
-
-from config import AppSettings
 from dependencies import (
     CurrentUser,
     get_credential_service,
@@ -30,11 +22,10 @@ from dependencies import (
     require_auth,
 )
 from errors import AuthenticationError, ValidationError
-from middleware.error_handler import register_error_handlers
-from middleware.rate_limiter import limiter
 from routes.auth import router as auth_router
 from schemas.models.user import UserDoc
 from schemas.results import AuthResult
+from tests.conftest import build_test_app
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -43,28 +34,6 @@ _EMAIL = "test@example.com"
 _PASSWORD = "StrongPass1!"
 _ACCESS_TOKEN = "mock.access.token"
 _REFRESH_TOKEN = "mock.refresh.token"
-
-
-def _build_test_app(overrides: dict) -> FastAPI:
-    settings = AppSettings()
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        app.state.settings = settings
-        app.state.db = MagicMock()
-        app.state.redis = None
-        app.state.email_provider = MagicMock()
-        app.state.http_client = MagicMock()
-        app.state.oauth_providers = {}
-        yield
-
-    app = FastAPI(lifespan=lifespan)
-    app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    register_error_handlers(app)
-    app.include_router(auth_router)
-    app.dependency_overrides.update(overrides)
-    return app
 
 
 def _make_user_doc(
@@ -122,12 +91,13 @@ def test_register_then_verify_then_login():
     unverified_mock_user = CurrentUser(user_id=_USER_OID, email_verified=False)
 
     # Build app with overrides that change mid-flow
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        auth_router,
+        overrides={
             get_credential_service: lambda: mock_cred_svc,
             get_verification_service: lambda: mock_verif_svc,
             require_auth: lambda: unverified_mock_user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         # Step 1: Register
@@ -172,7 +142,9 @@ def test_register_then_login_unverified():
         refresh_token="login.refresh",
     )
 
-    app = _build_test_app({get_credential_service: lambda: mock_cred_svc})
+    app = build_test_app(
+        auth_router, overrides={get_credential_service: lambda: mock_cred_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         # Register
         resp = client.post(
@@ -202,7 +174,9 @@ def test_login_then_refresh_rotates_tokens():
         user=user, access_token="new.access", refresh_token="new.refresh"
     )
 
-    app = _build_test_app({get_credential_service: lambda: mock_cred_svc})
+    app = build_test_app(
+        auth_router, overrides={get_credential_service: lambda: mock_cred_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         # Step 1: Login
         resp = client.post(
@@ -233,12 +207,13 @@ def test_login_then_me_returns_profile():
 
     mock_user = CurrentUser(user_id=_USER_OID, email_verified=True)
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        auth_router,
+        overrides={
             get_credential_service: lambda: mock_cred_svc,
             get_user_repo: lambda: mock_user_repo,
             require_auth: lambda: mock_user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         # Step 1: Login
@@ -270,12 +245,13 @@ def test_login_then_set_password():
 
     mock_user = CurrentUser(user_id=_USER_OID, email_verified=True)
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        auth_router,
+        overrides={
             get_credential_service: lambda: mock_cred_svc,
             get_password_service: lambda: mock_pwd_svc,
             require_auth: lambda: mock_user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         # Step 1: Login
@@ -308,11 +284,12 @@ def test_register_then_request_reset_then_reset_password():
     mock_pwd_svc.request_password_reset.return_value = None
     mock_pwd_svc.reset_password.return_value = None
 
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        auth_router,
+        overrides={
             get_credential_service: lambda: mock_cred_svc,
             get_password_service: lambda: mock_pwd_svc,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         # Step 1: Register
@@ -345,7 +322,9 @@ def test_login_then_logout_clears_cookies():
         user=user, access_token=_ACCESS_TOKEN, refresh_token=_REFRESH_TOKEN
     )
 
-    app = _build_test_app({get_credential_service: lambda: mock_cred_svc})
+    app = build_test_app(
+        auth_router, overrides={get_credential_service: lambda: mock_cred_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         # Step 1: Login
         resp = client.post(
@@ -405,14 +384,15 @@ def test_full_auth_journey():
     verified_mock_user = CurrentUser(user_id=_USER_OID, email_verified=True)
 
     # Start with unverified user
-    app = _build_test_app(
-        {
+    app = build_test_app(
+        auth_router,
+        overrides={
             get_credential_service: lambda: mock_cred_svc,
             get_verification_service: lambda: mock_verif_svc,
             get_user_repo: lambda: mock_user_repo,
             get_password_service: lambda: mock_pwd_svc,
             require_auth: lambda: unverified_mock_user,
-        }
+        },
     )
     with TestClient(app, raise_server_exceptions=False) as client:
         # 1. Register
@@ -467,7 +447,9 @@ def test_refresh_with_expired_token_clears_cookies():
         "invalid or expired refresh token"
     )
 
-    app = _build_test_app({get_credential_service: lambda: mock_cred_svc})
+    app = build_test_app(
+        auth_router, overrides={get_credential_service: lambda: mock_cred_svc}
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         client.cookies.set("refresh_token", "expired.jwt")
         resp = client.post("/auth/refresh")

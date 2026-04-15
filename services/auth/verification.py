@@ -14,12 +14,12 @@ from bson import ObjectId
 
 from errors import AppError, NotFoundError, ValidationError
 from infrastructure.email.protocol import EmailProvider
+from infrastructure.logging import get_logger
 from repositories.user_repository import UserRepository
 from schemas.models.token import TOKEN_TYPE_EMAIL_VERIFY
 from schemas.models.user import UserDoc
 from services.auth.otp import OtpService
 from services.token_factory import TokenFactory
-from shared.logging import get_logger
 
 log = get_logger(__name__)
 

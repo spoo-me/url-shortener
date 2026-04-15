@@ -8,7 +8,9 @@ from __future__ import annotations
 
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import Field, field_validator
+
+from schemas.dto.base import RequestBase
 
 
 class ApiKeyScope(str, Enum):
@@ -24,10 +26,8 @@ class ApiKeyScope(str, Enum):
 ALLOWED_SCOPES = frozenset(ApiKeyScope)
 
 
-class CreateApiKeyRequest(BaseModel):
+class CreateApiKeyRequest(RequestBase):
     """Request body for POST /api/v1/keys."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     name: str = Field(
         min_length=1,
