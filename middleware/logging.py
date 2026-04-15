@@ -15,8 +15,8 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.requests import Request
 from starlette.responses import Response
 
+from infrastructure.logging import get_logger, hash_ip
 from shared.ip_utils import get_client_ip
-from shared.logging import get_logger, hash_ip
 
 log = get_logger("spoo.request")
 

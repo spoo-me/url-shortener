@@ -22,15 +22,15 @@ from fastapi.responses import JSONResponse, RedirectResponse, Response
 from dependencies import OptionalUser, Settings, UrlSvc, get_db, get_redis
 from errors import ForbiddenError, GoneError, NotFoundError
 from infrastructure.cache.dual_cache import DualCache
+from infrastructure.logging import get_logger
+from infrastructure.templates import templates
 from middleware.rate_limiter import Limits, limiter
 from repositories.blocked_url_repository import BlockedUrlRepository
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
 from repositories.legacy.legacy_url_repository import LegacyUrlRepository
 from repositories.url_repository import UrlRepository
+from routes.legacy.helpers import humanize_number, is_positive_integer
 from shared.generators import generate_emoji_alias, generate_short_code
-from shared.legacy_helpers import humanize_number, is_positive_integer
-from shared.logging import get_logger
-from shared.templates import templates
 from shared.validators import (
     is_emoji_alias,
     validate_alias,

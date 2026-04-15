@@ -19,6 +19,7 @@ from dependencies import (
     VerificationSvc,
     fetch_user_profile,
 )
+from infrastructure.templates import templates
 from middleware.openapi import ERROR_RESPONSES
 from middleware.rate_limiter import Limits, limiter
 from routes.cookie_helpers import set_auth_cookies
@@ -28,7 +29,6 @@ from schemas.dto.responses.auth import (
     VerifyEmailResponse,
 )
 from services.auth.otp import OTP_EXPIRY_SECONDS
-from shared.templates import templates
 
 router = APIRouter()
 

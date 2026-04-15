@@ -9,7 +9,6 @@ from infrastructure.oauth_clients import (
     DiscordStrategy,
     GitHubStrategy,
     GoogleStrategy,
-    can_auto_link_accounts,
     extract_user_info_from_discord,
     extract_user_info_from_github,
     extract_user_info_from_google,
@@ -227,28 +226,3 @@ class TestProviderStrategies:
         assert result.provider_user_id == "777"
         assert result.email == "d@discord.com"
         assert "cdn.discordapp.com/avatars/777/hash123.png" in result.picture
-
-
-class TestCanAutoLinkAccounts:
-    def test_links_when_email_matches_and_verified(self):
-        user = {"email": "user@example.com", "auth_providers": []}
-        provider_info = {"email": "user@example.com", "email_verified": True}
-        assert can_auto_link_accounts(user, provider_info, "google") is True
-
-    def test_rejects_when_unverified(self):
-        user = {"email": "user@example.com", "auth_providers": []}
-        provider_info = {"email": "user@example.com", "email_verified": False}
-        assert can_auto_link_accounts(user, provider_info, "google") is False
-
-    def test_rejects_when_email_mismatch(self):
-        user = {"email": "other@example.com", "auth_providers": []}
-        provider_info = {"email": "user@example.com", "email_verified": True}
-        assert can_auto_link_accounts(user, provider_info, "google") is False
-
-    def test_rejects_when_provider_already_linked(self):
-        user = {
-            "email": "user@example.com",
-            "auth_providers": [{"provider": "google", "provider_user_id": "123"}],
-        }
-        provider_info = {"email": "user@example.com", "email_verified": True}
-        assert can_auto_link_accounts(user, provider_info, "google") is False

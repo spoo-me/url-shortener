@@ -27,11 +27,11 @@ from dependencies import (
     ProfilePictureSvc,
 )
 from errors import NotFoundError
+from infrastructure.logging import get_logger
+from infrastructure.templates import templates
 from middleware.rate_limiter import Limits, limiter
 from schemas.models.app import AppStatus
 from services.profile_picture_service import AvailablePicture, ProfilePictureService
-from shared.logging import get_logger
-from shared.templates import templates
 
 log = get_logger(__name__)
 

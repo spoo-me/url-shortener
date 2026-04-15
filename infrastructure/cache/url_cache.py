@@ -7,8 +7,8 @@ debuggable and safe to deserialise across Python versions.
 import redis.asyncio as aioredis
 from pydantic import BaseModel, ConfigDict, Field
 
-from shared.crypto import verify_password as verify_password_hash
-from shared.logging import get_logger
+from infrastructure.crypto import verify_password as verify_password_hash
+from infrastructure.logging import get_logger
 
 log = get_logger(__name__)
 

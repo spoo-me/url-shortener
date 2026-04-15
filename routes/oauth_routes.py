@@ -19,6 +19,7 @@ from fastapi.responses import RedirectResponse
 
 from dependencies import AuthUser, JwtConfig, OAuthProviders, OAuthSvc, Settings
 from errors import AppError, NotFoundError, ValidationError
+from infrastructure.logging import get_logger
 from infrastructure.oauth_clients import (
     PROVIDER_STRATEGIES,
     generate_oauth_state,
@@ -32,7 +33,6 @@ from schemas.dto.responses.auth import OAuthProvidersResponse
 from schemas.dto.responses.common import MessageResponse
 from schemas.models.user import OAuthAction
 from shared.ip_utils import get_client_ip
-from shared.logging import get_logger
 from shared.validators import validate_safe_redirect
 
 log = get_logger(__name__)

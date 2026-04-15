@@ -14,15 +14,15 @@ from bson import ObjectId
 from pymongo.errors import DuplicateKeyError
 
 from errors import AuthenticationError, ConflictError, ValidationError
+from infrastructure.crypto import hash_password, verify_password
 from infrastructure.email.protocol import EmailProvider
+from infrastructure.logging import get_logger
 from repositories.user_repository import UserRepository
 from schemas.models.token import TOKEN_TYPE_EMAIL_VERIFY
 from schemas.models.user import UserDoc, UserPlan, UserStatus
 from schemas.results import AuthResult
 from services.auth.otp import OtpService
 from services.token_factory import TokenFactory
-from shared.crypto import hash_password, verify_password
-from shared.logging import get_logger
 from shared.validators import validate_account_password
 
 log = get_logger(__name__)

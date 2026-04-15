@@ -4,7 +4,7 @@ import hashlib
 
 import pytest
 
-from shared.crypto import hash_password, hash_token, verify_password
+from infrastructure.crypto import hash_password, hash_token, verify_password
 
 
 class TestHashPassword:

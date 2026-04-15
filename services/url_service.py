@@ -33,6 +33,8 @@ from errors import (
     ValidationError,
 )
 from infrastructure.cache.url_cache import UrlCache, UrlCacheData
+from infrastructure.crypto import hash_password
+from infrastructure.logging import get_logger, should_sample
 from repositories.blocked_url_repository import BlockedUrlRepository
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
 from repositories.legacy.legacy_url_repository import LegacyUrlRepository
@@ -46,10 +48,8 @@ from schemas.models.url import (
     UrlStatus,
     UrlV2Doc,
 )
-from shared.crypto import hash_password
 from shared.datetime_utils import parse_datetime
 from shared.generators import generate_short_code_v2
-from shared.logging import get_logger, should_sample
 from shared.validators import (
     is_emoji_alias,
     validate_alias,
@@ -129,7 +129,10 @@ async def _handle_expire_after(
         return
     if request.expire_after is None and existing.expire_after:
         ops["expire_after"] = None
-    elif request.expire_after is not None and request.expire_after != existing.expire_after:
+    elif (
+        request.expire_after is not None
+        and request.expire_after != existing.expire_after
+    ):
         ops["expire_after"] = request.expire_after
 
 

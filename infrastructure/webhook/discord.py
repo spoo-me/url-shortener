@@ -9,7 +9,7 @@ Ported from utils/contact_utils.py (send_report / send_contact_message):
 from typing import Any
 
 from infrastructure.http_client import HttpClient
-from shared.logging import get_logger
+from infrastructure.logging import get_logger
 
 log = get_logger(__name__)
 

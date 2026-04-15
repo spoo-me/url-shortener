@@ -29,6 +29,8 @@ from dependencies import (
     fetch_user_profile,
 )
 from errors import AuthenticationError
+from infrastructure.logging import get_logger
+from infrastructure.templates import templates
 from middleware.openapi import ERROR_RESPONSES, PUBLIC_SECURITY
 from middleware.rate_limiter import Limits, limiter
 from schemas.dto.requests.auth import DeviceRefreshRequest, DeviceTokenRequest
@@ -40,8 +42,6 @@ from schemas.dto.responses.auth import (
 from schemas.models.app import AppEntry
 from services.auth.device import APP_ID_MAX_LEN
 from shared.generators import generate_secure_token
-from shared.logging import get_logger
-from shared.templates import templates
 
 log = get_logger(__name__)
 

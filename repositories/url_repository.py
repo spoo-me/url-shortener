@@ -14,9 +14,9 @@ from typing import TypedDict
 from bson import ObjectId
 from pymongo.errors import PyMongoError
 
+from infrastructure.logging import get_logger
 from repositories.base import BaseRepository
 from schemas.models.url import UrlStatus, UrlV2Doc
-from shared.logging import get_logger
 
 log = get_logger(__name__)
 

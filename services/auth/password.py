@@ -13,12 +13,12 @@ from datetime import datetime, timezone
 from bson import ObjectId
 
 from errors import AppError, NotFoundError, RateLimitError, ValidationError
+from infrastructure.crypto import hash_password, hash_token
 from infrastructure.email.protocol import EmailProvider
+from infrastructure.logging import get_logger
 from repositories.user_repository import UserRepository
 from schemas.models.token import TOKEN_TYPE_PASSWORD_RESET
 from services.auth.otp import OtpService
-from shared.crypto import hash_password, hash_token
-from shared.logging import get_logger
 from shared.validators import validate_account_password
 
 log = get_logger(__name__)

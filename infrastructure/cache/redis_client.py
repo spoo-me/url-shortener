@@ -7,7 +7,7 @@ or the connection fails. All callers must handle the None case gracefully.
 import redis.asyncio as aioredis
 from redis.exceptions import RedisError
 
-from shared.logging import get_logger
+from infrastructure.logging import get_logger
 
 log = get_logger(__name__)
 

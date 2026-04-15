@@ -15,10 +15,10 @@ from fastapi.responses import FileResponse, RedirectResponse, Response
 
 from dependencies import ContactSvc, Settings, UrlSvc
 from errors import AppError, ForbiddenError, ValidationError
+from infrastructure.logging import get_logger
+from infrastructure.templates import templates
 from middleware.rate_limiter import Limits, limiter
 from shared.ip_utils import get_client_ip
-from shared.logging import get_logger
-from shared.templates import templates
 
 log = get_logger(__name__)
 

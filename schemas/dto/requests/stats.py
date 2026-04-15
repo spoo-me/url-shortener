@@ -41,10 +41,8 @@ from schemas.enums.stats import (
     ALLOWED_FILTERS,
     ALLOWED_GROUP_BY,
     ALLOWED_METRICS,
-    ALLOWED_SCOPES,
     ExportFormat,
     StatsDimension,
-    StatsMetric,
     StatsScope,
 )
 

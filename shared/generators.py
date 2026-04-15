@@ -8,17 +8,19 @@ the system PRNG where security is not required (alias generation).
 from __future__ import annotations
 
 import json
-import os
 import random
 import secrets
 import string
+from functools import lru_cache
+from pathlib import Path
 
-_EMOJIS_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "data", "emojis.json"
-)
+_EMOJIS_PATH = Path(__file__).resolve().parent.parent / "data" / "emojis.json"
 
-with open(_EMOJIS_PATH, encoding="utf-8") as _f:
-    EMOJIES: list[str] = json.load(_f)
+
+@lru_cache(maxsize=1)
+def _load_emojis() -> list[str]:
+    with open(_EMOJIS_PATH, encoding="utf-8") as f:
+        return json.load(f)
 
 
 def generate_short_code() -> str:
@@ -43,8 +45,8 @@ def generate_short_code_v2(length: int = 7) -> str:
 
 
 def generate_emoji_alias() -> str:
-    """Generate a 3-emoji alias from the curated EMOJIES list."""
-    return "".join(random.choice(EMOJIES) for _ in range(3))
+    """Generate a 3-emoji alias from the curated emoji list."""
+    return "".join(random.choice(_load_emojis()) for _ in range(3))
 
 
 def generate_otp_code(length: int = 6) -> str:

@@ -28,6 +28,7 @@ from dependencies import (
     fetch_user_profile,
 )
 from errors import AuthenticationError
+from infrastructure.logging import get_logger
 from middleware.openapi import AUTH_RESPONSES, ERROR_RESPONSES, PUBLIC_SECURITY
 from middleware.rate_limiter import Limits, limiter
 from routes.cookie_helpers import clear_auth_cookies, set_auth_cookies
@@ -46,7 +47,6 @@ from schemas.dto.responses.auth import (
 )
 from schemas.dto.responses.common import MessageResponse
 from shared.ip_utils import get_client_ip
-from shared.logging import get_logger
 
 log = get_logger(__name__)
 

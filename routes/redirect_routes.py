@@ -21,11 +21,11 @@ from errors import (
     NotFoundError,
     ValidationError,
 )
+from infrastructure.logging import get_logger, should_sample
+from infrastructure.templates import templates
 from middleware.rate_limiter import Limits, limiter
 from schemas.models.url import SchemaVersion
 from shared.ip_utils import get_client_ip
-from shared.logging import get_logger, should_sample
-from shared.templates import templates
 
 log = get_logger(__name__)
 

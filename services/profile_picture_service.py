@@ -12,9 +12,9 @@ from bson import ObjectId
 from pydantic import BaseModel, ConfigDict, Field
 
 from errors import NotFoundError
+from infrastructure.logging import get_logger
 from repositories.user_repository import UserRepository
 from schemas.models.user import OAuthProvider, ProfilePicture
-from shared.logging import get_logger
 
 log = get_logger(__name__)
 

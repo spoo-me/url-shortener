@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from shared.bot_detection import get_bot_name, is_bot_request
+from services.click.bot_detection import get_bot_name, is_bot_request
 
 GOOGLEBOT_UA = (
     "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
@@ -17,15 +17,18 @@ class TestIsBotRequest:
 
     def test_custom_pattern_match(self, mocker):
         mocker.patch(
-            "shared.bot_detection._load_bot_user_agents", return_value=["TestBot/1\\.0"]
+            "services.click.bot_detection._load_bot_user_agents",
+            return_value=["TestBot/1\\.0"],
         )
         mocker.patch(
-            "shared.bot_detection._crawler_detect"
+            "services.click.bot_detection._crawler_detect"
         ).isCrawler.return_value = False
         assert is_bot_request("TestBot/1.0 (test)") is True
 
     def test_falls_back_to_crawler_detect_when_no_patterns(self, mocker):
-        mocker.patch("shared.bot_detection._load_bot_user_agents", return_value=[])
+        mocker.patch(
+            "services.click.bot_detection._load_bot_user_agents", return_value=[]
+        )
         assert is_bot_request(GOOGLEBOT_UA) is True
 
 
@@ -39,9 +42,10 @@ class TestGetBotName:
 
     def test_pattern_match_returns_pattern(self, mocker):
         mocker.patch(
-            "shared.bot_detection._load_bot_user_agents", return_value=["MyCustomBot"]
+            "services.click.bot_detection._load_bot_user_agents",
+            return_value=["MyCustomBot"],
         )
-        mock_cd = mocker.patch("shared.bot_detection._crawler_detect")
+        mock_cd = mocker.patch("services.click.bot_detection._crawler_detect")
         mock_cd.isCrawler.return_value = False
         mock_cd.getMatches.return_value = None
         assert get_bot_name("MyCustomBot/2.0") == "MyCustomBot"
