@@ -449,9 +449,7 @@ class OAuthService:
         )
 
         if not updated:
-            log.warning(
-                "oauth_unlink_not_found", user_id=user_id, provider=provider_name
-            )
+            log.info("oauth_unlink_not_found", user_id=user_id, provider=provider_name)
             raise NotFoundError("provider not found or already unlinked")
 
         log.info("oauth_provider_unlinked", user_id=user_id, provider=provider_name)

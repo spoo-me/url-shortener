@@ -302,10 +302,9 @@ class UrlService:
         if not validate_url(
             request.long_url, blocked_self_domains=self._blocked_self_domains
         ):
-            log.warning(
+            log.info(
                 "url_create_rejected",
                 reason="invalid_url",
-                long_url=request.long_url,
             )
             raise ValidationError("URL is not allowed or invalid", field="long_url")
 
@@ -315,10 +314,9 @@ class UrlService:
         if not validate_blocked_url(
             request.long_url, blocked_patterns, timeout=self._blocked_url_regex_timeout
         ):
-            log.warning(
+            log.info(
                 "url_create_rejected",
                 reason="blocked_pattern",
-                long_url=request.long_url,
             )
             raise ValidationError("URL is blocked", field="long_url")
 
@@ -349,7 +347,7 @@ class UrlService:
                     "Alias contains invalid characters", field="alias"
                 )
             if not await self.check_alias_available(request.alias):
-                log.info("url_alias_conflict", alias=request.alias)
+                log.info("url_alias_conflict", short_code=request.alias)
                 raise ConflictError("Alias is already in use")
             alias = request.alias
         else:
@@ -383,11 +381,13 @@ class UrlService:
         inserted_id = await self._url_repo.insert(doc)
         url_doc.id = inserted_id
 
+        _url_base = request.long_url.split("?")[0]
+        _log_url = f"{_url_base}?[REDACTED]" if "?" in request.long_url else _url_base
         log.info(
             "url_created",
-            alias=alias,
-            long_url=request.long_url,
-            owner_id=str(owner_id) if owner_id else None,
+            short_code=alias,
+            long_url=_log_url,
+            user_id=str(owner_id) if owner_id else None,
             schema=SchemaVersion.V2,
             has_password=bool(password_hash),
             max_clicks=request.max_clicks,
@@ -454,8 +454,8 @@ class UrlService:
         log.info(
             "url_updated",
             url_id=str(url_id),
-            alias=existing.alias,
-            owner_id=str(owner_id),
+            short_code=existing.alias,
+            user_id=str(owner_id),
             fields_changed=list(update_ops.keys()),
         )
 
@@ -521,8 +521,8 @@ class UrlService:
         log.info(
             "url_deleted",
             url_id=str(url_id),
-            alias=existing.alias,
-            owner_id=str(owner_id),
+            short_code=existing.alias,
+            user_id=str(owner_id),
         )
 
     async def list_by_owner(
@@ -594,7 +594,7 @@ class UrlService:
 
         log.info(
             "url_list_query",
-            owner_id=str(owner_id),
+            user_id=str(owner_id),
             page=query.page,
             page_size=query.page_size,
             sort_by=query.sort_by,

@@ -45,6 +45,19 @@ from shared.logging import get_logger
 log = get_logger(__name__)
 
 
+# Deprecated timezone names → IANA canonical names (loaded once, not per-request)
+_TIMEZONE_ALIASES: dict[str, str] = {
+    "Asia/Calcutta": "Asia/Kolkata",
+    "Asia/Katmandu": "Asia/Kathmandu",
+    "Asia/Rangoon": "Asia/Yangon",
+    "Asia/Saigon": "Asia/Ho_Chi_Minh",
+    "US/Eastern": "America/New_York",
+    "US/Central": "America/Chicago",
+    "US/Mountain": "America/Denver",
+    "US/Pacific": "America/Los_Angeles",
+}
+
+
 class StatsService:
     """Analytics query service.
 
@@ -455,19 +468,9 @@ class StatsService:
             )
 
         # ── Validate timezone ─────────────────────────────────────────────────
-        timezone_aliases = {
-            "Asia/Calcutta": "Asia/Kolkata",
-            "Asia/Katmandu": "Asia/Kathmandu",
-            "Asia/Rangoon": "Asia/Yangon",
-            "Asia/Saigon": "Asia/Ho_Chi_Minh",
-            "US/Eastern": "America/New_York",
-            "US/Central": "America/Chicago",
-            "US/Mountain": "America/Denver",
-            "US/Pacific": "America/Los_Angeles",
-        }
-        tz_name = timezone_aliases.get(tz_name, tz_name)
+        tz_name = _TIMEZONE_ALIASES.get(tz_name, tz_name)
         if tz_name not in available_timezones():
-            log.warning("invalid_timezone_provided", timezone=tz_name, fallback="UTC")
+            log.info("invalid_timezone_provided", timezone=tz_name, fallback="UTC")
             tz_name = "UTC"
 
         # ── Scope/target validation ───────────────────────────────────────────
@@ -481,7 +484,7 @@ class StatsService:
 
             if privacy["private"]:
                 if owner_id is None:
-                    log.warning(
+                    log.info(
                         "stats_access_denied",
                         reason="unauthenticated_private_stats",
                         short_code=short_code,
@@ -490,7 +493,7 @@ class StatsService:
                         "this URL has private statistics - authentication required"
                     )
                 if privacy["owner_id"] != str(owner_id):
-                    log.warning(
+                    log.info(
                         "stats_access_denied",
                         reason="not_owner",
                         short_code=short_code,
@@ -501,7 +504,7 @@ class StatsService:
 
         elif scope == StatsScope.ALL:
             if owner_id is None:
-                log.warning(
+                log.info(
                     "stats_access_denied",
                     reason="unauthenticated_scope_all",
                 )

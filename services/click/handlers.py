@@ -151,7 +151,7 @@ class V2ClickHandler:
                 country=country or "Unknown",
                 browser=browser,
                 is_bot=is_bot,
-                redirect_ms=redirect_ms,
+                duration_ms=redirect_ms,
             )
 
         # Max-clicks expiry — atomic conditional update
