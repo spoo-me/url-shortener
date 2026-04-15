@@ -16,7 +16,8 @@ utils/export_utils.py directly — that path is unaffected by this service.
 from __future__ import annotations
 
 from errors import ValidationError
-from schemas.dto.requests.stats import ExportQuery, StatsScope
+from schemas.dto.requests.stats import ExportQuery
+from schemas.enums.stats import StatsScope
 from schemas.results import ExportResult
 from services.export.protocol import ExportFormatter
 from services.stats_service import StatsService

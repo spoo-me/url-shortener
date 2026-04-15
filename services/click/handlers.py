@@ -117,7 +117,7 @@ class V2ClickHandler:
             return  # Skip analytics; redirect still proceeds
 
         # Build and insert ClickDoc
-        url_id = ObjectId(url_data._id)
+        url_id = ObjectId(url_data.id)
         owner_id = (
             ObjectId(url_data.owner_id) if url_data.owner_id else ANONYMOUS_OWNER_ID
         )

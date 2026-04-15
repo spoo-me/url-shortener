@@ -12,16 +12,16 @@ existing Flask endpoint exactly.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
+
+from schemas.dto.base import ResponseBase
 
 
-class ApiKeyResponse(BaseModel):
+class ApiKeyResponse(ResponseBase):
     """A single API key entry as returned by the list endpoint.
 
     The full token is never returned here — only the ``token_prefix`` for display.
     """
-
-    model_config = ConfigDict(populate_by_name=True)
 
     id: str = Field(description="API key ID", examples=["507f1f77bcf86cd799439011"])
     name: str = Field(
@@ -67,20 +67,16 @@ class ApiKeyCreatedResponse(ApiKeyResponse):
     )
 
 
-class ApiKeysListResponse(BaseModel):
+class ApiKeysListResponse(ResponseBase):
     """Response body for GET /api/v1/keys."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     keys: list[ApiKeyResponse] = Field(
         description="List of API keys for the authenticated user"
     )
 
 
-class ApiKeyActionResponse(BaseModel):
+class ApiKeyActionResponse(ResponseBase):
     """Response body for DELETE /api/v1/keys/{key_id}."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     success: bool = Field(description="Whether the action completed successfully")
     action: str = Field(

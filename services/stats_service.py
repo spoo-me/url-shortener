@@ -32,10 +32,10 @@ from errors import (
 )
 from repositories.click_repository import ClickRepository
 from repositories.url_repository import UrlRepository
-from schemas.dto.requests.stats import (
+from schemas.dto.requests.stats import StatsQuery
+from schemas.enums.stats import (
     StatsDimension,
     StatsMetric,
-    StatsQuery,
     StatsScope,
 )
 from shared.aggregation_strategies import AggregationStrategyFactory

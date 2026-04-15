@@ -74,7 +74,7 @@ def _build_test_app(overrides: dict) -> FastAPI:
 def _make_cache_data(**kwargs) -> UrlCacheData:
     """Build a UrlCacheData with sensible defaults; override via kwargs."""
     defaults = dict(
-        _id=str(ObjectId()),
+        id=str(ObjectId()),
         alias="abc123",
         long_url="https://example.com/destination",
         block_bots=False,

@@ -32,7 +32,7 @@ from dependencies import get_db
 from middleware.rate_limiter import Limits, limiter
 from repositories.legacy.emoji_url_repository import EmojiUrlRepository
 from repositories.legacy.legacy_url_repository import LegacyUrlRepository
-from schemas.dto.requests.stats import ExportFormat
+from schemas.enums.stats import ExportFormat
 from shared.datetime_utils import convert_to_gmt
 from shared.legacy_helpers import (
     add_missing_dates,

@@ -107,7 +107,7 @@ def make_active_cache(
     password_hash: str | None = None,
 ) -> UrlCacheData:
     return UrlCacheData(
-        _id=str(URL_OID),
+        id=str(URL_OID),
         alias=alias,
         long_url="https://example.com",
         block_bots=block_bots,
@@ -172,7 +172,7 @@ class TestUrlServiceResolve:
         )
 
         cached = UrlCacheData(
-            _id=str(URL_OID),
+            id=str(URL_OID),
             alias=ALIAS,
             long_url="",
             block_bots=False,
@@ -197,7 +197,7 @@ class TestUrlServiceResolve:
 
         for status in ("EXPIRED", "INACTIVE"):
             url_cache.get.return_value = UrlCacheData(
-                _id=str(URL_OID),
+                id=str(URL_OID),
                 alias=ALIAS,
                 long_url="",
                 block_bots=False,

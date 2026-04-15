@@ -58,7 +58,7 @@ def make_v2_cache(
     owner_id: str | None = None,
 ) -> UrlCacheData:
     return UrlCacheData(
-        _id=str(URL_OID),
+        id=str(URL_OID),
         alias=ALIAS,
         long_url="https://example.com",
         block_bots=block_bots,
@@ -76,7 +76,7 @@ def make_v1_cache(
     short_code: str = "abcdef",
 ) -> UrlCacheData:
     return UrlCacheData(
-        _id=short_code,
+        id=short_code,
         alias=short_code,
         long_url="https://legacy.example.com",
         block_bots=block_bots,

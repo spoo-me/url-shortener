@@ -4,10 +4,8 @@ Stores UrlCacheData as JSON (not pickle) so cache entries are
 debuggable and safe to deserialise across Python versions.
 """
 
-import json
-from dataclasses import asdict, dataclass
-
 import redis.asyncio as aioredis
+from pydantic import BaseModel, ConfigDict, Field
 
 from shared.crypto import verify_password as verify_password_hash
 from shared.logging import get_logger
@@ -15,11 +13,12 @@ from shared.logging import get_logger
 log = get_logger(__name__)
 
 
-@dataclass
-class UrlCacheData:
+class UrlCacheData(BaseModel):
     """Unified cache schema covering both v1 (legacy) and v2 URLs."""
 
-    _id: str  # MongoDB ObjectId as string
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str = Field(alias="_id")  # accepts "_id" from cached JSON, stored as "id"
     alias: str
     long_url: str
     block_bots: bool
@@ -63,7 +62,7 @@ class UrlCache:
             raw = await self._redis.get(self._key(short_code))
             if raw is None:
                 return None
-            return UrlCacheData(**json.loads(raw))
+            return UrlCacheData.model_validate_json(raw)
         except Exception as e:
             log.warning("url_cache_get_error", short_code=short_code, error=str(e))
             return None
@@ -75,7 +74,7 @@ class UrlCache:
             await self._redis.setex(
                 self._key(short_code),
                 self.ttl_seconds,
-                json.dumps(asdict(data)),
+                data.model_dump_json(by_alias=True),
             )
         except Exception as e:
             log.error("url_cache_set_error", short_code=short_code, error=str(e))

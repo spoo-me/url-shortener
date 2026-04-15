@@ -114,7 +114,7 @@ def _make_cache_data(
     max_clicks: int | None = None,
 ) -> UrlCacheData:
     return UrlCacheData(
-        _id=str(_URL_OID),
+        id=str(_URL_OID),
         alias=alias,
         long_url=long_url,
         block_bots=False,

@@ -16,18 +16,17 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
+from schemas.dto.base import ResponseBase
 from schemas.models.user import OAuthProvider, ProviderProfile
 
 if TYPE_CHECKING:
     from schemas.models.user import UserDoc
 
 
-class AuthProviderInfo(BaseModel):
+class AuthProviderInfo(ResponseBase):
     """Minimal OAuth provider entry returned inside UserProfileResponse."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     provider: OAuthProvider | None = Field(
         default=None, description="OAuth provider name", examples=["google"]
@@ -44,10 +43,8 @@ class AuthProviderInfo(BaseModel):
     )
 
 
-class UserPfp(BaseModel):
+class UserPfp(ResponseBase):
     """Profile picture info returned inside UserProfileResponse."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     url: str | None = Field(
         default=None,
@@ -59,10 +56,8 @@ class UserPfp(BaseModel):
     )
 
 
-class UserProfileResponse(BaseModel):
+class UserProfileResponse(ResponseBase):
     """User profile shape — used in login/register/me responses."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     id: str = Field(description="User ID", examples=["507f1f77bcf86cd799439011"])
     email: str | None = Field(
@@ -108,10 +103,8 @@ class UserProfileResponse(BaseModel):
         )
 
 
-class LoginResponse(BaseModel):
+class LoginResponse(ResponseBase):
     """Response body for POST /auth/login (200)."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     access_token: str = Field(
         description="JWT access token", examples=["eyJhbGciOiJIUzI1NiIs..."]
@@ -119,10 +112,8 @@ class LoginResponse(BaseModel):
     user: UserProfileResponse = Field(description="Authenticated user's profile")
 
 
-class RegisterResponse(BaseModel):
+class RegisterResponse(ResponseBase):
     """Response body for POST /auth/register (201)."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     access_token: str = Field(
         description="JWT access token", examples=["eyJhbGciOiJIUzI1NiIs..."]
@@ -136,28 +127,22 @@ class RegisterResponse(BaseModel):
     )
 
 
-class RefreshResponse(BaseModel):
+class RefreshResponse(ResponseBase):
     """Response body for POST /auth/refresh (200)."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     access_token: str = Field(
         description="New JWT access token", examples=["eyJhbGciOiJIUzI1NiIs..."]
     )
 
 
-class LogoutResponse(BaseModel):
+class LogoutResponse(ResponseBase):
     """Response body for POST /auth/logout (200)."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     success: bool = Field(description="Always true on successful logout")
 
 
-class VerifyEmailResponse(BaseModel):
+class VerifyEmailResponse(ResponseBase):
     """Response body for POST /auth/verify-email (200)."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     success: bool = Field(description="Whether verification succeeded")
     message: str = Field(
@@ -169,20 +154,16 @@ class VerifyEmailResponse(BaseModel):
     )
 
 
-class MeResponse(BaseModel):
+class MeResponse(ResponseBase):
     """Response body for GET /auth/me (200)."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     user: UserProfileResponse = Field(
         description="Current authenticated user's profile"
     )
 
 
-class SendVerificationResponse(BaseModel):
+class SendVerificationResponse(ResponseBase):
     """Response body for POST /auth/send-verification (200)."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     success: bool = Field(description="Whether the verification email was sent")
     message: str = Field(description="Human-readable status message")
@@ -191,29 +172,23 @@ class SendVerificationResponse(BaseModel):
     )
 
 
-class DeviceTokenResponse(BaseModel):
+class DeviceTokenResponse(ResponseBase):
     """Response body for POST /auth/device/token (200)."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     access_token: str = Field(description="JWT access token")
     refresh_token: str = Field(description="JWT refresh token")
     user: UserProfileResponse = Field(description="User profile")
 
 
-class DeviceRefreshResponse(BaseModel):
+class DeviceRefreshResponse(ResponseBase):
     """Response body for POST /auth/device/refresh (200)."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     access_token: str = Field(description="New JWT access token")
     refresh_token: str = Field(description="New JWT refresh token")
 
 
-class OAuthProviderDetail(BaseModel):
+class OAuthProviderDetail(ResponseBase):
     """Detailed OAuth provider entry for the providers list endpoint."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     provider: OAuthProvider = Field(description="Provider name", examples=["google"])
     email: str | None = Field(default=None, description="Email from provider")
@@ -228,10 +203,8 @@ class OAuthProviderDetail(BaseModel):
     )
 
 
-class OAuthProvidersResponse(BaseModel):
+class OAuthProvidersResponse(ResponseBase):
     """Response body for GET /oauth/providers (200)."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     providers: list[OAuthProviderDetail] = Field(
         description="List of linked OAuth providers with name, email, and linked_at"
