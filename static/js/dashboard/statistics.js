@@ -163,14 +163,10 @@ function closeAllModals(dashboard) {
         }
     }
 
-    // Close auto-refresh dropdown
-    const autoRefreshBtn = document.querySelector('.auto-refresh-btn');
-    const autoRefreshDropdown = autoRefreshBtn?.nextElementSibling;
-    if (autoRefreshDropdown) {
-        autoRefreshDropdown.classList.remove('show');
-        if (autoRefreshBtn) {
-            autoRefreshBtn.classList.remove('active');
-        }
+    // Close auto-refresh dropdown via primitive
+    const autoRefreshDd = document.querySelector('.auto-refresh-dropdown.dropdown');
+    if (autoRefreshDd && window.Dropdown) {
+        window.Dropdown.close(autoRefreshDd);
     }
 
     // Close export dropdown
@@ -368,40 +364,7 @@ class StatisticsDashboard {
             });
         }
 
-        // Auto-refresh dropdown toggle
-        const autoRefreshBtn = document.querySelector('.auto-refresh-btn');
-        if (autoRefreshBtn) {
-            autoRefreshBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const dropdown = autoRefreshBtn.nextElementSibling;
-                if (dropdown && dropdown.classList.contains('dropdown-menu')) {
-                    const isOpen = dropdown.classList.contains('show');
-
-                    // Close all other modals first
-                    closeAllModals(this);
-
-                    // Only open if it was previously closed
-                    if (!isOpen) {
-                        dropdown.classList.add('show');
-                        autoRefreshBtn.classList.add('active');
-                    }
-                }
-            });
-        }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            const autoRefreshDropdown = e.target.closest('.auto-refresh-dropdown');
-            if (!autoRefreshDropdown) {
-                const openDropdowns = document.querySelectorAll('.auto-refresh-dropdown .dropdown-menu.show');
-                const autoRefreshBtn = document.querySelector('.auto-refresh-btn');
-                openDropdowns.forEach(dropdown => dropdown.classList.remove('show'));
-                if (autoRefreshBtn) {
-                    autoRefreshBtn.classList.remove('active');
-                }
-            }
-        });
+        // Auto-refresh open/close/outside-click handled by Dropdown primitive.
 
         // Table view button controls
         this.setupTableViewControls();
@@ -1890,29 +1853,23 @@ class StatisticsDashboard {
     }
 
     setupAutoRefresh() {
-        // Auto-refresh dropdown items
-        const refreshDropdown = document.querySelector('.auto-refresh-dropdown .dropdown-menu');
-        if (refreshDropdown) {
-            refreshDropdown.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
+        // Auto-refresh item selection via Dropdown primitive.
+        const dropdown = document.querySelector('.auto-refresh-dropdown.dropdown');
+        if (!dropdown) return;
 
-                const item = e.target.closest('.dropdown-item');
-                if (item && !item.classList.contains('disabled')) {
-                    const interval = parseInt(item.dataset.interval);
-                    this.setAutoRefreshInterval(interval);
+        dropdown.addEventListener('dropdown:select', (e) => {
+            const item = e.detail.item;
+            if (item.hasAttribute('disabled') || item.classList.contains('disabled')) return;
 
-                    // Update button text
-                    const autoRefreshBtn = document.querySelector('.auto-refresh-btn');
-                    const intervalText = item.textContent.trim();
-                    autoRefreshBtn.innerHTML = `${intervalText} <i class="ti ti-chevron-down"></i>`;
+            const interval = parseInt(item.dataset.interval, 10);
+            this.setAutoRefreshInterval(interval);
 
-                    // Close dropdown
-                    const dropdown = refreshDropdown;
-                    dropdown.classList.remove('show');
-                }
-            });
-        }
+            // Update trigger label
+            const trigger = dropdown.querySelector('.auto-refresh-btn');
+            if (trigger) {
+                trigger.innerHTML = `${e.detail.text} <i class="ti ti-chevron-down"></i>`;
+            }
+        });
     }
 
     setAutoRefreshInterval(seconds) {

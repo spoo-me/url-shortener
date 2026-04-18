@@ -180,32 +180,18 @@
                     <i class="ti ti-refresh"></i>
                 </button>
                 <div class="separator"></div>
-                <div class="auto-refresh-dropdown">
-                    <button class="auto-refresh-btn" type="button">
+                <div class="auto-refresh-dropdown dropdown" data-dropdown>
+                    <button class="auto-refresh-btn dropdown-trigger" type="button" data-dropdown-trigger>
                         Off <i class="ti ti-chevron-down"></i>
                     </button>
-                    <div class="dropdown-menu">
-                        <div class="dropdown-item" data-interval="0">
-                            Off
-                        </div>
-                        <div class="dropdown-item" data-interval="60">
-                            1m
-                        </div>
-                        <div class="dropdown-item" data-interval="300">
-                            5m
-                        </div>
-                        <div class="dropdown-item" data-interval="900">
-                            15m
-                        </div>
-                        <div class="dropdown-item" data-interval="1800">
-                            30m
-                        </div>
-                        <div class="dropdown-item" data-interval="3600">
-                            1h
-                        </div>
-                        <div class="dropdown-item" data-interval="7200">
-                            2h
-                        </div>
+                    <div class="dropdown-menu dropdown-menu--align-right auto-refresh-menu" data-dropdown-menu>
+                        <button type="button" class="dropdown-item" data-value="0" data-interval="0">Off</button>
+                        <button type="button" class="dropdown-item" data-value="60" data-interval="60">1m</button>
+                        <button type="button" class="dropdown-item" data-value="300" data-interval="300">5m</button>
+                        <button type="button" class="dropdown-item" data-value="900" data-interval="900">15m</button>
+                        <button type="button" class="dropdown-item" data-value="1800" data-interval="1800">30m</button>
+                        <button type="button" class="dropdown-item" data-value="3600" data-interval="3600">1h</button>
+                        <button type="button" class="dropdown-item" data-value="7200" data-interval="7200">2h</button>
                     </div>
                 </div>
             </div>
