@@ -908,8 +908,41 @@ document.addEventListener('DOMContentLoaded', function () {
         els.pagination.appendChild(container);
     }
 
+    const FILTERS_STORAGE_KEY = 'spoo:links:filters:v1';
+
+    function saveFilters() {
+        try {
+            const snapshot = {
+                search: els.search.value,
+                status: els.status.value,
+                password: els.password.value,
+                maxClicks: els.maxClicks.value,
+                createdAfter: els.createdAfter.value,
+                createdBefore: els.createdBefore.value,
+                sortBy: els.sortBy.value,
+                order: els.order.value,
+                pageSize: els.pageSize.value,
+            };
+            localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(snapshot));
+        } catch (_) { /* localStorage may be unavailable */ }
+    }
+
+    function loadFilters() {
+        try {
+            const raw = localStorage.getItem(FILTERS_STORAGE_KEY);
+            if (!raw) return;
+            const saved = JSON.parse(raw);
+            for (const [key, value] of Object.entries(saved)) {
+                if (els[key] && typeof value === 'string') {
+                    els[key].value = value;
+                }
+            }
+        } catch (_) { /* ignore malformed state */ }
+    }
+
     function applyFilters() {
         state.page = 1;
+        saveFilters();
         fetchData();
         // Close the options dropdown with animation
         if (els.optionsDropdown) {
@@ -975,6 +1008,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Restore saved filter state before segmented visuals hydrate.
+    loadFilters();
     initSegments();
 
     // Expose fetchData globally for other components to refresh the list

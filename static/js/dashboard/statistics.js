@@ -335,13 +335,40 @@ class StatisticsDashboard {
     }
 
     setupDateRangePicker() {
+        const saved = this.loadSavedTimeRange();
         this.dateRangePicker = new DateRangePicker({
             container: 'dateRangeContainer',
             onRangeChange: (dateRange) => {
                 this.handleDateRangeChange(dateRange);
             },
-            defaultRange: 'last-7-days'
+            defaultRange: (saved && saved.range) || 'last-7-days'
         });
+
+        // For custom ranges, also restore the from/to text and refresh the trigger label.
+        if (saved && saved.range === 'custom' && saved.customFrom && saved.customTo) {
+            this.dateRangePicker.customFromValue = saved.customFrom;
+            this.dateRangePicker.customToValue = saved.customTo;
+            const triggerEl = document.querySelector('.selected-range');
+            if (triggerEl) triggerEl.textContent = `${saved.customFrom} - ${saved.customTo}`;
+        }
+    }
+
+    loadSavedTimeRange() {
+        try {
+            const raw = localStorage.getItem('stats-time-range');
+            return raw ? JSON.parse(raw) : null;
+        } catch (_) { return null; }
+    }
+
+    saveTimeRange() {
+        try {
+            const payload = { range: this.currentTimeRange };
+            if (this.currentTimeRange === 'custom' && this.dateRangePicker) {
+                payload.customFrom = this.dateRangePicker.customFromValue;
+                payload.customTo = this.dateRangePicker.customToValue;
+            }
+            localStorage.setItem('stats-time-range', JSON.stringify(payload));
+        } catch (_) { /* localStorage may be unavailable */ }
     }
 
     handleDateRangeChange(dateRange) {
@@ -349,6 +376,8 @@ class StatisticsDashboard {
         this.startDate = dateRange.start;
         this.endDate = dateRange.end;
         this.currentTimeRange = dateRange.range;
+
+        this.saveTimeRange();
 
         // Reload dashboard data with new range
         this.loadDashboardData();
