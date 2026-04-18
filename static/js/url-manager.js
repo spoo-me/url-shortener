@@ -39,8 +39,7 @@ class UrlManager {
     }
 
     init() {
-        // Tab switching
-        this.initTabs();
+        // Tab switching handled by ModalTabs (auto-init via modal-tabs.js).
 
         // Modal event listeners
         this.modal?.querySelector('.modal-close')?.addEventListener('click', () => this.closeModal());
@@ -82,37 +81,6 @@ class UrlManager {
 
         // Attach to row action buttons
         this.attachRowListeners();
-    }
-
-    initTabs() {
-        if (!this.modal) return;
-
-        const tabs = this.modal.querySelectorAll('.tab');
-        const tabContents = this.modal.querySelectorAll('.tab-content');
-        const tabsContainer = this.modal.querySelector('.tabs');
-
-        tabs.forEach((tab, index) => {
-            tab.addEventListener('click', () => {
-                const targetTab = tab.getAttribute('data-tab');
-
-                // Update tab indicator position
-                if (tabsContainer) {
-                    tabsContainer.setAttribute('data-active', index.toString());
-                }
-
-                // Update tab states
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-
-                // Update content states - simple show/hide
-                tabContents.forEach(content => {
-                    content.classList.remove('active');
-                    if (content.getAttribute('data-tab') === targetTab) {
-                        content.classList.add('active');
-                    }
-                });
-            });
-        });
     }
 
     attachRowListeners() {
@@ -244,12 +212,6 @@ class UrlManager {
             this.modal.classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            // Initialize tab indicator to first tab
-            const tabsContainer = this.modal.querySelector('.tabs');
-            if (tabsContainer) {
-                tabsContainer.setAttribute('data-active', '0');
-            }
-
             // Focus first input
             setTimeout(() => {
                 this.aliasInput?.focus();
@@ -262,6 +224,7 @@ class UrlManager {
             this.modal.classList.remove('active');
             document.body.style.overflow = '';
             this.currentUrlData = null;
+            if (window.ModalTabs) window.ModalTabs.reset(this.modal);
         }
     }
 

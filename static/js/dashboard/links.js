@@ -83,15 +83,8 @@ function closeCreateLinkModal() {
         const errorMessages = modal.querySelectorAll('.field-error');
         errorMessages.forEach(msg => msg.remove());
 
-        // Reset to first tab
-        const tabs = modal.querySelectorAll('.tab');
-        const contents = modal.querySelectorAll('.tab-content');
-        tabs.forEach((tab, i) => {
-            tab.classList.toggle('active', i === 0);
-        });
-        contents.forEach((content, i) => {
-            content.classList.toggle('active', i === 0);
-        });
+        // Reset to first tab (content + buttons + indicator)
+        if (window.ModalTabs) window.ModalTabs.reset(modal);
     }
 }
 
@@ -633,27 +626,7 @@ document.addEventListener('DOMContentLoaded', function () {
         closeBtn.addEventListener('click', closeCreateLinkModal);
     }
 
-    // Tab switching for create modal
-    const createTabs = document.querySelectorAll('#create-link-modal .tab');
-    createTabs.forEach((tab, index) => {
-        tab.addEventListener('click', function () {
-            const targetTab = this.dataset.tab;
-            const modal = document.getElementById('create-link-modal');
-            const tabsContainer = modal.querySelector('.tabs');
-
-            // Update tab indicator position
-            if (tabsContainer) {
-                tabsContainer.setAttribute('data-active', index.toString());
-            }
-
-            // Update tab states
-            modal.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            modal.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
-            this.classList.add('active');
-            modal.querySelector(`[data-tab="${targetTab}"].tab-content`).classList.add('active');
-        });
-    });
+    // Tab switching handled by ModalTabs (auto-init via modal-tabs.js).
 
     // ESC key to close modals
     document.addEventListener('keydown', function (e) {
