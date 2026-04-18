@@ -1,4 +1,4 @@
-var amount = 2000,
+var amount = 200,
     between = (min, max) => min + Math.random() * (max - min),
     colors = [
         "#d400ff",
@@ -17,14 +17,14 @@ let interval = setInterval(() => {
     if (current < amount) {
         animate(createConfetti());
     }
-}, 50);
+}, 30);
 
-setTimeout(() => clearInterval(interval), 5000);
+setTimeout(() => clearInterval(interval), 1200);
 
 function createConfetti() {
     let div = document.createElement('div');
     // Randomize the size and shape of the confetti
-    let size = between(10, 25); // Increase the minimum and maximum values
+    let size = between(6, 12);
     let shape = Math.random() > 0.5 ? 'circle' : 'square';
     gsap.set(div, {
         attr: {
@@ -44,21 +44,12 @@ function createConfetti() {
 }
 
 function animate(element) {
-    // Adjust the gravity, drag, and terminal velocity values
-    let gravity = 0.3;
-    let drag = 0.05;
-    let terminalVelocity = 10;
-    // Randomize the initial velocity and rotation of the confetti
-    let velocityX = between(-25, 25);
-    let velocityY = between(0, -50);
-    let rotationX = between(0, 360);
-    let rotationY = between(0, 360);
     let rotationZ = between(0, 360);
     gsap.to(element, {
         y: window.innerHeight + 40,
         ease: 'power1.out',
-        delay: between(0, .25),
-        duration: between(2, 5),
+        delay: between(0, .15),
+        duration: between(1.5, 3),
         onComplete() {
             if (element instanceof Element || element instanceof HTMLDocument) {
                 current--;
@@ -68,28 +59,7 @@ function animate(element) {
     });
     gsap.to(element, {
         rotationZ: rotationZ + between(90, 180),
-        repeat: -1,
-        yoyo: true,
-        duration: between(3, 6)
-    });
-    gsap.to(element, {
-        rotationX: rotationX + between(0, 360),
-        rotationY: rotationY + between(0, 360),
-        repeat: -1,
-        yoyo: true,
-        duration: between(3, 6)
-    });
-    // Apply forces to velocity and position
-    gsap.ticker.add(() => {
-        velocityX -= velocityX * drag;
-        velocityY = Math.min(velocityY + gravity, terminalVelocity);
-        velocityX += Math.random() > 0.5 ? Math.random() : -Math.random();
-        velocityY += Math.random() > 0.5 ? Math.random() : -Math.random();
-    });
-    // Increase the scale factor of each particle
-    gsap.to(element, {
-        scale: 1.5, // Change this value to make the confetti bigger or smaller
-        ease: "elastic.out(1, 0.3)",
-        duration: 1
+        duration: between(2, 4),
+        ease: 'none'
     });
 }

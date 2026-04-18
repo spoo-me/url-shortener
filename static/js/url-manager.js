@@ -212,6 +212,9 @@ class UrlManager {
             this.modal.classList.add('active');
             document.body.style.overflow = 'hidden';
 
+            // Clear any stale errors from a previous edit.
+            if (window.clearFormErrors) window.clearFormErrors(this.modal);
+
             // Focus first input
             setTimeout(() => {
                 this.aliasInput?.focus();
@@ -368,6 +371,22 @@ class UrlManager {
                 }, 200); // Small delay to allow user to see the success notification
             } else {
                 const errorData = await response.json();
+                // Route per-field errors through the primitive so the tab
+                // indicator dots + auto-jump kick in.
+                if (window.applyServerErrors) {
+                    const fieldMap = {
+                        'alias': 'edit-alias',
+                        'long_url': 'edit-long-url',
+                        'url': 'edit-long-url',
+                        'password': 'edit-password',
+                        'max_clicks': 'edit-max-clicks',
+                        'expire_after': 'edit-expire-after'
+                    };
+                    const applied = window.applyServerErrors(this.modal, errorData, fieldMap);
+                    if (applied > 0 && window.ModalTabs) {
+                        window.ModalTabs.jumpToFirstInvalid(this.modal);
+                    }
+                }
                 throw new Error(errorData.error || 'Failed to update URL');
             }
         } catch (error) {

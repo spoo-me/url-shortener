@@ -77,11 +77,8 @@ function closeCreateLinkModal() {
         const form = document.getElementById('create-link-form');
         if (form) form.reset();
 
-        // Clear any error states
-        const errorFields = modal.querySelectorAll('.error');
-        errorFields.forEach(field => field.classList.remove('error'));
-        const errorMessages = modal.querySelectorAll('.field-error');
-        errorMessages.forEach(msg => msg.remove());
+        // Clear any error states (also refreshes tab error dots)
+        if (window.clearFormErrors) window.clearFormErrors(modal);
 
         // Reset to first tab (content + buttons + indicator)
         if (window.ModalTabs) window.ModalTabs.reset(modal);
@@ -161,57 +158,53 @@ function openLinkSuccessModal(shortUrl, linkData) {
             }
         }, 500);
 
-        // Trigger confetti effect
+        // Trigger confetti effect — brand palette, celebratory but short.
         setTimeout(() => {
             if (window.confetti && !window.confettiActive) {
-                // Check for reduced motion preference
                 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                if (prefersReducedMotion) return;
 
-                if (!prefersReducedMotion) {
-                    window.confettiActive = true;
+                window.confettiActive = true;
+                const palette = ['#7c3aed', '#a78bfa', '#22c55e', '#f59e0b'];
 
-                    // Launch confetti from multiple directions with higher z-index
-                    const duration = 3000;
-                    const end = Date.now() + duration;
+                // Main burst from center
+                confetti({
+                    particleCount: 90,
+                    spread: 75,
+                    startVelocity: 40,
+                    scalar: 0.9,
+                    origin: { y: 0.6 },
+                    colors: palette,
+                    zIndex: 10000
+                });
 
-                    // Initial big burst
+                // Brief cannon from each side — 800ms trail
+                const end = Date.now() + 800;
+                (function frame() {
+                    if (!window.confettiActive) return;
                     confetti({
-                        particleCount: 100,
-                        spread: 70,
-                        origin: { y: 0.6 },
-                        colors: ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'],
+                        particleCount: 2,
+                        angle: 60,
+                        spread: 50,
+                        origin: { x: 0, y: 0.7 },
+                        colors: palette,
                         zIndex: 10000
                     });
-
-                    // Continuous smaller bursts
-                    (function frame() {
-                        if (!window.confettiActive) return; // Stop if confetti was disabled
-
-                        confetti({
-                            particleCount: 3,
-                            angle: 60,
-                            spread: 55,
-                            origin: { x: 0, y: 0.7 },
-                            colors: ['#6366f1', '#8b5cf6', '#06b6d4'],
-                            zIndex: 10000
-                        });
-                        confetti({
-                            particleCount: 3,
-                            angle: 120,
-                            spread: 55,
-                            origin: { x: 1, y: 0.7 },
-                            colors: ['#6366f1', '#8b5cf6', '#06b6d4'],
-                            zIndex: 10000
-                        });
-
-                        if (Date.now() < end && window.confettiActive) {
-                            window.confettiAnimationId = requestAnimationFrame(frame);
-                        } else {
-                            window.confettiAnimationId = null;
-                            window.confettiActive = false;
-                        }
-                    }());
-                }
+                    confetti({
+                        particleCount: 2,
+                        angle: 120,
+                        spread: 50,
+                        origin: { x: 1, y: 0.7 },
+                        colors: palette,
+                        zIndex: 10000
+                    });
+                    if (Date.now() < end && window.confettiActive) {
+                        window.confettiAnimationId = requestAnimationFrame(frame);
+                    } else {
+                        window.confettiAnimationId = null;
+                        window.confettiActive = false;
+                    }
+                }());
             }
         }, 100);
     }
@@ -408,9 +401,10 @@ function validateExpireAfter(expireAfter) {
     if (!expireAfter) return { valid: true, message: '' }; // Optional field
 
     const expireDate = new Date(expireAfter);
-    const now = new Date();
-
-    if (expireDate <= now) {
+    if (isNaN(expireDate.getTime())) {
+        return { valid: false, message: 'Invalid date' };
+    }
+    if (expireDate <= new Date()) {
         return { valid: false, message: 'Expiration date must be in the future' };
     }
 
@@ -458,6 +452,8 @@ async function submitCreateForm(event) {
     event.preventDefault();
 
     if (!validateForm()) {
+        const modal = document.getElementById('create-link-modal');
+        if (window.ModalTabs) window.ModalTabs.jumpToFirstInvalid(modal);
         return;
     }
 
@@ -551,7 +547,10 @@ function handleApiError(result) {
     };
     const createModal = document.getElementById('create-link-modal');
     const applied = window.applyServerErrors(createModal, result, fieldMap);
-    if (applied > 0) return;
+    if (applied > 0) {
+        if (window.ModalTabs) window.ModalTabs.jumpToFirstInvalid(createModal);
+        return;
+    }
 
     // Handle general errors
     let errorMessage = result.error || 'An error occurred while creating the link';
@@ -571,6 +570,9 @@ function handleApiError(result) {
     if (typeof showNotification === 'function') {
         showNotification(errorMessage, 'error');
     }
+
+    // If any per-field error landed, jump to the first invalid tab.
+    if (window.ModalTabs) window.ModalTabs.jumpToFirstInvalid(createModal);
 }
 
 // Event Listeners

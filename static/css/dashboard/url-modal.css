@@ -223,6 +223,18 @@
     font-size: 16px;
 }
 
+.tab.has-error::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-danger);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.4);
+}
+
 /* Tab Content */
 .tab-content {
     display: none;

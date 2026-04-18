@@ -54,6 +54,50 @@
         if (!modal) return;
         var tabsContainer = modal.querySelector('.tabs');
         if (tabsContainer) setActive(tabsContainer, 0);
+        modal.querySelectorAll('.tab.has-error').forEach(function (t) {
+            t.classList.remove('has-error');
+        });
+    }
+
+    function paneHasErrors(pane) {
+        return !!(pane && (pane.querySelector('.field.has-error') || pane.querySelector('.field-error')));
+    }
+
+    /**
+     * Scan each tab pane and toggle `.has-error` on its tab button so the red
+     * dot reflects real state. Cheap enough to call on every field change.
+     */
+    function refreshErrors(modal) {
+        if (!modal) return;
+        var tabs = modal.querySelectorAll('.tabs .tab');
+        tabs.forEach(function (tab) {
+            var targetTab = tab.getAttribute('data-tab');
+            var pane = modal.querySelector('.tab-content[data-tab="' + targetTab + '"]');
+            tab.classList.toggle('has-error', paneHasErrors(pane));
+        });
+    }
+
+    /**
+     * If the currently active tab has no errors but another tab does, jump to
+     * the first (leftmost) tab with errors. Otherwise stay put.
+     */
+    function jumpToFirstInvalid(modal) {
+        if (!modal) return;
+        var tabsContainer = modal.querySelector('.tabs');
+        if (!tabsContainer) return;
+        var tabs = tabsContainer.querySelectorAll('.tab');
+        var activeTab = tabsContainer.querySelector('.tab.active');
+        if (activeTab) {
+            var activePane = modal.querySelector('.tab-content[data-tab="' + activeTab.getAttribute('data-tab') + '"]');
+            if (paneHasErrors(activePane)) return;
+        }
+        for (var i = 0; i < tabs.length; i++) {
+            var pane = modal.querySelector('.tab-content[data-tab="' + tabs[i].getAttribute('data-tab') + '"]');
+            if (paneHasErrors(pane)) {
+                setActive(tabsContainer, i);
+                return;
+            }
+        }
     }
 
     function autoInit() {
@@ -69,6 +113,8 @@
     window.ModalTabs = {
         setActive: setActive,
         init: init,
-        reset: reset
+        reset: reset,
+        refreshErrors: refreshErrors,
+        jumpToFirstInvalid: jumpToFirstInvalid
     };
 })();

@@ -18,6 +18,12 @@
         return input.closest('.field');
     }
 
+    function refreshOwnerTabs(field) {
+        if (!field || !window.ModalTabs || !window.ModalTabs.refreshErrors) return;
+        var modal = field.closest('.modal');
+        if (modal) window.ModalTabs.refreshErrors(modal);
+    }
+
     window.setFieldError = function (fieldId, message) {
         var field = getField(fieldId);
         if (!field) return;
@@ -37,6 +43,7 @@
             el.textContent = message;
             field.appendChild(el);
         }
+        refreshOwnerTabs(field);
     };
 
     window.clearFieldError = function (fieldId) {
@@ -45,6 +52,7 @@
         field.classList.remove('has-error');
         var existing = field.querySelector(':scope > .field-error');
         if (existing) existing.remove();
+        refreshOwnerTabs(field);
     };
 
     window.clearFormErrors = function (container) {
@@ -55,6 +63,10 @@
         container.querySelectorAll('.field-error').forEach(function (e) {
             e.remove();
         });
+        var modal = container.closest ? container.closest('.modal') : null;
+        if (modal && window.ModalTabs && window.ModalTabs.refreshErrors) {
+            window.ModalTabs.refreshErrors(modal);
+        }
     };
 
     /**

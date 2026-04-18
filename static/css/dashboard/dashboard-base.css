@@ -89,10 +89,26 @@ body.dashboard-layout {
 }
 
 .brand-logo img {
-    /* width: 32px; */
     height: 26px;
     margin-top: 5px;
     flex-shrink: 0;
+}
+
+/* Show the full logo-with-text when expanded, swap to the square favicon
+   when collapsed. Both imgs are rendered so no flash on toggle. */
+.brand-logo-icon {
+    display: none;
+    height: 28px !important;
+    width: 28px;
+    margin-top: 0 !important;
+}
+
+.collapsed .brand-logo-full {
+    display: none;
+}
+
+.collapsed .brand-logo-icon {
+    display: block;
 }
 
 .brand-text {
@@ -104,8 +120,29 @@ body.dashboard-layout {
     transition: opacity var(--transition-speed) var(--transition-easing), width var(--transition-speed) var(--transition-easing);
 }
 
+/* Collapsed: stack logo + toggle in the same slot and crossfade on hover.
+   Logo is visible at rest; hovering the header reveals the expand button.
+   `pointer-events: none` on the logo lets clicks on the logo-area pass
+   through to the toggle button underneath, so clicking "the logo" expands
+   the sidebar without needing to hover first. */
+.collapsed .sidebar-header {
+    position: relative;
+    justify-content: center;
+}
+
 .collapsed .sidebar-brand {
-    display: none;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+}
+
+.collapsed .sidebar-header:hover .sidebar-brand {
+    opacity: 0;
 }
 
 .sidebar-toggle {
@@ -136,10 +173,16 @@ body.dashboard-layout {
     padding: 20px 15px;
 }
 
-/* Ensure toggle button is always visible */
+/* Toggle is always rendered + clickable; opacity fades in on header hover. */
 .collapsed .sidebar-toggle {
     flex-shrink: 0;
     margin: 0 auto;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.collapsed .sidebar-header:hover .sidebar-toggle {
+    opacity: 1;
 }
 
 /* Sidebar Navigation */
