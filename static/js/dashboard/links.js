@@ -358,14 +358,17 @@ function validateUrl(url) {
 function validateAlias(alias) {
     if (!alias) return { valid: true, message: '' }; // Optional field
 
-    // Check pattern: alphanumeric, underscore, hyphen only
-    const aliasPattern = /^[a-zA-Z0-9_-]+$/;
-    if (!aliasPattern.test(alias)) {
-        return { valid: false, message: 'Alias can only contain letters, numbers, underscores, and hyphens' };
+    if (alias.length < 3) {
+        return { valid: false, message: 'Must be at least 3 characters' };
     }
 
     if (alias.length > 16) {
-        return { valid: false, message: 'Alias cannot be longer than 16 characters' };
+        return { valid: false, message: 'Must be at most 16 characters' };
+    }
+
+    const aliasPattern = /^[a-zA-Z0-9_-]+$/;
+    if (!aliasPattern.test(alias)) {
+        return { valid: false, message: 'Only letters, numbers, underscores, and hyphens are allowed' };
     }
 
     return { valid: true, message: '' };
@@ -422,25 +425,10 @@ function validateExpireAfter(expireAfter) {
 }
 
 function showFieldError(fieldId, message) {
-    const field = document.getElementById(fieldId);
-    if (!field) return;
-
-    // Remove existing error
-    const existingError = field.parentNode.querySelector('.field-error');
-    if (existingError) existingError.remove();
-
     if (message) {
-        // Add error styling
-        field.classList.add('error');
-
-        // Add error message
-        const errorEl = document.createElement('small');
-        errorEl.className = 'field-error';
-        errorEl.textContent = message;
-        field.parentNode.appendChild(errorEl);
+        window.setFieldError(fieldId, message);
     } else {
-        // Remove error styling
-        field.classList.remove('error');
+        window.clearFieldError(fieldId);
     }
 }
 
@@ -559,23 +547,18 @@ function handleApiError(result) {
         return;
     }
 
-    // Handle field-specific errors
-    if (result.field) {
-        const fieldMap = {
-            'long_url': 'create-long-url',
-            'url': 'create-long-url',
-            'alias': 'create-alias',
-            'password': 'create-password',
-            'max_clicks': 'create-max-clicks',
-            'expire_after': 'create-expire-after'
-        };
-
-        const fieldId = fieldMap[result.field];
-        if (fieldId) {
-            showFieldError(fieldId, result.error);
-            return;
-        }
-    }
+    // Handle field-specific errors (single field or multi-field details[])
+    const fieldMap = {
+        'long_url': 'create-long-url',
+        'url': 'create-long-url',
+        'alias': 'create-alias',
+        'password': 'create-password',
+        'max_clicks': 'create-max-clicks',
+        'expire_after': 'create-expire-after'
+    };
+    const createModal = document.getElementById('create-link-modal');
+    const applied = window.applyServerErrors(createModal, result, fieldMap);
+    if (applied > 0) return;
 
     // Handle general errors
     let errorMessage = result.error || 'An error occurred while creating the link';

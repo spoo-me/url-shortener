@@ -323,8 +323,8 @@
 }
 
 .input-group:focus-within {
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    border-color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .input-prefix {
@@ -340,10 +340,15 @@
 .input-group input {
     background: none;
     border: none;
+    border-radius: 0;
     flex: 1;
     min-width: 0;
     width: 100%;
     box-sizing: border-box;
+}
+
+.input-group input:focus {
+    background: transparent;
 }
 
 /* Select Wrapper */
@@ -372,6 +377,35 @@
     font-size: 12px;
     color: var(--text-secondary);
     line-height: 1.4;
+}
+
+/* Field Error */
+.field-error {
+    font-size: 12px;
+    color: var(--color-danger);
+    line-height: 1.4;
+    display: block;
+}
+
+.field.has-error > .field-hint {
+    display: none;
+}
+
+.field.has-error input,
+.field.has-error select,
+.field.has-error .input-group {
+    border-color: var(--color-danger);
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.field.has-error .input-group input {
+    background: transparent;
+}
+
+.field.has-error input:focus,
+.field.has-error select:focus,
+.field.has-error .input-group:focus-within {
+    border-color: var(--color-danger);
 }
 
 /* Password Field Group */
@@ -428,8 +462,8 @@
 }
 
 .checkbox-field input[type="checkbox"]:checked+.checkbox-label .checkbox-indicator {
-    background: var(--accent-color);
-    border-color: var(--accent-color);
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
 }
 
 .checkbox-field input[type="checkbox"]:checked+.checkbox-label .checkbox-indicator::after {
