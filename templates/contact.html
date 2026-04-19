@@ -28,10 +28,10 @@
     <form action="/contact" method="post" onsubmit="return validateEmail() && validateMessage();">
         <p id="url-error"></p>
         {% if error %}
-        <script>showNotification("{{ error }}", 'error', 10000);</script>
+        <script>showNotification({{ error | tojson }}, 'error', 10000);</script>
         {% endif %}
         {% if success %}
-        <script>showNotification("{{ success }}", 'success', 10000);</script>
+        <script>showNotification({{ success | tojson }}, 'success', 10000);</script>
         {% endif %}
         <input type="text" id="email" name="email" placeholder="Email" value="{{ email }}" required>
         <textarea id="message" name="message" placeholder="Message" required>{{ message }}</textarea>

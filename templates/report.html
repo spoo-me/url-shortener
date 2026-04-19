@@ -27,8 +27,8 @@
     <h1 style="font-weight: bold;">Report URL</h1>
     <form id="reportForm" action="/report" method="post" onsubmit="return validateMessage();">
         <p id="url-error"></p>
-        {% if error %}<script>showNotification("{{ error }}", 'error', 10000);</script>{% endif %}
-        {% if success %}<script>showNotification("{{ success }}", 'success', 10000);</script>{% endif %}
+        {% if error %}<script>showNotification({{ error | tojson }}, 'error', 10000);</script>{% endif %}
+        {% if success %}<script>showNotification({{ success | tojson }}, 'success', 10000);</script>{% endif %}
         <div class="buttonIn">
             <div id="input-prefix"><span>{{ host_url }}</span></div>
             <input type="text" id="alias" name="short_code" placeholder="short-code" value="{{ short_code }}" required>

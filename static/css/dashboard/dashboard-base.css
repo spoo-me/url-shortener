@@ -223,7 +223,9 @@ body.dashboard-layout {
     transition: opacity 0.15s ease;
 }
 
-.collapsed .sidebar-header:hover .sidebar-toggle {
+.collapsed .sidebar-header:hover .sidebar-toggle,
+.collapsed .sidebar-toggle:focus,
+.collapsed .sidebar-toggle:focus-visible {
     opacity: 1;
 }
 

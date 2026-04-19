@@ -245,21 +245,21 @@
 </div>
 
 <!-- Delete Key Confirmation Modal -->
-<div id="delete-key-modal">
+<div id="delete-key-modal" aria-hidden="true">
     <div class="modal-backdrop"></div>
     <div class="modal-container">
-        <div class="modal-content">
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="deleteKeyModalTitle" aria-describedby="deleteKeyModalDesc">
             <div class="modal-header">
                 <div class="modal-title-section-delete">
                     <div class="modal-icon">
                         <i class="ti ti-alert-triangle"></i>
                     </div>
-                    <h2 class="modal-title">Delete API Key?</h2>
+                    <h2 class="modal-title" id="deleteKeyModalTitle">Delete API Key?</h2>
                 </div>
             </div>
 
             <div class="modal-body">
-                <p>Applications using this key will immediately stop working. This action cannot be undone.</p>
+                <p id="deleteKeyModalDesc">Applications using this key will immediately stop working. This action cannot be undone.</p>
             </div>
 
             <div class="modal-footer">

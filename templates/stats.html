@@ -29,9 +29,9 @@
     <form action="/stats" method="post" onsubmit="return checkURL();">
         <p id="url-error"></p>
         {% if error %}
-        <script>showNotification("{{ error }}", 'error', 10000);</script>
+        <script>showNotification({{ error | tojson }}, 'error', 10000);</script>
         {% elif password_error %}
-        <script>showNotification("{{ password_error }}", 'error', 10000);</script>
+        <script>showNotification({{ password_error | tojson }}, 'error', 10000);</script>
         {% endif %}
         <label for="short-code" style="font-weight: bold;">Enter the alias of the short URL</label>
         <div class="buttonIn">

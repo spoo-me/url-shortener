@@ -4,10 +4,10 @@
 
 {% block head_css %}
 <link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/statistics.css') }}?v=9">
-<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/dateRangePicker.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/dateRangePicker.css') }}?v=1">
 <!-- <link rel="stylesheet" type="text/css" -->
 <!-- href="https://cdn.jsdelivr.net/gh/spoo-me/spoo/static/css/anychart-ui.min.css" /> -->
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', path='css/anychart-ui.min.css') }}" />
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', path='css/anychart-ui.min.css') }}?v=1" />
 <link rel="stylesheet" type="text/css"
     href="https://cdn.anychart.com/releases/8.12.1/fonts/css/anychart-font.min.css" />
 {% endblock %}
@@ -628,6 +628,6 @@
 <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-data-adapter.min.js"></script>
 <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-exports.min.js"></script>
 <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-ui.min.js"></script>
-<script src="{{ url_for('static', path='js/dashboard/dateRangePicker.js') }}"></script>
+<script src="{{ url_for('static', path='js/dashboard/dateRangePicker.js') }}?v=1"></script>
 <script src="{{ url_for('static', path='js/dashboard/statistics.js') }}?v=13"></script>
 {% endblock %}

@@ -7,7 +7,7 @@
     border-radius: 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     position: sticky;
-    z-index: var(--z-max);
+    z-index: var(--z-max, 9999);
     top: 0;
     backdrop-filter: blur(20px);
     display: flex;
@@ -310,7 +310,7 @@
     padding: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     backdrop-filter: blur(12px);
-    z-index: var(--z-overlay);
+    z-index: var(--z-overlay, 1000);
 }
 
 .profile-dropdown a,
@@ -354,7 +354,6 @@
 }
 
 .self-promo-inner a {
-    text-align: center;
     all: unset;
     color: white;
     font-weight: normal;

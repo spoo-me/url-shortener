@@ -108,6 +108,12 @@ function openLinkSuccessModal(shortUrl, linkData) {
                 qrImg.style.opacity = "1";
                 setupQRCodeInteractions();
             };
+            qrImg.onerror = function () {
+                qrImg.parentElement.style.animation = "none";
+                if (typeof showNotification === "function") {
+                    showNotification("Failed to load QR code", "error");
+                }
+            };
             qrImg.src = `https://qr.spoo.me/api/v1/gradient?content=${enc}&size=280&start=%231d1919&end=%23322c29`;
         }
 
@@ -288,19 +294,19 @@ function setupQRCodeInteractions() {
     if (qrContainer && qrOverlay) {
         qrContainer.style.cursor = "pointer";
 
-        qrContainer.addEventListener("mouseenter", function () {
+        qrContainer.onmouseenter = function () {
             qrOverlay.style.opacity = "1";
             qrOverlay.style.visibility = "visible";
-        });
+        };
 
-        qrContainer.addEventListener("mouseleave", function () {
+        qrContainer.onmouseleave = function () {
             qrOverlay.style.opacity = "0";
             qrOverlay.style.visibility = "hidden";
-        });
+        };
 
-        qrContainer.addEventListener("click", function () {
+        qrContainer.onclick = function () {
             downloadQRCodeFromModal();
-        });
+        };
     }
 }
 

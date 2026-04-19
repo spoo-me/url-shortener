@@ -1,12 +1,13 @@
 async function authFetch(url, options = {}) {
-    const defaultOptions = {
+    const { headers: callerHeaders, ...restOptions } = options;
+    const response = await fetch(url, {
         credentials: 'include',
+        ...restOptions,
         headers: {
             'Content-Type': 'application/json',
-            ...options.headers
-        }
-    };
-    const response = await fetch(url, { ...defaultOptions, ...options });
+            ...callerHeaders,
+        },
+    });
     if (response.status === 401) {
         window.location.href = '/';
     }

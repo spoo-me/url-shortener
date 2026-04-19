@@ -4,7 +4,7 @@
     background: rgba(255, 255, 255, 0.04);
     border-radius: 0;
     position: sticky;
-    z-index: var(--z-max);
+    z-index: var(--z-max, 9999);
     top: 0;
     left: 0;
     right: 0;
@@ -246,7 +246,7 @@ ul.mobile-menu>li:hover {
     padding: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     backdrop-filter: blur(12px);
-    z-index: var(--z-overlay);
+    z-index: var(--z-overlay, 1000);
 }
 
 .mobile-profile .profile-dropdown a,

@@ -38,6 +38,7 @@ from middleware.rate_limiter import limiter
 from middleware.security import (
     MaxContentLengthMiddleware,
     SecurityHeadersMiddleware,
+    StaticCacheHeadersMiddleware,
     configure_cors,
 )
 from repositories.indexes import ensure_indexes
@@ -226,6 +227,8 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
     # 2. Security headers — must be outer so HSTS/CSP/nosniff apply to
     #    all responses including CORS preflights (204) and body-limit (413)
     app.add_middleware(SecurityHeadersMiddleware, hsts_enabled=settings.is_production)
+    # 2a. Long-lived cache headers for /static/*
+    app.add_middleware(StaticCacheHeadersMiddleware)
     # 3. CORS
     configure_cors(app, settings)
     # 4. Body size limit
