@@ -1,8 +1,8 @@
 async function authFetch(url, options = {}) {
     const { headers: callerHeaders, ...restOptions } = options;
     const response = await fetch(url, {
-        credentials: 'include',
         ...restOptions,
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
             ...callerHeaders,

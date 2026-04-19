@@ -45,7 +45,9 @@
         <input type="text" id="long-url" name="url" required placeholder="https://your-long-url.com" value="{{ url }}">
         {% if error %}
         <script>
-            showNotification({{ error | tojson }}, 'warning', 10000);
+            document.addEventListener('DOMContentLoaded', function () {
+                showNotification({{ error | tojson }}, 'warning', 10000);
+            });
         </script>
         {% endif %}
         <div class="alias-time-container">
