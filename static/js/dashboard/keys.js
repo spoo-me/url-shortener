@@ -9,8 +9,13 @@ const keyElements = {
     createModal: document.getElementById('createKeyModal'),
     successModal: document.getElementById('keySuccessModal'),
     createBtn: document.getElementById('btn-create'),
-    tokenInput: document.getElementById('fullTokenInput')
+    tokenInput: document.getElementById('fullTokenInput'),
+    deleteModal: document.getElementById('delete-key-modal'),
+    cancelDeleteBtn: document.getElementById('btn-cancel-key-delete'),
+    confirmDeleteBtn: document.getElementById('btn-confirm-key-delete')
 };
+
+let pendingDeleteKeyId = null;
 
 async function fetchKeys() {
     setKeysLoading(true);
@@ -110,17 +115,35 @@ function createKeyRow(key) {
     revokeBtn.setAttribute('data-id', key.id);
 
     if (!key.revoked) {
-        revokeBtn.addEventListener('click', () => revokeKey(key.id));
+        revokeBtn.addEventListener('click', () => openDeleteModal(key));
     }
 
     return node;
 }
 
-async function revokeKey(keyId) {
-    if (!confirm('Delete this key permanently? This action cannot be undone.')) return;
+function openDeleteModal(key) {
+    pendingDeleteKeyId = key.id;
+    keyElements.deleteModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => keyElements.cancelDeleteBtn?.focus(), 100);
+}
+
+function closeDeleteModal() {
+    keyElements.deleteModal.classList.remove('active');
+    document.body.style.overflow = '';
+    pendingDeleteKeyId = null;
+}
+
+async function confirmDeleteKey() {
+    if (!pendingDeleteKeyId) return;
+
+    const btn = keyElements.confirmDeleteBtn;
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ti ti-loader-2"></i><span>Deleting...</span>';
 
     try {
-        const res = await authFetch(`/api/v1/keys/${keyId}`, {
+        const res = await authFetch(`/api/v1/keys/${pendingDeleteKeyId}`, {
             method: 'DELETE',
             headers: { 'Accept': 'application/json' }
         });
@@ -129,12 +152,16 @@ async function revokeKey(keyId) {
             const data = await res.json().catch(() => ({}));
             const action = data.action || 'deleted';
             showNotification(`Key ${action} successfully`, 'success');
+            closeDeleteModal();
             fetchKeys();
         } else {
             showNotification('Failed to revoke key', 'error');
         }
     } catch (error) {
         showNotification('Failed to revoke key', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
     }
 }
 
@@ -375,10 +402,21 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Delete modal wiring
+    keyElements.cancelDeleteBtn?.addEventListener('click', closeDeleteModal);
+    keyElements.confirmDeleteBtn?.addEventListener('click', confirmDeleteKey);
+    keyElements.deleteModal?.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-container') || e.target.classList.contains('modal-backdrop')) {
+            closeDeleteModal();
+        }
+    });
+
     // Escape key to close modals
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            if (keyElements.createModal.style.display === 'flex') {
+            if (keyElements.deleteModal?.classList.contains('active')) {
+                closeDeleteModal();
+            } else if (keyElements.createModal.style.display === 'flex') {
                 closeCreateKeyModal();
             } else if (keyElements.successModal.style.display === 'flex') {
                 closeKeySuccessModal();
