@@ -1,25 +1,41 @@
-// Dashboard Base JavaScript
+async function authFetch(url, options = {}) {
+    const { headers: callerHeaders, ...restOptions } = options;
+    const response = await fetch(url, {
+        ...restOptions,
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            ...callerHeaders,
+        },
+    });
+    if (response.status === 401) {
+        window.location.href = '/';
+    }
+    return response;
+}
+
+async function logout() {
+    const res = await authFetch('/auth/logout', { method: 'POST' });
+    if (res.ok) {
+        window.location.href = '/';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
-    // Sidebar toggle functionality
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
-    const profileButton = document.getElementById('profileButton');
-    const profileMenu = document.getElementById('profileMenu');
     const navItems = document.querySelectorAll('.nav-item');
 
-    // Load sidebar state from localStorage
     const sidebarState = localStorage.getItem('sidebarCollapsed');
     if (sidebarState === 'true') {
         sidebar.classList.add('collapsed');
     }
 
-    // Toggle sidebar
     sidebarToggle?.addEventListener('click', function () {
         sidebar.classList.toggle('collapsed');
         const isCollapsed = sidebar.classList.contains('collapsed');
         localStorage.setItem('sidebarCollapsed', isCollapsed);
 
-        // Update toggle icon
         const icon = sidebarToggle.querySelector('i');
         if (icon) {
             if (isCollapsed) {
@@ -30,30 +46,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Close profile menu when collapsing
-        if (isCollapsed && profileMenu) {
-            profileMenu.classList.remove('active');
-            profileButton.classList.remove('active');
+        if (isCollapsed && window.Dropdown) {
+            const profileDd = document.querySelector('.profile-dropdown.dropdown');
+            if (profileDd) window.Dropdown.close(profileDd);
         }
-    });
-
-    // Profile dropdown functionality
-    profileButton?.addEventListener('click', function (e) {
-        e.stopPropagation();
-        profileMenu.classList.toggle('active');
-        profileButton.classList.toggle('active');
-    });
-
-    // Close profile menu when clicking outside
-    document.addEventListener('click', function (e) {
-        if (profileMenu && !profileMenu.contains(e.target) && !profileButton.contains(e.target)) {
-            profileMenu.classList.remove('active');
-            profileButton.classList.remove('active');
-        }
-    });
-
-    // Prevent menu from closing when clicking inside it
-    profileMenu?.addEventListener('click', function (e) {
-        e.stopPropagation();
     });
 
     // Mobile menu functionality
@@ -157,13 +153,10 @@ document.addEventListener('DOMContentLoaded', function () {
             sidebarToggle?.click();
         }
 
-        // Escape to close mobile sidebar or profile menu
+        // Escape to close mobile sidebar (profile menu Esc handled by Dropdown primitive)
         if (e.key === 'Escape') {
             if (window.innerWidth <= 768 && sidebar.classList.contains('mobile-open')) {
                 closeMobileSidebar();
-            } else if (profileMenu?.classList.contains('active')) {
-                profileMenu.classList.remove('active');
-                profileButton.classList.remove('active');
             }
         }
     });

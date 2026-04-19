@@ -21,16 +21,14 @@
 
 {% block head_css %}
     <link rel="stylesheet" href="{{ url_for('static', path='css/report.css') }}?v=3">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/customNotification.css') }}?v=4">
-    <script src="{{ url_for('static', path='js/customNotification.js') }}?v=3"></script>
 {% endblock %}
 
 {% block content %}
     <h1 style="font-weight: bold;">Report URL</h1>
     <form id="reportForm" action="/report" method="post" onsubmit="return validateMessage();">
         <p id="url-error"></p>
-        {% if error %}<script>customTopNotification("Error", "{{ error }}", 10, "error");</script>{% endif %}
-        {% if success %}<script>customTopNotification("Success", "{{ success }}", 10, "success");</script>{% endif %}
+        {% if error %}<script>document.addEventListener('DOMContentLoaded', function () { showNotification({{ error | tojson }}, 'error', 10000); });</script>{% endif %}
+        {% if success %}<script>document.addEventListener('DOMContentLoaded', function () { showNotification({{ success | tojson }}, 'success', 10000); });</script>{% endif %}
         <div class="buttonIn">
             <div id="input-prefix"><span>{{ host_url }}</span></div>
             <input type="text" id="alias" name="short_code" placeholder="short-code" value="{{ short_code }}" required>
@@ -56,7 +54,7 @@
         function validateMessage() {
             var message = document.getElementById('message').value;
             message = message.trim();
-            if (message.length < 20) { customTopNotification("Error", "Message should be at least 20 characters long", 10); return false; }
+            if (message.length < 20) { showNotification("Message should be at least 20 characters long", 'warning', 10000); return false; }
             else { return true; }
         }
         const inputBox = document.querySelector('#alias');

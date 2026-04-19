@@ -38,31 +38,12 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.css" />
 
     <link rel="stylesheet" href="{{ url_for('static', path='css/api.css') }}?v=5">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/header.css') }}?v=6">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/mobile-header.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/header.css') }}?v=9">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/mobile-header.css') }}?v=7">
     <link rel="stylesheet" href="{{ url_for('static', path='css/prism-duotone-dark.css') }}?v=1">
     <link rel="stylesheet" href="{{ url_for('static', path='css/contacts-modal.css') }}?v=9">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/self-promo.css') }}?v=2">
 
-    {% if sentry_client_key or clarity_id %}
-    <script>
-        addEventListener("load", function () {
-            {% if sentry_client_key %}
-            var s = document.createElement("script");
-            s.src = "https://js.sentry-cdn.com/{{ sentry_client_key }}.min.js";
-            s.crossOrigin = "anonymous";
-            document.head.appendChild(s);
-            {% endif %}
-            {% if clarity_id %}
-            (function (c, l, a, r, i, t, y) {
-                c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
-                t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
-                y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
-            })(window, document, "clarity", "script", "{{ clarity_id }}");
-            {% endif %}
-        });
-    </script>
-    {% endif %}
+    {% include 'partials/analytics.html' %}
 
 </head>
 
@@ -2249,8 +2230,7 @@ print(f"Shortened URL: {short_url}")
     </script>
 
     <script src="{{ url_for('static', path='js/contacts-popup.js') }}?v=1" defer=""></script>
-    <script src="{{ url_for('static', path='js/header.js') }}?v=6" defer=""></script>
-    <script src="{{ url_for('static', path='js/self-promo.js') }}?v=1" defer></script>
+    <script src="{{ url_for('static', path='js/header.js') }}?v=7" defer=""></script>
 
 </body>
 

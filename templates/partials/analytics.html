@@ -1,0 +1,19 @@
+{% if sentry_client_key or clarity_id %}
+<script>
+    addEventListener("load", function () {
+        {% if sentry_client_key %}
+        var s = document.createElement("script");
+        s.src = "https://js.sentry-cdn.com/{{ sentry_client_key }}.min.js";
+        s.crossOrigin = "anonymous";
+        document.head.appendChild(s);
+        {% endif %}
+        {% if clarity_id %}
+        (function (c, l, a, r, i, t, y) {
+            c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+            t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+            y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+        })(window, document, "clarity", "script", "{{ clarity_id }}");
+        {% endif %}
+    });
+</script>
+{% endif %}

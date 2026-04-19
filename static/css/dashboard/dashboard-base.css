@@ -1,3 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Allerta+Stencil&display=swap');
+
+:root {
+    /* Z-Index Scale */
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-overlay: 1000;
+    --z-modal: 2000;
+    --z-notification: 3000;
+    --z-max: 9999;
+
+    /* Status Colors */
+    --color-danger: #ef4444;
+    --color-danger-hover: #dc2626;
+    --color-success: #22c55e;
+    --color-warning: #f59e0b;
+    --color-info: #6366f1;
+}
+
+body::-webkit-scrollbar {
+    display: none;
+}
+
+body::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Allerta Stencil', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-color: #333;
+    -ms-overflow-style: none;
+}
+
 /* Dashboard Layout Variables */
 :root {
     --sidebar-width: 260px;
@@ -55,7 +97,7 @@ body.dashboard-layout {
     display: flex;
     flex-direction: column;
     transition: width var(--transition-speed) var(--transition-easing);
-    z-index: 100;
+    z-index: var(--z-dropdown);
 }
 
 .dashboard-sidebar.collapsed {
@@ -89,10 +131,26 @@ body.dashboard-layout {
 }
 
 .brand-logo img {
-    /* width: 32px; */
     height: 26px;
     margin-top: 5px;
     flex-shrink: 0;
+}
+
+/* Show the full logo-with-text when expanded, swap to the square favicon
+   when collapsed. Both imgs are rendered so no flash on toggle. */
+.brand-logo-icon {
+    display: none;
+    height: 28px !important;
+    width: 28px;
+    margin-top: 0 !important;
+}
+
+.collapsed .brand-logo-full {
+    display: none;
+}
+
+.collapsed .brand-logo-icon {
+    display: block;
 }
 
 .brand-text {
@@ -104,8 +162,29 @@ body.dashboard-layout {
     transition: opacity var(--transition-speed) var(--transition-easing), width var(--transition-speed) var(--transition-easing);
 }
 
+/* Collapsed: stack logo + toggle in the same slot and crossfade on hover.
+   Logo is visible at rest; hovering the header reveals the expand button.
+   `pointer-events: none` on the logo lets clicks on the logo-area pass
+   through to the toggle button underneath, so clicking "the logo" expands
+   the sidebar without needing to hover first. */
+.collapsed .sidebar-header {
+    position: relative;
+    justify-content: center;
+}
+
 .collapsed .sidebar-brand {
-    display: none;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+}
+
+.collapsed .sidebar-header:hover .sidebar-brand {
+    opacity: 0;
 }
 
 .sidebar-toggle {
@@ -136,10 +215,18 @@ body.dashboard-layout {
     padding: 20px 15px;
 }
 
-/* Ensure toggle button is always visible */
+/* Toggle is always rendered + clickable; opacity fades in on header hover. */
 .collapsed .sidebar-toggle {
     flex-shrink: 0;
     margin: 0 auto;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.collapsed .sidebar-header:hover .sidebar-toggle,
+.collapsed .sidebar-toggle:focus,
+.collapsed .sidebar-toggle:focus-visible {
+    opacity: 1;
 }
 
 /* Sidebar Navigation */
@@ -246,8 +333,9 @@ body.dashboard-layout {
     margin-top: auto;
 }
 
-.profile-dropdown {
+.profile-dropdown.dropdown {
     position: relative;
+    display: block;
 }
 
 .profile-button {
@@ -348,31 +436,24 @@ body.dashboard-layout {
     width: 0;
 }
 
-.profile-menu {
-    position: absolute;
+.profile-dropdown > .profile-menu {
+    /* Opens upward — override primitive's default top placement. */
+    top: auto;
     bottom: 100%;
     left: 0;
     right: 0;
     margin-bottom: 8px;
     background: rgba(20, 25, 40, 0.98);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
     padding: 8px;
-    opacity: 0;
-    visibility: hidden;
     transform: translateY(10px);
-    transition: all 0.3s;
     box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
 }
 
-.profile-menu.active {
-    opacity: 1;
-    visibility: visible;
+.profile-dropdown.is-open > .profile-menu {
     transform: translateY(0);
 }
 
-.collapsed .profile-menu {
+.collapsed .profile-dropdown > .profile-menu {
     left: 100%;
     right: auto;
     bottom: 0;
@@ -421,7 +502,7 @@ body.dashboard-layout {
     margin: 8px 0;
 }
 
-.profile-button.active .profile-chevron {
+.profile-button.is-active .profile-chevron {
     transform: rotate(180deg);
 }
 
@@ -486,7 +567,7 @@ body.dashboard-layout {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
     backdrop-filter: blur(20px) saturate(1.2);
     border-bottom: 1px solid var(--border-color);
-    z-index: 200;
+    z-index: var(--z-sticky);
     padding: 0 16px;
     align-items: center;
     justify-content: space-between;
@@ -544,7 +625,7 @@ body.dashboard-layout {
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
-    z-index: 150;
+    z-index: var(--z-sticky);
     backdrop-filter: blur(4px);
 }
 
@@ -574,7 +655,7 @@ body.dashboard-layout {
         height: 100vh;
         transform: translateX(-100%);
         transition: transform var(--transition-speed) var(--transition-easing);
-        z-index: 160;
+        z-index: var(--z-sticky);
         /* Remove collapsed width behavior on mobile */
         width: 280px !important;
     }
@@ -585,9 +666,11 @@ body.dashboard-layout {
         transform: translateX(-100%);
     }
 
-    /* Show sidebar when mobile-open */
+    /* Show sidebar when mobile-open — stack above the overlay so its
+       backdrop-filter doesn't smear the sidebar content. */
     .dashboard-sidebar.mobile-open {
         transform: translateX(0);
+        z-index: calc(var(--z-sticky) + 1);
     }
 
     /* Always show nav text on mobile */
@@ -603,6 +686,15 @@ body.dashboard-layout {
     /* Always show sidebar brand on mobile */
     .dashboard-sidebar .sidebar-brand {
         display: flex !important;
+    }
+
+    /* Force the full logo even when the desktop-collapsed state is cached. */
+    .dashboard-sidebar.collapsed .brand-logo-full {
+        display: block;
+    }
+
+    .dashboard-sidebar.collapsed .brand-logo-icon {
+        display: none;
     }
 
     /* Main content adjustments */
@@ -636,7 +728,7 @@ body.dashboard-layout {
         margin-bottom: 8px;
         width: auto;
         /* Ensure it appears above the button on mobile */
-        z-index: 1000;
+        z-index: var(--z-overlay);
     }
 
     /* Override collapsed positioning on mobile */
@@ -676,4 +768,94 @@ body.dashboard-layout {
     to {
         transform: rotate(360deg);
     }
+}
+
+.dropdown {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.dropdown-trigger {
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.dropdown-trigger .ti-chevron-down {
+    transition: transform 0.2s ease;
+}
+
+.dropdown-trigger.is-active .ti-chevron-down {
+    transform: rotate(180deg);
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 160px;
+    background: rgba(15, 20, 35, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(16px);
+    z-index: var(--z-overlay);
+    padding: 4px;
+    overflow: hidden;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0.15s;
+}
+
+.dropdown.is-open > .dropdown-menu {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0s;
+}
+
+.dropdown-menu--align-right {
+    left: auto;
+    right: 0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus-visible {
+    outline: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.dropdown-item.is-active {
+    background: rgba(124, 58, 237, 0.18);
+    color: #fff;
+}
+
+.dropdown-item[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.dropdown-divider {
+    height: 1px;
+    margin: 4px 0;
+    background: rgba(255, 255, 255, 0.08);
 }

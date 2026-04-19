@@ -16,28 +16,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ url_for('static', path='css/contacts-modal.css') }}?v=8">
     <link rel="stylesheet" href="{{ url_for('static', path='css/docs.css') }}?v=3">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/header.css') }}?v=6">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/mobile-header.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/header.css') }}?v=9">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/mobile-header.css') }}?v=7">
 
-    {% if sentry_client_key or clarity_id %}
-    <script>
-        addEventListener("load", function () {
-            {% if sentry_client_key %}
-            var s = document.createElement("script");
-            s.src = "https://js.sentry-cdn.com/{{ sentry_client_key }}.min.js";
-            s.crossOrigin = "anonymous";
-            document.head.appendChild(s);
-            {% endif %}
-            {% if clarity_id %}
-            (function (c, l, a, r, i, t, y) {
-                c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
-                t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
-                y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
-            })(window, document, "clarity", "script", "{{ clarity_id }}");
-            {% endif %}
-        });
-    </script>
-    {% endif %}
+    {% include 'partials/analytics.html' %}
 </head>
 
 <body>
@@ -78,43 +60,7 @@
         </ul>
     </div>
 
-    <div id="modalPopup" class="modal">
-        <div class="modal-content">
-            <h2 class="modal-header">Contact Us</h2>
-            <div class="button-container">
-                <button class="contact-button" onclick="openContactLink('/contact');"><img
-                        src="https://img.icons8.com/ios-filled/100/ffffff/pencil--v1.png" alt="Contact Form Symbol"
-                        loading="lazy">
-                    <p>Contact Form</p>
-                </button>
-                <button class="contact-button" onclick="openContactLink('https://spoo.me/discord');"><img
-                        src="https://img.icons8.com/ios-filled/100/ffffff/discord-logo.png" alt="Discord Logo"
-                        loading="lazy">
-                    <p>Discord</p>
-                </button>
-                <button class="contact-button" onclick="openContactLink('https://twitter.com/spoo_me');"><img
-                        src="https://img.icons8.com/ios-filled/100/ffffff/twitterx--v1.png" alt="Twitter Logo"
-                        loading="lazy">
-                    <p>Twitter</p>
-                </button>
-                <button class="contact-button" onclick="openContactLink('https://instagram.com/spoo.me');"><img
-                        src="https://img.icons8.com/ios-filled/100/ffffff/instagram-new.png" alt="Instagram Logo"
-                        loading="lazy">
-                    <p>Instagram</p>
-                </button>
-                <button class="contact-button" onclick="openContactLink('mailto:support@spoo.me');"><img
-                        src="https://img.icons8.com/pastel-glyph/100/ffffff/new-post--v1.png" alt="Email Icon"
-                        loading="lazy">
-                    <p>Email</p>
-                </button>
-                <button class="contact-button" onclick="openContactLink('https://github.com/spoo-me');"><img
-                        src="https://img.icons8.com/material-sharp/100/ffffff/github.png" alt="Github Logo"
-                        loading="lazy">
-                    <p>Github</p>
-                </button>
-            </div>
-        </div>
-    </div>
+    {% include 'partials/contact_modal.html' %}
 
     <div id='content' class="container mt-4">
 

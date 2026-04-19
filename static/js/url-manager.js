@@ -3,6 +3,14 @@
  * Handles editing, deactivating, and deleting URLs
  */
 
+// Silently prepend https:// when protocol is missing. Input value stays as-is.
+function normalizeUrl(raw) {
+    if (!raw) return raw;
+    const trimmed = raw.trim();
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return 'https://' + trimmed;
+}
+
 class UrlManager {
     constructor() {
         this.currentUrlData = null;
@@ -39,8 +47,7 @@ class UrlManager {
     }
 
     init() {
-        // Tab switching
-        this.initTabs();
+        // Tab switching handled by ModalTabs (auto-init via modal-tabs.js).
 
         // Modal event listeners
         this.modal?.querySelector('.modal-close')?.addEventListener('click', () => this.closeModal());
@@ -80,39 +87,17 @@ class UrlManager {
             }
         });
 
+        if (window.AliasChecker) {
+            this.aliasCheck = window.AliasChecker.attach({
+                inputId: 'edit-alias',
+                diceBtn: document.getElementById('edit-alias-dice'),
+                indicator: document.getElementById('edit-alias-status'),
+                getCurrentAlias: () => this.currentUrlData?.alias || '',
+            });
+        }
+
         // Attach to row action buttons
         this.attachRowListeners();
-    }
-
-    initTabs() {
-        if (!this.modal) return;
-
-        const tabs = this.modal.querySelectorAll('.tab');
-        const tabContents = this.modal.querySelectorAll('.tab-content');
-        const tabsContainer = this.modal.querySelector('.tabs');
-
-        tabs.forEach((tab, index) => {
-            tab.addEventListener('click', () => {
-                const targetTab = tab.getAttribute('data-tab');
-
-                // Update tab indicator position
-                if (tabsContainer) {
-                    tabsContainer.setAttribute('data-active', index.toString());
-                }
-
-                // Update tab states
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-
-                // Update content states - simple show/hide
-                tabContents.forEach(content => {
-                    content.classList.remove('active');
-                    if (content.getAttribute('data-tab') === targetTab) {
-                        content.classList.add('active');
-                    }
-                });
-            });
-        });
     }
 
     attachRowListeners() {
@@ -244,11 +229,8 @@ class UrlManager {
             this.modal.classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            // Initialize tab indicator to first tab
-            const tabsContainer = this.modal.querySelector('.tabs');
-            if (tabsContainer) {
-                tabsContainer.setAttribute('data-active', '0');
-            }
+            // Clear any stale errors from a previous edit.
+            if (window.clearFormErrors) window.clearFormErrors(this.modal);
 
             // Focus first input
             setTimeout(() => {
@@ -262,6 +244,8 @@ class UrlManager {
             this.modal.classList.remove('active');
             document.body.style.overflow = '';
             this.currentUrlData = null;
+            if (window.ModalTabs) window.ModalTabs.reset(this.modal);
+            this.aliasCheck?.reset();
         }
     }
 
@@ -278,8 +262,9 @@ class UrlManager {
             hasChanges = true;
         }
 
-        // Check long_url changes
-        const currentLongUrl = this.longUrlInput?.value?.trim();
+        // Check long_url changes (normalize so "example.com" auto-gets https://)
+        const rawLongUrl = this.longUrlInput?.value?.trim();
+        const currentLongUrl = rawLongUrl ? normalizeUrl(rawLongUrl) : rawLongUrl;
         if (currentLongUrl && currentLongUrl !== this.currentUrlData.long_url) {
             updateData.long_url = currentLongUrl;
             hasChanges = true;
@@ -345,7 +330,7 @@ class UrlManager {
 
         // If no changes detected, show message and return
         if (!hasChanges) {
-            this.showNotification('No changes detected', 'info');
+            showNotification('No changes detected', 'info');
             return;
         }
 
@@ -391,7 +376,7 @@ class UrlManager {
                     if (this.passwordInput) this.passwordInput.value = ''; // Clear the field after saving
                 }
 
-                this.showNotification('URL updated successfully', 'success');
+                showNotification('URL updated successfully', 'success');
 
                 // Update the table row with new data immediately
                 this.updateTableRow(this.currentUrlData);
@@ -405,11 +390,27 @@ class UrlManager {
                 }, 200); // Small delay to allow user to see the success notification
             } else {
                 const errorData = await response.json();
+                // Route per-field errors through the primitive so the tab
+                // indicator dots + auto-jump kick in.
+                if (window.applyServerErrors) {
+                    const fieldMap = {
+                        'alias': 'edit-alias',
+                        'long_url': 'edit-long-url',
+                        'url': 'edit-long-url',
+                        'password': 'edit-password',
+                        'max_clicks': 'edit-max-clicks',
+                        'expire_after': 'edit-expire-after'
+                    };
+                    const applied = window.applyServerErrors(this.modal, errorData, fieldMap);
+                    if (applied > 0 && window.ModalTabs) {
+                        window.ModalTabs.jumpToFirstInvalid(this.modal);
+                    }
+                }
                 throw new Error(errorData.error || 'Failed to update URL');
             }
         } catch (error) {
             console.error('Error updating URL:', error);
-            this.showNotification(error.message, 'error');
+            showNotification(error.message, 'error');
         } finally {
             this.saveBtn.disabled = false;
             this.saveBtn.innerHTML = '<i class="ti ti-check"></i><span>Save Changes</span>';
@@ -444,7 +445,7 @@ class UrlManager {
 
                 // Show success notification
                 const action = newStatus === 'ACTIVE' ? 'activated' : 'deactivated';
-                this.showNotification(`URL ${action} successfully`, 'success');
+                showNotification(`URL ${action} successfully`, 'success');
 
                 // Update the table row immediately
                 this.updateTableRow(this.currentUrlData);
@@ -457,7 +458,7 @@ class UrlManager {
             }
         } catch (error) {
             console.error('Error updating URL status:', error);
-            this.showNotification(error.message, 'error');
+            showNotification(error.message, 'error');
             // Restore original button content on error
             this.deactivateBtn.innerHTML = originalButtonContent;
         } finally {
@@ -521,7 +522,7 @@ class UrlManager {
             });
 
             if (response.ok) {
-                this.showNotification('URL deleted successfully', 'success');
+                showNotification('URL deleted successfully', 'success');
                 this.closeDeleteModal();
                 this.closeModal();
 
@@ -536,7 +537,7 @@ class UrlManager {
             }
         } catch (error) {
             console.error('Error deleting URL:', error);
-            this.showNotification(error.message, 'error');
+            showNotification(error.message, 'error');
         } finally {
             this.confirmDeleteBtn.disabled = false;
             this.confirmDeleteBtn.innerHTML = '<i class="ti ti-trash"></i><span>Delete Permanently</span>';
@@ -565,62 +566,7 @@ class UrlManager {
         return fetch(url, { ...defaultOptions, ...options });
     }
 
-    showNotification(message, type = 'info') {
-        // Create a simple notification system
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.innerHTML = `
-            <div class="notification-content">
-                <i class="ti ti-${type === 'success' ? 'check' : type === 'error' ? 'x' : 'info-circle'}"></i>
-                <span>${message}</span>
-            </div>
-        `;
 
-        // Add notification styles if not present
-        if (!document.getElementById('notification-styles')) {
-            const styles = document.createElement('style');
-            styles.id = 'notification-styles';
-            styles.textContent = `
-                .notification {
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    z-index: 10000;
-                    background: rgba(255, 255, 255, 0.1);
-                    backdrop-filter: blur(20px);
-                    border-radius: 8px;
-                    padding: 16px 20px;
-                    color: white;
-                    font-size: 14px;
-                    font-weight: 500;
-                    transform: translateX(100%);
-                    transition: transform 0.3s ease;
-                    border-left: 4px solid;
-                }
-                .notification-success { border-left-color: #10b981; }
-                .notification-error { border-left-color: #ef4444; }
-                .notification-info { border-left-color: #3b82f6; }
-                .notification.show { transform: translateX(0); }
-                .notification-content {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }
-            `;
-            document.head.appendChild(styles);
-        }
-
-        document.body.appendChild(notification);
-
-        // Animate in
-        setTimeout(() => notification.classList.add('show'), 100);
-
-        // Auto remove
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
-    }
 
     removeUrlFromTable(alias) {
         if (!alias) {

@@ -34,6 +34,10 @@ class Limits:
     API_AUTHED = "60 per minute; 5000 per day"
     API_ANON = "20 per minute; 1000 per day"
 
+    # Alias availability check — cheap read, UI debounces on each keystroke
+    API_CHECK_AUTHED = "180 per minute; 10000 per day"
+    API_CHECK_ANON = "60 per minute; 2000 per day"
+
     # Auth endpoints
     LOGIN = "5 per minute; 50 per day"
     SIGNUP = "5 per minute; 50 per day"

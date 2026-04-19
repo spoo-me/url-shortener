@@ -3,12 +3,11 @@
 {% block title %}Statistics Dashboard{% endblock %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/statistics.css') }}?v=1">
-<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/dateRangePicker.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/statistics.css') }}?v=9">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/dateRangePicker.css') }}?v=1">
 <!-- <link rel="stylesheet" type="text/css" -->
-    <!-- href="https://cdn.jsdelivr.net/gh/spoo-me/spoo/static/css/anychart-ui.min.css" /> -->
-<link rel="stylesheet" type="text/css"
-    href="{{ url_for('static', path='css/anychart-ui.min.css') }}" />
+<!-- href="https://cdn.jsdelivr.net/gh/spoo-me/spoo/static/css/anychart-ui.min.css" /> -->
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', path='css/anychart-ui.min.css') }}?v=1" />
 <link rel="stylesheet" type="text/css"
     href="https://cdn.anychart.com/releases/8.12.1/fonts/css/anychart-font.min.css" />
 {% endblock %}
@@ -29,8 +28,8 @@
     <!-- Controls Bar -->
     <div class="controls-bar">
         <div class="controls-left">
-            <div class="filters-dropdown-container">
-                <button class="filters-btn" type="button">
+            <div class="filters-dropdown-container dropdown" data-dropdown>
+                <button type="button" class="filters-btn dropdown-trigger" data-dropdown-trigger>
                     <i class="ti ti-filter"></i>
                     <span class="filters-text">Filters</span>
                     <span class="active-filters-count" style="display: none;">0</span>
@@ -38,7 +37,8 @@
                 </button>
 
                 <!-- Floating Filters Dropdown -->
-                <div class="filters-dropdown">
+                <div class="filters-dropdown" data-dropdown-menu>
+                    <div class="sheet-handle" aria-hidden="true"></div>
                     <!-- Main Filter Types List -->
                     <div class="filter-types-list">
                         <div class="filter-type-item" data-filter="browser">
@@ -152,25 +152,24 @@
         </div>
         <div class="controls-actions">
             <div id="dateRangeContainer"></div>
-            <div class="export-btn-wrapper">
-                <button class="export-btn" type="button" title="Export">
+            <div class="export-btn-wrapper dropdown" data-dropdown>
+                <button type="button" class="export-btn dropdown-trigger" data-dropdown-trigger title="Export">
                     <i class="ti ti-download"></i>
                 </button>
-                <!-- Export Dropdown Menu -->
-                <div class="export-dropdown-menu" id="exportDropdownMenu">
-                    <button class="export-menu-item" data-format="json">
+                <div class="dropdown-menu dropdown-menu--align-right export-menu" id="exportDropdownMenu" data-dropdown-menu>
+                    <button type="button" class="dropdown-item" data-value="json" data-format="json">
                         <i class="ti ti-file-type-json"></i>
                         <span>Export as JSON</span>
                     </button>
-                    <button class="export-menu-item" data-format="csv">
+                    <button type="button" class="dropdown-item" data-value="csv" data-format="csv">
                         <i class="ti ti-file-type-csv"></i>
                         <span>Export as CSV</span>
                     </button>
-                    <button class="export-menu-item" data-format="xlsx">
+                    <button type="button" class="dropdown-item" data-value="xlsx" data-format="xlsx">
                         <i class="ti ti-file-type-xls"></i>
                         <span>Export as Excel</span>
                     </button>
-                    <button class="export-menu-item" data-format="xml">
+                    <button type="button" class="dropdown-item" data-value="xml" data-format="xml">
                         <i class="ti ti-file-type-xml"></i>
                         <span>Export as XML</span>
                     </button>
@@ -181,32 +180,19 @@
                     <i class="ti ti-refresh"></i>
                 </button>
                 <div class="separator"></div>
-                <div class="auto-refresh-dropdown">
-                    <button class="auto-refresh-btn" type="button">
+                <div class="auto-refresh-dropdown dropdown" data-dropdown>
+                    <button class="auto-refresh-btn dropdown-trigger" type="button" data-dropdown-trigger>
                         Off <i class="ti ti-chevron-down"></i>
                     </button>
-                    <div class="dropdown-menu">
-                        <div class="dropdown-item" data-interval="0">
-                            Off
-                        </div>
-                        <div class="dropdown-item" data-interval="60">
-                            1m
-                        </div>
-                        <div class="dropdown-item" data-interval="300">
-                            5m
-                        </div>
-                        <div class="dropdown-item" data-interval="900">
-                            15m
-                        </div>
-                        <div class="dropdown-item" data-interval="1800">
-                            30m
-                        </div>
-                        <div class="dropdown-item" data-interval="3600">
-                            1h
-                        </div>
-                        <div class="dropdown-item" data-interval="7200">
-                            2h
-                        </div>
+                    <div class="dropdown-menu dropdown-menu--align-right auto-refresh-menu" data-dropdown-menu>
+                        <div class="sheet-handle" aria-hidden="true"></div>
+                        <button type="button" class="dropdown-item" data-value="0" data-interval="0">Off</button>
+                        <button type="button" class="dropdown-item" data-value="60" data-interval="60">1m</button>
+                        <button type="button" class="dropdown-item" data-value="300" data-interval="300">5m</button>
+                        <button type="button" class="dropdown-item" data-value="900" data-interval="900">15m</button>
+                        <button type="button" class="dropdown-item" data-value="1800" data-interval="1800">30m</button>
+                        <button type="button" class="dropdown-item" data-value="3600" data-interval="3600">1h</button>
+                        <button type="button" class="dropdown-item" data-value="7200" data-interval="7200">2h</button>
                     </div>
                 </div>
             </div>
@@ -220,23 +206,28 @@
                 <div class="chart-header">
                     <h2>Clicks Over Time</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="timeSeriesChart" title="Table View">
-                            <i class="ti ti-table"></i>
-                        </button>
-                        <div class="cascade-select" data-chart="timeSeriesChart">
-                            <button class="cascade-btn active" data-value="compare" title="Compare Both">
+                        <div class="view-toggle" data-chart="timeSeriesChart" role="group" aria-label="Toggle chart or table view">
+                            <button class="view-toggle-btn active" data-view="chart" aria-pressed="true" title="Chart view">
+                                <i class="ti ti-chart-line"></i>
+                            </button>
+                            <button class="view-toggle-btn" data-view="table" aria-pressed="false" title="Table view">
+                                <i class="ti ti-table"></i>
+                            </button>
+                        </div>
+                        <div class="cascade-select dropdown" data-chart="timeSeriesChart" data-dropdown>
+                            <button type="button" class="cascade-btn dropdown-trigger" data-dropdown-trigger data-value="compare" title="Compare Both">
                                 <i class="ti ti-switch-3"></i>
                             </button>
-                            <div class="cascade-dropdown">
-                                <button class="cascade-option" data-value="total">
+                            <div class="dropdown-menu dropdown-menu--align-right cascade-menu" data-dropdown-menu>
+                                <button type="button" class="dropdown-item" data-value="total">
                                     <i class="ti ti-chart-line"></i>
                                     <span>Total Clicks</span>
                                 </button>
-                                <button class="cascade-option" data-value="unique">
+                                <button type="button" class="dropdown-item" data-value="unique">
                                     <i class="ti ti-users"></i>
                                     <span>Unique Clicks</span>
                                 </button>
-                                <button class="cascade-option active" data-value="compare">
+                                <button type="button" class="dropdown-item is-active" data-value="compare">
                                     <i class="ti ti-switch-3"></i>
                                     <span>Compare Both</span>
                                 </button>
@@ -249,7 +240,8 @@
                     <div class="chart-empty-state hidden" id="timeSeriesChart-empty">
                         <div class="empty-state-icon"><i class="ti ti-chart-line"></i></div>
                         <h3 class="empty-state-title">No Click Data Yet</h3>
-                        <p class="empty-state-description">Start sharing your short links to see click analytics appear here</p>
+                        <p class="empty-state-description">Start sharing your short links to see click analytics appear
+                            here</p>
                         <a href="/dashboard/links" class="empty-state-action">
                             <i class="ti ti-link"></i>
                             <span>View My Links</span>
@@ -302,23 +294,28 @@
                 <div class="chart-header">
                     <h2>Short URLs</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="keyChart" title="Table View">
-                            <i class="ti ti-table"></i>
-                        </button>
-                        <div class="cascade-select" data-chart="keyChart">
-                            <button class="cascade-btn active" data-value="compare" title="Compare Both">
+                        <div class="view-toggle" data-chart="keyChart" role="group" aria-label="Toggle chart or table view">
+                            <button class="view-toggle-btn active" data-view="chart" aria-pressed="true" title="Chart view">
+                                <i class="ti ti-chart-bar"></i>
+                            </button>
+                            <button class="view-toggle-btn" data-view="table" aria-pressed="false" title="Table view">
+                                <i class="ti ti-table"></i>
+                            </button>
+                        </div>
+                        <div class="cascade-select dropdown" data-chart="keyChart" data-dropdown>
+                            <button type="button" class="cascade-btn dropdown-trigger" data-dropdown-trigger data-value="compare" title="Compare Both">
                                 <i class="ti ti-switch-3"></i>
                             </button>
-                            <div class="cascade-dropdown">
-                                <button class="cascade-option" data-value="total">
+                            <div class="dropdown-menu dropdown-menu--align-right cascade-menu" data-dropdown-menu>
+                                <button type="button" class="dropdown-item" data-value="total">
                                     <i class="ti ti-chart-bar"></i>
                                     <span>Total Clicks</span>
                                 </button>
-                                <button class="cascade-option" data-value="unique">
+                                <button type="button" class="dropdown-item" data-value="unique">
                                     <i class="ti ti-users"></i>
                                     <span>Unique Clicks</span>
                                 </button>
-                                <button class="cascade-option active" data-value="compare">
+                                <button type="button" class="dropdown-item is-active" data-value="compare">
                                     <i class="ti ti-switch-3"></i>
                                     <span>Compare Both</span>
                                 </button>
@@ -331,7 +328,8 @@
                     <div class="chart-empty-state hidden" id="keyChart-empty">
                         <div class="empty-state-icon"><i class="ti ti-link"></i></div>
                         <h3 class="empty-state-title">No Short Links Found</h3>
-                        <p class="empty-state-description">Create your first short link to start tracking performance</p>
+                        <p class="empty-state-description">Create your first short link to start tracking performance
+                        </p>
                     </div>
                     <div class="stats-table" id="keyTable" style="display: none;">
                         <div class="table-header">
@@ -350,23 +348,28 @@
                 <div class="chart-header">
                     <h2>Referrers</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="referrerChart" title="Table View">
-                            <i class="ti ti-table"></i>
-                        </button>
-                        <div class="cascade-select" data-chart="referrerChart">
-                            <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
+                        <div class="view-toggle" data-chart="referrerChart" role="group" aria-label="Toggle chart or table view">
+                            <button class="view-toggle-btn active" data-view="chart" aria-pressed="true" title="Chart view">
+                                <i class="ti ti-chart-bar"></i>
+                            </button>
+                            <button class="view-toggle-btn" data-view="table" aria-pressed="false" title="Table view">
+                                <i class="ti ti-table"></i>
+                            </button>
+                        </div>
+                        <div class="cascade-select dropdown" data-chart="referrerChart" data-dropdown>
+                            <button type="button" class="cascade-btn dropdown-trigger" data-dropdown-trigger data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
                             </button>
-                            <div class="cascade-dropdown">
-                                <button class="cascade-option" data-value="total">
+                            <div class="dropdown-menu dropdown-menu--align-right cascade-menu" data-dropdown-menu>
+                                <button type="button" class="dropdown-item" data-value="total">
                                     <i class="ti ti-chart-bar"></i>
                                     <span>Total Clicks</span>
                                 </button>
-                                <button class="cascade-option" data-value="unique">
+                                <button type="button" class="dropdown-item" data-value="unique">
                                     <i class="ti ti-users"></i>
                                     <span>Unique Clicks</span>
                                 </button>
-                                <button class="cascade-option active" data-value="compare">
+                                <button type="button" class="dropdown-item is-active" data-value="compare">
                                     <i class="ti ti-switch-3"></i>
                                     <span>Total vs Unique</span>
                                 </button>
@@ -379,7 +382,8 @@
                     <div class="chart-empty-state hidden" id="referrerChart-empty">
                         <div class="empty-state-icon"><i class="ti ti-world"></i></div>
                         <h3 class="empty-state-title">No Referrer Data</h3>
-                        <p class="empty-state-description">Referrer information will appear once people click your links</p>
+                        <p class="empty-state-description">Referrer information will appear once people click your links
+                        </p>
                     </div>
                     <div class="stats-table" id="referrerTable" style="display: none;">
                         <div class="table-header">
@@ -401,23 +405,28 @@
                 <div class="chart-header">
                     <h2>Browsers</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="browserChart" title="Table View">
-                            <i class="ti ti-table"></i>
-                        </button>
-                        <div class="cascade-select" data-chart="browserChart">
-                            <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
+                        <div class="view-toggle" data-chart="browserChart" role="group" aria-label="Toggle chart or table view">
+                            <button class="view-toggle-btn active" data-view="chart" aria-pressed="true" title="Chart view">
+                                <i class="ti ti-chart-pie"></i>
+                            </button>
+                            <button class="view-toggle-btn" data-view="table" aria-pressed="false" title="Table view">
+                                <i class="ti ti-table"></i>
+                            </button>
+                        </div>
+                        <div class="cascade-select dropdown" data-chart="browserChart" data-dropdown>
+                            <button type="button" class="cascade-btn dropdown-trigger" data-dropdown-trigger data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
                             </button>
-                            <div class="cascade-dropdown">
-                                <button class="cascade-option" data-value="total">
+                            <div class="dropdown-menu dropdown-menu--align-right cascade-menu" data-dropdown-menu>
+                                <button type="button" class="dropdown-item" data-value="total">
                                     <i class="ti ti-chart-bar"></i>
                                     <span>Total Clicks</span>
                                 </button>
-                                <button class="cascade-option" data-value="unique">
+                                <button type="button" class="dropdown-item" data-value="unique">
                                     <i class="ti ti-users"></i>
                                     <span>Unique Clicks</span>
                                 </button>
-                                <button class="cascade-option active" data-value="compare">
+                                <button type="button" class="dropdown-item is-active" data-value="compare">
                                     <i class="ti ti-switch-3"></i>
                                     <span>Total vs Unique</span>
                                 </button>
@@ -449,23 +458,28 @@
                 <div class="chart-header">
                     <h2>Platforms</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="osChart" title="Table View">
-                            <i class="ti ti-table"></i>
-                        </button>
-                        <div class="cascade-select" data-chart="osChart">
-                            <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
+                        <div class="view-toggle" data-chart="osChart" role="group" aria-label="Toggle chart or table view">
+                            <button class="view-toggle-btn active" data-view="chart" aria-pressed="true" title="Chart view">
+                                <i class="ti ti-chart-pie"></i>
+                            </button>
+                            <button class="view-toggle-btn" data-view="table" aria-pressed="false" title="Table view">
+                                <i class="ti ti-table"></i>
+                            </button>
+                        </div>
+                        <div class="cascade-select dropdown" data-chart="osChart" data-dropdown>
+                            <button type="button" class="cascade-btn dropdown-trigger" data-dropdown-trigger data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
                             </button>
-                            <div class="cascade-dropdown">
-                                <button class="cascade-option" data-value="total">
+                            <div class="dropdown-menu dropdown-menu--align-right cascade-menu" data-dropdown-menu>
+                                <button type="button" class="dropdown-item" data-value="total">
                                     <i class="ti ti-chart-bar"></i>
                                     <span>Total Clicks</span>
                                 </button>
-                                <button class="cascade-option" data-value="unique">
+                                <button type="button" class="dropdown-item" data-value="unique">
                                     <i class="ti ti-users"></i>
                                     <span>Unique Clicks</span>
                                 </button>
-                                <button class="cascade-option active" data-value="compare">
+                                <button type="button" class="dropdown-item is-active" data-value="compare">
                                     <i class="ti ti-switch-3"></i>
                                     <span>Total vs Unique</span>
                                 </button>
@@ -478,7 +492,8 @@
                     <div class="chart-empty-state hidden" id="osChart-empty">
                         <div class="empty-state-icon"><i class="ti ti-device-desktop"></i></div>
                         <h3 class="empty-state-title">No Platform Data</h3>
-                        <p class="empty-state-description">Operating system stats will populate as users engage with your links</p>
+                        <p class="empty-state-description">Operating system stats will populate as users engage with
+                            your links</p>
                     </div>
                     <div class="stats-table" id="osTable" style="display: none;">
                         <div class="table-header">
@@ -500,23 +515,28 @@
                 <div class="chart-header">
                     <h2>Cities</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="cityChart" title="Table View">
-                            <i class="ti ti-table"></i>
-                        </button>
-                        <div class="cascade-select" data-chart="cityChart">
-                            <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
+                        <div class="view-toggle" data-chart="cityChart" role="group" aria-label="Toggle chart or table view">
+                            <button class="view-toggle-btn active" data-view="chart" aria-pressed="true" title="Chart view">
+                                <i class="ti ti-chart-bar"></i>
+                            </button>
+                            <button class="view-toggle-btn" data-view="table" aria-pressed="false" title="Table view">
+                                <i class="ti ti-table"></i>
+                            </button>
+                        </div>
+                        <div class="cascade-select dropdown" data-chart="cityChart" data-dropdown>
+                            <button type="button" class="cascade-btn dropdown-trigger" data-dropdown-trigger data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
                             </button>
-                            <div class="cascade-dropdown">
-                                <button class="cascade-option" data-value="total">
+                            <div class="dropdown-menu dropdown-menu--align-right cascade-menu" data-dropdown-menu>
+                                <button type="button" class="dropdown-item" data-value="total">
                                     <i class="ti ti-chart-bar"></i>
                                     <span>Total Clicks</span>
                                 </button>
-                                <button class="cascade-option" data-value="unique">
+                                <button type="button" class="dropdown-item" data-value="unique">
                                     <i class="ti ti-users"></i>
                                     <span>Unique Clicks</span>
                                 </button>
-                                <button class="cascade-option active" data-value="compare">
+                                <button type="button" class="dropdown-item is-active" data-value="compare">
                                     <i class="ti ti-switch-3"></i>
                                     <span>Total vs Unique</span>
                                 </button>
@@ -529,7 +549,8 @@
                     <div class="chart-empty-state hidden" id="cityChart-empty">
                         <div class="empty-state-icon"><i class="ti ti-building"></i></div>
                         <h3 class="empty-state-title">No City Data</h3>
-                        <p class="empty-state-description">Geographic data from cities will display when visitors click your links</p>
+                        <p class="empty-state-description">Geographic data from cities will display when visitors click
+                            your links</p>
                     </div>
                     <div class="stats-table" id="cityTable" style="display: none;">
                         <div class="table-header">
@@ -548,19 +569,24 @@
                 <div class="chart-header">
                     <h2>Countries</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="countryChart" title="Table View">
-                            <i class="ti ti-table"></i>
-                        </button>
-                        <div class="cascade-select" data-chart="countryChart">
-                            <button class="cascade-btn active" data-value="total" title="Total Clicks">
+                        <div class="view-toggle" data-chart="countryChart" role="group" aria-label="Toggle chart or table view">
+                            <button class="view-toggle-btn active" data-view="chart" aria-pressed="true" title="Chart view">
                                 <i class="ti ti-chart-bar"></i>
                             </button>
-                            <div class="cascade-dropdown">
-                                <button class="cascade-option active" data-value="total">
+                            <button class="view-toggle-btn" data-view="table" aria-pressed="false" title="Table view">
+                                <i class="ti ti-table"></i>
+                            </button>
+                        </div>
+                        <div class="cascade-select dropdown" data-chart="countryChart" data-dropdown>
+                            <button type="button" class="cascade-btn dropdown-trigger" data-dropdown-trigger data-value="total" title="Total Clicks">
+                                <i class="ti ti-chart-bar"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu--align-right cascade-menu" data-dropdown-menu>
+                                <button type="button" class="dropdown-item is-active" data-value="total">
                                     <i class="ti ti-chart-bar"></i>
                                     <span>Total Clicks</span>
                                 </button>
-                                <button class="cascade-option" data-value="unique">
+                                <button type="button" class="dropdown-item" data-value="unique">
                                     <i class="ti ti-users"></i>
                                     <span>Unique Clicks</span>
                                 </button>
@@ -573,7 +599,8 @@
                     <div class="chart-empty-state hidden" id="countryChart-empty">
                         <div class="empty-state-icon"><i class="ti ti-map"></i></div>
                         <h3 class="empty-state-title">No Country Data</h3>
-                        <p class="empty-state-description">Country data will display once visitors engage with your links</p>
+                        <p class="empty-state-description">Country data will display once visitors engage with your
+                            links</p>
                     </div>
                     <div class="stats-table" id="countryTable" style="display: none;">
                         <div class="table-header">
@@ -591,6 +618,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', path='js/sheet-handle.js') }}?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/relativeTime.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -600,6 +628,6 @@
 <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-data-adapter.min.js"></script>
 <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-exports.min.js"></script>
 <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-ui.min.js"></script>
-<script src="{{ url_for('static', path='js/dashboard/dateRangePicker.js') }}"></script>
-<script src="{{ url_for('static', path='js/dashboard/statistics.js') }}?v=4"></script>
+<script src="{{ url_for('static', path='js/dashboard/dateRangePicker.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='js/dashboard/statistics.js') }}?v=13"></script>
 {% endblock %}

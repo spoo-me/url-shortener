@@ -10,37 +10,16 @@
 
     {% block meta %}{% endblock %}
 
-    <link rel="stylesheet" href="{{ url_for('static', path='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/header.css') }}?v=6">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/mobile-header.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/base.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/header.css') }}?v=9">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/mobile-header.css') }}?v=7">
     <link rel="stylesheet" href="{{ url_for('static', path='css/contacts-modal.css') }}?v=9">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/notifications.css') }}?v=1">
     <link rel="stylesheet" href="{{ url_for('static', path='css/auth.css') }}?v=1">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/self-promo.css') }}?v=2">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/v2-announcement.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/auth-modal.css') }}?v=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
 
-    {% if sentry_client_key or clarity_id %}
-    <script>
-        addEventListener("load", function () {
-            {% if sentry_client_key %}
-            var s = document.createElement("script");
-            s.src = "https://js.sentry-cdn.com/{{ sentry_client_key }}.min.js";
-            s.crossOrigin = "anonymous";
-            document.head.appendChild(s);
-            {% endif %}
-            {% if clarity_id %}
-            (function (c, l, a, r, i, t, y) {
-                c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
-                t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
-                y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
-            })(window, document, "clarity", "script", "{{ clarity_id }}");
-            {% endif %}
-        });
-    </script>
-    {% endif %}
-
-    <!-- Confetti for v2 announcement -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
+    {% include 'partials/analytics.html' %}
 
     {% block head_css %}{% endblock %}
 </head>
@@ -52,7 +31,6 @@
     {% include 'partials/mobile_navbar.html' %}
     {% include 'partials/contact_modal.html' %}
     {% include 'partials/auth_modal.html' %}
-    {% include 'partials/v2_announcement.html' %}
 
     {% block pre_body %}{% endblock %}
 
@@ -60,11 +38,10 @@
         {% block content %}{% endblock %}
     </main>
 
+    <script src="{{ url_for('static', path='js/notifications.js') }}?v=1" defer></script>
     <script src="{{ url_for('static', path='js/contacts-popup.js') }}?v=1" defer></script>
-    <script src="{{ url_for('static', path='js/header.js') }}?v=6" defer></script>
-    <script src="{{ url_for('static', path='js/self-promo.js') }}?v=2" defer></script>
+    <script src="{{ url_for('static', path='js/header.js') }}?v=7" defer></script>
     <script src="{{ url_for('static', path='js/auth.js') }}?v=3" defer></script>
-    <script src="{{ url_for('static', path='js/v2-announcement.js') }}?v=4" defer></script>
 
     {% block scripts %}{% endblock %}
 </body>

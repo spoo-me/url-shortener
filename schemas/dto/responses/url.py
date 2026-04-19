@@ -195,3 +195,19 @@ class UrlListResponse(ResponseBase):
     hasNext: bool
     sortBy: str
     sortOrder: str
+
+
+class AliasCheckResponse(ResponseBase):
+    """Response body for GET /api/v1/shorten/check-alias.
+
+    ``available`` is true only when the alias passes format/length validation
+    AND is not already taken. When false, ``reason`` explains why so the UI
+    can render a precise, non-generic message.
+    """
+
+    available: bool = Field(description="Whether the alias is free to use.")
+    reason: str | None = Field(
+        default=None,
+        description="When unavailable: 'length', 'format', or 'taken'.",
+        examples=["taken"],
+    )

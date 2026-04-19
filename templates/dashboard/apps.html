@@ -3,8 +3,8 @@
 {% block title %}Apps | Dashboard | spoo.me{% endblock %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/apps.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/url-modal.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/apps.css') }}?v=1">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/url-modal.css') }}?v=1">
 <meta name="robots" content="noindex">
 {% endblock %}
 
@@ -43,12 +43,13 @@
                     </div>
                     <span class="app-description">{{ app.description }}</span>
                 </div>
-                <div class="kebab-menu">
-                    <button class="kebab-btn" onclick="toggleKebab(this)" title="Options">
+                <div class="kebab-menu dropdown" data-dropdown>
+                    <button type="button" class="kebab-btn dropdown-trigger" data-dropdown-trigger title="Options">
                         <i class="ti ti-dots-vertical"></i>
                     </button>
-                    <div class="kebab-dropdown">
-                        <button class="kebab-item kebab-item--danger" onclick="revokeApp('{{ app.app_id }}', '{{ app.name }}')">
+                    <div class="dropdown-menu dropdown-menu--align-right kebab-menu-list" data-dropdown-menu>
+                        <button type="button" class="kebab-item kebab-item--danger dropdown-item"
+                            onclick="revokeApp('{{ app.app_id }}', '{{ app.name }}')">
                             <i class="ti ti-unlink"></i> Disconnect
                         </button>
                     </div>
@@ -180,19 +181,7 @@ if (typeof navigator !== 'undefined' && /Firefox\//.test(navigator.userAgent)) {
     });
 }
 
-// Kebab menu
-function toggleKebab(btn) {
-    const dropdown = btn.nextElementSibling;
-    const wasOpen = dropdown.classList.contains('open');
-    document.querySelectorAll('.kebab-dropdown.open').forEach(d => d.classList.remove('open'));
-    if (!wasOpen) dropdown.classList.add('open');
-}
-
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('.kebab-menu')) {
-        document.querySelectorAll('.kebab-dropdown.open').forEach(d => d.classList.remove('open'));
-    }
-});
+// Kebab menu open/close handled by the shared Dropdown primitive.
 
 let pendingRevokeId = null;
 

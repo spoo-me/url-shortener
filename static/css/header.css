@@ -7,7 +7,7 @@
     border-radius: 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     position: sticky;
-    z-index: 9999;
+    z-index: var(--z-max, 9999);
     top: 0;
     backdrop-filter: blur(20px);
     display: flex;
@@ -310,7 +310,7 @@
     padding: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     backdrop-filter: blur(12px);
-    z-index: 1000;
+    z-index: var(--z-overlay, 1000);
 }
 
 .profile-dropdown a,
@@ -334,4 +334,69 @@
     background: rgba(255, 255, 255, 0.08);
     text-shadow: none !important;
     width: -webkit-fill-available;
+}
+
+.self-promo {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.self-promo-inner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    width: -webkit-fill-available;
+}
+
+.self-promo-inner a {
+    all: unset;
+    color: white;
+    font-weight: normal;
+    font-size: 17px;
+    letter-spacing: 0.8px;
+    cursor: pointer;
+    text-align: center;
+    font-family: "Allerta Stencil", sans-serif;
+}
+
+.self-promo-inner a:hover {
+    text-decoration: underline;
+}
+
+.self-promo button {
+    background-color: rgba(255, 255, 255, 0.125);
+    backdrop-filter: blur(10px);
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    outline: none;
+    border-radius: 50%;
+    height: 27px;
+    width: 27px;
+    padding: 3px;
+    margin: 0;
+}
+
+.self-promo button:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+.self-promo button img {
+    vertical-align: initial;
+}
+
+.self-promo.hidden {
+    display: none;
+}
+
+@media screen and (max-width: 500px) {
+    .self-promo-inner a {
+        font-size: 12px;
+    }
 }

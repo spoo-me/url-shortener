@@ -8,7 +8,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 9999;
+    z-index: var(--z-max);
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -74,7 +74,8 @@
     background: rgba(255, 255, 255, 0.02);
 }
 
-.modal-title-section-delete, .modal-title-section-success {
+.modal-title-section-delete,
+.modal-title-section-success {
     display: flex;
     align-items: center;
     gap: 16px;
@@ -222,6 +223,18 @@
     font-size: 16px;
 }
 
+.tab.has-error::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-danger);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.4);
+}
+
 /* Tab Content */
 .tab-content {
     display: none;
@@ -276,8 +289,8 @@
     color: var(--text-primary);
 }
 
-.field input,
-.field select {
+.modal .field input,
+.modal .field select {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
@@ -290,18 +303,18 @@
     min-width: 0;
 }
 
-.field input:focus,
-.field select:focus {
+.modal .field input:focus,
+.modal .field select:focus {
     outline: none;
     border-color: var(--accent-primary);
     background: rgba(255, 255, 255, 0.08);
 }
 
-.field input::placeholder {
+.modal .field input::placeholder {
     color: var(--text-secondary);
 }
 
-.field input:disabled {
+.modal .field input:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     background: rgba(255, 255, 255, 0.02);
@@ -310,7 +323,7 @@
 /* Input Group */
 .input-group {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
@@ -321,9 +334,62 @@
     min-width: 0;
 }
 
+.alias-status {
+    display: none;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 16px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.alias-status.show {
+    display: flex;
+}
+
+.alias-status.is-checking i {
+    animation: spin 1s linear infinite;
+}
+
+.alias-status.is-available {
+    color: var(--color-success, #22c55e);
+}
+
+.alias-status.is-unavailable {
+    color: var(--color-danger);
+}
+
+.alias-dice {
+    background: transparent;
+    border: none;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease, background 0.15s ease;
+    flex-shrink: 0;
+}
+
+.alias-dice:hover {
+    color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.alias-dice i {
+    font-size: 18px;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 .input-group:focus-within {
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    border-color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .input-prefix {
@@ -336,13 +402,18 @@
     flex-shrink: 0;
 }
 
-.input-group input {
+.modal .input-group input {
     background: none;
     border: none;
+    border-radius: 0;
     flex: 1;
     min-width: 0;
     width: 100%;
     box-sizing: border-box;
+}
+
+.modal .input-group input:focus {
+    background: transparent;
 }
 
 /* Select Wrapper */
@@ -373,6 +444,35 @@
     line-height: 1.4;
 }
 
+/* Field Error */
+.field-error {
+    font-size: 12px;
+    color: var(--color-danger);
+    line-height: 1.4;
+    display: block;
+}
+
+.field.has-error > .field-hint {
+    display: none;
+}
+
+.field.has-error input,
+.field.has-error select,
+.field.has-error .input-group {
+    border-color: var(--color-danger);
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.field.has-error .input-group input {
+    background: transparent;
+}
+
+.field.has-error input:focus,
+.field.has-error select:focus,
+.field.has-error .input-group:focus-within {
+    border-color: var(--color-danger);
+}
+
 /* Password Field Group */
 .password-field-group {
     display: flex;
@@ -385,28 +485,6 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-}
-
-.btn-link {
-    background: none;
-    border: none;
-    color: #ef4444;
-    font-size: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 0;
-    transition: all 0.2s ease;
-}
-
-.btn-link:hover {
-    color: #dc2626;
-    text-decoration: underline;
-}
-
-.btn-link i {
-    font-size: 12px;
 }
 
 .password-status {
@@ -449,8 +527,8 @@
 }
 
 .checkbox-field input[type="checkbox"]:checked+.checkbox-label .checkbox-indicator {
-    background: var(--accent-color);
-    border-color: var(--accent-color);
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
 }
 
 .checkbox-field input[type="checkbox"]:checked+.checkbox-label .checkbox-indicator::after {
@@ -539,9 +617,9 @@
 }
 
 .btn-primary {
-    background: #6366f1;
+    background: var(--color-info);
     color: white;
-    border-color: #6366f1;
+    border-color: var(--color-info);
 }
 
 .btn-primary:hover {
@@ -555,9 +633,9 @@
 }
 
 .btn-warning {
-    background: #f59e0b;
+    background: var(--color-warning);
     color: white;
-    border-color: #f59e0b;
+    border-color: var(--color-warning);
 }
 
 .btn-warning:hover {
@@ -571,14 +649,14 @@
 }
 
 .btn-danger {
-    background: #ef4444;
+    background: var(--color-danger);
     color: white;
-    border-color: #ef4444;
+    border-color: var(--color-danger);
 }
 
 .btn-danger:hover {
-    background: #dc2626;
-    border-color: #dc2626;
+    background: var(--color-danger-hover);
+    border-color: var(--color-danger-hover);
 }
 
 .btn-danger:active {
@@ -623,7 +701,6 @@
 /* Clickable Rows */
 .clickable-row {
     transition: all 0.2s ease;
-    border-radius: 8px;
 }
 
 .clickable-row:hover {
@@ -657,7 +734,7 @@
 }
 
 .url-preview strong {
-    color: #ef4444;
+    color: var(--color-danger);
     font-weight: 600;
 }
 
@@ -748,6 +825,12 @@
     }
 
     .tab {
-        justify-content: flex-start;
+        padding: 10px 8px;
+        font-size: 13px;
+        gap: 6px;
+    }
+
+    .tab i {
+        font-size: 14px;
     }
 }

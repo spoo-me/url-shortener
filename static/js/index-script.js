@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
                 const err = data && data.error ? data.error : 'Failed to shorten URL';
-                customTopNotification('ShortenError', err, 8, 'error');
+                showNotification(err, 'error');
                 return;
             }
 
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Navigate to result page
             window.location.href = `/result/${encodeURIComponent(data.alias)}`;
         } catch (err) {
-            customTopNotification('NetworkError', 'Network error. Please try again.', 8, 'error');
+            showNotification('Network error. Please try again.', 'error');
         } finally {
             if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = prevText; }
         }

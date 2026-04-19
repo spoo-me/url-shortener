@@ -3,7 +3,7 @@
 {% block title %}API Keys | Dashboard | spoo.me{% endblock %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/keys.css') }}?v=2">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/keys.css') }}?v=7">
 <meta name="robots" content="noindex">
 {% endblock %}
 
@@ -244,6 +244,37 @@
     </div>
 </div>
 
+<!-- Delete Key Confirmation Modal -->
+<div id="delete-key-modal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-container">
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="deleteKeyModalTitle" aria-describedby="deleteKeyModalDesc">
+            <div class="modal-header">
+                <div class="modal-title-section-delete">
+                    <div class="modal-icon">
+                        <i class="ti ti-alert-triangle"></i>
+                    </div>
+                    <h2 class="modal-title" id="deleteKeyModalTitle">Delete API Key?</h2>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <p id="deleteKeyModalDesc">Applications using this key will immediately stop working. This action cannot be undone.</p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" id="btn-cancel-key-delete">
+                    <span>Cancel</span>
+                </button>
+                <button type="button" class="btn btn-delete" id="btn-confirm-key-delete">
+                    <i class="ti ti-trash"></i>
+                    <span>Delete Permanently</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <template id="tpl-key-item">
     <div class="table-row fade-in">
         <div class="table-cell col-name">
@@ -275,5 +306,6 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', path='js/dashboard/keys.js') }}?v=2"></script>
+<script src="{{ url_for('static', path='js/verification-check.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='js/dashboard/keys.js') }}?v=8"></script>
 {% endblock %}

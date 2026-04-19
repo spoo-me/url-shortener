@@ -13,7 +13,7 @@
     border-radius: 14px;
     background: rgba(15, 18, 37, 0.95);
     border: 1px solid #2a2e52;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
 }
 
 #authModal h2 {
@@ -87,6 +87,7 @@
     justify-content: center;
     gap: 8px;
 }
+
 #authModal .toggle button {
     background: none;
     border: none;
@@ -101,10 +102,15 @@
     text-decoration: underline;
     font: inherit;
 }
-#authError { color: #ff7b7b; text-align: center; }
 
-@media screen and (max-width: 600px){
-    #authModal .modal-content { margin: 20px; padding: 20px; }
+#authError {
+    color: #ff7b7b;
+    text-align: center;
 }
 
-
+@media screen and (max-width: 600px) {
+    #authModal .modal-content {
+        margin: 20px;
+        padding: 20px;
+    }
+}

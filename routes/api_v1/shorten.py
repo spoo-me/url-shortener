@@ -7,7 +7,9 @@ Auth is optional; API key users require `shorten:create` or `admin:all` scope.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query, Request
 
 from dependencies import (
     SHORTEN_SCOPES,
@@ -18,13 +20,14 @@ from dependencies import (
 )
 from middleware.openapi import AUTH_RESPONSES, OPTIONAL_AUTH_SECURITY
 from middleware.rate_limiter import Limits, dynamic_limit, limiter
-from schemas.dto.requests.url import CreateUrlRequest
-from schemas.dto.responses.url import UrlResponse
+from schemas.dto.requests.url import AliasCheckQuery, CreateUrlRequest
+from schemas.dto.responses.url import AliasCheckResponse, UrlResponse
 from shared.ip_utils import get_client_ip
 
 router = APIRouter(tags=["URL Shortening"])
 
 _shorten_limit, _shorten_key = dynamic_limit(Limits.API_AUTHED, Limits.API_ANON)
+_check_limit, _check_key = dynamic_limit(Limits.API_CHECK_AUTHED, Limits.API_CHECK_ANON)
 
 
 @router.post(
@@ -69,3 +72,31 @@ async def shorten_v1(
 
     doc = await url_service.create(body, owner_id, client_ip)
     return UrlResponse.from_doc(doc, settings.app_url)
+
+
+@router.get(
+    "/shorten/check-alias",
+    responses=AUTH_RESPONSES,
+    openapi_extra=OPTIONAL_AUTH_SECURITY,
+    operation_id="checkAliasAvailability",
+    summary="Check Alias Availability",
+)
+@limiter.limit(_check_limit, key_func=_check_key)
+async def check_alias(
+    request: Request,
+    url_service: UrlSvc,
+    query: Annotated[AliasCheckQuery, Query()],
+    _user: CurrentUser | None = Depends(optional_scopes_verified(SHORTEN_SCOPES)),  # noqa: B008
+) -> AliasCheckResponse:
+    """Check whether a proposed alias would be accepted by POST /api/v1/shorten.
+
+    Reason codes on a negative result (``length``/``format``/``taken``) let the
+    UI render precise inline feedback without duplicating the validation rules.
+
+    **Authentication**: Optional — higher rate limits when authenticated.
+    """
+    result = await url_service.check_alias(query.alias)
+    return AliasCheckResponse(
+        available=result == "available",
+        reason=None if result == "available" else result,
+    )

@@ -2,9 +2,11 @@
     <div class="sidebar-header">
         <a href="/" class="sidebar-brand">
             <span class="brand-logo">
-                <img src="{{ url_for('static', path='images/logo-text-dark.png') }}" alt="spoo.me" class="w-8 h-8">
+                <img src="{{ url_for('static', path='images/logo-text-dark.png') }}" alt="spoo.me"
+                    class="brand-logo-full">
+                <img src="{{ url_for('static', path='images/favicon.png') }}" alt="spoo.me"
+                    class="brand-logo-icon">
             </span>
-            <!-- <span class="brand-text">spoo.me</span> -->
         </a>
         <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
             <i class="ti ti-layout-sidebar-left-collapse"></i>
@@ -58,8 +60,9 @@
     </div>
 
     <div class="sidebar-footer">
-        <div class="profile-dropdown">
-            <button class="profile-button" id="profileButton" aria-label="Profile menu">
+        <div class="profile-dropdown dropdown" data-dropdown>
+            <button type="button" class="profile-button dropdown-trigger" id="profileButton"
+                data-dropdown-trigger aria-label="Profile menu">
                 <div class="profile-avatar">
                     {% if user.pfp and user.pfp.url %}
                     <img src="{{ user.pfp.url }}" alt="{{ user.user_name or user.email }}" class="profile-image"
@@ -77,21 +80,21 @@
                 <i class="ti ti-chevron-up profile-chevron"></i>
             </button>
 
-            <div class="profile-menu" id="profileMenu">
-                <a href="/dashboard/billing" class="menu-item">
+            <div class="profile-menu dropdown-menu" id="profileMenu" data-dropdown-menu>
+                <a href="/dashboard/billing" class="menu-item dropdown-item">
                     <i class="ti ti-credit-card"></i>
                     <span>Billing</span>
                 </a>
-                <a href="/report" class="menu-item">
+                <a href="/report" class="menu-item dropdown-item">
                     <i class="ti ti-report"></i>
                     <span>Report URL</span>
                 </a>
-                <a href="/contact" class="menu-item">
+                <a href="/contact" class="menu-item dropdown-item">
                     <i class="ti ti-help"></i>
                     <span>Help & Support</span>
                 </a>
-                <div class="menu-divider"></div>
-                <button class="menu-item" onclick="logout()">
+                <div class="menu-divider dropdown-divider"></div>
+                <button type="button" class="menu-item dropdown-item" onclick="logout()">
                     <i class="ti ti-logout"></i>
                     <span>Sign out</span>
                 </button>

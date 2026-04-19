@@ -126,6 +126,22 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class StaticCacheHeadersMiddleware(BaseHTTPMiddleware):
+    """Set long-lived immutable Cache-Control on /static/* responses.
+
+    Templates cache-bust via ?v=N query strings, so each asset URL is
+    effectively content-addressed and safe to cache for a year.
+    """
+
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
+        response = await call_next(request)
+        if request.url.path.startswith("/static/") and response.status_code == 200:
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
+
 class MaxContentLengthMiddleware(BaseHTTPMiddleware):
     """Reject requests whose Content-Length exceeds the configured limit."""
 

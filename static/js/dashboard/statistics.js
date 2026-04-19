@@ -153,34 +153,22 @@ const CHART_CONFIGS = {
  * @param {StatisticsDashboard} dashboard - Reference to dashboard instance for filter handling
  */
 function closeAllModals(dashboard) {
-    // Close filters dropdown
-    const filtersDropdown = document.querySelector('.filters-dropdown');
-    if (filtersDropdown) {
-        filtersDropdown.classList.remove('show');
-        const filtersBtn = document.querySelector('.filters-btn');
-        if (filtersBtn) {
-            filtersBtn.classList.remove('active');
-        }
+    // Close filters dropdown via primitive
+    const filtersWrapper = document.querySelector('.filters-dropdown-container.dropdown');
+    if (filtersWrapper && window.Dropdown) {
+        window.Dropdown.close(filtersWrapper);
     }
 
-    // Close auto-refresh dropdown
-    const autoRefreshBtn = document.querySelector('.auto-refresh-btn');
-    const autoRefreshDropdown = autoRefreshBtn?.nextElementSibling;
-    if (autoRefreshDropdown) {
-        autoRefreshDropdown.classList.remove('show');
-        if (autoRefreshBtn) {
-            autoRefreshBtn.classList.remove('active');
-        }
+    // Close auto-refresh dropdown via primitive
+    const autoRefreshDd = document.querySelector('.auto-refresh-dropdown.dropdown');
+    if (autoRefreshDd && window.Dropdown) {
+        window.Dropdown.close(autoRefreshDd);
     }
 
-    // Close export dropdown
-    const exportDropdownMenu = document.getElementById('exportDropdownMenu');
-    if (exportDropdownMenu) {
-        exportDropdownMenu.classList.remove('active');
-        const exportBtn = document.querySelector('.export-btn');
-        if (exportBtn) {
-            exportBtn.classList.remove('active');
-        }
+    // Close export dropdown via primitive
+    const exportDd = document.querySelector('.export-btn-wrapper.dropdown');
+    if (exportDd && window.Dropdown) {
+        window.Dropdown.close(exportDd);
     }
 
     // Note: Cascade dropdowns are intentionally NOT closed here
@@ -339,13 +327,40 @@ class StatisticsDashboard {
     }
 
     setupDateRangePicker() {
+        const saved = this.loadSavedTimeRange();
         this.dateRangePicker = new DateRangePicker({
             container: 'dateRangeContainer',
             onRangeChange: (dateRange) => {
                 this.handleDateRangeChange(dateRange);
             },
-            defaultRange: 'last-7-days'
+            defaultRange: (saved && saved.range) || 'last-7-days'
         });
+
+        // For custom ranges, also restore the from/to text and refresh the trigger label.
+        if (saved && saved.range === 'custom' && saved.customFrom && saved.customTo) {
+            this.dateRangePicker.customFromValue = saved.customFrom;
+            this.dateRangePicker.customToValue = saved.customTo;
+            const triggerEl = document.querySelector('.selected-range');
+            if (triggerEl) triggerEl.textContent = `${saved.customFrom} - ${saved.customTo}`;
+        }
+    }
+
+    loadSavedTimeRange() {
+        try {
+            const raw = localStorage.getItem('stats-time-range');
+            return raw ? JSON.parse(raw) : null;
+        } catch (_) { return null; }
+    }
+
+    saveTimeRange() {
+        try {
+            const payload = { range: this.currentTimeRange };
+            if (this.currentTimeRange === 'custom' && this.dateRangePicker) {
+                payload.customFrom = this.dateRangePicker.customFromValue;
+                payload.customTo = this.dateRangePicker.customToValue;
+            }
+            localStorage.setItem('stats-time-range', JSON.stringify(payload));
+        } catch (_) { /* localStorage may be unavailable */ }
     }
 
     handleDateRangeChange(dateRange) {
@@ -353,6 +368,8 @@ class StatisticsDashboard {
         this.startDate = dateRange.start;
         this.endDate = dateRange.end;
         this.currentTimeRange = dateRange.range;
+
+        this.saveTimeRange();
 
         // Reload dashboard data with new range
         this.loadDashboardData();
@@ -368,40 +385,7 @@ class StatisticsDashboard {
             });
         }
 
-        // Auto-refresh dropdown toggle
-        const autoRefreshBtn = document.querySelector('.auto-refresh-btn');
-        if (autoRefreshBtn) {
-            autoRefreshBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const dropdown = autoRefreshBtn.nextElementSibling;
-                if (dropdown && dropdown.classList.contains('dropdown-menu')) {
-                    const isOpen = dropdown.classList.contains('show');
-
-                    // Close all other modals first
-                    closeAllModals(this);
-
-                    // Only open if it was previously closed
-                    if (!isOpen) {
-                        dropdown.classList.add('show');
-                        autoRefreshBtn.classList.add('active');
-                    }
-                }
-            });
-        }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            const autoRefreshDropdown = e.target.closest('.auto-refresh-dropdown');
-            if (!autoRefreshDropdown) {
-                const openDropdowns = document.querySelectorAll('.auto-refresh-dropdown .dropdown-menu.show');
-                const autoRefreshBtn = document.querySelector('.auto-refresh-btn');
-                openDropdowns.forEach(dropdown => dropdown.classList.remove('show'));
-                if (autoRefreshBtn) {
-                    autoRefreshBtn.classList.remove('active');
-                }
-            }
-        });
+        // Auto-refresh open/close/outside-click handled by Dropdown primitive.
 
         // Table view button controls
         this.setupTableViewControls();
@@ -411,40 +395,17 @@ class StatisticsDashboard {
     }
 
     setupFilterSystem() {
-        // Set up filter toggle
-        const filtersBtn = document.querySelector('.filters-btn');
-        const filtersDropdown = document.querySelector('.filters-dropdown');
-
-        if (filtersBtn && filtersDropdown) {
-            filtersBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const isOpen = filtersDropdown.classList.contains('show');
-
-                // Close all other modals first
-                closeAllModals(this);
-
-                if (!isOpen) {
-                    // Only open if it was previously closed
-                    filtersDropdown.classList.add('show');
-                    filtersBtn.classList.add('active');
+        // Open/close/outside-click handled by the shared Dropdown primitive.
+        // Reset to the main (filter-types) view each time the panel closes.
+        const filtersWrapper = document.querySelector('.filters-dropdown-container.dropdown');
+        if (filtersWrapper) {
+            const observer = new MutationObserver(() => {
+                if (!filtersWrapper.classList.contains('is-open')) {
+                    this.showFilterTypes();
                 }
             });
+            observer.observe(filtersWrapper, { attributes: true, attributeFilter: ['class'] });
         }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.filters-dropdown-container')) {
-                const filtersDropdown = document.querySelector('.filters-dropdown');
-                const filtersBtn = document.querySelector('.filters-btn');
-
-                if (filtersDropdown && filtersBtn) {
-                    filtersDropdown.classList.remove('show');
-                    filtersBtn.classList.remove('active');
-                }
-            }
-        });
 
         // Set up hierarchical filter navigation
         this.setupHierarchicalFilters();
@@ -602,15 +563,9 @@ class StatisticsDashboard {
     }
 
     closeFiltersDropdown() {
-        const filtersDropdown = document.querySelector('.filters-dropdown');
-        const filtersBtn = document.querySelector('.filters-btn');
-
-        if (filtersDropdown && filtersBtn) {
-            filtersDropdown.classList.remove('show');
-            filtersBtn.classList.remove('active');
-
-            // Reset to main view
-            this.showFilterTypes();
+        const filtersWrapper = document.querySelector('.filters-dropdown-container.dropdown');
+        if (filtersWrapper && window.Dropdown) {
+            window.Dropdown.close(filtersWrapper);
         }
     }
 
@@ -990,137 +945,86 @@ class StatisticsDashboard {
     }
 
     setupCascadeControls() {
-        // Handle cascade button clicks
-        document.querySelectorAll('.cascade-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                // Don't proceed if button is disabled
-                if (btn.disabled) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return;
-                }
+        document.querySelectorAll('.cascade-select').forEach(wrapper => {
+            wrapper.addEventListener('dropdown:select', (e) => {
+                const { value, item } = e.detail;
+                const chartType = wrapper.dataset.chart;
 
-                e.stopPropagation();
-                const dropdown = btn.nextElementSibling;
-                const isOpen = dropdown.classList.contains('show');
-
-                // Close all other modals first
-                closeAllModals(this);
-
-                // Close other cascade dropdowns
-                document.querySelectorAll('.cascade-dropdown').forEach(dd => {
-                    if (dd !== dropdown) dd.classList.remove('show');
+                // Mark selected item active
+                wrapper.querySelectorAll('.dropdown-item').forEach(opt => {
+                    opt.classList.remove('is-active');
                 });
+                item.classList.add('is-active');
 
-                // Toggle current dropdown
-                if (isOpen) {
-                    dropdown.classList.remove('show');
-                } else {
-                    dropdown.classList.add('show');
-                }
-            });
-        });
+                // Sync trigger's icon, value, and title to the chosen option
+                const trigger = wrapper.querySelector('.cascade-btn');
+                trigger.dataset.value = value;
+                const triggerIcon = trigger.querySelector('i');
+                const itemIcon = item.querySelector('i');
+                if (triggerIcon && itemIcon) triggerIcon.className = itemIcon.className;
+                const itemLabel = item.querySelector('span');
+                if (itemLabel) trigger.title = itemLabel.textContent;
 
-        // Handle cascade option selection
-        document.querySelectorAll('.cascade-option').forEach(option => {
-            option.addEventListener('click', (e) => {
-                const cascadeSelect = option.closest('.cascade-select');
-
-                // Don't proceed if cascade select is disabled
-                if (cascadeSelect && cascadeSelect.style.pointerEvents === 'none') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return;
-                }
-
-                const value = option.dataset.value;
-                const chartType = cascadeSelect.dataset.chart;
-
-                // Update active states
-                cascadeSelect.querySelectorAll('.cascade-option').forEach(opt => {
-                    opt.classList.remove('active');
-                });
-                option.classList.add('active');
-
-                // Update main button
-                const mainBtn = cascadeSelect.querySelector('.cascade-btn');
-                mainBtn.dataset.value = value;
-                mainBtn.querySelector('i').className = option.querySelector('i').className;
-                mainBtn.title = option.querySelector('span').textContent;
-
-                // Close dropdown
-                cascadeSelect.querySelector('.cascade-dropdown').classList.remove('show');
-
-                // Update chart
                 this.updateChartByType(chartType, value);
-            });
-        });
-
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.cascade-dropdown').forEach(dropdown => {
-                dropdown.classList.remove('show');
             });
         });
     }
 
     setupTableViewControls() {
-        // Handle table view button clicks
-        document.querySelectorAll('.table-view-btn').forEach(btn => {
+        document.querySelectorAll('.view-toggle .view-toggle-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
 
-                const chartType = btn.dataset.chart;
-                this.toggleTableView(chartType, btn);
+                const toggle = btn.closest('.view-toggle');
+                const chartType = toggle?.dataset.chart;
+                const targetView = btn.dataset.view;
+                if (!chartType || !targetView) return;
+
+                this.setChartView(chartType, targetView);
             });
         });
     }
 
-    toggleTableView(chartType, btn) {
+    setChartView(chartType, view) {
+        const toggle = document.querySelector(`.view-toggle[data-chart="${chartType}"]`);
+        if (!toggle) return;
+
         const chartContainer = document.getElementById(chartType);
         const tableContainer = document.getElementById(chartType.replace('Chart', 'Table'));
         const cascadeSelect = document.querySelector(`[data-chart="${chartType}"].cascade-select`);
-
         if (!chartContainer || !tableContainer) return;
 
         const isTableVisible = tableContainer.style.display !== 'none';
+        const wantsTable = view === 'table';
+        if (isTableVisible === wantsTable) return;
 
-        if (isTableVisible) {
-            // Switch to chart view with fade transition
-            this.fadeTransition(tableContainer, chartContainer, () => {
-                btn.classList.remove('active');
-                btn.title = 'Table View';
+        const updateToggleState = () => {
+            toggle.querySelectorAll('.view-toggle-btn').forEach(b => {
+                const active = b.dataset.view === view;
+                b.classList.toggle('active', active);
+                b.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+        };
 
-                // Enable cascade selector
-                if (cascadeSelect) {
-                    cascadeSelect.style.pointerEvents = 'auto';
-                    cascadeSelect.style.opacity = '1';
-                    const cascadeBtn = cascadeSelect.querySelector('.cascade-btn');
-                    if (cascadeBtn) {
-                        cascadeBtn.disabled = false;
-                    }
-                }
+        const setCascadeEnabled = (enabled) => {
+            if (!cascadeSelect) return;
+            cascadeSelect.style.pointerEvents = enabled ? 'auto' : 'none';
+            cascadeSelect.style.opacity = enabled ? '1' : '0.5';
+            const cascadeBtn = cascadeSelect.querySelector('.cascade-btn');
+            if (cascadeBtn) cascadeBtn.disabled = !enabled;
+        };
 
+        if (wantsTable) {
+            this.fadeTransition(chartContainer, tableContainer, () => {
+                updateToggleState();
+                setCascadeEnabled(false);
+                this.updateTableData(chartType);
             });
         } else {
-            // Switch to table view with fade transition
-            this.fadeTransition(chartContainer, tableContainer, () => {
-                btn.classList.add('active');
-                btn.title = 'Chart View';
-
-                // Disable cascade selector
-                if (cascadeSelect) {
-                    cascadeSelect.style.pointerEvents = 'none';
-                    cascadeSelect.style.opacity = '0.5';
-                    const cascadeBtn = cascadeSelect.querySelector('.cascade-btn');
-                    if (cascadeBtn) {
-                        cascadeBtn.disabled = true;
-                    }
-                }
-
-                // Update table data
-                this.updateTableData(chartType);
+            this.fadeTransition(tableContainer, chartContainer, () => {
+                updateToggleState();
+                setCascadeEnabled(true);
             });
         }
     }
@@ -1431,7 +1335,7 @@ class StatisticsDashboard {
         }
 
         // Update table data if table is currently visible
-        const tableBtn = document.querySelector(`[data-chart="${chartType}"].table-view-btn`);
+        const tableBtn = document.querySelector(`.view-toggle[data-chart="${chartType}"] .view-toggle-btn[data-view="table"]`);
         if (tableBtn && tableBtn.classList.contains('active')) {
             this.updateTableData(chartType);
         }
@@ -1558,9 +1462,9 @@ class StatisticsDashboard {
         this.updateCountryChart(data);
 
         // Update any visible tables
-        document.querySelectorAll('.table-view-btn.active').forEach(btn => {
-            const chartType = btn.dataset.chart;
-            this.updateTableData(chartType);
+        document.querySelectorAll('.view-toggle .view-toggle-btn[data-view="table"].active').forEach(btn => {
+            const chartType = btn.closest('.view-toggle')?.dataset.chart;
+            if (chartType) this.updateTableData(chartType);
         });
     }
 
@@ -1604,6 +1508,7 @@ class StatisticsDashboard {
                 borderColor: color.border,
                 borderWidth: 2,
                 borderRadius: 20,
+                maxBarThickness: 28,
             });
         };
 
@@ -1672,6 +1577,17 @@ class StatisticsDashboard {
         if (cfg.tooltipAfterBody) {
             chartOptions.plugins.tooltip.callbacks = chartOptions.plugins.tooltip.callbacks || {};
             chartOptions.plugins.tooltip.callbacks.afterBody = (context) => cfg.tooltipAfterBody(context, { labels: labelsRef, datasets });
+        }
+
+        // Pad with empty slots so few-category charts top-align instead of
+        // spreading across the full fixed-height container.
+        const MIN_SLOTS = 7;
+        const padCount = Math.max(0, MIN_SLOTS - labelsRef.length);
+        if (padCount > 0) {
+            for (let i = 0; i < padCount; i++) labelsRef.push('');
+            datasets.forEach(ds => {
+                for (let i = 0; i < padCount; i++) ds.data.push(null);
+            });
         }
 
         const chart = new Chart(ctx, {
@@ -1890,29 +1806,23 @@ class StatisticsDashboard {
     }
 
     setupAutoRefresh() {
-        // Auto-refresh dropdown items
-        const refreshDropdown = document.querySelector('.auto-refresh-dropdown .dropdown-menu');
-        if (refreshDropdown) {
-            refreshDropdown.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
+        // Auto-refresh item selection via Dropdown primitive.
+        const dropdown = document.querySelector('.auto-refresh-dropdown.dropdown');
+        if (!dropdown) return;
 
-                const item = e.target.closest('.dropdown-item');
-                if (item && !item.classList.contains('disabled')) {
-                    const interval = parseInt(item.dataset.interval);
-                    this.setAutoRefreshInterval(interval);
+        dropdown.addEventListener('dropdown:select', (e) => {
+            const item = e.detail.item;
+            if (item.hasAttribute('disabled') || item.classList.contains('disabled')) return;
 
-                    // Update button text
-                    const autoRefreshBtn = document.querySelector('.auto-refresh-btn');
-                    const intervalText = item.textContent.trim();
-                    autoRefreshBtn.innerHTML = `${intervalText} <i class="ti ti-chevron-down"></i>`;
+            const interval = parseInt(item.dataset.interval, 10);
+            this.setAutoRefreshInterval(interval);
 
-                    // Close dropdown
-                    const dropdown = refreshDropdown;
-                    dropdown.classList.remove('show');
-                }
-            });
-        }
+            // Update trigger label
+            const trigger = dropdown.querySelector('.auto-refresh-btn');
+            if (trigger) {
+                trigger.innerHTML = `${e.detail.text} <i class="ti ti-chevron-down"></i>`;
+            }
+        });
     }
 
     setAutoRefreshInterval(seconds) {
@@ -2210,35 +2120,8 @@ class FilterManager {
 // ============================================================================
 
 function setupExportFunctionality(dashboard) {
-    const exportBtn = document.querySelector('.export-btn');
-    const exportDropdownMenu = document.getElementById('exportDropdownMenu');
+    const exportDd = document.querySelector('.export-btn-wrapper.dropdown');
 
-    // Toggle export dropdown
-    exportBtn?.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const isOpen = exportDropdownMenu.classList.contains('active');
-
-        // Close all other modals first
-        closeAllModals(dashboard);
-
-        if (!isOpen) {
-            // Only open if it was previously closed
-            exportDropdownMenu.classList.add('active');
-            exportBtn.classList.add('active');
-        }
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.export-btn-wrapper')) {
-            exportDropdownMenu?.classList.remove('active');
-            exportBtn?.classList.remove('active');
-        }
-    });
-
-    // Handle export button clicks
     function handleExport(format) {
         // Build export URL with current filters and parameters (same as loadDashboardData)
         const params = new URLSearchParams({
@@ -2305,10 +2188,6 @@ function setupExportFunctionality(dashboard) {
             
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
-            
-            // Close menus
-            exportDropdownMenu?.classList.remove('active');
-            exportBtn?.classList.remove('active');
         })
         .catch(error => {
             console.error('Export error:', error);
@@ -2316,14 +2195,8 @@ function setupExportFunctionality(dashboard) {
         });
     }
 
-    // Add click handlers for all export menu items
-    document.querySelectorAll('.export-menu-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            const format = this.getAttribute('data-format');
-            if (format) {
-                handleExport(format);
-            }
-        });
+    exportDd?.addEventListener('dropdown:select', (e) => {
+        const format = e.detail.value || e.detail.item.getAttribute('data-format');
+        if (format) handleExport(format);
     });
 }

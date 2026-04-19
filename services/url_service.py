@@ -20,6 +20,7 @@ import re
 import time
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
+from typing import Literal
 
 from bson import ObjectId
 
@@ -59,6 +60,8 @@ from shared.validators import (
 )
 
 log = get_logger(__name__)
+
+AliasCheckResult = Literal["available", "length", "format", "taken"]
 
 # ── Field update handlers ────────────────────────────────────────────────────
 #
@@ -283,6 +286,22 @@ class UrlService:
         if await self._url_repo.check_alias_exists(alias):
             return False
         return not await self._legacy_repo.check_exists(alias)
+
+    async def check_alias(self, alias: str) -> AliasCheckResult:
+        """Evaluate a candidate alias against the full creation rules.
+
+        Mirrors what POST /api/v1/shorten would enforce (length, charset,
+        collision) so the UI can surface precise feedback without duplicating
+        the rules. Returns a single literal describing the first failing check,
+        or ``"available"`` when the alias would be accepted today.
+        """
+        if not (3 <= len(alias) <= 16):
+            return "length"
+        if not validate_alias(alias):
+            return "format"
+        if not await self.check_alias_available(alias):
+            return "taken"
+        return "available"
 
     async def create(
         self,
