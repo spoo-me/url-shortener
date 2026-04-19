@@ -3,6 +3,14 @@
  * Handles editing, deactivating, and deleting URLs
  */
 
+// Silently prepend https:// when protocol is missing. Input value stays as-is.
+function normalizeUrl(raw) {
+    if (!raw) return raw;
+    const trimmed = raw.trim();
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return 'https://' + trimmed;
+}
+
 class UrlManager {
     constructor() {
         this.currentUrlData = null;
@@ -78,6 +86,15 @@ class UrlManager {
                 }
             }
         });
+
+        if (window.AliasChecker) {
+            this.aliasCheck = window.AliasChecker.attach({
+                inputId: 'edit-alias',
+                diceBtn: document.getElementById('edit-alias-dice'),
+                indicator: document.getElementById('edit-alias-status'),
+                getCurrentAlias: () => this.currentUrlData?.alias || '',
+            });
+        }
 
         // Attach to row action buttons
         this.attachRowListeners();
@@ -228,6 +245,7 @@ class UrlManager {
             document.body.style.overflow = '';
             this.currentUrlData = null;
             if (window.ModalTabs) window.ModalTabs.reset(this.modal);
+            this.aliasCheck?.reset();
         }
     }
 
@@ -244,8 +262,9 @@ class UrlManager {
             hasChanges = true;
         }
 
-        // Check long_url changes
-        const currentLongUrl = this.longUrlInput?.value?.trim();
+        // Check long_url changes (normalize so "example.com" auto-gets https://)
+        const rawLongUrl = this.longUrlInput?.value?.trim();
+        const currentLongUrl = rawLongUrl ? normalizeUrl(rawLongUrl) : rawLongUrl;
         if (currentLongUrl && currentLongUrl !== this.currentUrlData.long_url) {
             updateData.long_url = currentLongUrl;
             hasChanges = true;

@@ -4,7 +4,7 @@
 
 {% block head_css %}
 <link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/links.css') }}?v=4">
-<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/url-modal.css') }}?v=2">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/url-modal.css') }}?v=4">
 <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/relativeTime.js"></script>
@@ -264,6 +264,11 @@
                                         <span class="input-prefix">{{ host_url }}</span>
                                         <input type="text" id="create-alias" name="alias" placeholder="my-link"
                                             autocomplete="off">
+                                        <span class="alias-status" id="create-alias-status" aria-hidden="true"></span>
+                                        <button type="button" class="alias-dice" id="create-alias-dice"
+                                            aria-label="Generate random alias" title="Generate random alias">
+                                            <i class="ti ti-arrows-shuffle"></i>
+                                        </button>
                                     </div>
                                     <small class="field-hint">Leave empty for auto-generated alias</small>
                                 </div>
@@ -449,6 +454,11 @@
                                         <span class="input-prefix">{{ host_url }}</span>
                                         <input type="text" id="edit-alias" name="alias" placeholder="custom-alias"
                                             autocomplete="off">
+                                        <span class="alias-status" id="edit-alias-status" aria-hidden="true"></span>
+                                        <button type="button" class="alias-dice" id="edit-alias-dice"
+                                            aria-label="Generate random alias" title="Generate random alias">
+                                            <i class="ti ti-arrows-shuffle"></i>
+                                        </button>
                                     </div>
                                     <small class="field-hint">Choose a custom alias for your short URL</small>
                                 </div>
@@ -615,6 +625,7 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', path='js/dashboard/smart-datetime.js') }}?v=1"></script>
-<script src="{{ url_for('static', path='js/url-manager.js') }}?v=5" defer></script>
-<script src="{{ url_for('static', path='js/dashboard/links.js') }}?v=8" defer></script>
+<script src="{{ url_for('static', path='js/alias-checker.js') }}" defer></script>
+<script src="{{ url_for('static', path='js/url-manager.js') }}?v=7" defer></script>
+<script src="{{ url_for('static', path='js/dashboard/links.js') }}?v=10" defer></script>
 {% endblock %}

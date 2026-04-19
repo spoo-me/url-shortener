@@ -323,7 +323,7 @@
 /* Input Group */
 .input-group {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
@@ -332,6 +332,59 @@
     width: 100%;
     box-sizing: border-box;
     min-width: 0;
+}
+
+.alias-status {
+    display: none;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 16px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.alias-status.show {
+    display: flex;
+}
+
+.alias-status.is-checking i {
+    animation: spin 1s linear infinite;
+}
+
+.alias-status.is-available {
+    color: var(--color-success, #22c55e);
+}
+
+.alias-status.is-unavailable {
+    color: var(--color-danger);
+}
+
+.alias-dice {
+    background: transparent;
+    border: none;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease, background 0.15s ease;
+    flex-shrink: 0;
+}
+
+.alias-dice:hover {
+    color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.alias-dice i {
+    font-size: 18px;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 .input-group:focus-within {
@@ -773,6 +826,12 @@
     }
 
     .tab {
-        justify-content: flex-start;
+        padding: 10px 8px;
+        font-size: 13px;
+        gap: 6px;
+    }
+
+    .tab i {
+        font-size: 14px;
     }
 }

@@ -79,6 +79,7 @@ function closeCreateLinkModal() {
 
         // Clear any error states (also refreshes tab error dots)
         if (window.clearFormErrors) window.clearFormErrors(modal);
+        if (window.createAliasCheck) window.createAliasCheck.reset();
 
         // Reset to first tab (content + buttons + indicator)
         if (window.ModalTabs) window.ModalTabs.reset(modal);
@@ -324,17 +325,25 @@ function downloadQRCodeFromModal() {
 }
 
 // Form Validation Functions
+
+// Adds https:// when the user omits the protocol. Backend expects http(s)://,
+// so this is a silent fix-up — the input value is not visually rewritten.
+function normalizeUrl(raw) {
+    if (!raw) return raw;
+    const trimmed = raw.trim();
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return 'https://' + trimmed;
+}
+
 function validateUrl(url) {
     if (!url) return { valid: false, message: 'URL is required' };
 
-    // Basic URL pattern check
-    const urlPattern = /^https?:\/\/.+/i;
-    if (!urlPattern.test(url)) {
-        return { valid: false, message: 'URL must start with http:// or https://' };
+    const normalized = normalizeUrl(url);
+    if (!/^https?:\/\/.+/i.test(normalized)) {
+        return { valid: false, message: 'Enter a valid URL' };
     }
 
-    // Check if URL contains spoo.me (not allowed)
-    if (url.toLowerCase().includes('spoo.me')) {
+    if (normalized.toLowerCase().includes('spoo.me')) {
         return { valid: false, message: 'Cannot shorten spoo.me URLs' };
     }
 
@@ -467,7 +476,7 @@ async function submitCreateForm(event) {
     try {
         // Prepare form data
         const formData = {
-            long_url: document.getElementById('create-long-url').value.trim(),
+            long_url: normalizeUrl(document.getElementById('create-long-url').value.trim()),
             alias: document.getElementById('create-alias').value.trim() || undefined,
             password: document.getElementById('create-password').value || undefined,
             max_clicks: document.getElementById('create-max-clicks').value ?
@@ -601,7 +610,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Real-time validation on input
-    const inputs = ['create-long-url', 'create-alias', 'create-password', 'create-max-clicks', 'create-expire-after'];
+    // Skip 'create-alias' — AliasChecker owns its error state on keystroke.
+    const inputs = ['create-long-url', 'create-password', 'create-max-clicks', 'create-expire-after'];
     inputs.forEach(inputId => {
         const input = document.getElementById(inputId);
         if (input) {
@@ -611,6 +621,14 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     });
+
+    if (window.AliasChecker) {
+        window.createAliasCheck = window.AliasChecker.attach({
+            inputId: 'create-alias',
+            diceBtn: document.getElementById('create-alias-dice'),
+            indicator: document.getElementById('create-alias-status'),
+        });
+    }
 
     // Close modal on backdrop click
     const modal = document.getElementById('create-link-modal');

@@ -250,3 +250,19 @@ class ListUrlsQuery(RequestBase):
     @property
     def parsed_filter(self) -> UrlFilter | None:
         return self._parsed_filter
+
+
+class AliasCheckQuery(RequestBase):
+    """Query parameters for GET /api/v1/shorten/check-alias.
+
+    Intentionally permissive on ``max_length`` so that out-of-range input returns
+    a structured ``{available: false, reason: "length"}`` response instead of a
+    422 — the UI surfaces the reason inline without re-implementing rules.
+    """
+
+    alias: str = Field(
+        min_length=1,
+        max_length=64,
+        description="Candidate alias to check.",
+        examples=["mylink"],
+    )
