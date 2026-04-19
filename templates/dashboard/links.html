@@ -3,8 +3,8 @@
 {% block title %}Links | Dashboard | spoo.me{% endblock %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/links.css') }}?v=4">
-<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/url-modal.css') }}?v=4">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/links.css') }}?v=20">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/url-modal.css') }}?v=7">
 <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/relativeTime.js"></script>
@@ -38,10 +38,11 @@
             </div>
         </div>
         <div class="toolbar-actions">
-            <div class="options">
-                <button id="btn-options" class="btn"><span class="label">Options</span><i
+            <div class="options dropdown" data-dropdown>
+                <button id="btn-options" type="button" class="btn dropdown-trigger" data-dropdown-trigger><span class="label">Options</span><i
                         class="ti ti-adjustments"></i></button>
-                <div id="options-dropdown" class="options-dropdown">
+                <div id="options-dropdown" class="options-dropdown" data-dropdown-menu>
+                    <div class="sheet-handle" aria-hidden="true"></div>
                     <div class="options-grid">
                         <div class="field">
                             <label>Status</label>
@@ -142,6 +143,10 @@
                 <h3 class="empty-title">Oops! Nothing here yet</h3>
                 <p class="empty-message">Looks like you haven't created any links yet, or your search didn't match
                     anything.</p>
+                <button type="button" id="btn-empty-create" class="btn btn-primary empty-cta">
+                    <i class="ti ti-plus"></i>
+                    <span>Create your first link</span>
+                </button>
             </div>
         </div>
 
@@ -624,8 +629,12 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', path='js/verification-check.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='js/field-error.js') }}?v=2"></script>
+<script src="{{ url_for('static', path='js/sheet-handle.js') }}?v=1"></script>
+<script src="{{ url_for('static', path='js/modal-tabs.js') }}?v=2"></script>
 <script src="{{ url_for('static', path='js/dashboard/smart-datetime.js') }}?v=1"></script>
 <script src="{{ url_for('static', path='js/alias-checker.js') }}" defer></script>
 <script src="{{ url_for('static', path='js/url-manager.js') }}?v=7" defer></script>
-<script src="{{ url_for('static', path='js/dashboard/links.js') }}?v=10" defer></script>
+<script src="{{ url_for('static', path='js/dashboard/links.js') }}?v=12" defer></script>
 {% endblock %}

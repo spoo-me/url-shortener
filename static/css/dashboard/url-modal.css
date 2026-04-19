@@ -289,8 +289,8 @@
     color: var(--text-primary);
 }
 
-.field input,
-.field select {
+.modal .field input,
+.modal .field select {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
@@ -303,18 +303,18 @@
     min-width: 0;
 }
 
-.field input:focus,
-.field select:focus {
+.modal .field input:focus,
+.modal .field select:focus {
     outline: none;
     border-color: var(--accent-primary);
     background: rgba(255, 255, 255, 0.08);
 }
 
-.field input::placeholder {
+.modal .field input::placeholder {
     color: var(--text-secondary);
 }
 
-.field input:disabled {
+.modal .field input:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     background: rgba(255, 255, 255, 0.02);
@@ -402,7 +402,7 @@
     flex-shrink: 0;
 }
 
-.input-group input {
+.modal .input-group input {
     background: none;
     border: none;
     border-radius: 0;
@@ -412,7 +412,7 @@
     box-sizing: border-box;
 }
 
-.input-group input:focus {
+.modal .input-group input:focus {
     background: transparent;
 }
 
@@ -701,7 +701,6 @@
 /* Clickable Rows */
 .clickable-row {
     transition: all 0.2s ease;
-    border-radius: 8px;
 }
 
 .clickable-row:hover {

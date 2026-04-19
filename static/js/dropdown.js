@@ -1,30 +1,3 @@
-/**
- * Dropdown primitive for spoo.me
- *
- * Declarative markup:
- *   <div class="dropdown" data-dropdown>
- *     <button type="button" class="dropdown-trigger" data-dropdown-trigger>Label</button>
- *     <div class="dropdown-menu" data-dropdown-menu>
- *       <button type="button" class="dropdown-item" data-value="x">One</button>
- *       <button type="button" class="dropdown-item" data-value="y">Two</button>
- *     </div>
- *   </div>
- *
- * Auto-applies to every [data-dropdown] on the page and dispatches
- * `dropdown:select` on the .dropdown element with detail { value, text, item, dropdown }.
- *
- * Programmatic API:
- *   Dropdown.open(dropdownEl)
- *   Dropdown.close(dropdownEl)
- *   Dropdown.toggle(dropdownEl)
- *   Dropdown.isOpen(dropdownEl)
- *   Dropdown.closeAll()
- *
- * Styling hooks:
- *   .dropdown.is-open             on open
- *   .dropdown-trigger.is-active   while open
- *   .dropdown-item.is-active      caller sets this to mark the selected row
- */
 (function () {
     var OPEN_CLASS = 'is-open';
     var TRIGGER_ACTIVE_CLASS = 'is-active';

@@ -38,6 +38,9 @@
     background: var(--accent-primary);
     border-color: var(--accent-primary);
     text-decoration: none;
+    filter: brightness(1.12);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(124, 58, 237, 0.35);
 }
 
 /* Success modal must sit above all other modals on this page */
@@ -449,6 +452,9 @@
 .btn-primary:hover {
     background: var(--accent-primary);
     border-color: var(--accent-primary);
+    filter: brightness(1.12);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(124, 58, 237, 0.35);
 }
 
 .btn-ghost {
@@ -486,7 +492,7 @@
     transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0.15s;
 }
 
-.options-dropdown.show {
+.options.dropdown.is-open > .options-dropdown {
     visibility: visible;
     opacity: 1;
     transform: translateY(0);
@@ -526,13 +532,14 @@
 .datetime-wrapper input,
 .field select,
 .field input[type="datetime-local"] {
-    padding: 8px 12px;
-    padding-right: 36px;
+    padding: 0 36px 0 12px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
     font-size: 14px;
+    height: 36px;
+    box-sizing: border-box;
     transition: all 0.2s;
     width: 100%;
     -webkit-appearance: none;
@@ -587,16 +594,19 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 /* Segmented Control */
 .seg {
     display: flex;
+    align-items: stretch;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     overflow: hidden;
     position: relative;
+    height: 36px;
+    box-sizing: border-box;
 }
 
 .seg button {
     flex: 1;
-    padding: 8px;
+    padding: 0 8px;
     background: transparent;
     border: none;
     color: var(--text-secondary);
@@ -902,6 +912,19 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
     color: var(--text-secondary);
     line-height: 1.6;
     margin: 0;
+    max-width: 440px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.empty-state .empty-cta.btn-primary {
+    margin-top: 28px;
+    background: var(--accent-primary);
+    border: 1px solid var(--accent-primary);
+    color: white;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
 }
 
 /* Pagination */
@@ -990,6 +1013,8 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 @media (max-width: 768px) {
     .dashboard-content {
         padding: 0 !important;
+        display: flex;
+        flex-direction: column;
     }
 
     .page-header {
@@ -1048,8 +1073,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
         -webkit-overflow-scrolling: touch;
     }
 
-    .options-dropdown[style*="display: block"],
-    .options-dropdown[style*="display:block"] {
+    .options.dropdown.is-open > .options-dropdown {
         visibility: visible !important;
         opacity: 1 !important;
         transform: translateY(0) !important;
@@ -1073,28 +1097,59 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
         pointer-events: none;
     }
 
-    .options-dropdown[style*="display: block"]::before,
-    .options-dropdown[style*="display:block"]::before {
+    .options.dropdown.is-open > .options-dropdown::before {
         opacity: 1;
         pointer-events: auto;
     }
 
-    /* Add handle bar at top of bottom sheet */
-    .options-dropdown::after {
-        content: '';
-        position: absolute;
-        top: 12px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 36px;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 2px;
+    /* Handle bar: visible + functional drag/tap-to-close zone. */
+    .options-dropdown .sheet-handle {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 20px;
+        width: 100%;
+        touch-action: none;
+        cursor: grab;
+        user-select: none;
+        position: sticky;
+        top: 0;
+        background: rgba(15, 20, 35, 0.98);
+        z-index: 3;
     }
 
-    /* Adjust padding for mobile bottom sheet */
+    .options-dropdown .sheet-handle::before {
+        content: '';
+        width: 36px;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.3);
+        transition: background 0.2s ease;
+    }
+
+    .options-dropdown .sheet-handle:active {
+        cursor: grabbing;
+    }
+
+    .options-dropdown .sheet-handle:active::before {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Adjust padding for mobile bottom sheet (handle bar owns the top space). */
     .options-dropdown .options-grid {
-        padding: 32px 20px 20px;
+        padding: 4px 20px 20px;
+    }
+
+    /* Pin Apply/Reset to the bottom of the bottom sheet so the user never
+       has to scroll to submit. */
+    .options-dropdown .options-actions {
+        position: sticky;
+        bottom: 0;
+        padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+        margin: 0;
+        background: rgba(15, 20, 35, 0.98);
+        backdrop-filter: blur(20px);
+        z-index: 2;
     }
 
     /* Fix the container width to viewport */
@@ -1110,6 +1165,9 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
         margin: 0;
         backdrop-filter: none;
         /* Remove backdrop-filter to allow fixed positioning */
+        flex: 1;
+        display: flex;
+        flex-direction: column;
     }
 
     .toolbar {
@@ -1136,6 +1194,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
         /* Constrain to parent width */
         max-width: 100%;
         /* Never exceed parent */
+        flex: 1;
     }
 
     /* Style scrollbar */

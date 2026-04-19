@@ -46,6 +46,7 @@ class DateRangePicker {
                 </div>
                 
                 <div class="date-range-dropdown" id="dateRangeDropdown" style="display: none;">
+                    <div class="sheet-handle" aria-hidden="true"></div>
                     <div class="dropdown-content">
                         <div class="content-layout">
                             <!-- Relative Section -->
@@ -151,6 +152,12 @@ class DateRangePicker {
                 dropdown.style.display = 'none';
                 trigger.classList.remove('active');
             }
+        });
+
+        // Swipe/tap on the bottom-sheet handle dismisses the picker.
+        dropdown.addEventListener('sheet:dismiss', () => {
+            dropdown.style.display = 'none';
+            trigger.classList.remove('active');
         });
 
         // Relative options

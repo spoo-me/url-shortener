@@ -1,21 +1,3 @@
-/**
- * Shared modal tab helper for spoo.me.
- *
- * Markup contract (unchanged from existing modals):
- *   <div class="tabs" data-active="0">
- *     <button class="tab active" data-tab="basic">…</button>
- *     <button class="tab" data-tab="security">…</button>
- *   </div>
- *   …
- *   <div class="tab-content active" data-tab="basic">…</div>
- *   <div class="tab-content" data-tab="security">…</div>
- *
- * Auto-initializes every `.tabs` on DOMContentLoaded. Tab-content panes must
- * live under the same `.modal` ancestor as the `.tabs` container.
- *
- *   ModalTabs.setActive(tabsContainer, index)
- *   ModalTabs.reset(modalEl)   // always back to tab 0 — content, buttons, indicator
- */
 (function () {
     function getContents(tabsContainer) {
         var scope = tabsContainer.closest('.modal') || tabsContainer.closest('form') || document;

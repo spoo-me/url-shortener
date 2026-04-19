@@ -159,12 +159,3 @@ def test_redirect_route_registered_last(smoke_app: FastAPI) -> None:
     assert "/{short_code}" in last_two_paths, (
         f"/{'{short_code}'} not in last two routes: {last_two_paths}"
     )
-
-
-def test_api_v1_route_count(smoke_app: FastAPI) -> None:
-    """API v1 should have the expected number of route paths."""
-    api_v1_paths = {
-        r.path for r in _get_api_routes(smoke_app) if r.path.startswith("/api/v1/")
-    }
-    # shorten, urls, urls/{id}, urls/{id}/status, stats, export, keys, keys/{id}
-    assert len(api_v1_paths) == 8

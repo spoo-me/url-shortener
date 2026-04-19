@@ -179,13 +179,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
     min-height: 36px;
-}
-
-.export-btn-wrapper {
-    position: relative;
-    display: inline-block;
 }
 
 .export-btn:hover {
@@ -194,60 +188,22 @@
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-.export-btn.active {
+.export-btn.is-active {
     background: rgba(124, 58, 237, 0.15);
     border-color: rgba(124, 58, 237, 0.4);
     color: rgba(255, 255, 255, 0.95);
 }
 
-/* Export Dropdown Menu */
-.export-dropdown-menu {
-    position: absolute;
-    background: rgba(15, 20, 35, 0.98);
-    backdrop-filter: blur(20px) saturate(1.2);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 12px;
-    padding: 8px;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.2s ease;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-    z-index: var(--z-overlay);
+.export-menu {
     min-width: 200px;
-    top: calc(100% + 8px);
-    left: -20px;
 }
 
-.export-dropdown-menu.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.export-menu-item {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.export-menu .dropdown-item {
     padding: 10px 14px;
-    border-radius: 8px;
-    color: rgba(255, 255, 255, 0.85);
-    background: transparent;
-    border: none;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 14px;
-    font-weight: 500;
+    gap: 12px;
 }
 
-.export-menu-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.export-menu-item i {
+.export-menu .dropdown-item i {
     font-size: 18px;
     flex-shrink: 0;
 }
@@ -319,7 +275,7 @@
     color: rgba(255, 255, 255, 0.95);
 }
 
-.filters-btn.active {
+.filters-btn.is-active {
     background: rgba(124, 58, 237, 0.15);
     border-color: rgba(124, 58, 237, 0.4);
     color: rgba(255, 255, 255, 0.95);
@@ -347,7 +303,7 @@
     color: rgba(255, 255, 255, 0.6);
 }
 
-.filters-btn.active .filters-chevron {
+.filters-btn.is-active .filters-chevron {
     transform: rotate(180deg);
     color: rgba(255, 255, 255, 0.8);
 }
@@ -372,7 +328,7 @@
     transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0.15s;
 }
 
-.filters-dropdown.show {
+.filters-dropdown-container.dropdown.is-open > .filters-dropdown {
     visibility: visible;
     opacity: 1;
     transform: translateY(0);
@@ -1063,12 +1019,6 @@
 }
 
 /* Cascade Select Buttons */
-.cascade-select {
-    position: relative;
-    display: inline-block;
-    transition: opacity 0.3s ease;
-}
-
 .cascade-select[style*="pointer-events: none"] {
     cursor: not-allowed;
 }
@@ -1076,8 +1026,8 @@
 .cascade-btn {
     padding: 8px 12px;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid var(--accent-primary);
+    background: rgba(124, 58, 237, 0.3);
     color: white;
     cursor: pointer;
     font-size: 14px;
@@ -1088,12 +1038,7 @@
 }
 
 .cascade-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.25);
-}
-
-.cascade-btn.active:not(:disabled) {
-    background: rgba(124, 58, 237, 0.3);
-    border-color: var(--accent-primary);
+    background: rgba(124, 58, 237, 0.45);
 }
 
 .cascade-btn:disabled {
@@ -1103,63 +1048,18 @@
     border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-.cascade-dropdown {
-    position: absolute;
-    top: calc(100% + 5px);
-    right: 0;
-    background: rgba(30, 35, 50, 0.98);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 8px;
-    box-shadow: rgba(0, 0, 0, 0.3) 0 10px 30px;
-    backdrop-filter: blur(10px);
-    z-index: var(--z-overlay);
+.cascade-menu {
     min-width: 180px;
-    visibility: hidden;
-    overflow: hidden;
-    opacity: 0;
-    transform: translateY(-8px);
-    transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0.15s;
 }
 
-.cascade-dropdown.show {
-    visibility: visible;
-    opacity: 1;
-    transform: translateY(0);
-    transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0s;
-}
-
-.cascade-option {
-    width: 100%;
-    padding: 12px 16px;
-    border: none;
-    background: transparent;
-    color: rgba(255, 255, 255, 0.8);
-    cursor: pointer;
-    font-size: 14px;
-    text-align: left;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
+.cascade-menu .dropdown-item {
+    padding: 10px 14px;
     gap: 10px;
 }
 
-.cascade-option:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.cascade-option.active {
-    background: rgba(124, 58, 237, 0.3);
-    color: white;
-}
-
-.cascade-option i {
+.cascade-menu .dropdown-item i {
     font-size: 16px;
     width: 20px;
-}
-
-.cascade-option span {
-    flex: 1;
 }
 
 /* Headings */
@@ -1379,7 +1279,7 @@
         /* Remove desktop animation */
     }
 
-    .filters-dropdown.show {
+    .filters-dropdown-container.dropdown.is-open > .filters-dropdown {
         visibility: visible;
         opacity: 1;
         transform: translateY(0);
@@ -1405,28 +1305,47 @@
         pointer-events: none;
     }
 
-    .filters-dropdown.show::before {
+    .filters-dropdown-container.dropdown.is-open > .filters-dropdown::before {
         opacity: 1;
         pointer-events: auto;
     }
 
-    /* Handle bar */
-    .filters-dropdown::after {
+    /* Handle bar: visible + functional drag/tap-to-close zone. */
+    .filters-dropdown .sheet-handle {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 20px;
+        width: 100%;
+        touch-action: none;
+        cursor: grab;
+        user-select: none;
+        position: sticky;
+        top: 0;
+        background: rgba(15, 20, 35, 0.98);
+        z-index: 3;
+    }
+
+    .filters-dropdown .sheet-handle::before {
         content: '';
-        position: absolute;
-        top: 12px;
-        left: 50%;
-        transform: translateX(-50%);
         width: 36px;
         height: 4px;
-        background: rgba(255, 255, 255, 0.3);
         border-radius: 2px;
-        z-index: 1;
+        background: rgba(255, 255, 255, 0.3);
+        transition: background 0.2s ease;
+    }
+
+    .filters-dropdown .sheet-handle:active {
+        cursor: grabbing;
+    }
+
+    .filters-dropdown .sheet-handle:active::before {
+        background: rgba(255, 255, 255, 0.5);
     }
 
     .filter-types-list,
     .filter-values-view {
-        padding: 32px 20px 20px;
+        padding: 4px 20px 20px;
         min-height: 300px;
     }
 
@@ -1475,26 +1394,42 @@
         pointer-events: auto;
     }
 
-    /* Handle bar for auto-refresh */
-    .auto-refresh-dropdown .auto-refresh-menu::after {
+    /* Functional handle: swipe down or tap to dismiss. */
+    .auto-refresh-dropdown .auto-refresh-menu .sheet-handle {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 20px;
+        width: 100%;
+        touch-action: none;
+        cursor: grab;
+        user-select: none;
+        position: sticky;
+        top: 0;
+        background: rgba(15, 20, 35, 0.98);
+        z-index: 3;
+    }
+
+    .auto-refresh-dropdown .auto-refresh-menu .sheet-handle::before {
         content: '';
-        position: absolute;
-        top: 12px;
-        left: 50%;
-        transform: translateX(-50%);
         width: 36px;
         height: 4px;
-        background: rgba(255, 255, 255, 0.3);
         border-radius: 2px;
+        background: rgba(255, 255, 255, 0.3);
+        transition: background 0.2s ease;
+    }
+
+    .auto-refresh-dropdown .auto-refresh-menu .sheet-handle:active {
+        cursor: grabbing;
+    }
+
+    .auto-refresh-dropdown .auto-refresh-menu .sheet-handle:active::before {
+        background: rgba(255, 255, 255, 0.5);
     }
 
     .auto-refresh-dropdown .auto-refresh-menu .dropdown-item {
         padding: 16px 20px;
         font-size: 16px;
-    }
-
-    .auto-refresh-dropdown .auto-refresh-menu .dropdown-item:first-child {
-        margin-top: 24px;
     }
 
     /* Multi-select dropdowns as bottom sheets */

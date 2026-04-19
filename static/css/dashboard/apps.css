@@ -104,7 +104,7 @@
 }
 
 .app-card:hover .kebab-btn,
-.kebab-menu:has(.kebab-dropdown.open) .kebab-btn,
+.kebab-menu.is-open .kebab-btn,
 .kebab-btn:focus {
     opacity: 1;
 }
@@ -114,59 +114,18 @@
     background: rgba(255, 255, 255, 0.08);
 }
 
-.kebab-dropdown {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    margin-top: 4px;
-    background: rgba(12, 14, 24, 0.98);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-md, 8px);
-    padding: 4px;
+.kebab-menu-list {
     min-width: 150px;
-    z-index: 100;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.2);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(6px);
-    transition: all 0.2s;
 }
 
-.kebab-dropdown.open {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.kebab-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 8px 10px;
-    border: none;
-    background: transparent;
-    color: var(--text-secondary, #999);
-    font-size: 14px;
-    cursor: pointer;
-    border-radius: var(--radius-sm, 6px);
-    transition: all 0.15s;
-}
-
-.kebab-item i {
+.kebab-menu-list .dropdown-item i {
     width: 18px;
     height: 18px;
     flex-shrink: 0;
     font-size: 18px;
 }
 
-.kebab-item:hover {
-    background: var(--hover-bg, rgba(255, 255, 255, 0.06));
-    color: var(--text-primary, #e5e5e5);
-}
-
-.kebab-item--danger:hover {
+.kebab-menu-list .dropdown-item.kebab-item--danger:hover {
     background: rgba(239, 68, 68, 0.1);
     color: #ef4444;
 }

@@ -370,20 +370,37 @@
             visibility 0s linear 0s;
     }
 
-    /* Handle bar for bottom sheet */
-    .date-range-dropdown::before {
-        content: '';
+    /* Functional handle: swipe down or tap to dismiss. */
+    .date-range-dropdown .sheet-handle {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 20px;
+        width: 100%;
+        touch-action: none;
+        cursor: grab;
+        user-select: none;
         position: sticky;
-        top: 12px;
-        left: 50%;
-        transform: translateX(-50%);
+        top: 0;
+        background: rgba(15, 20, 35, 0.98);
+        z-index: 10;
+    }
+
+    .date-range-dropdown .sheet-handle::before {
+        content: '';
         width: 36px;
         height: 4px;
-        background: rgba(255, 255, 255, 0.3);
         border-radius: 2px;
-        display: block;
-        margin: 0 auto 8px;
-        z-index: 10;
+        background: rgba(255, 255, 255, 0.3);
+        transition: background 0.2s ease;
+    }
+
+    .date-range-dropdown .sheet-handle:active {
+        cursor: grabbing;
+    }
+
+    .date-range-dropdown .sheet-handle:active::before {
+        background: rgba(255, 255, 255, 0.5);
     }
 
     /* Backdrop overlay */

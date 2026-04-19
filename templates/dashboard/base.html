@@ -12,10 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Nata+Sans:wght@100..900&display=swap" rel="stylesheet">
 
     <!-- Base styles -->
-    <link rel="stylesheet" href="{{ url_for('static', path='css/base.css') }}?v=2">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/dashboard-base.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/dashboard-base.css') }}?v=8">
     <link rel="stylesheet" href="{{ url_for('static', path='css/notifications.css') }}?v=1">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/dropdown.css') }}?v=1">
 
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
@@ -57,13 +55,6 @@
     </div>
 
     <!-- Base scripts -->
-    <script src="{{ url_for('static', path='js/notifications.js') }}?v=1"></script>
-    <script src="{{ url_for('static', path='js/field-error.js') }}?v=2"></script>
-    <script src="{{ url_for('static', path='js/dropdown.js') }}?v=1"></script>
-    <script src="{{ url_for('static', path='js/modal-tabs.js') }}?v=2"></script>
-    <script src="{{ url_for('static', path='js/dashboard/dashboard-base.js') }}?v=1"></script>
-
-    <!-- Auth utilities -->
     <script>
         const g = {
             jwt_claims: {
@@ -71,10 +62,9 @@
             }
         };
     </script>
-    <script src="{{ url_for('static', path='js/auth-utils.js') }}?v=1"></script>
-
-    <!-- Verification check -->
-    <script src="{{ url_for('static', path='js/verification-check.js') }}"></script>
+    <script src="{{ url_for('static', path='js/notifications.js') }}?v=1"></script>
+    <script src="{{ url_for('static', path='js/dropdown.js') }}?v=1"></script>
+    <script src="{{ url_for('static', path='js/dashboard/dashboard-base.js') }}?v=3"></script>
 
     <!-- Check for verification success -->
     <script>

@@ -1,16 +1,3 @@
-/**
- * Field error primitive for spoo.me
- *
- * Renders <small class="field-error"> at the bottom of the enclosing .field
- * and toggles .has-error on the .field. Placement is identical whether the
- * input is bare or wrapped in .input-group.
- *
- *   setFieldError(fieldId, message)
- *   clearFieldError(fieldId)
- *   clearFormErrors(container)
- *   humanizeApiError(rawMessage)
- *   applyServerErrors(container, apiResponse, fieldMap)
- */
 (function () {
     function getField(fieldId) {
         var input = document.getElementById(fieldId);

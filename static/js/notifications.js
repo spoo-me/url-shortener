@@ -1,9 +1,3 @@
-/**
- * Unified notification system for spoo.me
- * Usage: showNotification(message, type, duration)
- *   type: 'success' | 'error' | 'warning' | 'info' (default: 'info')
- *   duration: ms (default: 4000)
- */
 (function () {
     const ICONS = {
         success: 'ti ti-check',

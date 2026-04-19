@@ -586,16 +586,17 @@ function handleApiError(result) {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function () {
-    // Create Link button
+    // Create Link button (toolbar + empty-state CTA share the same handler)
     const createBtn = document.getElementById('btn-create-link');
-    if (createBtn) {
-        createBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            if (checkVerificationBeforeShorten()) {
-                openCreateLinkModal();
-            }
-        });
-    }
+    const emptyCreateBtn = document.getElementById('btn-empty-create');
+    const openCreateFlow = function (e) {
+        e.preventDefault();
+        if (checkVerificationBeforeShorten()) {
+            openCreateLinkModal();
+        }
+    };
+    createBtn?.addEventListener('click', openCreateFlow);
+    emptyCreateBtn?.addEventListener('click', openCreateFlow);
 
     // Modal close buttons
     const cancelBtn = document.getElementById('btn-cancel-create');
@@ -737,7 +738,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function setLoading(isLoading) {
-        els.loading.style.display = isLoading ? 'block' : 'none';
+        els.loading.style.display = isLoading ? 'flex' : 'none';
     }
 
     function clearList() {
@@ -962,9 +963,10 @@ document.addEventListener('DOMContentLoaded', function () {
         state.page = 1;
         saveFilters();
         fetchData();
-        // Close the options dropdown with animation
-        if (els.optionsDropdown) {
-            els.optionsDropdown.classList.remove('show');
+        // Close the options dropdown via the shared primitive
+        const optionsWrapper = els.optionsBtn?.closest('.dropdown');
+        if (optionsWrapper && window.Dropdown) {
+            window.Dropdown.close(optionsWrapper);
         }
     }
 
@@ -991,22 +993,7 @@ document.addEventListener('DOMContentLoaded', function () {
     els.reset.addEventListener('click', resetFilters);
     els.search.addEventListener('keydown', (e) => { if (e.key === 'Enter') { applyFilters(); } });
 
-    // options dropdown toggle
-    function toggleOptions() {
-        if (!els.optionsDropdown) return;
-        const isOpen = els.optionsDropdown.classList.contains('show');
-        if (isOpen) {
-            els.optionsDropdown.classList.remove('show');
-        } else {
-            els.optionsDropdown.classList.add('show');
-        }
-    }
-    if (els.optionsBtn) { els.optionsBtn.addEventListener('click', toggleOptions); }
-    window.addEventListener('click', (e) => {
-        if (!els.optionsDropdown) return;
-        if (e.target === els.optionsBtn || els.optionsBtn.contains(e.target)) { return; }
-        if (!els.optionsDropdown.contains(e.target)) { els.optionsDropdown.classList.remove('show'); }
-    });
+    // Options dropdown open/close/outside-click handled by the shared Dropdown primitive.
 
     // segmented controls behavior
     function initSegments() {

@@ -28,6 +28,7 @@
 {% block head_css %}
 <link rel="stylesheet" href="{{ url_for('static', path='css/index.css') }}?v=9">
 <link rel="stylesheet" href="{{ url_for('static', path='css/landing-edit-modal.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/v2-announcement.css') }}?v=3">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Allerta+Stencil&display=swap" rel="preload">
@@ -109,6 +110,8 @@
 
 <!-- Landing Edit Modal -->
 {% include 'partials/landing_edit_modal.html' %}
+
+{% include 'partials/v2_announcement.html' %}
 {% endblock %}
 
 {% block scripts %}
@@ -116,4 +119,5 @@
 <script src="{{ url_for('static', path='js/index-recent-links.js') }}?v=1"></script>
 <script src="{{ url_for('static', path='js/index-validate.js') }}?v=1"></script>
 <script src="{{ url_for('static', path='js/index-script.js') }}?v=7" defer></script>
+<script src="{{ url_for('static', path='js/v2-announcement.js') }}?v=4" defer></script>
 {% endblock %}
