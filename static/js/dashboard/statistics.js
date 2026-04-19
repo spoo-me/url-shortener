@@ -1057,62 +1057,60 @@ class StatisticsDashboard {
     }
 
     setupTableViewControls() {
-        // Handle table view button clicks
-        document.querySelectorAll('.table-view-btn').forEach(btn => {
+        document.querySelectorAll('.view-toggle .view-toggle-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
 
-                const chartType = btn.dataset.chart;
-                this.toggleTableView(chartType, btn);
+                const toggle = btn.closest('.view-toggle');
+                const chartType = toggle?.dataset.chart;
+                const targetView = btn.dataset.view;
+                if (!chartType || !targetView) return;
+
+                this.setChartView(chartType, targetView);
             });
         });
     }
 
-    toggleTableView(chartType, btn) {
+    setChartView(chartType, view) {
+        const toggle = document.querySelector(`.view-toggle[data-chart="${chartType}"]`);
+        if (!toggle) return;
+
         const chartContainer = document.getElementById(chartType);
         const tableContainer = document.getElementById(chartType.replace('Chart', 'Table'));
         const cascadeSelect = document.querySelector(`[data-chart="${chartType}"].cascade-select`);
-
         if (!chartContainer || !tableContainer) return;
 
         const isTableVisible = tableContainer.style.display !== 'none';
+        const wantsTable = view === 'table';
+        if (isTableVisible === wantsTable) return;
 
-        if (isTableVisible) {
-            // Switch to chart view with fade transition
-            this.fadeTransition(tableContainer, chartContainer, () => {
-                btn.classList.remove('active');
-                btn.title = 'Table View';
+        const updateToggleState = () => {
+            toggle.querySelectorAll('.view-toggle-btn').forEach(b => {
+                const active = b.dataset.view === view;
+                b.classList.toggle('active', active);
+                b.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+        };
 
-                // Enable cascade selector
-                if (cascadeSelect) {
-                    cascadeSelect.style.pointerEvents = 'auto';
-                    cascadeSelect.style.opacity = '1';
-                    const cascadeBtn = cascadeSelect.querySelector('.cascade-btn');
-                    if (cascadeBtn) {
-                        cascadeBtn.disabled = false;
-                    }
-                }
+        const setCascadeEnabled = (enabled) => {
+            if (!cascadeSelect) return;
+            cascadeSelect.style.pointerEvents = enabled ? 'auto' : 'none';
+            cascadeSelect.style.opacity = enabled ? '1' : '0.5';
+            const cascadeBtn = cascadeSelect.querySelector('.cascade-btn');
+            if (cascadeBtn) cascadeBtn.disabled = !enabled;
+        };
 
+        if (wantsTable) {
+            this.fadeTransition(chartContainer, tableContainer, () => {
+                updateToggleState();
+                setCascadeEnabled(false);
+                this.updateTableData(chartType);
             });
         } else {
-            // Switch to table view with fade transition
-            this.fadeTransition(chartContainer, tableContainer, () => {
-                btn.classList.add('active');
-                btn.title = 'Chart View';
-
-                // Disable cascade selector
-                if (cascadeSelect) {
-                    cascadeSelect.style.pointerEvents = 'none';
-                    cascadeSelect.style.opacity = '0.5';
-                    const cascadeBtn = cascadeSelect.querySelector('.cascade-btn');
-                    if (cascadeBtn) {
-                        cascadeBtn.disabled = true;
-                    }
-                }
-
-                // Update table data
-                this.updateTableData(chartType);
+            this.fadeTransition(tableContainer, chartContainer, () => {
+                updateToggleState();
+                setCascadeEnabled(true);
             });
         }
     }
@@ -1423,7 +1421,7 @@ class StatisticsDashboard {
         }
 
         // Update table data if table is currently visible
-        const tableBtn = document.querySelector(`[data-chart="${chartType}"].table-view-btn`);
+        const tableBtn = document.querySelector(`.view-toggle[data-chart="${chartType}"] .view-toggle-btn[data-view="table"]`);
         if (tableBtn && tableBtn.classList.contains('active')) {
             this.updateTableData(chartType);
         }
@@ -1550,9 +1548,9 @@ class StatisticsDashboard {
         this.updateCountryChart(data);
 
         // Update any visible tables
-        document.querySelectorAll('.table-view-btn.active').forEach(btn => {
-            const chartType = btn.dataset.chart;
-            this.updateTableData(chartType);
+        document.querySelectorAll('.view-toggle .view-toggle-btn[data-view="table"].active').forEach(btn => {
+            const chartType = btn.closest('.view-toggle')?.dataset.chart;
+            if (chartType) this.updateTableData(chartType);
         });
     }
 

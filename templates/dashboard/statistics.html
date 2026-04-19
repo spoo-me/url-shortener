@@ -3,7 +3,7 @@
 {% block title %}Statistics Dashboard{% endblock %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/statistics.css') }}?v=1">
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/statistics.css') }}?v=2">
 <link rel="stylesheet" href="{{ url_for('static', path='css/dashboard/dateRangePicker.css') }}">
 <!-- <link rel="stylesheet" type="text/css" -->
 <!-- href="https://cdn.jsdelivr.net/gh/spoo-me/spoo/static/css/anychart-ui.min.css" /> -->
@@ -205,9 +205,14 @@
                 <div class="chart-header">
                     <h2>Clicks Over Time</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="timeSeriesChart" title="Table View">
-                            <i class="ti ti-table"></i>
-                        </button>
+                        <div class="view-toggle" data-chart="timeSeriesChart" role="group" aria-label="Toggle chart or table view">
+                            <button class="view-toggle-btn active" data-view="chart" aria-pressed="true" title="Chart view">
+                                <i class="ti ti-chart-line"></i>
+                            </button>
+                            <button class="view-toggle-btn" data-view="table" aria-pressed="false" title="Table view">
+                                <i class="ti ti-table"></i>
+                            </button>
+                        </div>
                         <div class="cascade-select" data-chart="timeSeriesChart">
                             <button class="cascade-btn active" data-value="compare" title="Compare Both">
                                 <i class="ti ti-switch-3"></i>
@@ -288,9 +293,14 @@
                 <div class="chart-header">
                     <h2>Short URLs</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="keyChart" title="Table View">
-                            <i class="ti ti-table"></i>
-                        </button>
+                        <div class="view-toggle" data-chart="keyChart" role="group" aria-label="Toggle chart or table view">
+                            <button class="view-toggle-btn active" data-view="chart" aria-pressed="true" title="Chart view">
+                                <i class="ti ti-chart-bar"></i>
+                            </button>
+                            <button class="view-toggle-btn" data-view="table" aria-pressed="false" title="Table view">
+                                <i class="ti ti-table"></i>
+                            </button>
+                        </div>
                         <div class="cascade-select" data-chart="keyChart">
                             <button class="cascade-btn active" data-value="compare" title="Compare Both">
                                 <i class="ti ti-switch-3"></i>
@@ -337,9 +347,14 @@
                 <div class="chart-header">
                     <h2>Referrers</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="referrerChart" title="Table View">
-                            <i class="ti ti-table"></i>
-                        </button>
+                        <div class="view-toggle" data-chart="referrerChart" role="group" aria-label="Toggle chart or table view">
+                            <button class="view-toggle-btn active" data-view="chart" aria-pressed="true" title="Chart view">
+                                <i class="ti ti-chart-bar"></i>
+                            </button>
+                            <button class="view-toggle-btn" data-view="table" aria-pressed="false" title="Table view">
+                                <i class="ti ti-table"></i>
+                            </button>
+                        </div>
                         <div class="cascade-select" data-chart="referrerChart">
                             <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
@@ -389,9 +404,14 @@
                 <div class="chart-header">
                     <h2>Browsers</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="browserChart" title="Table View">
-                            <i class="ti ti-table"></i>
-                        </button>
+                        <div class="view-toggle" data-chart="browserChart" role="group" aria-label="Toggle chart or table view">
+                            <button class="view-toggle-btn active" data-view="chart" aria-pressed="true" title="Chart view">
+                                <i class="ti ti-chart-pie"></i>
+                            </button>
+                            <button class="view-toggle-btn" data-view="table" aria-pressed="false" title="Table view">
+                                <i class="ti ti-table"></i>
+                            </button>
+                        </div>
                         <div class="cascade-select" data-chart="browserChart">
                             <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
@@ -437,9 +457,14 @@
                 <div class="chart-header">
                     <h2>Platforms</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="osChart" title="Table View">
-                            <i class="ti ti-table"></i>
-                        </button>
+                        <div class="view-toggle" data-chart="osChart" role="group" aria-label="Toggle chart or table view">
+                            <button class="view-toggle-btn active" data-view="chart" aria-pressed="true" title="Chart view">
+                                <i class="ti ti-chart-pie"></i>
+                            </button>
+                            <button class="view-toggle-btn" data-view="table" aria-pressed="false" title="Table view">
+                                <i class="ti ti-table"></i>
+                            </button>
+                        </div>
                         <div class="cascade-select" data-chart="osChart">
                             <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
@@ -489,9 +514,14 @@
                 <div class="chart-header">
                     <h2>Cities</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="cityChart" title="Table View">
-                            <i class="ti ti-table"></i>
-                        </button>
+                        <div class="view-toggle" data-chart="cityChart" role="group" aria-label="Toggle chart or table view">
+                            <button class="view-toggle-btn active" data-view="chart" aria-pressed="true" title="Chart view">
+                                <i class="ti ti-chart-bar"></i>
+                            </button>
+                            <button class="view-toggle-btn" data-view="table" aria-pressed="false" title="Table view">
+                                <i class="ti ti-table"></i>
+                            </button>
+                        </div>
                         <div class="cascade-select" data-chart="cityChart">
                             <button class="cascade-btn active" data-value="compare" title="Total vs Unique">
                                 <i class="ti ti-switch-3"></i>
@@ -538,9 +568,14 @@
                 <div class="chart-header">
                     <h2>Countries</h2>
                     <div class="chart-actions">
-                        <button class="table-view-btn" data-chart="countryChart" title="Table View">
-                            <i class="ti ti-table"></i>
-                        </button>
+                        <div class="view-toggle" data-chart="countryChart" role="group" aria-label="Toggle chart or table view">
+                            <button class="view-toggle-btn active" data-view="chart" aria-pressed="true" title="Chart view">
+                                <i class="ti ti-chart-bar"></i>
+                            </button>
+                            <button class="view-toggle-btn" data-view="table" aria-pressed="false" title="Table view">
+                                <i class="ti ti-table"></i>
+                            </button>
+                        </div>
                         <div class="cascade-select" data-chart="countryChart">
                             <button class="cascade-btn active" data-value="total" title="Total Clicks">
                                 <i class="ti ti-chart-bar"></i>
@@ -592,5 +627,5 @@
 <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-exports.min.js"></script>
 <script src="https://cdn.anychart.com/releases/8.12.1/js/anychart-ui.min.js"></script>
 <script src="{{ url_for('static', path='js/dashboard/dateRangePicker.js') }}"></script>
-<script src="{{ url_for('static', path='js/dashboard/statistics.js') }}?v=5"></script>
+<script src="{{ url_for('static', path='js/dashboard/statistics.js') }}?v=6"></script>
 {% endblock %}
