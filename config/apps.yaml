@@ -80,7 +80,7 @@ apps:
     icon: raycast.svg
     description: Shorten and manage your spoo.me links from Raycast
     verified: true
-    status: coming_soon
+    status: live
     type: device_auth
     redirect_uris:
       - https://raycast.com/redirect*
