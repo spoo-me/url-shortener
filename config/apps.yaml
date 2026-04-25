@@ -83,7 +83,7 @@ apps:
     status: live
     type: device_auth
     redirect_uris:
-      - https://raycast.com/redirect*
+      - https://raycast.com/redirect?*
     links:
       raycast: https://www.raycast.com/spoo-me/spoo
     permissions:
