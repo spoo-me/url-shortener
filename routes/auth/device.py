@@ -66,12 +66,29 @@ def _device_error(request: Request, error: str, status_code: int = 400) -> Respo
     )
 
 
+def _redirect_uri_allowed(redirect_uri: str, app: AppEntry) -> bool:
+    """Match a redirect_uri against an app's allowlist.
+
+    Mirrors ``DeviceAuthService.validate_redirect_uri``: exact match, or
+    prefix match for an allowlist entry ending with ``*``.
+    """
+    if not redirect_uri:
+        return False
+    for allowed in app.redirect_uris:
+        if allowed.endswith("*"):
+            if redirect_uri.startswith(allowed[:-1]):
+                return True
+        elif redirect_uri == allowed:
+            return True
+    return False
+
+
 def _build_callback_redirect(
     code: str, state: str, redirect_uri: str, app: AppEntry
 ) -> RedirectResponse:
     """Build the redirect to the callback page or a registered redirect_uri."""
     params = urlencode({"code": code, "state": state})
-    if redirect_uri and redirect_uri in app.redirect_uris:
+    if _redirect_uri_allowed(redirect_uri, app):
         separator = "&" if "?" in redirect_uri else "?"
         return RedirectResponse(f"{redirect_uri}{separator}{params}", status_code=302)
     return RedirectResponse(f"/auth/device/callback?{params}", status_code=302)
