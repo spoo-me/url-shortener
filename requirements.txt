@@ -69,7 +69,7 @@ propcache==0.5.4
 pycountry==26.2.16
 pycparser==3.0
 pydantic==2.13.5
-pydantic-ai-slim==2.52.0
+pydantic-ai-slim==2.53.0
 pydantic-core==2.46.5
 pydantic-graph==2.52.0
 pydantic-settings==2.15.0
