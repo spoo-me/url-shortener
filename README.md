@@ -241,3 +241,4 @@ All Rights Reserved</h6>
 </p>
 
 [self-host]: https://img.shields.io/badge/self--host-30363d?style=flat-square
+Live proof, round B, closing now.
