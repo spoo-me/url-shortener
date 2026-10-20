@@ -94,3 +94,23 @@ tests/k6/
 ├── scenarios/       # All test scripts
 └── README.md
 ```
+
+## Results
+
+### api-load.js
+
+| Window | VU ramp | Requests/s | p50 | p95 | p99 | HTTP failures |
+|---|---:|---:|---:|---:|---:|---:|
+| 0:00-1:00 | 0-50 | 12.97 | 2.57 ms | 6.45 ms | 9.10 ms | 39.46% |
+| 1:00-4:00 | 50-150 | 49.87 | 2.44 ms | 6.93 ms | 10.67 ms | 38.98% |
+| 4:00-7:00 | 150-300 | 111.66 | 3.42 ms | 18.76 ms | 115.04 ms | 39.64% |
+| 7:00-10:00 | 300-500 | 197.09 | 6.74 ms | 128.68 ms | 316.98 ms | 39.76% |
+| 10:00-13:00 | 500-800 | 279.29 | 30.87 ms | 1.70 s | 3.10 s | 40.20% |
+| 13:00-16:00 | 800-1,200 | 268.57 | 1.07 s | 5.00 s | 6.18 s | 40.05% |
+| 16:00-19:00 | 1,200-1,600 | 215.93 | 2.59 s | 13.82 s | 17.44 s | 40.59% |
+| Overall | 0-1,600-0 | 180.65 | 246.28 ms | 6.90 s | 13.05 s | 39.90% |
+| Status breakdown | HTTP 201 | 87,022 | | | | Shorten |
+| Status breakdown | HTTP 200 | 43,542 | | | | Health |
+| Status breakdown | HTTP 401 | 86,715 | | | | Stats 65,007; export 21,708 |
+
+Run on 2026-10-20 at commit `16ead788e02b81cc43e18bd59431145834a074a8` with k6 v2.3.0; the app, MongoDB, Redis, and k6 shared one 4 vCPU, 8 GB machine. Rate limits were raised locally to `1000000 per minute`, Redis was flushed, and all requests came from one IP; the earlier default-limit run rejected 78.18% of traffic at 50 VUs. Latency degraded consistently around 700-750 VUs, where p95 reached 3.22 s at 238.6 req/s after a healthy 650-700 VU window at 316.5 req/s, 609 ms p95, and 1.81 s p99. The single uvicorn app process reached about one CPU core while MongoDB stayed near 12%, Redis near 1%, k6 near 18%, and the host retained about 65% idle CPU, indicating single-process app saturation rather than host, MongoDB, Redis, or k6 exhaustion. No 429 or 5xx responses occurred, but stats and export returned 401 throughout because the scenario sends no credentials, so the 1% error threshold is not a usable capacity signal for this script.
