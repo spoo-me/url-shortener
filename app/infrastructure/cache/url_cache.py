@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 import redis.asyncio as aioredis
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.infrastructure.crypto import verify_password as verify_password_hash
+from app.infrastructure.crypto import verify_password_async
 from app.infrastructure.logging import get_logger
 from app.schemas.models.url import AbVariant
 from app.shared.datetime_utils import to_unix_timestamp, to_unix_timestamp_ceil
@@ -113,7 +113,7 @@ class UrlCacheData(BaseModel):
         """
         return self.expiration_time is not None and self.expiration_time <= now_ts
 
-    def verify_password(self, password: str | None) -> bool:
+    async def verify_password(self, password: str | None) -> bool:
         """Check a password against this URL's stored hash.
 
         Handles schema-specific hashing: argon2 for v2, plaintext for v1/emoji.
@@ -124,7 +124,7 @@ class UrlCacheData(BaseModel):
         if password is None:
             return False
         if self.schema_version == "v2":
-            return verify_password_hash(password, self.password_hash)
+            return await verify_password_async(password, self.password_hash)
         return password == self.password_hash
 
 

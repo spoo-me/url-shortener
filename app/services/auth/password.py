@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from bson import ObjectId
 
 from app.errors import AppError, NotFoundError, RateLimitError, ValidationError
-from app.infrastructure.crypto import hash_password, hash_token
+from app.infrastructure.crypto import hash_password_async, hash_token
 from app.infrastructure.email.protocol import EmailProvider
 from app.infrastructure.logging import get_logger
 from app.repositories.user_repository import UserRepository
@@ -78,7 +78,7 @@ class PasswordService:
                 details={"missing_requirements": missing},
             )
 
-        new_hash = hash_password(password)
+        new_hash = await hash_password_async(password)
         updated = await self._user_repo.update(
             user_oid,
             {
@@ -175,7 +175,7 @@ class PasswordService:
             # via distinct error messages (verify_otp already logs the details)
             raise ValidationError("invalid email or code") from None
 
-        new_hash = hash_password(new_password)
+        new_hash = await hash_password_async(new_password)
         updated = await self._user_repo.update(
             user.id,
             {

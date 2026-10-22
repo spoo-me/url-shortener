@@ -42,7 +42,7 @@ from app.errors import (
     PasswordRequiredError,
     ValidationError,
 )
-from app.infrastructure.crypto import verify_password
+from app.infrastructure.crypto import verify_password_async
 from app.infrastructure.logging import get_logger
 from app.schemas.enums.stats import StatsScope
 from app.schemas.models.url import LegacyUrlDoc, UrlV2Doc
@@ -160,7 +160,7 @@ class PublicStatsService:
                     short_code=link.alias,
                 )
                 raise PasswordRequiredError("this link's stats are password protected")
-            if not self._password_matches(doc, is_v2, password):
+            if not await self._password_matches(doc, is_v2, password):
                 log.info(
                     "public_stats_denied",
                     reason="invalid_password",
@@ -200,10 +200,10 @@ class PublicStatsService:
     # ── Private: gates and derived facts ──────────────────────────────────────
 
     @staticmethod
-    def _password_matches(doc: _PublicDoc, is_v2: bool, password: str) -> bool:
+    async def _password_matches(doc: _PublicDoc, is_v2: bool, password: str) -> bool:
         """v2 stores an argon2 hash; v1/emoji store plaintext."""
         if is_v2:
-            return verify_password(password, doc.password)
+            return await verify_password_async(password, doc.password)
         return password == doc.password
 
     @staticmethod

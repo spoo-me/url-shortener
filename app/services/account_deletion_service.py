@@ -24,7 +24,11 @@ from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 
 from app.errors import AppError, ConflictError, ForbiddenError, NotFoundError
-from app.infrastructure.crypto import hash_password, hash_token, verify_password
+from app.infrastructure.crypto import (
+    hash_password,
+    hash_token,
+    verify_password_async,
+)
 from app.infrastructure.logging import get_logger
 from app.schemas.models.token import TOKEN_TYPE_DELETION_RESTORE
 from app.schemas.models.user import UserDoc, UserStatus
@@ -102,7 +106,7 @@ class AccountDeletionService:
         if user.status in (UserStatus.PENDING_DELETION, UserStatus.ERASING):
             raise ConflictError("account deletion already requested")
 
-        self._verify_reauth(user, password, confirm_email)
+        await self._verify_reauth(user, password, confirm_email)
 
         # Password accounts mint best-effort AFTER the flip (credentials can
         # always cancel); OAuth-only BEFORE — see _request_oauth_only_deletion.
@@ -137,10 +141,10 @@ class AccountDeletionService:
         if user is None or not user.password_hash:
             # Burn a verify anyway so timing can't distinguish "no such
             # account / OAuth-only" from "wrong password" (CWE-203).
-            verify_password(password, _TIMING_DUMMY_HASH)
+            await verify_password_async(password, _TIMING_DUMMY_HASH)
             svc_log.info("account_restore_failed", reason="invalid_credentials")
             raise ForbiddenError(_RESTORE_FAILED)
-        if not verify_password(password, user.password_hash):
+        if not await verify_password_async(password, user.password_hash):
             svc_log.info(
                 "account_restore_failed",
                 reason="invalid_credentials",
@@ -262,7 +266,7 @@ class AccountDeletionService:
         return purge_after, restore_token
 
     @staticmethod
-    def _verify_reauth(
+    async def _verify_reauth(
         user: UserDoc, password: str | None, confirm_email: str | None
     ) -> None:
         """Prove the request comes from the account owner, not a session.
@@ -274,7 +278,7 @@ class AccountDeletionService:
         hash, or a hash without the flag — fails closed on the password.
         """
         if user.password_hash:
-            if password and verify_password(password, user.password_hash):
+            if password and await verify_password_async(password, user.password_hash):
                 return
         elif not user.password_set:
             supplied = (confirm_email or "").encode()

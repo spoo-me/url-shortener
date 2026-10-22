@@ -41,7 +41,7 @@ from app.errors import (
     ValidationError,
 )
 from app.infrastructure.cache.url_cache import UrlCache, UrlCacheData
-from app.infrastructure.crypto import hash_password, hash_token
+from app.infrastructure.crypto import hash_password_async, hash_token
 from app.infrastructure.logging import get_logger, should_sample
 from app.repositories.blocked_url_repository import BlockedUrlRepository
 from app.repositories.legacy.emoji_url_repository import EmojiUrlRepository
@@ -293,7 +293,7 @@ async def _handle_password(
     elif request.password:
         # Always re-hash — argon2 uses random salts so string comparison
         # cannot detect "same password", and the write is cheap.
-        ops["password"] = hash_password(request.password)
+        ops["password"] = await hash_password_async(request.password)
 
 
 async def _handle_max_clicks(
@@ -1025,7 +1025,7 @@ class UrlService:
         # 3. Password hash (cheap — do before alias generation loop)
         password_hash: str | None = None
         if request.password:
-            password_hash = hash_password(request.password)
+            password_hash = await hash_password_async(request.password)
 
         # 4. expire_after (already parsed to datetime by the DTO validator)
         expire_ts: datetime | None = request.expire_after
