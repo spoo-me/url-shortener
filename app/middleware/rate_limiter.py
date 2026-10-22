@@ -193,9 +193,15 @@ class Limits:
 def rate_limit_key(request: Request) -> str:
     """Three-tier rate limit key: API key hash → JWT hash → client IP.
 
-    Lightweight header inspection only — no DB queries, no JWT verification.
-    Provides consistent per-session bucketing for rate limiting purposes.
+    A token only earns its own bucket once the auth dependency has verified
+    it for this request (it sets ``request.state.auth_ctx``; FastAPI resolves
+    dependencies before the limit decorator runs). Anything else is keyed by
+    IP, so a made-up Authorization header or cookie cannot mint a fresh
+    bucket per request.
     """
+    if getattr(request.state, "auth_ctx", None) is None:
+        return get_client_ip(request)
+
     auth_header = request.headers.get("Authorization", "")
 
     if auth_header.lower().startswith("bearer "):

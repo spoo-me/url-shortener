@@ -13,7 +13,7 @@ import os
 from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, MagicMock
 
-from fastapi import APIRouter, FastAPI, Request
+from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.testclient import TestClient
@@ -179,7 +179,17 @@ def test_rate_limit_hint_on_anonymous_api_route():
 def test_rate_limit_hint_absent_for_authenticated_api_route():
     """Authenticated callers already have the top tier — no hint."""
     _reset_limiter()
-    router = _make_api_limited_router("1/minute")
+
+    def _verified(request: Request) -> None:
+        request.state.auth_ctx = {"user_id": "u", "auth_method": "api_key"}
+
+    router = APIRouter(prefix="/api/v1")
+
+    @router.get("/test-limited", dependencies=[Depends(_verified)])
+    @limiter.limit("1/minute")
+    async def _api_limited(request: Request):
+        return {"ok": True}
+
     app = _build_test_app(extra_routers=[router])
     headers = {"Authorization": "Bearer spoo_testkey123"}
     with TestClient(app, raise_server_exceptions=False) as c:
@@ -242,6 +252,7 @@ def test_rate_limit_key_uses_ip_for_anonymous():
     mock_request = MagicMock()
     mock_request.headers = {}
     mock_request.cookies = {}
+    mock_request.state.auth_ctx = None
     mock_request.client = MagicMock()
     mock_request.client.host = "192.168.1.100"
 
@@ -255,6 +266,7 @@ def test_rate_limit_key_uses_jwt_hash_for_bearer_token():
     mock_request = MagicMock()
     mock_request.headers = {"Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.test"}
     mock_request.cookies = {}
+    mock_request.state.auth_ctx = {"user_id": "u", "auth_method": "jwt"}
 
     key = rate_limit_key(mock_request)
     assert key.startswith("jwt:")
@@ -265,6 +277,7 @@ def test_rate_limit_key_uses_apikey_hash_for_spoo_token():
     mock_request = MagicMock()
     mock_request.headers = {"Authorization": "Bearer spoo_abc123secret"}
     mock_request.cookies = {}
+    mock_request.state.auth_ctx = {"user_id": "u", "auth_method": "jwt"}
 
     key = rate_limit_key(mock_request)
     assert key.startswith("apikey:")
@@ -275,6 +288,7 @@ def test_rate_limit_key_uses_cookie_jwt_when_no_header():
     mock_request = MagicMock()
     mock_request.headers = {}
     mock_request.cookies = {"access_token": "eyJhbGciOiJIUzI1NiJ9.cookie"}
+    mock_request.state.auth_ctx = {"user_id": "u", "auth_method": "jwt"}
 
     key = rate_limit_key(mock_request)
     assert key.startswith("jwt:")
