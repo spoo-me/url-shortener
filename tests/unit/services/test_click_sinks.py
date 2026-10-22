@@ -13,6 +13,7 @@ from app.services.click.events import (
     ClickEvent,
 )
 from app.services.click.sinks import InlineSink, RedisStreamSink
+from app.services.click.sinks.stream import TRIM_EVERY
 from tests.factories import make_click_event as make_event
 
 
@@ -58,7 +59,7 @@ class TestInlineSink:
 
 
 class TestRedisStreamSink:
-    async def test_xadds_encoded_event_with_maxlen(self):
+    async def test_xadds_encoded_event(self):
         redis = AsyncMock()
         fallback = AsyncMock()
         sink = RedisStreamSink(
@@ -69,17 +70,39 @@ class TestRedisStreamSink:
         await sink.emit(event)
 
         redis.xadd.assert_awaited_once()
-        args, kwargs = redis.xadd.await_args
+        args, _ = redis.xadd.await_args
         assert args[0] == "events:clicks"
         fields = args[1]
         assert fields[STREAM_FIELD_TYPE] == EVENT_TYPE_CLICK
         assert STREAM_FIELD_DATA in fields
-        assert kwargs["maxlen"] == 1000
-        assert kwargs["approximate"] is True
-        # Redis 8.2 consumer-group-aware trimming: consumed history
-        # self-cleans on write; unacked backlog is never trimmed.
-        assert kwargs["ref_policy"] == "ACKED"
         fallback.emit.assert_not_awaited()
+
+    async def test_trims_acked_history_once_per_trim_every_emits(self):
+        """An ACKED trim costs O(unacked backlog) in Redis, so it must not
+        ride every XADD: a backlog would then slow every emit and starve
+        the worker that is trying to drain it."""
+        redis = AsyncMock()
+        sink = RedisStreamSink(
+            redis, stream="events:clicks", maxlen=1000, fallback=AsyncMock()
+        )
+
+        for _ in range(TRIM_EVERY * 2):
+            await sink.emit(make_event())
+
+        trims = [
+            kwargs
+            for _, kwargs in redis.xadd.await_args_list
+            if kwargs["maxlen"] is not None
+        ]
+        assert len(trims) == 2
+        for kwargs in trims:
+            assert kwargs["maxlen"] == 1000
+            assert kwargs["approximate"] is True
+            # Redis 8.2 consumer-group-aware trimming: consumed history
+            # self-cleans on write; unacked backlog is never trimmed.
+            assert kwargs["ref_policy"] == "ACKED"
+        untrimmed = redis.xadd.await_args_list[: TRIM_EVERY - 1]
+        assert all(c.kwargs["ref_policy"] is None for c in untrimmed)
 
     async def test_falls_back_inline_on_xadd_failure(self):
         redis = AsyncMock()
