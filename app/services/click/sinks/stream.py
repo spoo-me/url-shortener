@@ -10,6 +10,9 @@ from app.services.click.sinks.protocol import ClickEventSink
 
 log = get_logger(__name__)
 
+# An ACKED trim walks the whole unacked backlog, so paying it per XADD saturates Redis when the worker lags.
+TRIM_EVERY = 100
+
 
 class RedisStreamSink:
     """XADDs encoded events to the click stream (~1 ms on the hot path).
@@ -32,19 +35,23 @@ class RedisStreamSink:
         self._stream = stream
         self._maxlen = maxlen
         self._fallback = fallback
+        self._emits = 0
 
     async def emit(self, event: ClickEvent) -> None:
+        self._emits += 1
+        trim = self._emits % TRIM_EVERY == 0
         try:
-            # ref_policy="ACKED" (Redis >= 8.2): each XADD also sweeps entries
-            # beyond `maxlen` that EVERY consumer group has acknowledged —
-            # consumed history self-cleans on write, while unacked backlog is
-            # untrimmable regardless of size (never lose a click).
+            # ref_policy="ACKED" (Redis >= 8.2): the trimming XADD sweeps
+            # entries beyond `maxlen` that EVERY consumer group has
+            # acknowledged — consumed history self-cleans on write, while
+            # unacked backlog is untrimmable regardless of size (never lose
+            # a click).
             await self._redis.xadd(
                 self._stream,
                 to_stream_fields(event),
-                maxlen=self._maxlen,
+                maxlen=self._maxlen if trim else None,
                 approximate=True,
-                ref_policy="ACKED",
+                ref_policy="ACKED" if trim else None,
             )
         except Exception as exc:
             log.warning(

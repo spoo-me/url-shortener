@@ -263,10 +263,11 @@ class ClickEventsSettings(BaseSettings):
     stream: str = "events:clicks"
     dlq_stream: str = "events:clicks:dlq"
     # Acked-history tail kept in the stream (XADD ACKED MAXLEN ~, Redis 8.2+):
-    # every publish sweeps entries beyond this that ALL groups have acked, so
-    # consumed history self-cleans server-side (~7MB at the default). Unacked
-    # backlog is never trimmed regardless of size — its only bound is the
-    # queue Redis noeviction memory cap (backpressure → inline fallback).
+    # every 100th publish sweeps entries beyond this that ALL groups have
+    # acked, so consumed history self-cleans server-side (~7MB at the
+    # default). Unacked backlog is never trimmed regardless of size — its
+    # only bound is the queue Redis noeviction memory cap (backpressure →
+    # inline fallback).
     maxlen: int = Field(default=10_000, ge=1000)
 
     # Consumer tunables.
