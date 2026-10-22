@@ -2,6 +2,8 @@
 slowapi rate limiter — shared instance, Limits constants, and key resolution.
 
 Storage backend: Redis if REDIS_URI env var is set, otherwise in-memory.
+If Redis errors or times out, each process falls back to in-memory counters
+until Redis answers again.
 Key resolution: API key hash → JWT token hash → client IP.
 """
 
@@ -12,6 +14,8 @@ import math
 import os
 
 from fastapi import Request
+from redis.backoff import NoBackoff
+from redis.retry import Retry
 from slowapi import Limiter
 from starlette.datastructures import MutableHeaders
 
@@ -193,9 +197,15 @@ class Limits:
 def rate_limit_key(request: Request) -> str:
     """Three-tier rate limit key: API key hash → JWT hash → client IP.
 
-    Lightweight header inspection only — no DB queries, no JWT verification.
-    Provides consistent per-session bucketing for rate limiting purposes.
+    A token only earns its own bucket once the auth dependency has verified
+    it for this request (it sets ``request.state.auth_ctx``; FastAPI resolves
+    dependencies before the limit decorator runs). Anything else is keyed by
+    IP, so a made-up Authorization header or cookie cannot mint a fresh
+    bucket per request.
     """
+    if getattr(request.state, "auth_ctx", None) is None:
+        return get_client_ip(request)
+
     auth_header = request.headers.get("Authorization", "")
 
     if auth_header.lower().startswith("bearer "):
@@ -218,6 +228,19 @@ def rate_limit_key(request: Request) -> str:
 
 _redis_uri = os.environ.get("REDIS_URI")
 _storage_uri = _redis_uri if _redis_uri else "memory://"
+# limits drives a SYNC redis client from inside async handlers, so every
+# stall blocks the whole event loop. redis-py's defaults (no socket timeout,
+# 3 retries with up to 10 s backoff) let one wedged or restarting Redis
+# freeze the worker; fail fast and let the in-memory fallback take over.
+_storage_options = (
+    {
+        "socket_timeout": 0.25,
+        "socket_connect_timeout": 0.25,
+        "retry": Retry(NoBackoff(), 0),
+    }
+    if _redis_uri
+    else {}
+)
 
 
 class _HeaderSafeLimiter(Limiter):
@@ -237,6 +260,8 @@ class _HeaderSafeLimiter(Limiter):
 limiter = _HeaderSafeLimiter(
     key_func=rate_limit_key,
     storage_uri=_storage_uri,
+    storage_options=_storage_options,
+    in_memory_fallback_enabled=True,
     strategy="fixed-window",
     headers_enabled=True,
 )

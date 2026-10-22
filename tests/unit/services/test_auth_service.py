@@ -281,6 +281,29 @@ class TestLogin:
             await svc.login("test@example.com", "WrongPass1!")
 
     @pytest.mark.asyncio
+    async def test_login_does_not_block_the_event_loop(self):
+        import asyncio
+
+        from app.infrastructure.crypto import hash_password
+
+        svc = make_credential_service()
+        hashed = hash_password("CorrectPass1!")
+        svc._user_repo.find_by_email.return_value = make_user_doc(
+            password_hash=hashed, password_set=True
+        )
+        ticks = 0
+        login = asyncio.ensure_future(svc.login("test@example.com", "WrongPass1!"))
+        while not login.done():
+            await asyncio.sleep(0.001)
+            ticks += 1
+
+        with pytest.raises(AuthenticationError):
+            await login
+        # An inline argon2 verify holds the loop for the whole hash, so
+        # nothing else runs until the login has finished.
+        assert ticks > 3
+
+    @pytest.mark.asyncio
     async def test_login_blocked_when_pending_deletion(self):
         from app.errors import AccountPendingDeletionError
         from app.infrastructure.crypto import hash_password

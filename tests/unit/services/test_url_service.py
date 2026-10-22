@@ -722,6 +722,26 @@ class TestUrlServiceCreate:
             await svc.create(req, owner_id=USER_OID, client_ip="1.2.3.4")
 
     @pytest.mark.asyncio
+    async def test_create_alias_taken_between_check_and_insert_raises_conflict(self):
+        from pymongo.errors import DuplicateKeyError
+
+        url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
+        svc = make_service(
+            url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache
+        )
+
+        blocked_url_repo.get_patterns.return_value = []
+        url_repo.check_alias_exists.return_value = False
+        legacy_repo.check_exists.return_value = False
+        url_repo.insert.side_effect = DuplicateKeyError("E11000 duplicate key error")
+
+        from app.schemas.dto.requests.url import CreateUrlRequest
+
+        req = CreateUrlRequest(long_url="https://example.com", alias="myalias")
+        with pytest.raises(ConflictError, match="Alias is already in use"):
+            await svc.create(req, owner_id=USER_OID, client_ip="1.2.3.4")
+
+    @pytest.mark.asyncio
     async def test_create_reserved_alias_raises_validation_error(self):
         url_repo, legacy_repo, emoji_repo, blocked_url_repo, url_cache = make_repos()
         svc = make_service(

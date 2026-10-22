@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Literal
 
 import pycountry
 from bson import ObjectId
+from pymongo.errors import DuplicateKeyError
 
 from app.errors import (
     AppError,
@@ -40,7 +41,7 @@ from app.errors import (
     ValidationError,
 )
 from app.infrastructure.cache.url_cache import UrlCache, UrlCacheData
-from app.infrastructure.crypto import hash_password, hash_token
+from app.infrastructure.crypto import hash_password_async, hash_token
 from app.infrastructure.logging import get_logger, should_sample
 from app.repositories.blocked_url_repository import BlockedUrlRepository
 from app.repositories.legacy.emoji_url_repository import EmojiUrlRepository
@@ -292,7 +293,7 @@ async def _handle_password(
     elif request.password:
         # Always re-hash — argon2 uses random salts so string comparison
         # cannot detect "same password", and the write is cheap.
-        ops["password"] = hash_password(request.password)
+        ops["password"] = await hash_password_async(request.password)
 
 
 async def _handle_max_clicks(
@@ -1024,7 +1025,7 @@ class UrlService:
         # 3. Password hash (cheap — do before alias generation loop)
         password_hash: str | None = None
         if request.password:
-            password_hash = hash_password(request.password)
+            password_hash = await hash_password_async(request.password)
 
         # 4. expire_after (already parsed to datetime by the DTO validator)
         expire_ts: datetime | None = request.expire_after
@@ -1136,8 +1137,13 @@ class UrlService:
         if url_doc.dest is not None:
             doc["dest"] = url_doc.dest.to_doc()
 
-        # 8. Insert
-        inserted_id = await self._url_repo.insert(doc)
+        # 8. Insert. The availability check above is read-then-act; the
+        # (domain, alias) unique index settles concurrent creates.
+        try:
+            inserted_id = await self._url_repo.insert(doc)
+        except DuplicateKeyError:
+            log.info("url_alias_conflict", short_code=alias, on="insert")
+            raise ConflictError("Alias is already in use") from None
         url_doc.id = inserted_id
 
         # L1 accumulation for every destination the link routes to

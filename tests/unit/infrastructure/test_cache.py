@@ -154,55 +154,56 @@ class TestUrlCacheDataMetaFields:
 class TestUrlCacheDataVerifyPassword:
     """Unit tests for UrlCacheData.verify_password()."""
 
-    def test_no_password_returns_true_for_none(self):
+    async def test_no_password_returns_true_for_none(self):
         data = _url_data(password_hash=None)
-        assert data.verify_password(None) is True
+        assert await data.verify_password(None) is True
 
-    def test_no_password_returns_true_for_any_input(self):
+    async def test_no_password_returns_true_for_any_input(self):
         data = _url_data(password_hash=None)
-        assert data.verify_password("anything") is True
+        assert await data.verify_password("anything") is True
 
-    def test_v2_correct_password(self):
+    async def test_v2_correct_password(self):
         data = _url_data(password_hash="$argon2id$hash", schema_version="v2")
         with patch(
-            "app.infrastructure.cache.url_cache.verify_password_hash", return_value=True
+            "app.infrastructure.cache.url_cache.verify_password_async",
+            return_value=True,
         ):
-            assert data.verify_password("correct") is True
+            assert await data.verify_password("correct") is True
 
-    def test_v2_wrong_password(self):
+    async def test_v2_wrong_password(self):
         data = _url_data(password_hash="$argon2id$hash", schema_version="v2")
         with patch(
-            "app.infrastructure.cache.url_cache.verify_password_hash",
+            "app.infrastructure.cache.url_cache.verify_password_async",
             return_value=False,
         ):
-            assert data.verify_password("wrong") is False
+            assert await data.verify_password("wrong") is False
 
-    def test_v2_none_password_short_circuits_without_hashing(self):
+    async def test_v2_none_password_short_circuits_without_hashing(self):
         data = _url_data(password_hash="$argon2id$hash", schema_version="v2")
-        with patch("app.infrastructure.cache.url_cache.verify_password_hash") as mock:
-            result = data.verify_password(None)
+        with patch("app.infrastructure.cache.url_cache.verify_password_async") as mock:
+            result = await data.verify_password(None)
             assert result is False
             mock.assert_not_called()
 
-    def test_v1_plaintext_correct(self):
+    async def test_v1_plaintext_correct(self):
         data = _url_data(password_hash="secret123", schema_version="v1")
-        assert data.verify_password("secret123") is True
+        assert await data.verify_password("secret123") is True
 
-    def test_v1_plaintext_wrong(self):
+    async def test_v1_plaintext_wrong(self):
         data = _url_data(password_hash="secret123", schema_version="v1")
-        assert data.verify_password("wrong") is False
+        assert await data.verify_password("wrong") is False
 
-    def test_emoji_plaintext_correct(self):
+    async def test_emoji_plaintext_correct(self):
         data = _url_data(password_hash="mypass", schema_version="emoji")
-        assert data.verify_password("mypass") is True
+        assert await data.verify_password("mypass") is True
 
-    def test_emoji_plaintext_wrong(self):
+    async def test_emoji_plaintext_wrong(self):
         data = _url_data(password_hash="mypass", schema_version="emoji")
-        assert data.verify_password("nope") is False
+        assert await data.verify_password("nope") is False
 
-    def test_v1_none_password_does_not_match(self):
+    async def test_v1_none_password_does_not_match(self):
         data = _url_data(password_hash="secret", schema_version="v1")
-        assert data.verify_password(None) is False
+        assert await data.verify_password(None) is False
 
 
 class TestDualCache:

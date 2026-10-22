@@ -10,7 +10,6 @@ import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager, suppress
 
-import redis.asyncio as aioredis
 import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
@@ -23,6 +22,7 @@ from app.dependencies.wiring import wire_services
 from app.infrastructure.bootstrap.system_default_domain import (
     ensure_system_default_domain,
 )
+from app.infrastructure.cache.redis_client import create_cache_client
 from app.infrastructure.email.zeptomail import ZeptoMailProvider
 from app.infrastructure.geoip import GeoIPService
 from app.infrastructure.http_client import HttpClient
@@ -99,13 +99,7 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
         # Redis is optional; self-hosters may not configure it
         redis_client = None
         if settings.redis.redis_uri:
-            redis_client = aioredis.from_url(
-                settings.redis.redis_uri,
-                encoding="utf-8",
-                decode_responses=True,
-                socket_keepalive=True,
-                health_check_interval=30,
-            )
+            redis_client = create_cache_client(settings.redis.redis_uri)
             try:
                 await redis_client.ping()
                 log.info(

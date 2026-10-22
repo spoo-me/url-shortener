@@ -241,7 +241,7 @@ async def redirect_url(
     # 2. Password check
     if url_data.password_hash:
         password = request.query_params.get("password")
-        if not url_data.verify_password(password):
+        if not await url_data.verify_password(password):
             log.debug("url_password_required", short_code=short_code, schema=schema)
             return templates.TemplateResponse(
                 request,
@@ -399,7 +399,7 @@ async def check_password(
             request, "400", "Invalid short code or URL not password-protected", 400
         )
 
-    if url_data.verify_password(password):
+    if await url_data.verify_password(password):
         log.info("url_password_verified", short_code=short_code)
         return RedirectResponse(f"/{short_code}?password={password}", status_code=302)
 

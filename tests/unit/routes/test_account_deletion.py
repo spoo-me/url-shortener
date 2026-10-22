@@ -831,11 +831,12 @@ async def test_restore_unknown_email_burns_dummy_verify(monkeypatch):
     import app.services.account_deletion_service as ads
 
     verified_hashes = []
-    monkeypatch.setattr(
-        ads,
-        "verify_password",
-        lambda pwd, hsh: verified_hashes.append(hsh) or False,
-    )
+
+    async def fake_verify(pwd, hsh):
+        verified_hashes.append(hsh)
+        return False
+
+    monkeypatch.setattr(ads, "verify_password_async", fake_verify)
     svc, repo = make_service(_pending_user(hash_password(PASSWORD)))
     repo.find_by_email.return_value = None
 
@@ -852,11 +853,12 @@ async def test_restore_oauth_only_burns_dummy_verify(monkeypatch):
     import app.services.account_deletion_service as ads
 
     verified_hashes = []
-    monkeypatch.setattr(
-        ads,
-        "verify_password",
-        lambda pwd, hsh: verified_hashes.append(hsh) or False,
-    )
+
+    async def fake_verify(pwd, hsh):
+        verified_hashes.append(hsh)
+        return False
+
+    monkeypatch.setattr(ads, "verify_password_async", fake_verify)
     svc, repo = make_service(_pending_user(None))
     repo.find_by_email.return_value = make_user_doc(
         password_set=False, password_hash=None, status="PENDING_DELETION"

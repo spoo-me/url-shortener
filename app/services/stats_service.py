@@ -416,43 +416,34 @@ class StatsService:
         }
         results: dict[str, list[dict[str, Any]]] = {}
 
-        try:
-            raw = await self._click_repo.aggregate(combined_pipeline)
+        # A failed aggregation propagates: empty facets here would read as
+        # "zero clicks" to the caller, a wrong answer rather than an error.
+        raw = await self._click_repo.aggregate(combined_pipeline)
 
-            if raw:
-                facet_results = raw[0]
+        if raw:
+            facet_results = raw[0]
 
-                # Extract summary
-                summary_list = facet_results.get("_summary", [])
-                if summary_list:
-                    s = summary_list[0]
-                    # $avg yields None when no click in range carried a
-                    # redirect_ms measurement — pass it through as null.
-                    avg_redirect = s.get("avg_redirection_time")
-                    summary = {
-                        "total_clicks": s.get("total_clicks", 0),
-                        "unique_clicks": s.get("unique_clicks", 0),
-                        "first_click": self._fmt_tz(s.get("first_click"), tz_name),
-                        "last_click": self._fmt_tz(s.get("last_click"), tz_name),
-                        "avg_redirection_time": (
-                            round(avg_redirect, 2) if avg_redirect is not None else None
-                        ),
-                    }
+            # Extract summary
+            summary_list = facet_results.get("_summary", [])
+            if summary_list:
+                s = summary_list[0]
+                # $avg yields None when no click in range carried a
+                # redirect_ms measurement — pass it through as null.
+                avg_redirect = s.get("avg_redirection_time")
+                summary = {
+                    "total_clicks": s.get("total_clicks", 0),
+                    "unique_clicks": s.get("unique_clicks", 0),
+                    "first_click": self._fmt_tz(s.get("first_click"), tz_name),
+                    "last_click": self._fmt_tz(s.get("last_click"), tz_name),
+                    "avg_redirection_time": (
+                        round(avg_redirect, 2) if avg_redirect is not None else None
+                    ),
+                }
 
-                # Extract per-dimension results
-                for dim, strategy in strategies.items():
-                    results[dim] = strategy.format_results(facet_results.get(dim, []))
-            else:
-                for dim in group_by:
-                    results[dim] = []
-
-        except Exception as exc:
-            log.error(
-                "stats_facet_aggregation_failed",
-                error=str(exc),
-                error_type=type(exc).__name__,
-                dimensions=group_by,
-            )
+            # Extract per-dimension results
+            for dim, strategy in strategies.items():
+                results[dim] = strategy.format_results(facet_results.get(dim, []))
+        else:
             for dim in group_by:
                 results[dim] = []
 

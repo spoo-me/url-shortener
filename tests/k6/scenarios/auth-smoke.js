@@ -13,6 +13,9 @@ import { BASE_URL, THRESHOLDS } from '../lib/config.js';
 import { buildHeaders, buildApiHeaders, buildFormHeaders, randomAlias, isOk, isRedirect } from '../lib/helpers.js';
 import { createTestUrls, allAliases } from '../setup.js';
 
+// 401/409/429 are the expected answers for these probes, not failures.
+http.setResponseCallback(http.expectedStatuses({ min: 200, max: 399 }, 401, 409, 429));
+
 export const options = {
   vus: 2,
   duration: '2m',
@@ -24,35 +27,37 @@ export default function () {
 
   switch (endpoint) {
     case 1: {
-      // POST /auth/login with fake credentials — expect 401
+      // POST /auth/login with fake credentials: expect 401 (429 once the
+      // 5/min login limit for this IP is spent)
       const res = http.post(
         `${BASE_URL}/auth/login`,
         JSON.stringify({
-          email: 'nonexistent@k6test.invalid',
+          email: 'nonexistent@k6test.example.com',
           password: 'WrongPassword123!',
         }),
         { headers: buildApiHeaders() },
       );
       check(res, {
-        'POST /auth/login: status 401': (r) => r.status === 401,
+        'POST /auth/login: status 401 or 429': (r) => r.status === 401 || r.status === 429,
       });
       break;
     }
 
     case 2: {
-      // POST /auth/register — expect 201 or 409
-      const uniqueEmail = `k6test+${Date.now()}${randomIntBetween(1000, 9999)}@test.invalid`;
+      // POST /auth/register: expect 201 or 409 (429 once the signup limit
+      // for this IP is spent). Reserved TLDs like .invalid fail validation.
+      const uniqueEmail = `k6test+${Date.now()}${randomIntBetween(1000, 9999)}@k6test.example.com`;
       const res = http.post(
         `${BASE_URL}/auth/register`,
         JSON.stringify({
           email: uniqueEmail,
           password: 'K6TestPass123!',
-          name: 'K6 Test User',
+          user_name: 'K6 Test User',
         }),
         { headers: buildApiHeaders() },
       );
       check(res, {
-        'POST /auth/register: status 201 or 409': (r) => r.status === 201 || r.status === 409,
+        'POST /auth/register: status 201, 409 or 429': (r) => [201, 409, 429].includes(r.status),
       });
       break;
     }
@@ -82,14 +87,15 @@ export default function () {
     }
 
     case 5: {
-      // POST /auth/request-password-reset — always returns 200 (timing-safe)
+      // POST /auth/request-password-reset: always 200 (timing-safe),
+      // 429 after the third request from this IP in an hour
       const res = http.post(
         `${BASE_URL}/auth/request-password-reset`,
-        JSON.stringify({ email: 'nobody@k6test.invalid' }),
+        JSON.stringify({ email: 'nobody@k6test.example.com' }),
         { headers: buildApiHeaders() },
       );
       check(res, {
-        'POST /auth/request-password-reset: status 200': (r) => r.status === 200,
+        'POST /auth/request-password-reset: status 200 or 429': (r) => r.status === 200 || r.status === 429,
       });
       break;
     }

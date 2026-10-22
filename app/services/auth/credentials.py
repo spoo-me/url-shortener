@@ -19,7 +19,7 @@ from app.errors import (
     ConflictError,
     ValidationError,
 )
-from app.infrastructure.crypto import hash_password, verify_password
+from app.infrastructure.crypto import hash_password_async, verify_password_async
 from app.infrastructure.email.protocol import EmailProvider
 from app.infrastructure.logging import get_logger
 from app.repositories.user_repository import UserRepository
@@ -79,7 +79,7 @@ class CredentialService:
             )
             raise AuthenticationError("invalid credentials")
 
-        if not verify_password(password, user.password_hash):
+        if not await verify_password_async(password, user.password_hash):
             svc_log.info(
                 "login_failed", reason="invalid_password", user_id=str(user.id)
             )
@@ -134,7 +134,7 @@ class CredentialService:
             raise ConflictError("email already registered")
 
         now = datetime.now(timezone.utc)
-        password_hash = hash_password(password)
+        password_hash = await hash_password_async(password)
         user_doc = UserDoc(
             email=email,
             email_verified=False,

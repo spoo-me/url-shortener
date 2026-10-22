@@ -832,3 +832,15 @@ class TestResolveWindowParity:
             stats._resolve_window(start_raw, end_raw)
         with pytest.raises(ValidationError, match=match):
             public._resolve_window(start_raw, end_raw, "UTC")
+
+
+class TestAggregationFailure:
+    @pytest.mark.asyncio
+    async def test_failed_aggregation_raises_instead_of_reporting_zero(self):
+        from pymongo.errors import ServerSelectionTimeoutError
+
+        svc, click_repo, _ = make_service()
+        click_repo.aggregate.side_effect = ServerSelectionTimeoutError("no server")
+
+        with pytest.raises(ServerSelectionTimeoutError):
+            await svc.query(query=_q(), owner_id=OWNER_ID)

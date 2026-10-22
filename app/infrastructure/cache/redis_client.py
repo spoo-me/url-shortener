@@ -13,6 +13,23 @@ from app.infrastructure.logging import get_logger
 
 log = get_logger(__name__)
 
+# The URL cache sits on the redirect path: a wedged Redis must cost a cache
+# miss, not a hang, so its timeouts are far tighter than the queue client's.
+CACHE_SOCKET_TIMEOUT = 0.5
+
+
+def create_cache_client(redis_uri: str) -> aioredis.Redis:
+    """Build (without connecting) the client for the URL cache Redis."""
+    return aioredis.from_url(
+        redis_uri,
+        encoding="utf-8",
+        decode_responses=True,
+        socket_keepalive=True,
+        health_check_interval=30,
+        socket_connect_timeout=CACHE_SOCKET_TIMEOUT,
+        socket_timeout=CACHE_SOCKET_TIMEOUT,
+    )
+
 
 async def create_redis_client(
     redis_uri: str, *, label: str = "redis"

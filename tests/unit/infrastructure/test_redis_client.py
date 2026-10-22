@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from redis.exceptions import RedisError
 
 from app.infrastructure.cache.redis_client import create_redis_client
@@ -53,3 +54,27 @@ class TestCreateRedisClient:
         kwargs = from_url.call_args.kwargs
         assert kwargs["socket_timeout"] == 5
         assert kwargs["socket_connect_timeout"] == 5
+
+
+class TestCreateCacheClient:
+    async def test_wedged_redis_fails_fast_instead_of_hanging(self):
+        """A Redis that accepts the connection but never answers (paused,
+        overloaded, half-open) must raise quickly so the cache can miss."""
+        import asyncio
+        import socket
+        import time
+
+        from app.infrastructure.cache.redis_client import create_cache_client
+
+        sock = socket.socket()
+        sock.bind(("127.0.0.1", 0))
+        sock.listen(8)
+        client = create_cache_client(f"redis://127.0.0.1:{sock.getsockname()[1]}/0")
+        start = time.monotonic()
+        try:
+            with pytest.raises(RedisError):
+                await asyncio.wait_for(client.get("k"), timeout=10)
+        finally:
+            await client.aclose()
+            sock.close()
+        assert time.monotonic() - start < 2

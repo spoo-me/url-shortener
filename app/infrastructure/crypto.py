@@ -7,12 +7,19 @@ and PKCE code-challenge derivation (RFC 7636).
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import hashlib
+from concurrent.futures import ThreadPoolExecutor
 
 from argon2 import PasswordHasher
 
 _password_hasher = PasswordHasher()
+
+# Run inline, argon2 blocks the event loop for the whole hash, so a login
+# burst stalls every redirect on the worker. One thread is enough: each hash
+# already runs 4 lanes, and a second hash only takes CPU from the loop.
+_argon2_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="argon2")
 
 
 def hash_password(plain_password: str) -> str:
@@ -36,6 +43,20 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
         return True
     except Exception:
         return False
+
+
+async def hash_password_async(plain_password: str) -> str:
+    """``hash_password`` on the argon2 pool, off the event loop."""
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(_argon2_pool, hash_password, plain_password)
+
+
+async def verify_password_async(plain_password: str, password_hash: str) -> bool:
+    """``verify_password`` on the argon2 pool, off the event loop."""
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(
+        _argon2_pool, verify_password, plain_password, password_hash
+    )
 
 
 def hash_token(token: str) -> str:

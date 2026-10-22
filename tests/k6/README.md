@@ -156,3 +156,58 @@ Throughput peaked at about 320 req/s between 300 and 450 VUs, then fell to 200 t
 Requests started failing at roughly 8,500 VUs, all on the client side: 12,167 got no response within k6's 60 s timeout, 4,960 were never accepted and 4,401 were reset, with 147,041 listen queue overflows in the kernel. No response was a 5xx and the process never restarted. Failures stopped 26 s after load dropped to 50 VUs, and a smoke run right after had a p95 of 13.9 ms. App memory grew from 250 MB to 1.4 GB at 10,000 open connections and stayed at 1.2 GB afterwards.
 
 With Redis stopped, no request failed: the app logged cache errors and read from MongoDB. With MongoDB stopped, redirects kept working from the Redis cache, but clicks in that minute were dropped (`click_tracking_failed`, no retry). The two legacy `/emoji` aliases, which are never cached, waited 30 s for server selection and returned 500, which accounts for all 27 failures.
+
+### Spike: shorten, auth, rate limiter, stats
+
+Run on 2026-10-21 at commit `16ead788e02b81cc43e18bd59431145834a074a8` with k6 v2.3.0 on an 8 vCPU, 16 GB box. The app ran like production: `uvicorn app.main:app --workers 2 --timeout-keep-alive 5`, the click worker, `CLICK_EVENTS_SINK=stream` with a separate queue Redis, `SAFETY_ENABLED=true` (no Web Risk key), `ENV=production`, JSON logs. Both uvicorn workers, the click worker and both Redis containers were pinned to 2 cores (a CCX13 has 2 vCPU), mongod to 2 more, and k6 to the last 4. Python 3.14.6, MongoDB 9.0.4, Redis 8.10.2 (cache capped at 512 MB, `allkeys-lru`).
+
+No rate limit was changed; there is no env setting for them. Spike traffic came from distinct `CF-Connecting-IP` values, one seeded API key or session per VU, so the limiter did not hide the backend. Data: 500 users with API keys, and an owner with 40 links and 2M clicks over 89 days inside a 7.5M click collection.
+
+| Run | Peak | Throughput at peak | p95 at peak | Failures | Recovery |
+|---|---:|---:|---:|---|---|
+| Shorten, anonymous, 5 to 500 VUs in 10 s | 500 | 64 creates/s | 8.6 s | none | normal latency as soon as the queue drained |
+| Shorten, API key, 5 to 500 VUs in 10 s | 500 | 36 creates/s | 17.2 s | none | same |
+| Shorten, anonymous, 5 to 2,000 VUs | 2,000 | 40 creates/s | 60 s | 33% k6 timeouts | same |
+| Same custom alias from 50 clients at once, 20 rounds | 50 | | 951 ms | 57 of 1,000 were 500 | |
+| Login, 0 to 300 VUs in 5 s, 100 redirect VUs alongside | 300 | 7.4 logins/s | 60 s | 52 login timeouts | |
+| Register, 0 to 300 VUs in 5 s, same redirect load | 300 | 7.0 registers/s | 60 s | 36 timeouts | |
+| Redirects during the login spike | 100 | 5.8 req/s (51 before) | 21.8 s (36 ms before) | none | 18 to 31 ms once logins drained |
+| One IP, then one API key, 200 VUs, Redis up | 200 | | | 20 and 60 created, exactly the limits | |
+| Same, Redis stopped for 20 s | 200 | | | 4,360 HTTP 500 | |
+| Same, Redis paused for 20 s | 200 | | | both workers served nothing for 20 s, `/health` included | |
+| Stats and export, 0 to 200 VUs, one owner | 200 | 3.4 req/s | 60 s | 37.5% timeouts | none within 60 s |
+
+Where it broke and why:
+
+- Shorten is CPU bound at about 64 creates/s on 2 cores. Profiles put 16% of worker time in argon2 for the 10% of creates that set a password, 15% in the rate limiter's synchronous Redis calls (hit, then get and ttl for the headers, all blocking the event loop), and about 9% in the URL safety gate (pattern, verdict and feed lookups plus the L1 counters). The safety checks never blocked or queued a create, and L1 fired once per domain and window as designed. No duplicate aliases: the unique index held. Past about 1,000 VUs requests sit in the event loop until k6 gives up at 60 s, and the server still finishes them: 625 links were created for clients that had already timed out. Worker RSS stayed between 230 and 340 MB.
+- Login and register are argon2 bound at about 7.5 per second for the box, and argon2 ran on the event loop, so every redirect on a worker waited behind the queued logins.
+- With Redis up the limiter is exact across two workers. When Redis is stopped every limited route returns 500 after redis-py's retry backoff, and when it hangs the synchronous client blocks both workers. Separately, any made-up `Authorization` header or `access_token` cookie got its own bucket: from one IP, 477 wrong-password logins went through in 40 s (limit 5 per minute) and 245 anonymous links were created (limit 20 per minute).
+- Stats and export break in MongoDB. One 90-day account query for the 2M-click owner takes 9.4 s alone, 26.7 s with every group-by, because each request runs a `$facet` with `$addToSet` over every IP for unique counts. At 200 VUs mongod grew to 12.9 GB and was OOM-killed. Abandoned aggregations kept running after k6 timed out (no `maxTimeMS`), pymongo retried them against the restarted mongod, and it was OOM-killed a second time after the test ended. During the outage the stats endpoint answered 200 with `total_clicks: 0`.
+
+Slowest profiled queries, all on `clicks`:
+
+| ms | Shape | Plan |
+|---:|---|---|
+| 26,599 | owner, 90 days, `$facet` over 8 group-bys with `$addToSet` | `CLUSTERED_IXSCAN`, all buckets in range |
+| 9,416 | owner, 90 days, summary and time | same |
+| 6,758 | owner export, 90 days, summary and time | same |
+| 1,767 | one link, 90 days | `meta.url_id` index, 467 buckets |
+
+For this owner (26% of all clicks) the planner scans every bucket in the window (572,837) instead of the owner's 7,416; hinting `meta.owner_id_1_clicked_at_-1` cuts the match from 546 ms to 73 ms, but `$addToSet` dominates either way. Owners with ordinary volumes get the owner index.
+
+Fixes are in this branch, one commit each with a test, with before and after numbers from the same k6 slice:
+
+| Commit | Slice | Before | After |
+|---|---|---|---|
+| `fix(shorten): return 409 when a custom alias is taken mid-request` | alias race | 57 HTTP 500 | 0 HTTP 500, 980 HTTP 409 |
+| `fix(auth): run argon2 hashing off the event loop` | redirect p95 during the login spike | 21.8 s at 5.8 req/s | 102 ms at 49.3 req/s |
+| `fix(rate-limit): give a token its own bucket only once verified` | one IP, random bearer per request | 477 logins, 245 creates | 5 logins, 20 creates |
+| `fix(rate-limit): fall back to memory when Redis is down or wedged` | Redis stopped, then paused | 4,360 HTTP 500; 20 s freeze | 0 HTTP 500, no freeze; 40 creates, the limit once per worker |
+| `fix(cache): time out cache Redis calls instead of hanging redirects` | redirects only, Redis paused 20 s | 50 served, rest hung 20 s | 630 served at 1.05 s p50 from MongoDB |
+| `fix(stats): fail the request when the click aggregation fails` | owner stats, MongoDB stopped 30 s | 7 HTTP 200 with 0 clicks | 0; 10 HTTP 500 |
+
+The stats OOM has no fix here: it needs bounded concurrency or precomputed counts, not a patch.
+
+Script fixes in this change: `auth-smoke.js` used `.invalid` addresses, which fail email validation, so login, register and password reset only ever measured 422 (70% failure rate in a 30 s run); it now uses `example.com` and accepts 429 once a per-IP auth limit is spent. `api-load.js` sent stats and export with no credentials, which only measured 401; set `K6_API_KEY` to include them.
+
+Caveat: one box. MongoDB had 2 dedicated cores and no memory cap, unlike a hosted cluster, and k6 shared the machine's memory and network stack. The spike scripts and seed data were scratch and are not committed.
