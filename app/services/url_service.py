@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Literal
 
 import pycountry
 from bson import ObjectId
+from pymongo.errors import DuplicateKeyError
 
 from app.errors import (
     AppError,
@@ -1136,8 +1137,13 @@ class UrlService:
         if url_doc.dest is not None:
             doc["dest"] = url_doc.dest.to_doc()
 
-        # 8. Insert
-        inserted_id = await self._url_repo.insert(doc)
+        # 8. Insert. The availability check above is read-then-act; the
+        # (domain, alias) unique index settles concurrent creates.
+        try:
+            inserted_id = await self._url_repo.insert(doc)
+        except DuplicateKeyError:
+            log.info("url_alias_conflict", short_code=alias, on="insert")
+            raise ConflictError("Alias is already in use") from None
         url_doc.id = inserted_id
 
         # L1 accumulation for every destination the link routes to
